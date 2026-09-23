@@ -13,8 +13,6 @@ A web-based pantry and recipe management app with AI-assisted inventory tracking
 - Automatic stock deduction after cooking; low-stock items are added to the shopping list.
 - Chat assistant that queries data through **MCP** tools.
 
-Grading follows the `Thesis Deliverable Package v1.2` (product quality + AI-first). Anything mandatory there is mandatory here.
-
 ## 2. Tech stack
 
 | Layer | Technology |
@@ -107,6 +105,8 @@ A task is done only when build, format, lint and **all** tests are green.
 
 ## 7. Security
 
+**Security baseline (non-negotiable):** Every endpoint that handles user data must be protected with actual authentication (not just UI-level guards). All inputs must be validated before reaching the domain or database. Error responses must never leak stack traces, internal paths, or implementation details to the client.
+
 - **Never commit secrets**: API keys, passwords, connection strings with real values. When adding an env variable, update `.env.example` and the README.
 - Do not read `.env` files into your context and never commit them.
 - Protect secured endpoints on the backend, not only in the UI.
@@ -138,7 +138,8 @@ See [docs/00_index.md](docs/00_index.md) for the full documentation index.
 | Capability status | [docs/01_product/capability_map.md](docs/01_product/capability_map.md) |
 
 - Do not document anything that is not implemented. Missing items go under "Known limitations".
-- No `TODO` may remain in the submitted docs.
+- **No TODO rule:** No section in the submitted documentation may be left empty or marked with `TODO`. Anything not yet addressed belongs under a "Known limitations" heading — never a placeholder.
+- **ADR rule:** Every significant engineering or architectural decision (e.g. database choice, auth strategy, framework selection) must be recorded as an ADR under `docs/02_architecture/adr/`. Each ADR must include: the alternatives that were considered, the trade-offs and consequences of the chosen option, and how the decision was or will be verified. Copy `0001-template.md` and increment the number.
 - Scope is defined in [docs/01_product/scope_contract.md](docs/01_product/scope_contract.md). Anything outside it is **not built** without a request.
 
 ## 10. AI transparency (mandatory deliverable)
