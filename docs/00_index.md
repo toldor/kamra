@@ -12,10 +12,11 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[vision.md](01_product/vision.md)* | Persona, értékajánlat, non-goals, kockázatok | **Hiányzik** |
+| [vision.md](01_product/vision.md) | Probléma, persona, értékajánlat, North Star + guardrailek, non-goals, kockázatok | Kész |
+| [competitor_analysis.md](01_product/competitor_analysis.md) | Versenytársak funkciónkénti, forrásolt összehasonlítása | Kész |
 | [scope_contract.md](01_product/scope_contract.md) | MVP story-k, elfogadási kritériumok, Definition of Done | Kész |
 | [capability_map.md](01_product/capability_map.md) | Funkciók állapottáblája (Value + Productization) | Kész |
-| *[metrics.md](01_product/metrics.md)* | North Star + guardrail metrikák, mérési terv | **Hiányzik** |
+| [metrics.md](01_product/metrics.md) | North Star + guardrail metrikák, mérési terv | Kész |
 
 ---
 
@@ -74,7 +75,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[ai_manifest.md](07_ai/ai_manifest.md)* | Használt eszközök, tiltások, kritikus döntések, kockázatok | **Hiányzik** |
+| [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Kész (skeleton) |
 | [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01 bejegyzéssel) |
 | [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Kész (sablon) |
 
@@ -91,8 +92,6 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 ## Hiányzó fájlok összesítve (teendők)
 
-- `docs/01_product/vision.md`
-- `docs/01_product/metrics.md`
 - `docs/02_architecture/c4_context_container.md`
 - `docs/02_architecture/quality_attributes.md`
 - `docs/02_architecture/adr/0002-*.md` … (min. 5–8 ADR kell összesen)
@@ -103,4 +102,3 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 - `docs/06_release/demo_script.md`
 - `docs/06_release/self_assessment.md`
 - `docs/06_release/changelog.md`
-- `docs/07_ai/ai_manifest.md`
