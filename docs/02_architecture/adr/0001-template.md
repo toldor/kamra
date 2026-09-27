@@ -1,32 +1,30 @@
-# ADR-0001: [Döntés rövid neve]
+# 000X - [Döntés címe]
 
-**Dátum:** ÉÉÉÉ-HH-NN
-**Állapot:** Javasolt | Elfogadott | Elvetve | Elavult | Felváltva (→ ADR-XXXX)
+Dátum: YYYY-MM-DD
+Státusz: Proposed | Accepted | Deprecated
 
-## Kontextus
+## Context
 
-Miért kellett döntést hozni? Mi volt a helyzet, a kényszer, a szükséglet?
+- Mi a probléma?
+- Milyen kényszerek vannak (idő, tech, csapat, platform)?
+- Milyen minőségi attribútumot érint (pl. security, performance)?
 
-## Döntés
+## Decision
 
-Mit döntöttünk el pontosan?
+- Egy mondatban: mit választottunk?
 
-## Következmények
+## Alternatives
 
-### Pozitív
-- ...
+1) Alternatíva A - előny/hátrány
+2) Alternatíva B - előny/hátrány
 
-### Negatív / kompromisszumok
-- ...
+## Consequences
 
-### Semleges
-- ...
+- Pozitív következmények
+- Negatív következmények / kockázatok
+- Mit kell figyelni a megvalósítás során?
 
-## Alternatívák (elvetett lehetőségek)
+## Verification
 
-| Alternatíva | Elvetés oka |
-|---|---|
-| ... | ... |
-
----
-*Új ADR létrehozásakor másold ezt a sablont, növeld a sorszámot, és töltsd ki a mezőket.*
+- Hogyan ellenőrizzük? (teszt/mérés/PoC)
+- Evidence link: [link]
