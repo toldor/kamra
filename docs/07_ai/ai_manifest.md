@@ -3,7 +3,7 @@
 A Kamra projekt AI-first módon készül. Ez a dokumentum leírja, **milyen AI eszközöket, mire és milyen korlátokkal** használok.
 Élő dokumentum: a fejlesztés során folyamatosan bővül. Részletek: [prompt_log.md](prompt_log.md), [verification_log.md](verification_log.md).
 
-Utolsó frissítés: 2026-09-24
+Utolsó frissítés: 2026-09-28
 
 ---
 
@@ -12,27 +12,27 @@ Utolsó frissítés: 2026-09-24
 | Eszköz | Típus | Modell / verzió | Szerep |
 |---|---|---|---|
 | Claude Code | CLI ágens | claude-sonnet-4-6, claude-opus-5-5 | Architect / Tutor, CLI Agent: tervezés, ADR, multi-file generálás, tesztfuttatás, CI |
-| Copilot CLI | CLI ágens | [fejlesztő tölti ki] | Claude Code alternatívája |
-| GitHub Copilot | IDE asszisztens | [fejlesztő tölti ki] | Pair Programmer: implementáció, boilerplate, unit tesztek |
-| Gemini CLI | CLI ágens | [fejlesztő tölti ki] | Reviewer: keresztvalidáció, ellenséges tesztelés |
-| Claude / Gemini chat | Chat LLM | [fejlesztő tölti ki] | Scope tervezés, debug, trianguláció |
+| Copilot CLI | CLI ágens | Claude Sonnet 4 | Claude Code alternatívája |
+| GitHub Copilot | IDE asszisztens | Claude Sonnet 4 | Pair Programmer: implementáció, boilerplate, unit tesztek |
+| Antigravity | Agentic IDE | Gemini 3.1 Pro (High) | Reviewer: keresztvalidáció, dokumentációs audit, ellenséges tesztelés |
+| Gemini chat | Chat LLM | Gemini 3.1 Pro | Scope tervezés, debug, trianguláció |
 
 ## 2. Felhasználási területek
 
 | Terület | Elsődleges eszköz | Mire | Példa (prompt log) |
 |---|---|---|---|
-| Tervezés (scope, architektúra, ADR) | Claude | MVP, non-goals, ADR-alapanyag, trade-off elemzés | [P-01](prompt_log.md) |
+| Tervezés (scope, architektúra, ADR) | Claude Code | MVP, non-goals, ADR-alapanyag, trade-off elemzés, kikérdezéses (grilling) tervezés | [P-03–P-05](prompt_log.md) |
 | Kód | Copilot, Claude Code | Feature implementáció, boilerplate, scaffold | – |
 | Teszt | Copilot Chat, Claude Code | Acceptance criteria → tesztesetek, negatív tesztek | – |
-| Review | Gemini CLI | Edge case, security, architekturális konzisztencia | – |
-| Debug | Claude chat | Stacktrace-elemzés, root cause hipotézisek, regressziós teszt | – |
+| Review | Antigravity | Edge case, security, architekturális konzisztencia, dokumentációs audit | [P-06–P-07](prompt_log.md) |
+| Debug | Claude Code, Gemini chat | Stacktrace-elemzés, root cause hipotézisek, regressziós teszt | – |
 | Dokumentáció | Claude Code | README, API leírás, docs skeleton | [P-01](prompt_log.md) |
 | CI/CD | Claude Code | GitHub Actions workflow | – |
 
 ### Munkamódszer
 
 - **Workflow:** generál → review → teszt → integrál (kézi ellenőrzés + commit). Részletek: [AGENTS.md](../../AGENTS.md).
-- **Keresztvalidáció:** aki a kódot írta, nem az reviewzza – Claude generál, Gemini CLI reviewz, a végső elfogadás az enyém.
+- **Keresztvalidáció:** aki a kódot írta, nem az reviewzza – Claude generál, Antigravity (Gemini) reviewz, a végső elfogadás az enyém. A reviewer állításait is ellenőrzöm (lásd [V-04](verification_log.md)).
 - **Ellenséges teszt:** kritikus moduloknál egy másik modell próbálja eltörni a kódot.
 - **Spec-first (TDD):** komplex moduloknál előbb specifikáció és teszt, utána implementáció.
 - **Trianguláció:** fontos architekturális döntésnél két modell véleménye; az ellentmondás az ADR része lesz.
@@ -43,7 +43,6 @@ Utolsó frissítés: 2026-09-24
 - **Secretek:** API kulcsok, jelszók, valódi connection stringek. A `.env` fájlt az ágensek nem olvashatják be (AGENTS.md 7. pont).
 - **Személyes adat (PII):** valós felhasználói adat nem kerül promptba; tesztadat csak szintetikus.
 - **Éles adatbázis-tartalom:** promptba csak séma és generált mintaadat kerül.
-- [fejlesztő bővíti, ha újabb szabály keletkezik]
 
 Technikai védelem: `.gitignore` (`.env`), `.env.example` érték nélkül, commit előtti diff-átnézés.
 
@@ -53,9 +52,8 @@ Technikai védelem: `.gitignore` (`.env`), `.env.example` érték nélkül, comm
 
 | # | Döntés | AI javaslata | Döntésem és miért | Hivatkozás |
 |---|---|---|---|---|
-| D-1 | [fejlesztő tölti ki] | | | |
-| D-2 | | | | |
-| D-3 | | | | |
+| D-1 | **North Star: megmentett főzések száma** | „Lejárat előtt felhasznált készlet aránya” (arány) | A darabszámot választottam, mert közvetlenül a termék fő tevékenységét (főzés hamarosan lejáró alapanyagból) méri, és egyszerűen kommunikálható. Az arány gyengeségét, hogy nem mutatja a kárba ment mennyiséget, a G1 guardrail (pazarolt arány) pótolja. | [P-03](prompt_log.md), [metrics.md](../01_product/metrics.md) |
+| D-2 | **Bevásárlólista: csak javaslat, a felhasználó dönt** | Az elfogyott hozzávaló automatikusan kerüljön a listára | Automatikus felkerülés helyett bevásárlójavaslat, amit a felhasználó elfogad vagy elutasít, és ugyanez igaz a minimumszintre is. Ugyanazt az elvet követi, mint az AI-bevitel: a rendszer javasol, az ember dönt. Így a lista nem telik meg olyasmivel, amit a felhasználó nem akar megvenni. | [P-05](prompt_log.md), [scope_contract.md](../01_product/scope_contract.md) US-5 |
 
 ## 5. Kockázatok és kezelésük
 
@@ -65,7 +63,7 @@ Technikai védelem: `.gitignore` (`.env`), `.env.example` érték nélkül, comm
 | Hibás security tanács | Auth bypass, injection, adatszivárgás | Minden security állítás a [verification_log](verification_log.md)-ba kerül; keresztvalidáció másik modellel; negatív tesztek |
 | Hibás teljesítmény-állítás | Lassú lekérdezés, rossz UX | Mérés vagy PoC a verification logban |
 | Licenc | Nem kompatibilis licencű kód/csomag | Függőségek licencének ellenőrzése (dependency scan); részletek: `privacy_licensing.md` |
-| Prompt injection (az alkalmazás LLM-funkcióiban) | Az LLM kimenete jogosulatlan műveletet indít | LLM kimenet séma-validáció DB előtt; MCP toolok csak szűk, validált use case-eken át írnak |
+| Prompt injection (az alkalmazás LLM-funkcióiban) | Az LLM kimenete jogosulatlan műveletet indít | LLM kimenet séma-validáció DB előtt; az AI kimenete csak felhasználói jóváhagyással kerül az adatbázisba; az MCP toolok csak olvasnak ([mcp_tools.md](../03_design/mcp_tools.md)) |
 | Megértés hiánya | Nem tudom megvédeni a kódot | Kódkikérdezés commit előtt; generált kód refaktorálása |
 | Tesztek gyengítése a zöld CI kedvéért | Hamis biztonságérzet | AGENTS.md tiltja; teszt módosítás csak indoklással és jóváhagyással |
 
@@ -73,4 +71,5 @@ Technikai védelem: `.gitignore` (`.env`), `.env.example` érték nélkül, comm
 
 > A fejlesztés során talált AI hibák összefoglalója, hivatkozással a verification log bejegyzésre.
 
-[fejlesztő bővíti a fejlesztés során]
+- **Az AI túlértékeli a termék egyediségét ([V-01](verification_log.md)).** Az értékajánlathoz javasolt „csak nálunk van” állítás egy forrásellenőrzés után megdőlt: a szabad szöveges, több tételes bevitel más eszközökben is létezik. Tanulság: az AI által javasolt egyediségi és versenytárs-állítást mindig forrással ellenőrzöm, és negatív állítást („más appban nincs”) nem teszek, mert nem igazolható.
+- **A forrás pontos olvasása a problémát is szűkítette ([V-02](verification_log.md)).** Az AI által javasolt pazarlási adat az elsődleges forrás (NÉBIH) szerint helyes volt, de a forrás a kidobás három okát sorolja fel, ebből a termék csak kettőt (megfeledkezés, túlvásárlás) céloz. Tanulság: számszerű állítást csak az elsődleges forrásból veszek át, és azt is ellenőrzöm, hogy a forrás pontosan azt támasztja-e alá, amit állítok, nem csak a számot.
