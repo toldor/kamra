@@ -17,7 +17,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [scope_contract.md](01_product/scope_contract.md) | MVP story-k, elfogadási kritériumok, Definition of Done | Kész |
 | [capability_map.md](01_product/capability_map.md) | Funkciók állapottáblája (Value + Productization) | Kész |
 | [metrics.md](01_product/metrics.md) | North Star + guardrail metrikák, mérési terv | Kész |
-| *ux_flows.md* | 2-3 fő user flow, hiba- és üres állapotok, alap a11y | **Hiányzik** |
+| [ux_flows.md](01_product/ux_flows.md) | 3 fő user flow, hiba- és üres állapotok, alap a11y | Kész (screenshotok az implementációval) |
 
 ---
 
@@ -80,8 +80,8 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-2, tanulságok: V-01–V-02) |
-| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-07 bejegyzéssel) |
+| [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-2, 3 tanulság) |
+| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-10 bejegyzéssel) |
 | [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Folyamatban (V-01–V-04) |
 
 ---
@@ -97,7 +97,6 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 ## Hiányzó fájlok összesítve (teendők)
 
-- `docs/01_product/ux_flows.md`
 - `docs/02_architecture/c4_context_container.md`
 - `docs/02_architecture/c4_component.md`
 - `docs/02_architecture/quality_attributes.md`

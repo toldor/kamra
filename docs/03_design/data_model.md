@@ -56,3 +56,5 @@ Migrációk helye: `src/backend/KamraApp.Infrastructure/Migrations/`
 
 - Séma tervezés alatt, változhat.
 - A séma még nem követi teljesen a [CONTEXT.md](../../CONTEXT.md) fogalmait és a [scope_contract.md](../01_product/scope_contract.md) story-jait. Hiányzik: Háztartás/felhasználó, kanonikus Hozzávaló (ADR-0003), készletmozgás-napló csökkenési okkal, főzés-esemény, minimumszint, bevásárlójavaslat és tételjavaslat, valamint a kapcsolatok és az adatélettartam. A teljes újratervezés külön adatmodell-tervezési lépés.
+- Egyidejű készletlevonás (például két fül): a készlettételen konkurenciakezelés kell (optimista zárolás vagy atomikus feltételes frissítés), hogy ne vesszen el levonás. A megoldásról az adatmodell-tervezéskor döntünk, lehetséges ADR-téma.
+- A fix kategórialista az alapértelmezett eltarthatósági napértékekkel és azok forrásával itt készül el (a [scope_contract.md](../01_product/scope_contract.md) Korlátok / Adat része erre hivatkozik).

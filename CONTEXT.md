@@ -1,6 +1,6 @@
 # Kamra
 
-Egyszemélyes háztartási készlet- és receptkezelés, amelynek célja az otthoni élelmiszer-pazarlás csökkentése.
+Egy ember által vezetett háztartási készlet- és receptkezelés, amelynek célja az otthoni élelmiszer-pazarlás csökkentése.
 
 ## Language
 
@@ -32,7 +32,7 @@ Az AI által szabad szövegből kinyert, még nem végleges készlettétel, amel
 _Avoid_: parse eredmény, AI tétel
 
 **Készletbevitel**:
-Egy beküldés, amellyel a felhasználó készletet rögzít (egy form-mentés vagy egy mondat), függetlenül attól, hány tételt tartalmaz.
+Egy sikeresen mentett beküldés, amellyel a felhasználó készletet rögzít (egy form-mentés vagy egy jóváhagyott mondatos bevitel), függetlenül attól, hány tételt tartalmaz; az el nem fogadott mondat nem készletbevitel.
 _Avoid_: rögzítés, felvitel
 
 **Kategória**:
@@ -48,7 +48,7 @@ A kategória alapértelmezett eltarthatóságából számolt lejárati dátum, h
 _Avoid_: automatikus lejárat
 
 **Hamarosan lejáró**:
-Olyan készlettétel, amelynek lejárati dátuma a mai naptól számított 2 napon belül van; a már lejárt tétel nem hamarosan lejáró.
+Olyan készlettétel, amelynek lejárati dátuma ma, holnap vagy holnapután van (a mai naptól számított 2 napon belül, a mai napot is beleértve); a már lejárt tétel nem hamarosan lejáró.
 _Avoid_: lejáró, lejárat közeli
 
 **Csökkenési ok**:
@@ -58,6 +58,23 @@ _Avoid_: törlés
 **Pazarolt mennyiség**:
 Egy tétel *kidobtam* okú csökkenéseinek összege, plusz a lejárat után a mérési ablak végén még készleten lévő mennyiség.
 _Avoid_: veszteség, hulladék
+
+**Készletmozgás-napló**:
+A készlettételek minden mennyiségváltozásának visszakereshető nyilvántartása mennyiséggel, időponttal és okkal (bevitel, főzés, csökkenési ok).
+_Avoid_: audit log, history
+
+**Recept**:
+Mentett elkészítési leírás adagszámmal és hozzávalókkal (mennyiséggel és mértékegységgel); forrása az induló receptkészlet, a felhasználó kézi felvitele vagy egy jóváhagyott AI-receptötlet.
+
+**Főzés**:
+Az az esemény, amikor a felhasználó jelzi, hogy egy receptet adott adagszámmal megfőzött; a megerősítés után a felhasznált mennyiségek *elfogyott* okkal levonódnak a készletből.
+_Avoid_: receptfelhasználás
+
+**Elkészíthető**:
+Olyan recept, amelynek minden hozzávalója (az alaphozzávalók kivételével) megvan a készletben a szükséges mennyiségben.
+
+**Majdnem elkészíthető**:
+Olyan recept, amelynek legfeljebb 2 hozzávalója hiányzik a készletből vagy van belőle kevesebb a szükségesnél.
 
 **Megmentett főzés**:
 Olyan főzés, amely legalább egy hamarosan lejáró tételt felhasznál.

@@ -1,29 +1,61 @@
 # Capability Map
 
-Az alkalmazás képességei és megvalósítottsági állapotuk: mennyi a felhasználói érték (**Value**) és mennyi a termékminőség (**Productization**: minőség, üzemeltetés, biztonság).
-Frissítsd minden lépcső végén; „Done” státusz csak evidence- és tesztlinkkel adható. A story-k és a stretch tételek: [scope_contract.md](scope_contract.md).
+A termék képességei és megvalósítottsági állapotuk: mennyi a felhasználói érték (**Value**) és mennyi a termékminőség (**Productization**: biztonság, üzemeltethetőség, hibakezelés, minőségbiztosítás). A story-k és az ütemezés forrása: [scope_contract.md](scope_contract.md).
+
+**Frissítés:** minden lépcső végén. „Done” státusz csak evidence- és tesztlinkkel adható. Evidence: repón belüli relatív link (screenshot vagy GIF a `docs/assets/` alatt) vagy CI-futás link. Teszt: konkrét tesztfájl vagy tesztosztály.
+
+## Képességek
 
 | Capability | Kategória | Evidence (link) | Teszt (link) | Státusz |
 |---|---|---|---|---|
-| F-01 Készlettétel hozzáadása, szerkesztése, törlése (form) – US-1 | Value | – | – | Planned |
-| F-02 Természetes nyelvű gyorsbevitel tételjavaslatokkal – US-2 | Value | – | – | Planned |
-| F-03 Lejárati dátum becslés kategória alapján – US-1 | Value | – | – | Planned |
-| F-04 Ajánlás készletből, lejárat-prioritással – US-3 | Value | – | – | Planned |
-| F-06 Automatikus készletcsökkentés főzés után – US-4 | Value | – | – | Planned |
-| F-07 Bevásárlólista bevásárlójavaslatokkal és minimumszinttel – US-5 | Value | – | – | Planned |
-| F-08 Chat asszisztens MCP-n keresztül (csak olvasó) – US-6 | Value | – | – | Planned |
-| F-09 Receptkezelés: induló receptkészlet + kézi felvitel – US-3 | Value | – | – | Planned |
-| F-11 Kézi készletcsökkentés csökkenési okkal + készletmozgás-napló – US-1, US-4 | Productization | – | – | Planned |
-| F-12 Metrika-lekérdezések (North Star + guardrailek) – [metrics.md](metrics.md) | Productization | – | – | Planned |
-| F-14 Regisztráció, bejelentkezés, háztartásonkénti adatelkülönítés – keresztmetszeti | Productization | – | – | Planned |
-| F-15 CI pipeline: build, formázás, lint, tesztek, lefedettség, függőség-vizsgálat – DoD | Productization | – | – | Planned |
-| F-16 Strukturált naplózás és health check – [observability.md](../05_security_ops/observability.md) | Productization | – | – | Planned |
-| F-17 LLM-kiesés kezelése: időtúllépés, újrapróbálás, kézi form, AI-funkciók kikapcsolhatósága – US-2 | Productization | – | – | Planned |
-| F-05 AI-vezérelt adag- és helyettesítési javaslat – stretch | Value | – | – | Planned |
-| F-10 AI-receptötlet mentése jóváhagyással – stretch | Value | – | – | Planned |
-| F-13 Kipipált bevásárlólista-tételből készletbevitel – stretch | Value | – | – | Planned |
+| CAP-01 Készlet rögzítése és áttekintése (US-1) | Value | – | – | Planned |
+| CAP-02 Bevásárlás rögzítése egy mondattal (US-2) | Value | – | – | Planned |
+| CAP-03 „Mit főzzek?” – ajánlás a készletből (US-3) | Value | – | – | Planned |
+| CAP-04 Főzés és a készlet automatikus frissítése (US-4) | Value | – | – | Planned |
+| CAP-05 Bevásárlólista javaslatokkal (US-5) | Value | – | – | Planned |
+| CAP-06 Kérdezés a kamráról élő nyelven (US-6) | Value | – | – | Planned |
+| CAP-07 Bejelentkezés és háztartásonkénti adatelkülönítés | Productization | – | – | Planned |
+| CAP-08 Készletváltozások naplózása okkal | Productization | – | – | Planned |
+| CAP-09 Folyamatos minőségellenőrzés (build, lint, tesztek, lefedettség, függőségvizsgálat) | Productization | – | – | Planned |
+| CAP-10 Üzemeltethetőség: strukturált naplózás és állapotfigyelés | Productization | – | – | Planned |
+| CAP-11 Működés AI-kiesés esetén | Productization | – | – | Planned |
+| CAP-12 A siker mérése: North Star és guardrail metrikák | Productization | – | – | Planned |
 
 **Státuszok:** `Planned` · `Partial` · `Done`
+
+## Mérés és kockázat
+
+| Capability | Mérés | Kockázat |
+|---|---|---|
+| CAP-01 | G2 korai megtartás ([metrics.md](metrics.md)) | R2 pontatlan készlet ([vision.md](vision.md)) |
+| CAP-02 | G3 bevitel ideje: p50 ≤ 40 mp, p90 ≤ 90 mp | R1 hibás AI-kimenet |
+| CAP-03 | North Star: megmentett főzések | R3 hideg indulás, R4 hozzávaló-egyeztetés |
+| CAP-04 | North Star; G1 pazarolt arány | R4 hozzávaló-egyeztetés (rossz levonás) |
+| CAP-05 | Mérési ötlet: a bevásárlójavaslatok elfogadási aránya | Zajos, ismétlődő javaslatok → elutasítási szabály (US-5) |
+| CAP-06 | Mérési ötlet: a chat-kérdések hány százalékára érkezik hibamentes válasz | Prompt injection → csak olvasó MCP toolok ([mcp_tools.md](../03_design/mcp_tools.md)) |
+| CAP-07 | Az adatelkülönítési integrációs tesztek 100%-a zöld | Más háztartás adatának elérése azonosító ismeretében |
+| CAP-08 | Minden készletváltozás csökkenési okkal naplózott (invariáns teszt) | Napló nélküli módosítás torzítja a G1-et |
+| CAP-09 | A `main` ágon a CI-futások zöld aránya; Domain és Application lefedettség ≥ 80% | Instabil (flaky) tesztek |
+| CAP-10 | A health check válaszol; minden hiba `correlationId` alapján visszakereshető | Személyes adat, prompt vagy API-kulcs a naplóban |
+| CAP-11 | LLM p95 válaszidő ≤ 10 mp; az időtúllépések aránya | Külső API kiesése → kézi form, AI-funkciók kikapcsolhatók |
+| CAP-12 | A metrika-lekérdezések a szintetikus seed-adaton egyeznek a kézzel számolt értékekkel | Felhasználó által rögzített adatból fakadó torzítás |
+
+## Roadmap
+
+Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az ütemezés változik, a scope_contract az irányadó.
+
+| Lépcső | Céldátum | Capability-k |
+|---|---|---|
+| Alapok | okt. 4. | CAP-07, CAP-09 (bővül a teljes fejlesztés alatt) |
+| 1. lépcső – determinisztikus mag | nov. 1. | CAP-01, CAP-03, CAP-04, CAP-05, CAP-08, CAP-10 |
+| 2. lépcső – AI-bevitel | nov. 15. | CAP-02, CAP-11 |
+| 3. lépcső – chat és mérés | nov. 22. | CAP-06, CAP-12 |
+
+- **Csúszás esetén** először a CAP-06 szűkül; az 1. és a 2. lépcső képességei védettek.
+- **Stretch** (nem vállalt, csak ha a 3. lépcső a nov. 22-i feature freeze előtt kész és zöld):
+  - *AI-receptötlet mentése jóváhagyással:* a hideg indulást az induló receptkészlet már kezeli, ez csak kényelmi bővítés.
+  - *AI-os helyettesítés és adagjavaslat:* a lineáris adagskálázás az MVP-ben van; az AI-os rész nem szükséges a fő flow-hoz.
+  - *Kipipált bevásárlólista-tételből készletbevitel:* a készletbevitel e nélkül is működik; ez a kör zárását kényelmesíti.
 
 ## Ismert hiányosságok
 

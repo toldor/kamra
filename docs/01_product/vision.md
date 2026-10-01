@@ -31,20 +31,20 @@ Hetente egyszer nagybevásárol, és ő tervezi a heti menüt.
 
 - **Tomi** egy mondattal rögzíti a bevásárlást („vettem 2 liter tejet, 10 tojást és fél kiló paradicsomot, a tej pénteken jár le”). A rendszer ebből tételjavaslatokat készít, amelyeket mentés előtt jóváhagy vagy javít. Ha nem ad meg lejáratot, a rendszer a kategória alapján becsül. A nyilvántartás így annyiba kerül, mint egy üzenet megírása.
 - **Tomi és Betti** a „mit főzzek?” kérdésre a készletből ténylegesen elkészíthető recepteket kapják, elöl azokkal, amelyek a hamarosan lejáró tételeket használják fel.
-- **Zárt kör:** főzés után a felhasznált mennyiségek levonódnak, a hiányzó vagy fogyóban lévő tételek a bevásárlólistára kerülnek. A készlet így külön adminisztráció nélkül naprakész marad.
+- **Zárt kör:** főzés után a felhasznált mennyiségek levonódnak, a hiányzó vagy fogyóban lévő hozzávalókból bevásárlójavaslat lesz, amit a felhasználó egy kattintással a listára tehet. A készlet így külön adminisztráció nélkül naprakész marad.
 
 ## 4. Siker definíció
 
 Részletes mérési terv és célértékek: [metrics.md](metrics.md).
 
-**North Star – Megmentett főzések:** aktív háztartásonként hetente megfőzött receptek átlagos száma, amelyek legalább egy *hamarosan lejáró* tételt felhasználnak. Hamarosan lejáró az a tétel, amelynek lejárati dátuma a mai naptól számított 2 napon belül van; a már lejárt tétel nem ilyen. A metrika azt méri, hogy a termék a lejárat előtt a fazékba juttatja-e az élelmiszert.
+**North Star – Megmentett főzések:** aktív háztartásonként hetente megfőzött receptek átlagos száma, amelyek legalább egy *hamarosan lejáró* tételt felhasználnak. Hamarosan lejáró az a tétel, amelynek lejárati dátuma ma, holnap vagy holnapután van; a már lejárt tétel nem ilyen. A metrika azt méri, hogy a termék a lejárat előtt a fazékba juttatja-e az élelmiszert.
 
 **Guardrailek:**
 
 | # | Metrika | Mitől véd |
 |---|---|---|
 | G1 | **Pazarolt arány:** a lejárt tételek eredeti mennyiségének átlagosan hány százaléka ment pazarlásba (kidobva, vagy lejártan a készletben maradt) | A North Star nőhet úgy is, hogy közben ugyanannyi étel romlik meg (többet vásárol, többet főz). A G1 tartja a mérést a pazarlásnál. |
-| G2 | **Korai megtartás:** a regisztrált felhasználók hány százaléka végzett legalább 3 készletbevitelt a regisztrációt követő 14 napban. Bármely csatornán (form vagy egy mondatos bevitel) történt beküldés egy bevitelnek számít. | Ha a felhasználó abbahagyja a vezetést, az adat elavul, és a North Star értelmét veszti. Ez Tomi „abbahagytam” frusztrációja. |
+| G2 | **Korai megtartás:** a regisztrált felhasználók hány százaléka végzett legalább 3 készletbevitelt a regisztrációt követő 14 napban. Bármely csatornán (form vagy egy mondatos bevitel) történt, sikeresen mentett beküldés egy bevitelnek számít; az el nem fogadott mondat nem. | Ha a felhasználó abbahagyja a vezetést, az adat elavul, és a North Star értelmét veszti. Ez Tomi „abbahagytam” frusztrációja. |
 | G3 | **Bevitel ideje:** a szöveg beküldésétől a jóváhagyott mentésig eltelt idő (p50/p90), benne az LLM válaszidejével | Egy lassú AI-bevitel rosszabb lehet, mint a kézi form, és elveszne az egy mondatos bevitel előnye. |
 
 **Mérési korlát:** minden metrika a felhasználó által rögzített adatból számol. Ha a fogyasztást nem jelzi (például kézi levonás nélkül eszik meg valamit), a G1 túlbecsüli a pazarlást.

@@ -21,7 +21,7 @@ Az eszközök kizárólag az Application rétegen keresztül, ugyanazokat a use 
 
 ### `get_expiring_items`
 
-**Leírás:** Visszaadja a hamarosan lejáró készlettételeket (lejárat a mai naptól számított 2 napon belül, lásd [CONTEXT.md](../../CONTEXT.md)).
+**Leírás:** Visszaadja a hamarosan lejáró készlettételeket (lejárat ma, holnap vagy holnapután, lásd [CONTEXT.md](../../CONTEXT.md)).
 
 **Paraméter:** –
 **Visszatérési érték:** `PantryItem[]`

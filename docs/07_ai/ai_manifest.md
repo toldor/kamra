@@ -3,7 +3,7 @@
 A Kamra projekt AI-first módon készül. Ez a dokumentum leírja, **milyen AI eszközöket, mire és milyen korlátokkal** használok.
 Élő dokumentum: a fejlesztés során folyamatosan bővül. Részletek: [prompt_log.md](prompt_log.md), [verification_log.md](verification_log.md).
 
-Utolsó frissítés: 2026-09-28
+Utolsó frissítés: 2026-10-01
 
 ---
 
@@ -24,7 +24,7 @@ Utolsó frissítés: 2026-09-28
 | Tervezés (scope, architektúra, ADR) | Claude Code | MVP, non-goals, ADR-alapanyag, trade-off elemzés, kikérdezéses (grilling) tervezés | [P-03–P-05](prompt_log.md) |
 | Kód | Copilot, Claude Code | Feature implementáció, boilerplate, scaffold | – |
 | Teszt | Copilot Chat, Claude Code | Acceptance criteria → tesztesetek, negatív tesztek | – |
-| Review | Antigravity | Edge case, security, architekturális konzisztencia, dokumentációs audit | [P-06–P-07](prompt_log.md) |
+| Review | Antigravity | Edge case, security, architekturális konzisztencia, dokumentációs audit | [P-06, P-07, P-10](prompt_log.md) |
 | Debug | Claude Code, Gemini chat | Stacktrace-elemzés, root cause hipotézisek, regressziós teszt | – |
 | Dokumentáció | Claude Code | README, API leírás, docs skeleton | [P-01](prompt_log.md) |
 | CI/CD | Claude Code | GitHub Actions workflow | – |
@@ -73,3 +73,4 @@ Technikai védelem: `.gitignore` (`.env`), `.env.example` érték nélkül, comm
 
 - **Az AI túlértékeli a termék egyediségét ([V-01](verification_log.md)).** Az értékajánlathoz javasolt „csak nálunk van” állítás egy forrásellenőrzés után megdőlt: a szabad szöveges, több tételes bevitel más eszközökben is létezik. Tanulság: az AI által javasolt egyediségi és versenytárs-állítást mindig forrással ellenőrzöm, és negatív állítást („más appban nincs”) nem teszek, mert nem igazolható.
 - **A forrás pontos olvasása a problémát is szűkítette ([V-02](verification_log.md)).** Az AI által javasolt pazarlási adat az elsődleges forrás (NÉBIH) szerint helyes volt, de a forrás a kidobás három okát sorolja fel, ebből a termék csak kettőt (megfeledkezés, túlvásárlás) céloz. Tanulság: számszerű állítást csak az elsődleges forrásból veszek át, és azt is ellenőrzöm, hogy a forrás pontosan azt támasztja-e alá, amit állítok, nem csak a számot.
+- **A reviewer AI nem dönt helyettem ([P-10](prompt_log.md), [V-04](verification_log.md)).** A UX-validálás során a reviewer (Antigravity) „hivatalosan engedélyezett” egy új függőséget (axe-core), és korábban téves állítást tett a modellnevekről. Tanulság: a reviewer AI megállapításai javaslatok; új függőségről és minden döntésről én döntök, és a reviewer állításait is ellenőrzöm.

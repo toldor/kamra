@@ -101,3 +101,32 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
 - **AI javaslat összefoglaló:** Az audit 17 megállapítást, 13 hiányzó dokumentumot és egy becsült pontmérleget adott. A Claude Code a v1.2 forrásban és a repóban ellenőrizte az állításokat, és négy csoportra bontotta őket: javítandó a saját dokumentumokban (index, capability map, verification log, ai_manifest), javítandó a korábbi skeletonokban (error_handling, mcp_tools, data_model), elutasítandó (a „fiktív modellnevek” állítás téves – V-04; a „család” szóhasználat nem sérti a glosszáriumot), és döntést igénylő (600 órás elvárt ráfordítás vs. a hátralévő 200 óra). A javítások után: törött link nélküli index a hiányzó ux_flows, c4_component és performance sorokkal; V-02–V-04 verifikációs bejegyzések; 4 csak olvasó MCP tool; az INSUFFICIENT_STOCK hibakód törlése; a data model fogalmi javítása; az ai_manifest eszközverziói.
 - **Érintett fájlok:** `docs/00_index.md`, `docs/01_product/capability_map.md`, `docs/03_design/error_handling.md`, `docs/03_design/mcp_tools.md`, `docs/03_design/data_model.md`, `docs/07_ai/verification_log.md`, `docs/07_ai/ai_manifest.md`, `docs/07_ai/prompt_log.md`
 - **Mit változtattam / döntésem:** A szűrt javítási listát jóváhagytam. A 600 óra kontra 200 óra kérdésben úgy döntöttem, hogy a scope_contractban maradjon a tényleges, hátralévő 200 órás kapacitás. Megadtam az ai_manifest eszközverzióit (Antigravity a Gemini CLI helyett). A kritikus döntések (D-1, D-2) és a tanulságok megfogalmazásához ajánlást kértem, a többit később töltöm ki.
+
+### P-08 – Capability map kidolgozása interjúval
+- **Dátum:** 2026-09-29
+- **Cél:** A capability_map.md átdolgozása a v1.2 3.C fejezete és a B) Capability Breadth scorecard szerint, a kiemelkedő szint elemeivel (mérés, kockázat, roadmap).
+- **Eszköz:** Claude Code (claude-opus-5-5), `/grill-with-docs` skill
+- **Prompt összefoglaló:** Kérdezz ki a capability_map.md-hez szekciónként, egyszerre egy kérdéssel; a szekció végén mutasd meg a szöveget, és csak jóváhagyás után írd be.
+- **AI javaslat összefoglaló:** 3 kérdés ajánlott válaszokkal: (1) a 17 funkció szintű sor helyett 12 képesség képességnyelven (6 Value, egy-egy MVP story-nként, és 6 Productization: auth és adatelkülönítés, készletnapló, CI, üzemeltethetőség, AI-kiesés kezelése, metrikák), új CAP-01–CAP-12 azonosítókkal; (2) a kötelező 5 oszlopos tábla változatlan, alatta külön „Mérés és kockázat” tábla hivatkozásokkal a metrics.md-re és a vision kockázataira; (3) Roadmap a scope_contract ütemezéséből (lépcső, céldátum, csúszási szabály) és a stretch tételek „miért nem MVP” indoklással.
+- **Érintett fájlok:** `docs/01_product/capability_map.md`, `docs/07_ai/prompt_log.md`
+- **Mit változtattam / döntésem:** Mindhárom javaslatot elfogadtam, és a teljes tervezetet változtatás nélkül jóváhagytam.
+
+### P-09 – UX flow-k kidolgozása interjúval
+- **Dátum:** 2026-09-30
+- **Cél:** A ux_flows.md megírása a v1.2 3.D fejezete szerint: 2–3 fő flow, hibahelyzetek, üres állapotok, alap akadálymentesség, a kiemelkedő szinthez edge case-ekkel és mikrocopyval.
+- **Eszköz:** Claude Code (claude-opus-5-5), `/grill-with-docs` skill
+- **Prompt összefoglaló:** Kérdezz ki a ux_flows.md-hez, egyszerre egy kérdéssel; a végén mutasd meg a szöveget, és csak jóváhagyás után írd be.
+- **AI javaslat összefoglaló:** 7 kérdés ajánlott válaszokkal: 3 fő flow Tomi személyével (bevitel, „Mit főzzek?” és főzés, bevásárlójavaslat), a készlet mint kezdőképernyő az üres állapotban a mondatos bevitelre terelve, duplikált készlet és dupla jóváhagyás kezelése (külön készlettétel, „Már van otthon” jelzés, idempotens jóváhagyás), három „Mit főzzek?” üres állapot mikrocopyval, értesítés a bevásárlójavaslatokról (visszajelzés és navigációs jelvény), 4 kötelező hibahelyzet (AI-kiesés, hiányzó egység, hálózati hiba, hibás bejelentkezés) és 2 további edge case, akadálymentességi minimum Lighthouse-ellenőrzéssel.
+- **Érintett fájlok:** `docs/01_product/ux_flows.md`, `docs/00_index.md`, `docs/07_ai/prompt_log.md`
+- **Mit változtattam / döntésem:** A flow-kat, a kezdőképernyőt, az edge case-eket, a hibahelyzeteket és az akadálymentességi minimumot a javaslat szerint elfogadtam. A javaslattól eltérő döntéseim:
+  - **Üres állapot szövegei:** teljesen üres készletnél a gomb „Bevásárlás rögzítése” helyett „Készlet rögzítése”; a majdnem elkészíthető állapot szövege „…egyik recepthez…” helyett „…egyik receptedhez…”.
+  - **Bevásárlójavaslat értesítés:** a javasolt visszajelzés és navigációs jelvény helyett csak a keletkezés pillanatában megjelenő visszajelzés (jelvény nélkül).
+
+### P-10 – UX flow-k validálása keresztvalidációval
+- **Dátum:** 2026-09-30
+- **Cél:** A ux_flows.md független validálása a v1.2 3.D fejezete szerint, majd a reviewer megjegyzéseinek szűrése.
+- **Eszköz:** Antigravity (Gemini 3.1 Pro (High)) – validálás; Claude Code (claude-opus-5-5) – a megjegyzések értékelése és a feljegyzések
+- **Prompt összefoglaló:** (1) Antigravity: validáld a ux_flows.md-t a követelmények szerint. (2) Claude Code: nézd át a reviewer megjegyzéseit, gyűjtsd össze, mit módosítanál vagy jegyeznél fel, de jóváhagyásig ne módosíts.
+- **AI javaslat összefoglaló:** A reviewer a dokumentumot kiemelkedő szintűnek értékelte, és három megjegyzést tett: (1) „hivatalosan engedélyezte” az `@axe-core/playwright` függőséget; (2) egyidejű készletlevonásnál optimista zárolást javasolt; (3) a dupla jóváhagyáshoz backend-idempotenciát kért. A Claude Code értékelése: (1) a függőség jóváhagyása a fejlesztő döntése, nem a revieweré, ADR nem kell hozzá; (2) valós versenyhelyzet (elveszett levonás), adatmodell-döntésként feljegyzendő; (3) a ux_flows.md már tartalmazza (a tételjavaslat állapota idempotencia-kulcs), csak az ismételt jóváhagyásra adott API-válasz nyitott.
+- **Érintett fájlok:** `docs/03_design/data_model.md`, `docs/03_design/error_handling.md`, `docs/07_ai/ai_manifest.md`, `docs/07_ai/prompt_log.md`, `docs/00_index.md`
+- **Mit változtattam / döntésem:** Az axe-core függőséget nem vezettem be, az akadálymentesség ellenőrzése a Lighthouse-auditon és a kézi bejáráson marad. Az egyidejű levonás és az ismételt jóváhagyás kérdését feljegyeztettem az adatmodell és a hibakezelés ismert hiányosságai közé, későbbi tervezésre, és a tanulságot felvetettem az AI manifestbe.

@@ -25,8 +25,8 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 - Készlettétel mezői: hozzávaló, mennyiség, mértékegység (g, dkg, kg, ml, dl, l, db), kategória (fix lista), lejárat (opcionális).
 - Ha nincs megadva lejárat, a rendszer a kategória alapértelmezett eltarthatóságából **becsült lejáratot** számol, amely becsültként jelölve látszik és szerkeszthető. Az „egyéb” kategóriánál a lejárat kötelező.
 - Érvénytelen bevitel (0 vagy negatív mennyiség, ismeretlen egység, hiányzó hozzávaló) nem mentődik, és a hibaüzenet megmondja, mit kell javítani.
-- A lista kereshető név szerint, szűrhető kategória szerint, és van **„hamarosan lejáró”** szűrő (lejárat a mai naptól számított 2 napon belül). A lejárt tételek külön jelölve látszanak.
-- Kézi készletcsökkentésnél a **csökkenési ok** kötelező (elfogyott / kidobtam / hibás rögzítés), és minden változás a készletmozgás-naplóba kerül.
+- A lista kereshető név szerint, szűrhető kategória szerint, és van **„hamarosan lejáró”** szűrő (lejárat ma, holnap vagy holnapután). A lejárt tételek külön jelölve látszanak.
+- Kézi készletcsökkentésnél a **csökkenési ok** kötelező (elfogyott / kidobtam / hibás rögzítés), és minden változás a készletmozgás-naplóba kerül. Ez a törlésre és a mennyiség szerkesztéssel történő csökkentésére is vonatkozik: a törlés egy 0-ra csökkentés csökkenési okkal.
 
 ### US-2 – Egy mondatos bevitel
 
@@ -36,6 +36,8 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 - Relatív dátumok a beküldés napjához képest: „ma”, „holnap”, „holnapután”; a hét napja a következő ilyen napot jelenti, és ha ma van, a mait. Abszolút dátum („okt. 3.”, „10.03”) is elfogadott. Minden más kifejezésnél becsült lejárat jön, becsültként jelölve.
 - Nem átváltható egység („egy csomag tejföl”) esetén a tételjavaslatból hiányzik az egység, és jóváhagyás előtt meg kell adni.
 - LLM-időtúllépés (15 mp) vagy kiesés esetén egy automatikus újrapróbálás történik. Ha az is sikertelen, vagy a válasz nem felel meg a sémának, vagy egyetlen tétel sem nyerhető ki: magyar nyelvű hibaüzenet jelenik meg, a beírt szöveg megmarad, egy kattintással elérhető a kézi form, és semmi nem mentődik.
+- Ha egy hozzávalóból már van készlet, a tételjavaslat tájékoztat róla („Már van otthon: tej 0,5 l, okt. 2-án jár le”), és jóváhagyáskor mindig új készlettétel jön létre (nincs összevonás).
+- A jóváhagyás egy tételjavaslatra csak egyszer fut le (idempotens): dupla kattintás vagy a kérés újraküldése nem hoz létre duplikált készletet.
 - A tételjavaslat beküldési és jóváhagyási időpontja tárolódik (G3 metrika, [metrics.md](metrics.md)).
 
 ### US-3 – Receptek és ajánlás
@@ -56,6 +58,8 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 - Főzéskor megadható az adagszám (alapértelmezés: a recept adagszáma). A levonandó mennyiség lineárisan skálázódik; darabnál felfelé kerekítünk egészre, g-nál és ml-nél egészre.
 - Levonás előtt egy megerősítő képernyő mutatja a levonandó mennyiségeket, és ott tételenként módosíthatók.
 - A levonás a legkorábban lejáró készlettételből indul (FEFO). A készlet nem lehet negatív: ha nincs elég, a tétel 0-ra csökken, és a képernyő jelzi az eltérést.
+- A levonandó mennyiségek a megerősítés pillanatában a friss készletből számolódnak; ha a készlet az ajánlás megnyitása óta változott, a megerősítő képernyő az eltérést jelzi.
+- A megerősítés után egy összegző sor jelzi, mely hozzávalók fogytak el, és kerültek a bevásárlójavaslatok közé (US-5).
 - Minden levonás *elfogyott* okkal kerül a készletmozgás-naplóba, a főzés-esemény pedig tárolódik (időpont, recept, felhasznált tételek; North Star metrika).
 
 ### US-5 – Bevásárlólista
@@ -177,3 +181,14 @@ A projekt akkor leadható, ha az alábbiak **mind** teljesülnek:
 - Táplálkozás- és kalóriakövetés
 - Egyéni ízlés- és allergiaprofilok
 - Online rendelés, bolti vagy webshop-integráció
+
+## Későbbi továbbfejlesztési lehetőségek
+
+Tudatosan kihagyott, de a jelenlegi tervezéssel összeegyeztethető bővítések (nem stretch, ebben a scope-ban nem készülnek el):
+
+- **Saját „mindig otthon van” lista:** az alaphozzávalók (víz, só, bors) felhasználói bővítése.
+- **Kategóriafüggő „hamarosan lejáró” küszöb:** a fix 2 nap helyett kategóriánként eltérő küszöb.
+- **A kategória-eltarthatóság felhasználói felülírása** a háztartás saját szokásaihoz.
+- **Hozzávaló-hierarchia és helyettesíthetőség** („trappista sajt” ⊂ „sajt”), lásd [ADR-0003](../02_architecture/adr/0003-kanonikus-hozzavalo-lista.md).
+- **Tömeg–térfogat átváltás** hozzávalónkénti sűrűséggel, lásd [ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md).
+- **Automatizált akadálymentesség-ellenőrzés** az e2e tesztekben (axe-core); jelenleg Lighthouse-audit és kézi bejárás.

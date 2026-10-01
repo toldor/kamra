@@ -39,3 +39,4 @@ Stack trace soha nem kerül a kliensnek.
 ## Ismert hiányosságok
 
 - A hibakódok listája bővülni fog az implementáció során.
+- Egy már jóváhagyott tételjavaslat ismételt jóváhagyására adott válasz (azonos sikeres válasz vagy 409) az API-tervezéskor dől el. A duplikált készlet létrejöttét a tételjavaslat állapota (függőben → jóváhagyva / elvetve) már megakadályozza.
