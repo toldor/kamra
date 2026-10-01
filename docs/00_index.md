@@ -12,10 +12,12 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[vision.md](01_product/vision.md)* | Persona, értékajánlat, non-goals, kockázatok | **Hiányzik** |
+| [vision.md](01_product/vision.md) | Probléma, persona, értékajánlat, North Star + guardrailek, non-goals, kockázatok | Kész |
+| [competitor_analysis.md](01_product/competitor_analysis.md) | Versenytársak funkciónkénti, forrásolt összehasonlítása | Kész |
 | [scope_contract.md](01_product/scope_contract.md) | MVP story-k, elfogadási kritériumok, Definition of Done | Kész |
 | [capability_map.md](01_product/capability_map.md) | Funkciók állapottáblája (Value + Productization) | Kész |
-| *[metrics.md](01_product/metrics.md)* | North Star + guardrail metrikák, mérési terv | **Hiányzik** |
+| [metrics.md](01_product/metrics.md) | North Star + guardrail metrikák, mérési terv | Kész |
+| [ux_flows.md](01_product/ux_flows.md) | 3 fő user flow, hiba- és üres állapotok, alap a11y | Kész (screenshotok az implementációval) |
 
 ---
 
@@ -23,9 +25,12 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[c4_context_container.md](02_architecture/c4_context_container.md)* | C4 Context + Container diagram | **Hiányzik** |
-| *[quality_attributes.md](02_architecture/quality_attributes.md)* | 5-8 nemfunkcionális elvárás, ≥2 quality scenario | **Hiányzik** |
-| [adr/0001-template.md](02_architecture/adr/0001-template.md) | ADR sablon (másolható, min. 5–8 ADR kell) | Kész (sablon) |
+| *c4_context_container.md* | C4 Context + Container diagram | **Hiányzik** |
+| *c4_component.md* | C4 Component diagram (backend modulhatárok) | **Hiányzik** |
+| *quality_attributes.md* | 5-8 nemfunkcionális elvárás, ≥2 quality scenario | **Hiányzik** |
+| [adr/0001-template.md](02_architecture/adr/0001-template.md) | ADR sablon (másolható, min. 8 ADR kell) | Kész (sablon) |
+| [adr/0002-fix-atvalthato-mertekegysegek.md](02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md) | Fix, átváltható mértékegységek „csomag” nélkül | Accepted |
+| [adr/0003-kanonikus-hozzavalo-lista.md](02_architecture/adr/0003-kanonikus-hozzavalo-lista.md) | Kanonikus hozzávaló-lista hierarchia nélkül | Accepted |
 
 ---
 
@@ -44,8 +49,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[test_strategy.md](04_quality/test_strategy.md)* | Teszt piramis, mock stratégia, CI quality gate-ek | **Hiányzik** |
+| *test_strategy.md* | Teszt piramis, mock stratégia, CI quality gate-ek | **Hiányzik** |
 | [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Kész (skeleton) |
+| *performance.md* | Teljesítmény-alapmérés, legalább egy mért szűk keresztmetszet | **Hiányzik** |
 
 ---
 
@@ -53,9 +59,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[threat_model.md](05_security_ops/threat_model.md)* | STRIDE fenyegetések (≥6), mitigáció, residual risk | **Hiányzik** |
-| *[privacy_licensing.md](05_security_ops/privacy_licensing.md)* | Adatkategóriák, adatáramlás, AI adatküldési szabály, licencek | **Hiányzik** |
-| *[deploy_runbook.md](05_security_ops/deploy_runbook.md)* | Deploy lépések, rollback, ≥2 incident forgatókönyv | **Hiányzik** |
+| *threat_model.md* | STRIDE fenyegetések (≥6), mitigáció, residual risk | **Hiányzik** |
+| *privacy_licensing.md* | Adatkategóriák, adatáramlás, AI adatküldési szabály, licencek | **Hiányzik** |
+| *deploy_runbook.md* | Deploy lépések, rollback, ≥2 incident forgatókönyv | **Hiányzik** |
 | [observability.md](05_security_ops/observability.md) | Naplózás, health check, metrikák, debugging guide | Kész (skeleton) |
 
 ---
@@ -64,9 +70,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[demo_script.md](06_release/demo_script.md)* | 5-7 perces stabil demo forgatókönyv | **Hiányzik** |
-| *[self_assessment.md](06_release/self_assessment.md)* | Kötelező önértékelés kategóriánként (4.5 pont a PDF-ben) | **Hiányzik** |
-| *[changelog.md](06_release/changelog.md)* | Release notes, scope változások | **Hiányzik** |
+| *demo_script.md* | 5-7 perces stabil demo forgatókönyv | **Hiányzik** |
+| *self_assessment.md* | Kötelező önértékelés kategóriánként (4.5 pont a PDF-ben) | **Hiányzik** |
+| *changelog.md* | Release notes, scope változások | **Hiányzik** |
 
 ---
 
@@ -74,9 +80,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *[ai_manifest.md](07_ai/ai_manifest.md)* | Használt eszközök, tiltások, kritikus döntések, kockázatok | **Hiányzik** |
-| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01 bejegyzéssel) |
-| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Kész (sablon) |
+| [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-2, 3 tanulság) |
+| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-10 bejegyzéssel) |
+| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Folyamatban (V-01–V-04) |
 
 ---
 
@@ -91,16 +97,15 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 ## Hiányzó fájlok összesítve (teendők)
 
-- `docs/01_product/vision.md`
-- `docs/01_product/metrics.md`
 - `docs/02_architecture/c4_context_container.md`
+- `docs/02_architecture/c4_component.md`
 - `docs/02_architecture/quality_attributes.md`
-- `docs/02_architecture/adr/0002-*.md` … (min. 5–8 ADR kell összesen)
+- `docs/02_architecture/adr/0004-*.md` … (min. 8 ADR kell összesen; kötelezően: LLM-szolgáltató, authentikáció)
 - `docs/04_quality/test_strategy.md`
+- `docs/04_quality/performance.md`
 - `docs/05_security_ops/threat_model.md`
 - `docs/05_security_ops/privacy_licensing.md`
 - `docs/05_security_ops/deploy_runbook.md`
 - `docs/06_release/demo_script.md`
 - `docs/06_release/self_assessment.md`
 - `docs/06_release/changelog.md`
-- `docs/07_ai/ai_manifest.md`

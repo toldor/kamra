@@ -9,8 +9,8 @@ A web-based pantry and recipe management app with AI-assisted inventory tracking
 
 - Add inventory items via a form **or** via natural-language quick entry (the LLM extracts name, quantity, expiry date).
 - Expiry estimation based on product category when the date is missing.
-- Recipe suggestions from current stock, prioritising items that expire soon; AI-driven serving adjustment and ingredient substitution.
-- Automatic stock deduction after cooking; low-stock items are added to the shopping list.
+- Recipe recommendations from current stock, prioritising items that expire soon (deterministic ranking); AI-driven serving adjustment and ingredient substitution are stretch goals.
+- Automatic stock deduction after cooking; depleted or low-stock ingredients become shopping list suggestions that the user accepts or rejects.
 - Chat assistant that queries data through **MCP** tools.
 
 ## 2. Tech stack
@@ -81,7 +81,7 @@ A task is done only when build, format, lint and **all** tests are green.
 ### AI / MCP
 - Every LLM call sits behind an interface defined in the Application layer (e.g. `IIngredientParser`) so it can be mocked.
 - **Always** validate LLM output against a schema (JSON schema or DTO validation) before it reaches the database; on invalid output return a clear error – do not guess.
-- MCP tools are read-only or write only through narrow, validated use cases. Never expose raw SQL or arbitrary queries.
+- MCP tools are read-only; they never modify or propose data changes. Never expose raw SQL or arbitrary queries.
 - Every MCP tool has a description, an input schema and a test. The list lives in `docs/03_design/mcp_tools.md`.
 - Keep prompt texts in dedicated files or constants, versioned, not scattered across the code.
 

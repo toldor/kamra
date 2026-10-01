@@ -8,7 +8,7 @@ Stack trace soha nem kerül a kliensnek.
 ```json
 {
   "type": "https://kamra.app/errors/PANTRY_ITEM_NOT_FOUND",
-  "title": "A kamra tétel nem található.",
+  "title": "A készlettétel nem található.",
   "status": 404,
   "code": "PANTRY_ITEM_NOT_FOUND",
   "correlationId": "abc-123"
@@ -31,12 +31,12 @@ Stack trace soha nem kerül a kliensnek.
 
 | Kód | Státusz | Leírás | Állapot |
 |---|---|---|---|
-| `PANTRY_ITEM_NOT_FOUND` | 404 | Kamra tétel nem létezik | Tervezett |
+| `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik | Tervezett |
 | `INVALID_QUANTITY` | 400 | Érvénytelen mennyiség | Tervezett |
 | `LLM_PARSE_FAILED` | 400 | LLM nem tudta értelmezni a bemenetet | Tervezett |
 | `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Tervezett |
-| `INSUFFICIENT_STOCK` | 409 | Nincs elég alapanyag főzéshez | Tervezett |
 
 ## Ismert hiányosságok
 
 - A hibakódok listája bővülni fog az implementáció során.
+- Egy már jóváhagyott tételjavaslat ismételt jóváhagyására adott válasz (azonos sikeres válasz vagy 409) az API-tervezéskor dől el. A duplikált készlet létrejöttét a tételjavaslat állapota (függőben → jóváhagyva / elvetve) már megakadályozza.

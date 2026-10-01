@@ -10,17 +10,17 @@ OpenAPI spec: `src/backend/KamraApp.Api/openapi.json` (generált, ne szerkeszd k
 
 | Metódus | Útvonal | Leírás | Állapot |
 |---|---|---|---|
-| GET | `/pantry` | Összes tétel listázása | Nem kész |
-| POST | `/pantry` | Új tétel hozzáadása | Nem kész |
-| PUT | `/pantry/{id}` | Tétel módosítása | Nem kész |
-| DELETE | `/pantry/{id}` | Tétel törlése | Nem kész |
-| POST | `/pantry/quick-add` | Természetes nyelvű gyorsbevitel | Nem kész |
+| GET | `/pantry` | Összes készlettétel listázása | Nem kész |
+| POST | `/pantry` | Új készlettétel hozzáadása | Nem kész |
+| PUT | `/pantry/{id}` | Készlettétel módosítása | Nem kész |
+| DELETE | `/pantry/{id}` | Készlettétel törlése (csökkenési okkal) | Nem kész |
+| POST | `/pantry/quick-add` | Egy mondatos bevitel: tételjavaslatok készítése | Nem kész |
 
 ### Receptek (`/recipes`)
 
 | Metódus | Útvonal | Leírás | Állapot |
 |---|---|---|---|
-| GET | `/recipes/suggestions` | Javaslatok a jelenlegi készletből | Nem kész |
+| GET | `/recipes/recommendations` | Ajánlás a jelenlegi készletből | Nem kész |
 | POST | `/recipes/{id}/cook` | Főzés: készletcsökkentés | Nem kész |
 
 ### Bevásárlólista (`/shopping-list`)
@@ -39,3 +39,4 @@ OpenAPI spec: `src/backend/KamraApp.Api/openapi.json` (generált, ne szerkeszd k
 
 - Egyetlen végpont sincs még implementálva.
 - Az autentikáció/autorizáció tervezés alatt.
+- A végpontlista még a scope_contract előtti állapotot tükrözi. Hiányzik többek között a tételjavaslatok jóváhagyása és elvetése, a kézi készletcsökkentés, a receptkezelés, a bevásárlójavaslatok elfogadása és elutasítása, valamint a regisztráció és a bejelentkezés. A lista az API-tervezéskor igazodik a [scope_contract.md](../01_product/scope_contract.md) US-1–US-6 story-jaihoz.
