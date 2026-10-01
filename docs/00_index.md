@@ -81,7 +81,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-2, 3 tanulság) |
-| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-10 bejegyzéssel) |
+| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-11 bejegyzéssel) |
 | [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Folyamatban (V-01–V-04) |
 
 ---
@@ -100,7 +100,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 - `docs/02_architecture/c4_context_container.md`
 - `docs/02_architecture/c4_component.md`
 - `docs/02_architecture/quality_attributes.md`
-- `docs/02_architecture/adr/0004-*.md` … (min. 8 ADR kell összesen; kötelezően: LLM-szolgáltató, authentikáció)
+- `docs/02_architecture/adr/0004-*.md` … (min. 8 ADR kell összesen; kötelezően: LLM-szolgáltató, authentikáció; további jelöltek: Clean Architecture rétegek, adatbázis és migrációs stratégia, MCP-integráció, naplózási stratégia, egyidejű készletlevonás / konkurenciakezelés)
 - `docs/04_quality/test_strategy.md`
 - `docs/04_quality/performance.md`
 - `docs/05_security_ops/threat_model.md`

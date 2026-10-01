@@ -116,6 +116,7 @@ A task is done only when build, format, lint and **all** tests are green.
 ## 8. Git workflow
 
 - Branches: `main` (stable, PR-only), `feature/<short-name>`, `fix/<short-name>`, `docs/<short-name>`.
+- `develop` (integration): `docs/*` and `feature/*` branches merge here via PR; `develop` → `main` via PR when releasable.
 - Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`, `style:` – max 72 characters, imperative mood.
 - Small, focused commits: prompt → review → test → commit. No giant end-of-day commit.
 - Never push directly to `main`; no force pushes.
