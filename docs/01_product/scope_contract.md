@@ -35,7 +35,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 - A beküldött szövegből a rendszer **tételjavaslatokat** készít, amelyek szerkeszthető formában jelennek meg. Jóváhagyás nélkül semmi nem kerül a készletbe.
 - Relatív dátumok a beküldés napjához képest: „ma”, „holnap”, „holnapután”; a hét napja a következő ilyen napot jelenti, és ha ma van, a mait. Abszolút dátum („okt. 3.”, „10.03”) is elfogadott. Minden más kifejezésnél becsült lejárat jön, becsültként jelölve.
 - Nem átváltható egység („egy csomag tejföl”) esetén a tételjavaslatból hiányzik az egység, és jóváhagyás előtt meg kell adni.
-- LLM-időtúllépés (15 mp) vagy kiesés esetén egy automatikus újrapróbálás történik. Ha az is sikertelen, vagy a válasz nem felel meg a sémának, vagy egyetlen tétel sem nyerhető ki: magyar nyelvű hibaüzenet jelenik meg, a beírt szöveg megmarad, egy kattintással elérhető a kézi form, és semmi nem mentődik.
+- LLM-időtúllépés (15 mp próbálkozásonként) vagy kiesés esetén egy automatikus újrapróbálás történik. Ha az is sikertelen, vagy a válasz nem felel meg a sémának, vagy egyetlen tétel sem nyerhető ki: magyar nyelvű hibaüzenet jelenik meg, a beírt szöveg megmarad, egy kattintással elérhető a kézi form, és semmi nem mentődik.
 - Ha egy hozzávalóból már van készlet, a tételjavaslat tájékoztat róla („Már van otthon: tej 0,5 l, okt. 2-án jár le”), és jóváhagyáskor mindig új készlettétel jön létre (nincs összevonás).
 - A jóváhagyás egy tételjavaslatra csak egyszer fut le (idempotens): dupla kattintás vagy a kérés újraküldése nem hoz létre duplikált készletet.
 - A tételjavaslat beküldési és jóváhagyási időpontja tárolódik (G3 metrika, [metrics.md](metrics.md)).
@@ -126,7 +126,7 @@ Leadás: **2026. december 5.** Kapacitás: kb. 20 óra/hét, összesen kb. 200 �
 - CI-ban és automatizált tesztekben soha nincs valódi LLM-hívás (mock).
 - Az LLM csak a felhasználó beírt szövegét és a válaszhoz szükséges készletadatot kapja meg; fiókadatot (e-mail, jelszó) soha.
 - Havi költségkeret a fejlesztés alatt: legfeljebb 10 000 Ft. Átlépés esetén az AI-funkciók kikapcsolhatók, a kézi form és a determinisztikus funkciók működnek tovább.
-- Időtúllépés: 15 mp, egy újrapróbálással (US-2).
+- Időtúllépés: 15 mp próbálkozásonként, egy újrapróbálással (US-2).
 
 ## 4. Kész definíciója (Definition of Done) a leadásra
 

@@ -48,6 +48,7 @@ docs/                                 # Docs-as-Code (00_index.md is the index)
 - `Api` and `McpServer` → `Application` (plus `Infrastructure` for DI registration).
 - No business logic in controllers, MCP tools or React components.
 - The API and the MCP server call the **same** Application use cases – no duplicated logic.
+- Application: one class per use case, aggregate-level repository interfaces, no generic repository, no mediator; every household-scoped repository method takes `HouseholdId`.
 
 ## 4. Commands
 
@@ -71,9 +72,9 @@ A task is done only when build, format, lint and **all** tests are green.
 ### Backend
 - `nullable` enabled, warnings as errors.
 - Async I/O everywhere, passing `CancellationToken` through.
-- Validation in the Application layer (FluentValidation or equivalent).
+- Validation in the Application layer with DataAnnotations (see ADR-0004).
 - Unified error model: RFC 7807 `ProblemDetails` with a stable `code` field (e.g. `PANTRY_ITEM_NOT_FOUND`). Never send stack traces to the client.
-- Error categories: validation (400), unauthorized (401), forbidden (403), not found (404), conflict (409), rate limit (429), internal (500).
+- Error categories: validation (400), unauthorized (401), forbidden (403), not found (404), conflict (409), rate limit (429), internal (500), bad gateway (502, invalid LLM response), unavailable (503, LLM unavailable). Use cases throw `AppException` subclasses; mapping to ProblemDetails happens in one place (see ADR-0007).
 - Structured logging (Serilog, JSON) with `correlationId`. **Never log PII, prompts or API keys.**
 - Configuration: `appsettings.json` + environment overrides, validated at startup (fail fast).
 - Schema changes only via EF migrations with descriptive names (`AddExpiryEstimateToPantryItem`).
@@ -88,6 +89,7 @@ A task is done only when build, format, lint and **all** tests are green.
 ### Frontend
 - Function components, TypeScript `strict`.
 - API calls live under `src/frontend/src/api/`; no direct `fetch` from components.
+- No `dangerouslySetInnerHTML`; LLM output is always rendered as plain text.
 - Every data-loading view has loading, empty, error and success states.
 - User-facing messages are in **Hungarian**, clear, and tell the user what to do next. No HTTP codes or technical text.
 - Basic a11y: labelled inputs, keyboard-operable controls, sufficient contrast.

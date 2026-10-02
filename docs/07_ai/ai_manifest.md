@@ -3,7 +3,7 @@
 A Kamra projekt AI-first módon készül. Ez a dokumentum leírja, **milyen AI eszközöket, mire és milyen korlátokkal** használok.
 Élő dokumentum: a fejlesztés során folyamatosan bővül. Részletek: [prompt_log.md](prompt_log.md), [verification_log.md](verification_log.md).
 
-Utolsó frissítés: 2026-10-01
+Utolsó frissítés: 2026-10-02
 
 ---
 
@@ -13,7 +13,7 @@ Utolsó frissítés: 2026-10-01
 |---|---|---|---|
 | Claude Code | CLI ágens | claude-sonnet-4-6, claude-opus-5-5 | Architect / Tutor, CLI Agent: tervezés, ADR, multi-file generálás, tesztfuttatás, CI |
 | Copilot CLI | CLI ágens | Claude Sonnet 4 | Claude Code alternatívája |
-| GitHub Copilot | IDE asszisztens | Claude Sonnet 4 | Pair Programmer: implementáció, boilerplate, unit tesztek |
+| GitHub Copilot | IDE asszisztens | Claude Sonnet 4, gpt-5.6-luna | Pair Programmer: implementáció, boilerplate, unit tesztek; Reviewer: dokumentum-review |
 | Antigravity | Agentic IDE | Gemini 3.1 Pro (High) | Reviewer: keresztvalidáció, dokumentációs audit, ellenséges tesztelés |
 | Gemini chat | Chat LLM | Gemini 3.1 Pro | Scope tervezés, debug, trianguláció |
 
@@ -24,7 +24,7 @@ Utolsó frissítés: 2026-10-01
 | Tervezés (scope, architektúra, ADR) | Claude Code | MVP, non-goals, ADR-alapanyag, trade-off elemzés, kikérdezéses (grilling) tervezés | [P-03–P-05](prompt_log.md) |
 | Kód | Copilot, Claude Code | Feature implementáció, boilerplate, scaffold | – |
 | Teszt | Copilot Chat, Claude Code | Acceptance criteria → tesztesetek, negatív tesztek | – |
-| Review | Antigravity | Edge case, security, architekturális konzisztencia, dokumentációs audit | [P-06, P-07, P-10](prompt_log.md) |
+| Review | Antigravity, GitHub Copilot | Edge case, security, architekturális konzisztencia, dokumentációs audit | [P-06, P-07, P-10](prompt_log.md) |
 | Debug | Claude Code, Gemini chat | Stacktrace-elemzés, root cause hipotézisek, regressziós teszt | – |
 | Dokumentáció | Claude Code | README, API leírás, docs skeleton | [P-01](prompt_log.md) |
 | CI/CD | Claude Code | GitHub Actions workflow | – |
