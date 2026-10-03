@@ -14,20 +14,7 @@ builder.Services.AddSerilog((services, logger) => logger
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
-builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
-{
-    context.ProblemDetails.Extensions["correlationId"] = context.HttpContext.TraceIdentifier;
-    // Framework-generated errors (e.g. unknown route) get a stable code too (ADR-0007).
-    if (!context.ProblemDetails.Extensions.ContainsKey("code"))
-    {
-        context.ProblemDetails.Extensions["code"] = context.ProblemDetails.Status switch
-        {
-            StatusCodes.Status404NotFound => "NOT_FOUND",
-            StatusCodes.Status405MethodNotAllowed => "METHOD_NOT_ALLOWED",
-            _ => AppExceptionHandler.InternalErrorCode,
-        };
-    }
-});
+builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = AppExceptionHandler.Customize);
 
 var app = builder.Build();
 
