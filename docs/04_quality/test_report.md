@@ -7,7 +7,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 - OS: Windows 11 (fejlesztői gép)
 - Runtime/SDK: .NET SDK 10.0.201 (`global.json`), xUnit v3 Microsoft Testing Platform módban
-- DB: PostgreSQL 18 (`postgres:18` image Testcontainersszel, ugyanaz, mint a Docker Compose-ban); a teszteknél futó Docker szükséges
+- DB: PostgreSQL 18 (`postgres:18` image Testcontainersszel; a Docker Compose ugyanezt az image-et kapja a walking skeleton S5 szakaszában, [ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)); a teszteknél futó Docker szükséges
 - Teszt adat: –
 
 ## Teszt suite-ek és futtatás
@@ -21,15 +21,15 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
 | Unit | ≥ 18 | 24 | 24 |
-| Integrációs | ≥ 6 | 18 | 18 |
+| Integrációs | ≥ 6 | 19 | 19 |
 | E2E | ≥ 6 | 0 | – |
-| Negatív esetek | ≥ 5 | 16 | 16 |
-| **Összesen** | **≥ 30** | **42** | **42** |
+| Negatív esetek | ≥ 5 | 17 | 17 |
+| **Összesen** | **≥ 30** | **43** | **43** |
 
 ## Legutolsó futás eredménye
 
 - Dátum: 2026-10-03
-- Eredmény: PASS (42/42), helyi futás, háromszor egymás után (flaky-ellenőrzés)
+- Eredmény: PASS (43/43), helyi futás, háromszor egymás után (flaky-ellenőrzés)
 - CI link: –
 
 ## Tesztelt modulok
@@ -38,11 +38,11 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 |---|---|---|---|
 | Rétegszabályok ([LayerRulesTests.cs](../../tests/KamraApp.Unit.Tests/LayerRulesTests.cs)) | Unit | A Domain és az Application assembly-hivatkozásai és projektfájl-hivatkozásai az [ADR-0004](../02_architecture/adr/0004-clean-architecture-retegek.md) szerint | ✅ 4/4 |
 | Hibakategória → HTTP-státusz ([ErrorCategoryMappingTests.cs](../../tests/KamraApp.Unit.Tests/ErrorCategoryMappingTests.cs)) | Unit | Mind a 8 `ErrorCategory` az [ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md) szerinti státuszra képeződik; a kód nélküli keretrendszer-státuszok alapértelmezett kódot kapnak | ✅ 12/12 |
-| Hibakezelés, health, correlationId ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)) | Integrációs | `/health` 200; váratlan hiba 500 belső részlet nélkül (negatív); `AppException` → saját státusz, kód, cím; ismeretlen útvonal 404 ProblemDetails magyar címmel (negatív); rossz HTTP-metódus 405 (negatív); keretrendszer-elutasítás (`BadHttpRequestException`) megtartja a 4xx státuszt, `REQUEST_REJECTED`, belső részlet nélkül (negatív); a `correlationId` egyezik a fejléccel a 409-es és az 500-as úton is, CSP- és `nosniff`-fejléc; a `/health` az adatbázist is ellenőrzi | ✅ 7/7 |
+| Hibakezelés, health, correlationId ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)) | Integrációs | `/health` 200; váratlan hiba 500 belső részlet nélkül (negatív); `AppException` → saját státusz, kód, cím; ismeretlen útvonal 404 ProblemDetails magyar címmel (negatív); rossz HTTP-metódus 405 (negatív); keretrendszer-elutasítás (`BadHttpRequestException`) megtartja a 4xx státuszt, `REQUEST_REJECTED`, belső részlet nélkül (negatív); a `correlationId` egyezik a fejléccel a 409-es és az 500-as úton is, CSP- és `nosniff`-fejléc; a `/health` 200 elérhető adatbázissal | ✅ 7/7 |
 | Háztartás létrehozása ([HouseholdTests.cs](../../tests/KamraApp.Unit.Tests/HouseholdTests.cs)) | Unit | GUID v7 azonosító, tulajdonos, létrehozási idő; üres tulajdonos elutasítva (negatív) | ✅ 2/2 |
 | Auth-használati esetek ([AuthUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/AuthUseCaseTests.cs)) | Unit | Hibás e-mail, 128-nál hosszabb jelszó, hiányzó törzs elutasítva (negatív); a háztartás tulajdonosa az új felhasználó; hibás belépés → `INVALID_CREDENTIALS`, zárolás → `LOGIN_LOCKED_OUT` (negatív) | ✅ 6/6 |
 | Authentikáció ([AuthTests.cs](../../tests/KamraApp.Integration.Tests/AuthTests.cs)) | Integrációs | Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listája valódi Postgresszel: cookie nélkül és hamisított cookie-val 401; antiforgery token nélkül elutasítva, fiók nem jön létre; rossz jelszó és ismeretlen e-mail azonos válasz; az 5. hibánál zárolás, a helyes jelszó is 429; rate limit 429; 14 karakteres jelszó 400 magyar `errors`-szal; foglalt e-mail (más kis-/nagybetűvel) 409 (mind negatív); a regisztráció háztartást hoz létre és bejelentkeztet; bejelentkezés és kijelentkezés | ✅ 10/10 |
-| Indítás ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs)) | Integrációs | Connection string nélkül az alkalmazás nem indul el (fail-fast, QA-7, negatív) | ✅ 1/1 |
+| Indítás ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs)) | Integrációs | Connection string nélkül az alkalmazás nem indul el (fail-fast, QA-7, negatív); elérhetetlen adatbázisnál a `/health` 503 (negatív) | ✅ 2/2 |
 
 ## Lefedetlen területek
 
@@ -50,7 +50,8 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 ## Ismert hiányosságok
 
-- A Domainben még csak a `Household`, az Applicationben csak az `AppException` van: az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
+- A Domainben még csak a `Household`, az Applicationben csak a hibamodell és az auth-használati esetek vannak: az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
+- Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listájából két pont még nincs lefedve: a „más háztartás erőforrása 404” (S-2) az első háztartáshoz kötött végponttal (US-1) készül, a „session megmarad az api konténer újraindítása után” pedig a deploy runbook újraindítási próbájával (walking skeleton S6).
 - Még nincs CI: a tesztek egyelőre csak helyben futnak; a CI a walking skeleton S5 szakaszában készül.
 - Még nincs lefedettségmérés: a lefedettség-gyűjtő eszköz a CI-val együtt kerül be.
 - Élő AI API-hívás nem futhat CI-ban (`[Trait("Category","LiveAI")]` jelöléssel különítendő el).

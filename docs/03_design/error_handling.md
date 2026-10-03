@@ -25,7 +25,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | Státusz | Kategória | Leírás |
 |---|---|---|
 | 400 | Validációs hiba | Érvénytelen bemenet |
-| 401 | Nem autentikált | Hiányzó vagy érvénytelen token |
+| 401 | Nem autentikált | Hiányzó, lejárt vagy érvénytelen bejelentkezési cookie, illetve hibás belépési adatok |
 | 403 | Tiltott | Nincs jogosultság |
 | 404 | Nem található | Az erőforrás nem létezik |
 | 409 | Konfliktus | Üzleti szabály megsértése |
