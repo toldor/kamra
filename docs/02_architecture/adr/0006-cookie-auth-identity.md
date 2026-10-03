@@ -54,7 +54,7 @@ Státusz: Accepted
   - A háztartás azonosítója a szerver által titkosított és aláírt cookie claimjéből jön, kérésenkénti lekérdezés nélkül; az MCP-toolok input sémájában nincs háztartás-azonosító, így prompt injection nem tud másik háztartást célozni.
   - A bejelentkezés és a regisztráció rate limitje a v1.2 „Rate limiting / abuse prevention” bónuszelemét is teljesíti.
 - **Negatív / kockázatok (maradó kockázat):**
-  - Egy ellopott cookie a lejáratig (legfeljebb 14 nap csúszó lejárattal) érvényes; a kijelentkezés csak az adott eszközön törli; „kijelentkezés minden eszközről” nincs.
+  - Egy ellopott cookie a lejáratig (legfeljebb 14 nap csúszó lejárattal), illetve a felhasználó következő kijelentkezéséig érvényes. *(Módosítva 2026-10-03, a walking skeleton S3 ellenséges tesztje után: a kijelentkezés új security stampet ad, és a cookie-t minden kérésnél ellenőrizzük, így a kijelentkezés minden eszközön érvényteleníti a sessiont; ára kérésenként egy felhasználó-lekérdezés – [V-11](../../07_ai/verification_log.md).)*
   - Aki ismeri egy felhasználó e-mail-címét, a fiókzárolással legfeljebb 5 percre, ismételt próbálkozással tartósabban is kizárhatja (DoS).
   - A regisztráció válaszából kideríthető, hogy egy e-mail-cím regisztrált-e; e-mail-megerősítés nélkül ez nem rejthető el, a rate limit csak lassítja.
   - A jelszó nincs feketelistával összevetve, amit a NIST SP 800-63B-4 előír.
@@ -62,7 +62,7 @@ Státusz: Accepted
 - **Figyelni kell a megvalósítás során:**
   - Új függőség: `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (MIT); a `MapIdentityApi` nem használható.
   - Jelszó: legalább 15, legfeljebb 128 karakter, összetételi szabályok nélkül ([NIST SP 800-63B-4](https://pages.nist.gov/800-63-4/sp800-63b.html)); a jelszómezőbe a beillesztés engedélyezett (jelszókezelők); `RequireUniqueEmail = true`.
-  - Lockout bekapcsolva: 5 sikertelen próbálkozás után 5 perc ([LockoutOptions](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.lockoutoptions?view=aspnetcore-10.0)); a bejelentkezésnél a lockoutot külön engedélyezni kell.
+  - Lockout bekapcsolva: 5 sikertelen próbálkozás után 5 perc; a jelszó-ellenőrzés folyamaton belül sorba rendezett, mert az Identity hibaszámlálója párhuzamos kérésnél növeléseket veszíthet ([V-10](../../07_ai/verification_log.md)) ([LockoutOptions](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.identity.lockoutoptions?view=aspnetcore-10.0)); a bejelentkezésnél a lockoutot külön engedélyezni kell.
   - A beépített rate limiter IP-címenként a bejelentkezés és a regisztráció végpontján, 429 válasszal.
   - Rossz e-mailre és rossz jelszóra egységes hibaüzenet.
   - Session: 14 nap, csúszó lejárat ([cookie authentication](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0)); a kijelentkezés a cookie-t törli.

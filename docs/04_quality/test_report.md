@@ -21,15 +21,15 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
 | Unit | ≥ 18 | 24 | 24 |
-| Integrációs | ≥ 6 | 19 | 19 |
+| Integrációs | ≥ 6 | 27 | 27 |
 | E2E | ≥ 6 | 0 | – |
-| Negatív esetek | ≥ 5 | 17 | 17 |
-| **Összesen** | **≥ 30** | **43** | **43** |
+| Negatív esetek | ≥ 5 | 25 | 25 |
+| **Összesen** | **≥ 30** | **51** | **51** |
 
 ## Legutolsó futás eredménye
 
 - Dátum: 2026-10-03
-- Eredmény: PASS (43/43), helyi futás, háromszor egymás után (flaky-ellenőrzés)
+- Eredmény: PASS (51/51), helyi futás, háromszor egymás után (flaky-ellenőrzés)
 - CI link: –
 
 ## Tesztelt modulok
@@ -42,6 +42,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Háztartás létrehozása ([HouseholdTests.cs](../../tests/KamraApp.Unit.Tests/HouseholdTests.cs)) | Unit | GUID v7 azonosító, tulajdonos, létrehozási idő; üres tulajdonos elutasítva (negatív) | ✅ 2/2 |
 | Auth-használati esetek ([AuthUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/AuthUseCaseTests.cs)) | Unit | Hibás e-mail, 128-nál hosszabb jelszó, hiányzó törzs elutasítva (negatív); a háztartás tulajdonosa az új felhasználó; hibás belépés → `INVALID_CREDENTIALS`, zárolás → `LOGIN_LOCKED_OUT` (negatív) | ✅ 6/6 |
 | Authentikáció ([AuthTests.cs](../../tests/KamraApp.Integration.Tests/AuthTests.cs)) | Integrációs | Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listája valódi Postgresszel: cookie nélkül és hamisított cookie-val 401; antiforgery token nélkül elutasítva, fiók nem jön létre; rossz jelszó és ismeretlen e-mail azonos válasz; az 5. hibánál zárolás, a helyes jelszó is 429; rate limit 429; 14 karakteres jelszó 400 magyar `errors`-szal; foglalt e-mail (más kis-/nagybetűvel) 409 (mind negatív); a regisztráció háztartást hoz létre és bejelentkeztet; bejelentkezés és kijelentkezés | ✅ 10/10 |
+| Ellenséges auth-tesztek ([AdversarialAuthTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialAuthTests.cs)) | Integrációs | Az Antigravity (Gemini 3.1 Pro) által írt támadások: régi cookie kijelentkezés után; más session és bejelentkezés előtti antiforgery tokenje; határértékes jelszavak és e-mailek; felderítés a teljes választörzsből; párhuzamos lockout-megkerülés és kis-/nagybetűs e-mail; párhuzamos regisztráció; csonka JSON (mind negatív). Két valódi hibát találtak ([V-10](../07_ai/verification_log.md), [V-11](../07_ai/verification_log.md)). | ✅ 8/8 |
 | Indítás ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs)) | Integrációs | Connection string nélkül az alkalmazás nem indul el (fail-fast, QA-7, negatív); elérhetetlen adatbázisnál a `/health` 503 (negatív) | ✅ 2/2 |
 
 ## Lefedetlen területek

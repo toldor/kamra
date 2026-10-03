@@ -19,7 +19,7 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | GET | `/auth/antiforgery` | nyilvános | – | 200 `{ "requestToken": "..." }` | – |
 | POST | `/auth/register` | nyilvános, rate limit | `{ "email", "password" }` (e-mail ≤ 256, jelszó 15–128 karakter) | 204, a felhasználó bejelentkezett | `VALIDATION_FAILED`, `EMAIL_ALREADY_REGISTERED`, `ANTIFORGERY_TOKEN_INVALID`, `RATE_LIMITED` |
 | POST | `/auth/login` | nyilvános, rate limit | `{ "email", "password" }` | 204, a felhasználó bejelentkezett | `VALIDATION_FAILED`, `INVALID_CREDENTIALS`, `LOGIN_LOCKED_OUT`, `ANTIFORGERY_TOKEN_INVALID`, `RATE_LIMITED` |
-| POST | `/auth/logout` | bejelentkezett | – | 204, a cookie törölve | `UNAUTHENTICATED`, `ANTIFORGERY_TOKEN_INVALID` |
+| POST | `/auth/logout` | bejelentkezett | – | 204; a cookie törölve, és a felhasználó minden korábbi sessionje érvénytelen (új security stamp) | `UNAUTHENTICATED`, `ANTIFORGERY_TOKEN_INVALID` |
 | GET | `/auth/me` | bejelentkezett | – | 200 `{ "email", "householdId" }` | `UNAUTHENTICATED` |
 
 ## Végpontok
