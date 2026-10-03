@@ -15,7 +15,7 @@ Státusz: Proposed
 
 ## Alternatives
 
-1) **Beépített naplózás (`AddJsonConsole` + `AddHttpLogging`)** – előny: nincs új függőség; a `CombineLogs` kérésenként egy bejegyzést ad. Hátrány: a scope-ok (így a `correlationId`) a JSON-ban egy `Scopes` tömbön belül, a kérés mezői egy beágyazott `State` objektumban jelennek meg, így a napló nehezebben olvasható és kereshető. Ez volt az eredeti AI-javaslat (Claude Code); egy második modell reviewja után a lapos szerkezet miatt a fejlesztő a Serilogot választotta ([P-13](../../07_ai/prompt_log.md)).
+1) **Beépített naplózás (`AddJsonConsole` + `AddHttpLogging`)** – előny: nincs új függőség; a `CombineLogs` kérésenként egy bejegyzést ad. Hátrány: a scope-ok (így a `correlationId`) a JSON-ban egy `Scopes` tömbön belül, a kérés mezői egy beágyazott `State` objektumban jelennek meg, így a napló nehezebben olvasható és kereshető. Ez volt az eredeti AI-javaslat (Claude Code); az Antigravity (Gemini 3.1 Pro) reviewja után a lapos szerkezet miatt a fejlesztő a Serilogot választotta ([P-13](../../07_ai/prompt_log.md)).
 2) **OpenTelemetry (naplók, trace-ek, metrikák) exporterrel** – előny: iparági szabvány, trace-ek és metrikák is; hátrány: collector vagy backend (pl. Jaeger, Grafana) kell hozzá, ami a 15 perces indítást és az időkeretet terheli; a v1.2-ben „erősen ajánlott”, nem kötelező.
 3) **A kliens által küldött `X-Correlation-Id` átvétele** – előny: a frontend és a backend naplója összeköthető; hátrány: a kliens tetszőleges értéket írhatna a naplóba (log-injekció, hamis összerendelés), és jelenleg nincs kliensoldali naplógyűjtés, ami kihasználná.
 
@@ -30,7 +30,7 @@ Státusz: Proposed
   - A váratlan kivétel üzenete és stack trace-e a naplóba kerül; ha egy külső könyvtár kivételüzenete személyes adatot tartalmazna, az a naplóba jutna. A saját kivételek (`AppException`) üzenete a biztonságos magyar `title`.
   - A `correlationId` folyamaton belüli azonosító; az Api és egy külön MCP-host közötti továbbítása az MCP-integráció ADR-jének része.
 - **Figyelni kell a megvalósítás során:**
-  - A naplószint konfigurációból jön (`Serilog:MinimumLevel`), alapértelmezetten `Information`, fejlesztésben `Debug`.
+  - A naplószint konfigurációból jön (`Serilog:MinimumLevel`), alapértelmezetten `Information`; fejlesztésben a `http` launch profile állítja `Debug`-ra (`Serilog__MinimumLevel__Default`), mert az `appsettings.Development.json` nem verziózott.
   - Naplóüzenet csak strukturált sablonnal készül (`LoggerMessage` forrásgenerátor, a CA1848 analyzer kikényszeríti); kérés- és választörzs, cookie, jelszó és prompt nem naplózható.
   - A `correlationId`-t és a biztonsági fejléceket a válasz elküldésekor kell beállítani (`OnStarting`), mert a kivételkezelő a hibaválasz írása előtt törli a válaszfejléceket.
 
@@ -40,5 +40,5 @@ Státusz: Proposed
   - Integrációs teszt: a hibaválasz `correlationId`-je egyezik az `X-Correlation-Id` fejléccel ([ErrorHandlingTests.cs](../../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)); ez a teszt találta meg, hogy a kivételkezelő törli a fejlécet.
   - Integrációs teszt: váratlan hibánál a válasz nem tartalmazza a kivétel üzenetét és stack trace-ét.
   - Naplóminta az [observability.md](../../05_security_ops/observability.md)-ben (a walking skeleton S6 szakaszában).
-  - Tervezési validáció: [P-13](../../07_ai/prompt_log.md); a második modell reviewja a naplózási kérdésről, és az S2 szakasz Gemini-reviewja.
+  - Tervezési validáció: [P-13](../../07_ai/prompt_log.md); az Antigravity (Gemini 3.1 Pro) reviewja a naplózási kérdésről, és az S2 szakasz Gemini-reviewja.
 - **Evidence link:** a fenti tesztek és a naplóminta; a CI-futás linkje az S5 szakasz után kerül ide.

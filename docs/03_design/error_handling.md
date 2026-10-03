@@ -41,6 +41,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `INTERNAL_ERROR` | 500 | Váratlan hiba; a válasz nem tartalmaz belső részletet, a részletek a naplóba kerülnek | Megvalósítva |
 | `NOT_FOUND` | 404 | Ismeretlen útvonal (keretrendszer által generált 404) | Megvalósítva |
 | `METHOD_NOT_ALLOWED` | 405 | A végpont nem támogatja a HTTP-metódust | Megvalósítva |
+| `REQUEST_REJECTED` | 4xx | Egyéb, a keretrendszer által elutasított kérés (pl. 415), saját kód nélkül | Megvalósítva |
 | `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik | Tervezett |
 | `INVALID_QUANTITY` | 400 | Érvénytelen mennyiség | Tervezett |
 | `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el (időtúllépés vagy kiesés újrapróbálás után) | Tervezett |
@@ -50,7 +51,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 
 ## Felhasználói üzenetek
 
-A `title` mindig biztonságos, általános magyar szöveg; mezőnkénti validációs hibánál az `errors` magyar üzeneteket tartalmaz. A frontend üzenetkatalógusa csak azokat a kódokat írja felül, amelyekhez a [ux_flows.md](../01_product/ux_flows.md) külön szöveget vagy teendőt rendel; minden más kódnál a `title` jelenik meg. Váratlan hibánál (500) a válasz csak a `correlationId`-t tartalmazza.
+A `title` mindig biztonságos, általános magyar szöveg; mezőnkénti validációs hibánál az `errors` magyar üzeneteket tartalmaz. A frontend üzenetkatalógusa csak azokat a kódokat írja felül, amelyekhez a [ux_flows.md](../01_product/ux_flows.md) külön szöveget vagy teendőt rendel; minden más kódnál a `title` jelenik meg. Váratlan hibánál (500) a válasz csak általános adatokat tartalmaz: `status`, az általános magyar `title` („Váratlan hiba történt. Próbáld újra később.”), `code: INTERNAL_ERROR` és a `correlationId`; a kivétel üzenete, típusa és stack trace-e csak a naplóba kerül. A keretrendszer által generált hibák (pl. ismeretlen útvonal) is kapnak kódot és magyar `title`-t.
 
 ## Ismert hiányosságok
 
