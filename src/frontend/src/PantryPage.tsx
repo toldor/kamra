@@ -3,11 +3,7 @@ import { api, ApiError, errorMessage, type Me } from './api/client'
 
 // Walking skeleton: the pantry is always empty until US-1 adds pantry items. The ux_flows empty-state
 // text continues with an invitation to the one-sentence entry, which arrives with US-2.
-export function PantryPage({ me, onSignedOut }: {
-  me: Me
-  // notice: shown on the sign-in screen, e.g. when the session had already expired.
-  onSignedOut: (notice?: string) => void
-}) {
+export function PantryPage({ me, onSignedOut }: { me: Me; onSignedOut: () => void }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -18,9 +14,9 @@ export function PantryPage({ me, onSignedOut }: {
       await api.logout()
       onSignedOut()
     } catch (caught) {
-      // ux_flows "Lejárt munkamenet": back to sign-in with the explanation, not an error on this page.
+      // 401: the session had already ended - the user wanted to be signed out, and is.
       if (caught instanceof ApiError && caught.status === 401) {
-        onSignedOut(caught.message)
+        onSignedOut()
         return
       }
       setError(errorMessage(caught))

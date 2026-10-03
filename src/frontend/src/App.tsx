@@ -7,7 +7,7 @@ import { PantryPage } from './PantryPage'
 type State =
   | { screen: 'loading' }
   | { screen: 'error'; message: string }
-  | { screen: 'login' | 'register'; notice?: string }
+  | { screen: 'login' | 'register' }
   | { screen: 'pantry'; me: Me }
 
 async function loadSession(): Promise<State> {
@@ -52,13 +52,12 @@ export default function App() {
         </main>
       )
     case 'pantry':
-      return <PantryPage me={state.me} onSignedOut={(notice) => setState({ screen: 'login', notice })} />
+      return <PantryPage me={state.me} onSignedOut={() => setState({ screen: 'login' })} />
     default:
       return (
         <AuthForm
           key={state.screen}
           mode={state.screen}
-          notice={state.notice}
           onSignedIn={(me) => setState({ screen: 'pantry', me })}
           onSwitchMode={() => setState({ screen: state.screen === 'login' ? 'register' : 'login' })}
         />

@@ -106,7 +106,7 @@ describe('sign-in screens', () => {
     await waitFor(() => expect(document.activeElement).toBe(passwordInput))
   })
 
-  it('returns to sign-in with the expired-session message when the session is gone', async () => {
+  it('treats logging out with an already expired session as a successful logout, without a message', async () => {
     fakeBackend({
       'GET /api/v1/auth/me': [{ status: 200, body: { email: 'tomi@example.com', householdId: 'h-1' } }],
       'GET /api/v1/auth/antiforgery': [token],
@@ -117,7 +117,7 @@ describe('sign-in screens', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Kijelentkezés' }))
 
     expect(await screen.findByRole('heading', { name: 'Bejelentkezés' })).toBeTruthy()
-    expect(screen.getByRole('status').textContent).toBe('Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.')
+    expect(screen.getByRole('alert').textContent).toBe('')
   })
 
   it('shows the empty pantry after a successful registration', async () => {
