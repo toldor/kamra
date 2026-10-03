@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\KamraApp.Application\KamraApp.Application.csproj" />
     <ProjectReference Include="..\KamraApp.Infrastructure\KamraApp.Infrastructure.csproj" />
   </ItemGroup>

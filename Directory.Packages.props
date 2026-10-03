@@ -2,9 +2,13 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+  </ItemGroup>
   <ItemGroup Label="Tests">
     <!-- 8.x: Xceed commercial license; stay on the last Apache-2.0 major (V-07). -->
     <PackageVersion Include="FluentAssertions" Version="[7.2.2,8.0)" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
   </ItemGroup>
 </Project>
