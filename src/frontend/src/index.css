@@ -74,6 +74,13 @@ button.link {
   margin: 0;
 }
 
+.notice {
+  background: #fff4d6;
+  border-left: 4px solid #8a5a00;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 0.5rem;
+}
+
 .hint {
   color: #4a4a4a;
   margin: 0;
@@ -84,6 +91,12 @@ button.link {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+}
+
+/* Long e-mail addresses must wrap instead of pushing the page wider than 360 px. */
+.topbar span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .empty {

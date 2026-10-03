@@ -22,6 +22,7 @@ function fakeBackend(routes: Record<string, Reply[]>) {
 
 const notSignedIn: Reply = { status: 401, body: { code: 'UNAUTHENTICATED', title: 'Jelentkezz be a folytatáshoz.' } }
 const token: Reply = { status: 200, body: { requestToken: 'token-1' } }
+const lockedOut = 'Túl sok sikertelen próbálkozás. Várj 5 percet, és próbáld újra.'
 
 beforeEach(() => resetClientForTests())
 afterEach(() => {
@@ -33,15 +34,30 @@ describe('api client', () => {
   it('sends the antiforgery token header and turns ProblemDetails into an ApiError', async () => {
     const calls = fakeBackend({
       'GET /api/v1/auth/antiforgery': [token],
-      'POST /api/v1/auth/login': [{ status: 429, body: { code: 'LOGIN_LOCKED_OUT', title: 'Túl sok sikertelen próbálkozás.' } }],
+      'POST /api/v1/auth/login': [{ status: 429, body: { code: 'LOGIN_LOCKED_OUT', title: lockedOut } }],
     })
 
     const error = await api.login({ email: 'tomi@example.com', password: 'x' }).catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
-    expect(error).toMatchObject({ status: 429, code: 'LOGIN_LOCKED_OUT', message: 'Túl sok sikertelen próbálkozás.' })
+    expect(error).toMatchObject({ status: 429, code: 'LOGIN_LOCKED_OUT', message: lockedOut })
     const login = calls.find((c) => c.init.method === 'POST')!
     expect((login.init.headers as Record<string, string>)['X-XSRF-TOKEN']).toBe('token-1')
+  })
+
+  it('retries once with a fresh antiforgery token when the cached one is stale', async () => {
+    const calls = fakeBackend({
+      'GET /api/v1/auth/antiforgery': [token, { status: 200, body: { requestToken: 'token-2' } }],
+      'POST /api/v1/auth/login': [
+        { status: 400, body: { code: 'ANTIFORGERY_TOKEN_INVALID', title: 'A kérés biztonsági ellenőrzése nem sikerült.' } },
+        { status: 204 },
+      ],
+    })
+
+    await api.login({ email: 'tomi@example.com', password: 'correct horse battery staple' })
+
+    const tokens = calls.filter((c) => c.init.method === 'POST').map((c) => (c.init.headers as Record<string, string>)['X-XSRF-TOKEN'])
+    expect(tokens).toEqual(['token-1', 'token-2'])
   })
 
   it('reports a network failure with a Hungarian message instead of a technical error', async () => {
@@ -85,7 +101,23 @@ describe('sign-in screens', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fiók létrehozása' }))
 
     const fieldError = await screen.findByText('A jelszó legalább 15 és legfeljebb 128 karakter legyen.')
-    expect(screen.getByLabelText('Jelszó').getAttribute('aria-describedby')).toBe(fieldError.id)
+    const passwordInput = screen.getByLabelText('Jelszó')
+    expect(passwordInput.getAttribute('aria-describedby')).toBe(fieldError.id)
+    await waitFor(() => expect(document.activeElement).toBe(passwordInput))
+  })
+
+  it('returns to sign-in with the expired-session message when the session is gone', async () => {
+    fakeBackend({
+      'GET /api/v1/auth/me': [{ status: 200, body: { email: 'tomi@example.com', householdId: 'h-1' } }],
+      'GET /api/v1/auth/antiforgery': [token],
+      'POST /api/v1/auth/logout': [notSignedIn],
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Kijelentkezés' }))
+
+    expect(await screen.findByRole('heading', { name: 'Bejelentkezés' })).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toBe('Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.')
   })
 
   it('shows the empty pantry after a successful registration', async () => {

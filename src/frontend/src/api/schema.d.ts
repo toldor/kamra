@@ -28,8 +28,8 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description OK */
-                200: {
+                /** @description No Content */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -67,8 +67,8 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description OK */
-                200: {
+                /** @description No Content */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -100,8 +100,8 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description OK */
-                200: {
+                /** @description No Content */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -137,9 +137,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["MeResponse"];
                         "application/json": components["schemas"]["MeResponse"];
-                        "text/json": components["schemas"]["MeResponse"];
                     };
                 };
             };
@@ -174,9 +172,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["AntiforgeryTokenResponse"];
                         "application/json": components["schemas"]["AntiforgeryTokenResponse"];
-                        "text/json": components["schemas"]["AntiforgeryTokenResponse"];
                     };
                 };
             };

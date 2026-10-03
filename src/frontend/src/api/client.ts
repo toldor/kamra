@@ -1,12 +1,13 @@
 import type { components } from './schema'
-import { messageFor, NETWORK_MESSAGE } from './messages'
+import { FALLBACK_MESSAGE, messageFor, NETWORK_MESSAGE } from './messages'
 
 // The only place that talks to the backend (AGENTS.md: no fetch from components).
 // The base URL lives here and nowhere else (ADR-0007).
 const BASE_URL = '/api/v1'
 
 export type Me = components['schemas']['MeResponse']
-export type Credentials = components['schemas']['LoginRequest']
+export type LoginRequest = components['schemas']['LoginRequest']
+export type RegisterRequest = components['schemas']['RegisterRequest']
 
 export class ApiError extends Error {
   readonly status: number
@@ -21,8 +22,14 @@ export class ApiError extends Error {
   }
 }
 
+// Every component shows errors through this: an ApiError already carries the user-facing text.
+export function errorMessage(caught: unknown): string {
+  return caught instanceof ApiError ? caught.message : FALLBACK_MESSAGE
+}
+
 // ADR-0006: every state-changing request carries the antiforgery token. The token is bound to the
-// signed-in user, so it is fetched again after login, registration and logout.
+// signed-in user, so it is dropped after login, registration and logout and fetched again lazily
+// before the next POST - a failed refresh can then never turn a successful login into an error.
 let antiforgeryToken: string | null = null
 
 async function send(method: 'GET' | 'POST', path: string, body?: unknown): Promise<Response> {
@@ -62,7 +69,14 @@ async function refreshAntiforgeryToken(): Promise<void> {
 
 async function post(path: string, body: unknown = {}): Promise<void> {
   if (!antiforgeryToken) await refreshAntiforgeryToken()
-  await send('POST', path, body)
+  try {
+    await send('POST', path, body)
+  } catch (error) {
+    // A stale token (e.g. the user signed in or out in another tab): retry once with a fresh one.
+    if (!(error instanceof ApiError && error.code === 'ANTIFORGERY_TOKEN_INVALID')) throw error
+    await refreshAntiforgeryToken()
+    await send('POST', path, body)
+  }
 }
 
 export const api = {
@@ -76,19 +90,19 @@ export const api = {
     }
   },
 
-  async login(credentials: Credentials): Promise<void> {
-    await post('/auth/login', credentials)
-    await refreshAntiforgeryToken()
+  async login(request: LoginRequest): Promise<void> {
+    await post('/auth/login', request)
+    antiforgeryToken = null
   },
 
-  async register(credentials: Credentials): Promise<void> {
-    await post('/auth/register', credentials)
-    await refreshAntiforgeryToken()
+  async register(request: RegisterRequest): Promise<void> {
+    await post('/auth/register', request)
+    antiforgeryToken = null
   },
 
   async logout(): Promise<void> {
     await post('/auth/logout')
-    await refreshAntiforgeryToken()
+    antiforgeryToken = null
   },
 }
 

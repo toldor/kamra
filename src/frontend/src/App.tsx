@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, ApiError, type Me } from './api/client'
-import { FALLBACK_MESSAGE } from './api/messages'
+import { api, errorMessage, type Me } from './api/client'
 import { AuthForm } from './AuthForm'
 import { PantryPage } from './PantryPage'
 
@@ -8,7 +7,7 @@ import { PantryPage } from './PantryPage'
 type State =
   | { screen: 'loading' }
   | { screen: 'error'; message: string }
-  | { screen: 'login' | 'register' }
+  | { screen: 'login' | 'register'; notice?: string }
   | { screen: 'pantry'; me: Me }
 
 async function loadSession(): Promise<State> {
@@ -16,7 +15,7 @@ async function loadSession(): Promise<State> {
     const me = await api.me()
     return me ? { screen: 'pantry', me } : { screen: 'login' }
   } catch (caught) {
-    return { screen: 'error', message: caught instanceof ApiError ? caught.message : FALLBACK_MESSAGE }
+    return { screen: 'error', message: errorMessage(caught) }
   }
 }
 
@@ -39,6 +38,7 @@ export default function App() {
     case 'error':
       return (
         <main>
+          <h1>Kamra</h1>
           <p role="alert">{state.message}</p>
           <button
             type="button"
@@ -52,12 +52,13 @@ export default function App() {
         </main>
       )
     case 'pantry':
-      return <PantryPage me={state.me} onSignedOut={() => setState({ screen: 'login' })} />
+      return <PantryPage me={state.me} onSignedOut={(notice) => setState({ screen: 'login', notice })} />
     default:
       return (
         <AuthForm
           key={state.screen}
           mode={state.screen}
+          notice={state.notice}
           onSignedIn={(me) => setState({ screen: 'pantry', me })}
           onSwitchMode={() => setState({ screen: state.screen === 'login' ? 'register' : 'login' })}
         />
