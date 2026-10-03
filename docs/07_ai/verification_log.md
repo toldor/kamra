@@ -71,3 +71,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Forrásellenőrzés: az [Inedo cikke a licencváltásról](https://blog.inedo.com/proget/fluent-assertions-license-changes), a [FluentAssertions 8.3.0 NuGet licencoldala](https://packages.nuget.org/packages/FluentAssertions/8.3.0/License), valamint a 7.2.0 és a 7.2.2 csomag nuspec fájljának `license` mezője a NuGet API-ból (Claude Code).
 - **Eredmény:** **PASS.** A 8.x az Xceed Community License Agreement for Non-Commercial Use alá tartozik, kereskedelmi használatra fizetős licenc kell; a 7.2.0 és a 7.2.2 nuspec-je `Apache-2.0` licenckifejezést tartalmaz.
 - **Következtetés:** A [Directory.Packages.props](../../Directory.Packages.props) a FluentAssertionst `[7.2.2,8.0)` tartománnyal rögzíti, így véletlen frissítés sem emelheti 8.x-re. Az AGENTS.md stacktáblája változatlan.
+
+### V-08 – A `global.json` `test.runner` beállítása „hallucinált” (Gemini szakasz-review)
+- **Dátum:** 2026-10-03
+- **Állítás:** A walking skeleton S1 szakaszának reviewjában az Antigravity (Gemini 3.1 Pro) a `global.json` `"test": { "runner": "Microsoft.Testing.Platform" }` csomópontját vélhetően hallucináltnak nevezte, és helyette a `<TestingPlatformDotnetTestSupport>` MSBuild-tulajdonságot javasolta (a .NET 8/9 tudására hivatkozva, elavultsági figyelmeztetéssel).
+- **Kockázat:** Közepes. Ha elfogadjuk, a `dotnet test` a .NET 10 SDK-n nem futtatja az xUnit v3 teszteket.
+- **Ellenőrzési módszer:** Forrásellenőrzés ([Microsoft Learn – unit testing with dotnet test](https://learn.microsoft.com/nb-no/dotnet/core/testing/unit-testing-with-dotnet-test), [.NET blog](https://devblogs.microsoft.com/dotnet/?p=57713)) és kísérlet (Claude Code).
+- **Eredmény:** **FAIL.** A .NET 10 SDK-ban a `TestingPlatformDotnetTestSupport` elavult, a `global.json` `test.runner` a dokumentált mód. A beállítás nélkül a `dotnet test` „Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later” hibával leáll, vele a 4 teszt zöld.
+- **Következtetés:** A [global.json](../../global.json) változatlan. Tanulság: a reviewer keretrendszer-verziós állítását kísérlettel ellenőrizzük (vö. V-04, V-06).
