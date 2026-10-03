@@ -4,7 +4,8 @@ using System.Text.Json;
 
 namespace KamraApp.Integration.Tests;
 
-public class ErrorHandlingTests(KamraApiFactory factory) : IClassFixture<KamraApiFactory>
+[Collection("api")]
+public class ErrorHandlingTests(KamraApiFactory factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 
