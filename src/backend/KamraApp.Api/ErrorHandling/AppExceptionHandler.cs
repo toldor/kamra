@@ -33,7 +33,7 @@ public sealed partial class AppExceptionHandler(IProblemDetailsService problemDe
             LogRejected(logger, code);
         }
 
-        var problem = new ProblemDetails { Status = status, Title = title, Extensions = { [CodeKey] = code } };
+        var problem = NewProblem(status, code, title);
         if (exception is ValidationException validation)
         {
             problem.Extensions["errors"] = validation.Errors;
@@ -48,16 +48,20 @@ public sealed partial class AppExceptionHandler(IProblemDetailsService problemDe
         });
     }
 
-    // For errors produced outside the exception path (authentication challenge, rate limiter).
+    // For errors produced outside the exception path (authentication challenge, rate limiter,
+    // antiforgery failure).
     public static async Task WriteProblemAsync(HttpContext httpContext, int status, string code, string title)
     {
         httpContext.Response.StatusCode = status;
         await httpContext.RequestServices.GetRequiredService<IProblemDetailsService>().WriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
-            ProblemDetails = new ProblemDetails { Status = status, Title = title, Extensions = { [CodeKey] = code } },
+            ProblemDetails = NewProblem(status, code, title),
         });
     }
+
+    private static ProblemDetails NewProblem(int status, string code, string title) =>
+        new() { Status = status, Title = title, Extensions = { [CodeKey] = code } };
 
     // Runs for every ProblemDetails: adds the correlation id, and gives framework-generated errors
     // (no code yet) a stable code and a Hungarian title instead of the English default.

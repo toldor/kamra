@@ -6,6 +6,9 @@ public sealed class ValidationException(IReadOnlyDictionary<string, string[]> er
     : AppException(ErrorCategory.Validation, "VALIDATION_FAILED", "Néhány mező hibás. Javítsd a jelölt mezőket, és próbáld újra.")
 {
     public IReadOnlyDictionary<string, string[]> Errors { get; } = errors;
+
+    public static ValidationException ForField(string field, string message) =>
+        new(new Dictionary<string, string[]> { [field] = [message] });
 }
 
 public sealed class UnauthorizedException(string code, string message)

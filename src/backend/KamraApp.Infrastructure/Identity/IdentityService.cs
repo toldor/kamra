@@ -17,9 +17,9 @@ public sealed class IdentityService(KamraDbContext db, UserManager<AppUser> user
     private static ConflictException EmailTaken() =>
         new("EMAIL_ALREADY_REGISTERED", "Ezzel az e-mail-címmel már van fiók. Jelentkezz be, vagy adj meg másik címet.");
 
-    public async Task RegisterAndSignInAsync(Guid userId, string email, string password, Household household, CancellationToken cancellationToken)
+    public async Task RegisterAndSignInAsync(string email, string password, Household household, CancellationToken cancellationToken)
     {
-        var user = new AppUser { Id = userId, UserName = email, Email = email };
+        var user = new AppUser { Id = household.OwnerUserId, UserName = email, Email = email };
 
         // UserManager saves through the same scoped DbContext, so the user, the claim and the
         // household are committed together or not at all.
@@ -74,18 +74,12 @@ public sealed class IdentityService(KamraDbContext db, UserManager<AppUser> user
         if (codes.Any(code => code.StartsWith("Password", StringComparison.Ordinal)))
         {
             // Backstop: the use case already validated the length with a Hungarian message.
-            throw new ValidationException(new Dictionary<string, string[]>
-            {
-                ["password"] = ["A jelszó nem felel meg a szabályoknak: legalább 15 és legfeljebb 128 karakter legyen."],
-            });
+            throw ValidationException.ForField("password", "A jelszó nem felel meg a szabályoknak: legalább 15 és legfeljebb 128 karakter legyen.");
         }
 
         if (codes.Any(code => code.Contains("Email", StringComparison.Ordinal) || code.Contains("UserName", StringComparison.Ordinal)))
         {
-            throw new ValidationException(new Dictionary<string, string[]>
-            {
-                ["email"] = ["Adj meg egy érvényes e-mail-címet, például: nev@pelda.hu."],
-            });
+            throw ValidationException.ForField("email", "Adj meg egy érvényes e-mail-címet, például: nev@pelda.hu.");
         }
 
         throw new InvalidOperationException($"Identity operation failed: {string.Join(", ", codes)}");

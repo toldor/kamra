@@ -10,10 +10,7 @@ public static class RequestValidator
     {
         if (request is null)
         {
-            throw new ValidationException(new Dictionary<string, string[]>
-            {
-                [""] = ["A kérés hiányos vagy hibás formátumú."],
-            });
+            throw ValidationException.ForField("", "A kérés hiányos vagy hibás formátumú.");
         }
 
         var results = new List<ValidationResult>();

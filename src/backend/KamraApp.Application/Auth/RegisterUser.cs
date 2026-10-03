@@ -9,9 +9,8 @@ public sealed class RegisterUser(IIdentityService identity, TimeProvider time)
     public async Task ExecuteAsync(RegisterRequest? request, CancellationToken cancellationToken)
     {
         var valid = RequestValidator.Validate(request);
-        var userId = Guid.CreateVersion7();
-        var household = Household.Create(userId, time.GetUtcNow());
+        var household = Household.Create(ownerUserId: Guid.CreateVersion7(), time.GetUtcNow());
 
-        await identity.RegisterAndSignInAsync(userId, valid.Email!.Trim(), valid.Password!, household, cancellationToken);
+        await identity.RegisterAndSignInAsync(valid.Email!, valid.Password!, household, cancellationToken);
     }
 }

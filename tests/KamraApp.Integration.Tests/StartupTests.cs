@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Options;
@@ -17,5 +18,18 @@ public class StartupTests
 
         start.Should().Throw<OptionsValidationException>()
             .Which.Message.Should().Contain("ConnectionStrings:Default");
+    }
+
+    // The health check really queries the database: with no reachable database it reports 503.
+    [Fact]
+    public async Task Health_returns_503_when_the_database_is_unreachable()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder => builder.UseSetting(
+                "ConnectionStrings:Default", "Host=127.0.0.1;Port=1;Database=none;Username=none;Timeout=2"));
+
+        var response = await factory.CreateClient().GetAsync("/health", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
     }
 }

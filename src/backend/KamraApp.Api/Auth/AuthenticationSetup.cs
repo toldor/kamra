@@ -43,7 +43,11 @@ public static class AuthenticationSetup
         // [AllowAnonymous]. A global filter (not a fallback policy) keeps unknown routes at 404.
         // ADR-0006 / ADR-0007: one global antiforgery filter; the SPA sends the token in a header.
         services.AddAuthorization();
-        services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
+        services.AddAntiforgery(options =>
+        {
+            options.HeaderName = "X-XSRF-TOKEN";
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        });
         services.Configure<MvcOptions>(options =>
         {
             options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
@@ -60,7 +64,7 @@ public static class AuthenticationSetup
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = window }));
             options.OnRejected = (context, _) => new ValueTask(AppExceptionHandler.WriteProblemAsync(
-                context.HttpContext, StatusCodes.Status429TooManyRequests, "RATE_LIMITED", "Túl sok kérés érkezett. Várj egy percet, és próbáld újra."));
+                context.HttpContext, StatusCodes.Status429TooManyRequests, "RATE_LIMITED", "Túl sok kérés érkezett. Várj egy kicsit, és próbáld újra."));
         });
 
         return services;

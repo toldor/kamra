@@ -46,8 +46,8 @@ public class AuthUseCaseTests
         await new RegisterUser(_identity, new FixedTime(Now))
             .ExecuteAsync(new RegisterRequest { Email = " tomi@example.com ", Password = ValidPassword }, CancellationToken.None);
 
-        var (userId, email, household) = _identity.Registered!.Value;
-        household.OwnerUserId.Should().Be(userId);
+        var (email, household) = _identity.Registered!.Value;
+        household.OwnerUserId.Version.Should().Be(7, "the new user's id is a GUID v7 generated in the use case");
         household.CreatedAt.Should().Be(Now);
         email.Should().Be("tomi@example.com");
     }
@@ -76,13 +76,13 @@ public class AuthUseCaseTests
 
     private sealed class FakeIdentityService : IIdentityService
     {
-        public (Guid UserId, string Email, Household Household)? Registered { get; private set; }
+        public (string Email, Household Household)? Registered { get; private set; }
 
         public SignInOutcome Outcome { get; set; } = SignInOutcome.Succeeded;
 
-        public Task RegisterAndSignInAsync(Guid userId, string email, string password, Household household, CancellationToken cancellationToken)
+        public Task RegisterAndSignInAsync(string email, string password, Household household, CancellationToken cancellationToken)
         {
-            Registered = (userId, email, household);
+            Registered = (email, household);
             return Task.CompletedTask;
         }
 

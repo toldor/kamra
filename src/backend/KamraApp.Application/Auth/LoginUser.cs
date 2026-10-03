@@ -8,7 +8,7 @@ public sealed class LoginUser(IIdentityService identity)
     {
         var valid = RequestValidator.Validate(request);
 
-        var outcome = await identity.PasswordSignInAsync(valid.Email!.Trim(), valid.Password!, cancellationToken);
+        var outcome = await identity.PasswordSignInAsync(valid.Email!, valid.Password!, cancellationToken);
 
         switch (outcome)
         {
@@ -20,7 +20,7 @@ public sealed class LoginUser(IIdentityService identity)
             case SignInOutcome.LockedOut:
                 throw new RateLimitedException("LOGIN_LOCKED_OUT", "Túl sok sikertelen próbálkozás. Várj 5 percet, és próbáld újra.");
             default:
-                throw new ArgumentOutOfRangeException(nameof(request), outcome, "Unknown sign-in outcome.");
+                throw new InvalidOperationException($"Unknown sign-in outcome: {outcome}.");
         }
     }
 }
