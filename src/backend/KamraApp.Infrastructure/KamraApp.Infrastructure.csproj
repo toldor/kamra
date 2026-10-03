@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\KamraApp.Application\KamraApp.Application.csproj" />
+    <ProjectReference Include="..\KamraApp.Domain\KamraApp.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
