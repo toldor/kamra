@@ -46,6 +46,9 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<KamraDbContext>()
             .AddSignInManager();
         services.AddScoped<IIdentityService, IdentityService>();
+        // Validate the cookie's security stamp on every request, so a logout (new stamp) revokes the
+        // session immediately instead of after the default 30 minutes. Cost: one user lookup per request.
+        services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.Zero);
 
         // ADR-0006: cookie and antiforgery keys must survive restarts and deploys (Docker volume).
         var dataProtection = services.AddDataProtection().SetApplicationName("Kamra");

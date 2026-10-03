@@ -45,17 +45,45 @@ public sealed class IdentityService(KamraDbContext db, UserManager<AppUser> user
 
     public async Task<SignInOutcome> PasswordSignInAsync(string email, string password, CancellationToken cancellationToken)
     {
-        var result = await signIn.PasswordSignInAsync(email, password, isPersistent: true, lockoutOnFailure: true);
-
-        return result switch
+        // Identity increments the failed-attempt counter with optimistic concurrency, so parallel
+        // wrong passwords lose increments and slip past the lockout (found by an adversarial test, V-10).
+        // ponytail: one process-wide lock serializes password checks (~10-20 logins/s with PBKDF2);
+        // a multi-instance deployment would need an atomic counter update in the database instead.
+        await LoginLock.WaitAsync(cancellationToken);
+        try
         {
-            { Succeeded: true } => SignInOutcome.Succeeded,
-            { IsLockedOut: true } => SignInOutcome.LockedOut,
-            _ => SignInOutcome.InvalidCredentials,
-        };
+            // The cookie's security-stamp check may already have loaded this user into the request's
+            // DbContext before the lock; a stale tracked copy would make the counter update fail silently.
+            db.ChangeTracker.Clear();
+            var result = await signIn.PasswordSignInAsync(email, password, isPersistent: true, lockoutOnFailure: true);
+
+            return result switch
+            {
+                { Succeeded: true } => SignInOutcome.Succeeded,
+                { IsLockedOut: true } => SignInOutcome.LockedOut,
+                _ => SignInOutcome.InvalidCredentials,
+            };
+        }
+        finally
+        {
+            LoginLock.Release();
+        }
     }
 
-    public Task SignOutAsync(CancellationToken cancellationToken) => signIn.SignOutAsync();
+    // A new security stamp invalidates every cookie issued before the logout, on every device;
+    // the cookie is checked against the stamp on each request (V-11).
+    public async Task SignOutAsync(CancellationToken cancellationToken)
+    {
+        var user = await users.GetUserAsync(signIn.Context.User);
+        if (user is not null)
+        {
+            await users.UpdateSecurityStampAsync(user);
+        }
+
+        await signIn.SignOutAsync();
+    }
+
+    private static readonly SemaphoreSlim LoginLock = new(1, 1);
 
     private static void ThrowIfFailed(IdentityResult result)
     {
