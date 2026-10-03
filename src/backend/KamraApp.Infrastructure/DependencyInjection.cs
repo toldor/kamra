@@ -1,4 +1,8 @@
+using KamraApp.Application.Auth;
+using KamraApp.Infrastructure.Identity;
 using KamraApp.Infrastructure.Persistence;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +26,34 @@ public static class DependencyInjection
             options.UseNpgsql(provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString));
 
         services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
+
+        // ADR-0006: NIST SP 800-63B-4 password length without composition rules; lockout after 5
+        // failures for 5 minutes; one account per e-mail (the e-mail is also the user name).
+        services.AddIdentityCore<AppUser>(options =>
+            {
+                options.Password.RequiredLength = 15;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredUniqueChars = 1;
+                options.User.RequireUniqueEmail = true;
+                options.User.AllowedUserNameCharacters = "";
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.AllowedForNewUsers = true;
+            })
+            .AddEntityFrameworkStores<KamraDbContext>()
+            .AddSignInManager();
+        services.AddScoped<IIdentityService, IdentityService>();
+
+        // ADR-0006: cookie and antiforgery keys must survive restarts and deploys (Docker volume).
+        var dataProtection = services.AddDataProtection().SetApplicationName("Kamra");
+        var keysPath = configuration["DataProtection:KeysPath"];
+        if (!string.IsNullOrWhiteSpace(keysPath))
+        {
+            dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+        }
 
         return services;
     }

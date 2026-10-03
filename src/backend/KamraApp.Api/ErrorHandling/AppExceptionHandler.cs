@@ -33,17 +33,29 @@ public sealed partial class AppExceptionHandler(IProblemDetailsService problemDe
             LogRejected(logger, code);
         }
 
+        var problem = new ProblemDetails { Status = status, Title = title, Extensions = { [CodeKey] = code } };
+        if (exception is ValidationException validation)
+        {
+            problem.Extensions["errors"] = validation.Errors;
+        }
+
         httpContext.Response.StatusCode = status;
         return await problemDetails.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
             Exception = exception,
-            ProblemDetails = new ProblemDetails
-            {
-                Status = status,
-                Title = title,
-                Extensions = { [CodeKey] = code },
-            },
+            ProblemDetails = problem,
+        });
+    }
+
+    // For errors produced outside the exception path (authentication challenge, rate limiter).
+    public static async Task WriteProblemAsync(HttpContext httpContext, int status, string code, string title)
+    {
+        httpContext.Response.StatusCode = status;
+        await httpContext.RequestServices.GetRequiredService<IProblemDetailsService>().WriteAsync(new ProblemDetailsContext
+        {
+            HttpContext = httpContext,
+            ProblemDetails = new ProblemDetails { Status = status, Title = title, Extensions = { [CodeKey] = code } },
         });
     }
 

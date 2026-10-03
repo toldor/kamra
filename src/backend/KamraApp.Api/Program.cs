@@ -1,3 +1,4 @@
+using KamraApp.Api.Auth;
 using KamraApp.Api.ErrorHandling;
 using KamraApp.Infrastructure;
 using Serilog;
@@ -12,8 +13,11 @@ builder.Services.AddSerilog((services, logger) => logger
     .Enrich.FromLogContext()
     .WriteTo.Console(new RenderedCompactJsonFormatter()));
 
-builder.Services.AddControllers();
+// ADR-0004: validation runs in the use cases, so MVC's automatic model validation is switched off.
+// The antiforgery filters are registered by the "with views" variant; no views are used.
+builder.Services.AddControllersWithViews().ConfigureApiBehaviorOptions(options => options.SuppressModelStateInvalidFilter = true);
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddKamraAuthentication(builder.Configuration);
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = AppExceptionHandler.Customize);
 
@@ -39,7 +43,11 @@ app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-app.MapHealthChecks("/health");
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
+
+app.MapHealthChecks("/health").AllowAnonymous();
 app.MapControllers();
 
 app.Run();
