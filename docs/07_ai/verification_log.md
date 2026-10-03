@@ -63,3 +63,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Forrásellenőrzés a NIST SP 800-63B-4 hivatalos szövegében (Claude Code, webkeresés).
 - **Eredmény:** **FAIL** (részben). Az összetételi szabályok tilalma helyes, a hossz nem: a [NIST SP 800-63B-4](https://pages.nist.gov/800-63-4/sp800-63b.html) szerint egyfaktoros jelszónál *„a minimum of 15 characters in length”* kötelező; a 8 karakteres minimum csak többfaktoros hitelesítés részeként használt jelszóra vonatkozik. A 8 karakter a szabvány korábbi változatának szabálya.
 - **Következtetés:** Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) jelszószabálya marad legalább 15 karakter, összetételi szabályok nélkül. Tanulság: a reviewer szabvány- és verzióállításai is elavultak lehetnek (lásd V-04); szabványra hivatkozó javaslatot a szabvány aktuális szövegével vetünk össze.
+
+### V-07 – A FluentAssertions 8.x licence nem Apache-2.0 (walking skeleton tesztcsomagjai)
+- **Dátum:** 2026-10-03
+- **Állítás:** A walking skeleton tervezésekor a Claude Code azt állította, hogy az AGENTS.md-ben megnevezett FluentAssertions a 8.0-tól kereskedelmi (Xceed) licencű, a 7.x pedig még Apache-2.0, ezért a 7.x rögzítését javasolta.
+- **Kockázat:** Közepes. Ha a 8.x kerül be, a projekt olyan licencű függőséget használ, amely kereskedelmi célra fizetős; ez a G kategóriában (licenc) kifogásolható, és a későbbi felhasználást korlátozza.
+- **Ellenőrzési módszer:** Forrásellenőrzés: az [Inedo cikke a licencváltásról](https://blog.inedo.com/proget/fluent-assertions-license-changes), a [FluentAssertions 8.3.0 NuGet licencoldala](https://packages.nuget.org/packages/FluentAssertions/8.3.0/License), valamint a 7.2.0 és a 7.2.2 csomag nuspec fájljának `license` mezője a NuGet API-ból (Claude Code).
+- **Eredmény:** **PASS.** A 8.x az Xceed Community License Agreement for Non-Commercial Use alá tartozik, kereskedelmi használatra fizetős licenc kell; a 7.2.0 és a 7.2.2 nuspec-je `Apache-2.0` licenckifejezést tartalmaz.
+- **Következtetés:** A [Directory.Packages.props](../../Directory.Packages.props) a FluentAssertionst `[7.2.2,8.0)` tartománnyal rögzíti, így véletlen frissítés sem emelheti 8.x-re. Az AGENTS.md stacktáblája változatlan.
