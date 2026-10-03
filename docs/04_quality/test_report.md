@@ -21,15 +21,15 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
 | Unit | ≥ 18 | 16 | 16 |
-| Integrációs | ≥ 6 | 6 | 6 |
+| Integrációs | ≥ 6 | 7 | 7 |
 | E2E | ≥ 6 | 0 | – |
-| Negatív esetek | ≥ 5 | 3 | 3 |
-| **Összesen** | **≥ 30** | **22** | **22** |
+| Negatív esetek | ≥ 5 | 4 | 4 |
+| **Összesen** | **≥ 30** | **23** | **23** |
 
 ## Legutolsó futás eredménye
 
 - Dátum: 2026-10-03
-- Eredmény: PASS (22/22), helyi futás, háromszor egymás után (flaky-ellenőrzés)
+- Eredmény: PASS (23/23), helyi futás, háromszor egymás után (flaky-ellenőrzés)
 - CI link: –
 
 ## Tesztelt modulok
@@ -38,7 +38,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 |---|---|---|---|
 | Rétegszabályok ([LayerRulesTests.cs](../../tests/KamraApp.Unit.Tests/LayerRulesTests.cs)) | Unit | A Domain és az Application assembly-hivatkozásai és projektfájl-hivatkozásai az [ADR-0004](../02_architecture/adr/0004-clean-architecture-retegek.md) szerint | ✅ 4/4 |
 | Hibakategória → HTTP-státusz ([ErrorCategoryMappingTests.cs](../../tests/KamraApp.Unit.Tests/ErrorCategoryMappingTests.cs)) | Unit | Mind a 8 `ErrorCategory` az [ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md) szerinti státuszra képeződik; a kód nélküli keretrendszer-státuszok alapértelmezett kódot kapnak | ✅ 12/12 |
-| Hibakezelés, health, correlationId ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)) | Integrációs | `/health` 200; váratlan hiba 500 belső részlet nélkül (negatív); `AppException` → saját státusz, kód, cím; ismeretlen útvonal 404 ProblemDetails magyar címmel (negatív); rossz HTTP-metódus 405 (negatív); a `correlationId` egyezik a fejléccel a 409-es és az 500-as úton is, CSP-fejléc | ✅ 6/6 |
+| Hibakezelés, health, correlationId ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)) | Integrációs | `/health` 200; váratlan hiba 500 belső részlet nélkül (negatív); `AppException` → saját státusz, kód, cím; ismeretlen útvonal 404 ProblemDetails magyar címmel (negatív); rossz HTTP-metódus 405 (negatív); keretrendszer-elutasítás (`BadHttpRequestException`) megtartja a 4xx státuszt, `REQUEST_REJECTED`, belső részlet nélkül (negatív); a `correlationId` egyezik a fejléccel a 409-es és az 500-as úton is, CSP- és `nosniff`-fejléc | ✅ 7/7 |
 
 ## Lefedetlen területek
 

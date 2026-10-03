@@ -1,7 +1,7 @@
 # 0011 - Strukturált JSON-naplózás Seriloggal, szerver által generált correlationId-vel
 
 Dátum: 2026-10-03
-Státusz: Proposed
+Státusz: Accepted
 
 ## Context
 
@@ -32,6 +32,7 @@ Státusz: Proposed
 - **Figyelni kell a megvalósítás során:**
   - A naplószint konfigurációból jön (`Serilog:MinimumLevel`), alapértelmezetten `Information`; fejlesztésben a `http` launch profile állítja `Debug`-ra (`Serilog__MinimumLevel__Default`), mert az `appsettings.Development.json` nem verziózott.
   - Naplóüzenet csak strukturált sablonnal készül (`LoggerMessage` forrásgenerátor, a CA1848 analyzer kikényszeríti); kérés- és választörzs, cookie, jelszó és prompt nem naplózható.
+  - Adatbázis-hiba üzenete se vigyen adatértéket a naplóba: az Npgsql `Include Error Detail` kapcsolati beállítása és az EF Core `EnableSensitiveDataLogging` nem kapcsolható be (az adatbázis-réteggel együtt forrással ellenőrizve).
   - A `correlationId`-t és a biztonsági fejléceket a válasz elküldésekor kell beállítani (`OnStarting`), mert a kivételkezelő a hibaválasz írása előtt törli a válaszfejléceket.
 
 ## Verification
@@ -40,5 +41,5 @@ Státusz: Proposed
   - Integrációs teszt: a hibaválasz `correlationId`-je egyezik az `X-Correlation-Id` fejléccel ([ErrorHandlingTests.cs](../../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)); ez a teszt találta meg, hogy a kivételkezelő törli a fejlécet.
   - Integrációs teszt: váratlan hibánál a válasz nem tartalmazza a kivétel üzenetét és stack trace-ét.
   - Naplóminta az [observability.md](../../05_security_ops/observability.md)-ben (a walking skeleton S6 szakaszában).
-  - Tervezési validáció: [P-13](../../07_ai/prompt_log.md); az Antigravity (Gemini 3.1 Pro) reviewja a naplózási kérdésről, és az S2 szakasz Gemini-reviewja.
+  - Tervezési validáció: [P-13](../../07_ai/prompt_log.md); az Antigravity (Gemini 3.1 Pro) reviewja a naplózási kérdésről (a Serilog melletti érvelés), és az S2 szakasz Antigravity (Gemini 3.1 Pro) kódreviewja, amely után a `X-Content-Type-Options` fejléc és a `BadHttpRequestException` státuszának megtartása bekerült.
 - **Evidence link:** a fenti tesztek és a naplóminta; a CI-futás linkje az S5 szakasz után kerül ide.
