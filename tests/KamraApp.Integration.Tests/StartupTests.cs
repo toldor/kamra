@@ -20,6 +20,19 @@ public class StartupTests
             .Which.Message.Should().Contain("ConnectionStrings:Default");
     }
 
+    // The local Docker Compose deployment is plain HTTP; the antiforgery token must still be issued (V-12).
+    [Fact]
+    public async Task Antiforgery_token_is_issued_over_plain_http()
+    {
+        await using var factory = new KamraApiFactory();
+        await factory.InitializeAsync();
+
+        var response = await factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("http://localhost") })
+            .GetAsync("/api/v1/auth/antiforgery", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
     // The health check really queries the database: with no reachable database it reports 503.
     [Fact]
     public async Task Health_returns_503_when_the_database_is_unreachable()
