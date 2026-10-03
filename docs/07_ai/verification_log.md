@@ -103,3 +103,19 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Ellenséges teszt: `Reusing_a_cookie_after_logout_is_rejected` ([AdversarialAuthTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialAuthTests.cs)), amely a regisztrációkor kapott cookie-t a kijelentkezés után egy másik kliensről küldi vissza.
 - **Eredmény:** **FAIL** (a dokumentált viselkedés szerint): a régi cookie-val a `/auth/me` 200-at adott.
 - **Következtetés:** A fejlesztő a kockázat csökkentése mellett döntött: a kijelentkezés új security stampet ad (`UpdateSecurityStampAsync`), és a cookie-t minden kérésnél a stamp alapján ellenőrizzük (`SecurityStampValidatorOptions.ValidationInterval = 0`), így a kijelentkezés minden eszközön érvényteleníti a sessiont. Ára kérésenként egy felhasználó-lekérdezés. Az ADR-0006 Consequences szakasza dátummal kiegészítve; a teszt zöld.
+
+### V-12 – Az antiforgery cookie `Secure = Always` beállítása biztonságosabb (hibás AI-javaslat)
+- **Dátum:** 2026-10-03
+- **Állítás:** Az S3 elő-reviewjának szétválogatásában a Claude Code javasolta (J1), hogy az antiforgery cookie is kapjon `SecurePolicy = Always`-t, mint a session-cookie; a fejlesztő jóváhagyta, és a 43 integrációs teszt zöld maradt.
+- **Kockázat:** Magas (működés). Ha a beállítás hibás, a sima HTTP-n futó telepítésben (helyi Docker Compose) senki nem tud bejelentkezni vagy regisztrálni.
+- **Ellenőrzési módszer:** Az S4 Playwright e2e tesztje ([auth.spec.ts](../../tests/e2e/auth.spec.ts)) valódi Chrome-ban, `http://localhost`-on; az Api naplójának elemzése.
+- **Eredmény:** **FAIL.** Minden e2e futás elbukott: az ASP.NET Core antiforgery-rendszere `SecurePolicy = Always` mellett szerveroldalon elutasítja a tokenkiadást nem-HTTPS kérésnél („the current request is not an SSL request”), így a `GET /auth/antiforgery` 500-at adott. Az integrációs tesztek ezt nem láthatták, mert HTTPS-címmel futnak.
+- **Következtetés:** Az antiforgery cookie visszakerült a keretrendszer alapértelmezésére (`SameAsRequest`: HTTPS alatt Secure), a [AuthenticationSetup.cs](../../src/backend/KamraApp.Api/Auth/AuthenticationSetup.cs) kommentje rögzíti az okot; új integrációs teszt (`Antiforgery_token_is_issued_over_plain_http`) és a 4 e2e futás zöld. Tanulság: a biztonsági „szigorítást” a valódi telepítési környezetben (HTTP, böngésző) is ellenőrizni kell; a HTTPS-es tesztkliens elfedte a hibát.
+
+### V-13 – A `Secure` session-cookie `http://localhost`-on is működik a böngészőben
+- **Dátum:** 2026-10-03
+- **Állítás:** A walking skeleton tervezésekor a Claude Code azt állította, hogy a `Secure` jelzésű session-cookie-t a böngészők `http://localhost`-on is elfogadják (a localhost biztonságos kontextusnak számít), ezért a helyi, HTTP-s Docker Compose telepítéshez nem kell TLS.
+- **Kockázat:** Magas (működés). Ha nem igaz, a helyi telepítésben a bejelentkezés után a cookie nem kerül vissza, és a felhasználó azonnal kijelentkezettnek látszik.
+- **Ellenőrzési módszer:** Teszt: a Playwright e2e ([auth.spec.ts](../../tests/e2e/auth.spec.ts)) Chromiumban, `http://localhost:5083`-on: regisztráció, oldal-újratöltés után is bejelentkezett állapot, kijelentkezés, bejelentkezés (asztali és 360 px-es nézet).
+- **Eredmény:** **PASS.** Mind a 4 futás zöld; a session az újratöltés után is megmaradt.
+- **Következtetés:** A helyi telepítés HTTP-n marad. Korlát: a böngészők ezt csak a `localhost`-ra engedik; más gépnévvel vagy IP-címmel elért telepítéshez TLS kell (a deploy runbookban rögzítendő).

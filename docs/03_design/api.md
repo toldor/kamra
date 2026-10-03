@@ -2,7 +2,7 @@
 
 Alap URL: `/api/v1`
 Hibák: RFC 7807 `ProblemDetails` (lásd [error_handling.md](error_handling.md)); stílus, verziózás és hibamodell: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md)
-OpenAPI spec: `src/backend/KamraApp.Api/openapi.json` (generált, ne szerkeszd kézzel)
+OpenAPI spec: [`src/backend/KamraApp.Api/openapi.json`](../../src/backend/KamraApp.Api/openapi.json) – OpenAPI 3.1, build közben generálódik (`Microsoft.Extensions.ApiDescription.Server`), ne szerkeszd kézzel; a frontend típusai ebből készülnek (`cd src/frontend && npm run gen:api`). Futás közben nincs közzétéve.
 
 ## Autentikáció
 
@@ -57,5 +57,6 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 
 - Az auth-végpontokon és a `/health`-en kívül még egyetlen végpont sincs implementálva.
 - A rate limit a kapcsolat IP-címét használja. Proxy vagy Docker Desktop porttovábbítás mögött minden kérés ugyanarról a (gateway-) címről érkezhet, ilyenkor a limit közös az összes kliensre. Megbízható reverse proxy jelenleg nincs, ezért a továbbított IP-fejléceket (`X-Forwarded-For`) szándékosan nem fogadjuk el, mert azt a kliens hamisíthatná.
-- Az OpenAPI-leírás generálása a walking skeleton S4 szakaszában kerül be; addig a `openapi.json` nem létezik.
+- Az `openapi.json` a sikeres válaszokat és a kérés-sémákat írja le; a ProblemDetails-hibaválaszok még nincsenek benne végpontonként, azok listája ebben a dokumentumban és az [error_handling.md](error_handling.md)-ben van.
+- A CI-ellenőrzés (a generált fájl egyezik a commitolttal) a walking skeleton S5 szakaszában kerül be.
 - A végpontlista még a scope_contract előtti állapotot tükrözi. Hiányzik többek között a tételjavaslatok jóváhagyása és elvetése, a kézi készletcsökkentés, a receptkezelés, a bevásárlójavaslatok elfogadása és elutasítása. A lista az API-tervezéskor igazodik a [scope_contract.md](../01_product/scope_contract.md) US-1–US-6 story-jaihoz.

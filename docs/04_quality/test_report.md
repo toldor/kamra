@@ -15,21 +15,24 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 - Összes: `dotnet test` (a repo gyökeréből)
 - Unit: `dotnet test --project tests/KamraApp.Unit.Tests`
 - Integrációs: `dotnet test --project tests/KamraApp.Integration.Tests`
+- Frontend (Vitest): `cd src/frontend && npm ci && npm test`
+- E2E (Playwright, futó stack ellen): `cd tests/e2e && npm ci && npx playwright install chromium && npx playwright test` (`E2E_BASE_URL`, alapértelmezetten `http://localhost:5083`)
 
 ## Összesítés
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
 | Unit | ≥ 18 | 24 | 24 |
-| Integrációs | ≥ 6 | 27 | 27 |
-| E2E | ≥ 6 | 0 | – |
-| Negatív esetek | ≥ 5 | 25 | 25 |
-| **Összesen** | **≥ 30** | **51** | **51** |
+| Integrációs | ≥ 6 | 28 | 28 |
+| Frontend (Vitest) | – | 5 | 5 |
+| E2E | ≥ 6 | 2 (×2 nézet) | 2 |
+| Negatív esetek | ≥ 5 | 29 | 29 |
+| **Összesen** | **≥ 30** | **59** | **59** |
 
 ## Legutolsó futás eredménye
 
 - Dátum: 2026-10-03
-- Eredmény: PASS (51/51), helyi futás, háromszor egymás után (flaky-ellenőrzés)
+- Eredmény: PASS (.NET 52/52 háromszor egymás után; Vitest 5/5; Playwright 4/4 futás – asztali Chrome és 360 px), helyi futás, háromszor egymás után (flaky-ellenőrzés)
 - CI link: –
 
 ## Tesztelt modulok
@@ -43,7 +46,9 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Auth-használati esetek ([AuthUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/AuthUseCaseTests.cs)) | Unit | Hibás e-mail, 128-nál hosszabb jelszó, hiányzó törzs elutasítva (negatív); a háztartás tulajdonosa az új felhasználó; hibás belépés → `INVALID_CREDENTIALS`, zárolás → `LOGIN_LOCKED_OUT` (negatív) | ✅ 6/6 |
 | Authentikáció ([AuthTests.cs](../../tests/KamraApp.Integration.Tests/AuthTests.cs)) | Integrációs | Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listája valódi Postgresszel: cookie nélkül és hamisított cookie-val 401; antiforgery token nélkül elutasítva, fiók nem jön létre; rossz jelszó és ismeretlen e-mail azonos válasz; az 5. hibánál zárolás, a helyes jelszó is 429; rate limit 429; 14 karakteres jelszó 400 magyar `errors`-szal; foglalt e-mail (más kis-/nagybetűvel) 409 (mind negatív); a regisztráció háztartást hoz létre és bejelentkeztet; bejelentkezés és kijelentkezés | ✅ 10/10 |
 | Ellenséges auth-tesztek ([AdversarialAuthTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialAuthTests.cs)) | Integrációs | Az Antigravity (Gemini 3.1 Pro) által írt támadások: régi cookie kijelentkezés után; más session és bejelentkezés előtti antiforgery tokenje; határértékes jelszavak és e-mailek; felderítés a teljes választörzsből; párhuzamos lockout-megkerülés és kis-/nagybetűs e-mail; párhuzamos regisztráció; csonka JSON (mind negatív). Két valódi hibát találtak ([V-10](../07_ai/verification_log.md), [V-11](../07_ai/verification_log.md)). | ✅ 8/8 |
-| Indítás ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs)) | Integrációs | Connection string nélkül az alkalmazás nem indul el (fail-fast, QA-7, negatív); elérhetetlen adatbázisnál a `/health` 503 (negatív) | ✅ 2/2 |
+| Frontend ([App.test.tsx](../../src/frontend/src/App.test.tsx)) | Unit (Vitest) | Az API-kliens elküldi az antiforgery tokent, a ProblemDetails-ből magyar `ApiError` lesz; hálózati hibára magyar üzenet (negatív); hibás belépésnél H4 üzenet, az e-mail megmarad (negatív); a jelszó mezőhibája a mező alatt, `aria-describedby`-jal (negatív); sikeres regisztráció után üres készlet | ✅ 5/5 |
+| E2E ([auth.spec.ts](../../tests/e2e/auth.spec.ts)) | E2E (Playwright) | Regisztráció → üres készlet → újratöltés után is bejelentkezve → kijelentkezés → bejelentkezés; hibás belépés H4 üzenettel (negatív). Asztali Chrome és 360 px-es mobil nézet | ✅ 2/2 (4 futás) |
+| Indítás ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs)) | Integrációs | Connection string nélkül az alkalmazás nem indul el (fail-fast, QA-7, negatív); elérhetetlen adatbázisnál a `/health` 503 (negatív); az antiforgery token sima HTTP-n is kiadható (V-12) | ✅ 3/3 |
 
 ## Lefedetlen területek
 
@@ -53,6 +58,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 - A Domainben még csak a `Household`, az Applicationben csak a hibamodell és az auth-használati esetek vannak: az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
 - Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listájából két pont még nincs lefedve: a „más háztartás erőforrása 404” (S-2) az első háztartáshoz kötött végponttal (US-1) készül, a „session megmarad az api konténer újraindítása után” pedig a deploy runbook újraindítási próbájával (walking skeleton S6).
+- Az e2e teszteket az S4-ben egyszer helyben futtattuk (Postgres-konténer + `dotnet run` + buildelt SPA); a CI-ban a Docker Compose stack ellen az S5-ben futnak.
 - Még nincs CI: a tesztek egyelőre csak helyben futnak; a CI a walking skeleton S5 szakaszában készül.
 - Még nincs lefedettségmérés: a lefedettség-gyűjtő eszköz a CI-val együtt kerül be.
 - Élő AI API-hívás nem futhat CI-ban (`[Trait("Category","LiveAI")]` jelöléssel különítendő el).
