@@ -1,0 +1,61 @@
+# Kamra - local stack: database, one-off migrator, Api (+ SPA). Start: `docker compose up --build`.
+# Secrets come only from the .env file (copy .env.example to .env); nothing secret lives here.
+name: kamra
+
+services:
+  db:
+    # Same image as the Testcontainers integration tests (ADR-0005).
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/<major>/docker.
+      - pgdata:/var/lib/postgresql
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    networks: [kamra-network]
+
+  migrator:
+    build:
+      context: .
+      target: migrator
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    networks: [kamra-network]
+
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      DataProtection__KeysPath: /keys
+      RateLimiting__Auth__PermitLimit: ${RateLimiting__Auth__PermitLimit:-10}
+      RateLimiting__Auth__WindowSeconds: ${RateLimiting__Auth__WindowSeconds:-60}
+    depends_on:
+      # ADR-0005: the Api starts only after the migrations succeeded, and has no DDL step itself.
+      migrator:
+        condition: service_completed_successfully
+    ports:
+      - "${API_PORT:-8080}:8080"
+    volumes:
+      - dpkeys:/keys
+    networks: [kamra-network]
+
+volumes:
+  pgdata:
+  dpkeys:
+
+networks:
+  kamra-network:
