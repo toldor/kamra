@@ -57,12 +57,12 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 ## Ismert hiányosságok
 
 - A Domainben még csak a `Household`, az Applicationben csak a hibamodell és az auth-használati esetek vannak: az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
-- Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listájából két pont még nincs lefedve: a „más háztartás erőforrása 404” (S-2) az első háztartáshoz kötött végponttal (US-1) készül, a „session megmarad az api konténer újraindítása után” pedig a deploy runbook újraindítási próbájával (walking skeleton S6).
+- Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listájából két pont még nincs lefedve: a „más háztartás erőforrása 404” (S-2) az első háztartáshoz kötött végponttal (US-1) készül, a „session megmarad az api konténer újraindítása után” pontot a [V-14](../07_ai/verification_log.md) próbája igazolta (Docker Compose, kézi Playwright-szkript); a deploy runbookba az S6-ban kerül.
 - A ux_flows „Lejárt munkamenet” üzenete („Biztonsági okból kiléptettünk…”) az első adatlekérő végponttal (US-1, készlet betöltése) kap valódi kiváltó eseményt; a szöveg már az üzenetkatalógusban van.
 - Az üres készlet képernyő csak a „Még üres a kamrád.” mondatot mutatja; a ux_flows szövegének a mondatos bevitelre hívó folytatása a US-2-vel kerül be.
 - Az e2e teszteket az S4-ben helyben futtattuk (Postgres-konténer + `dotnet run` + buildelt SPA); a CI-ban a Docker Compose stack ellen az S5-ben futnak.
-- Még nincs CI: a tesztek egyelőre csak helyben futnak; a CI a walking skeleton S5 szakaszában készül.
-- Még nincs lefedettségmérés: a lefedettség-gyűjtő eszköz a CI-val együtt kerül be.
+- CI: [.github/workflows/ci.yml](../../.github/workflows/ci.yml) – `backend` (build, format, OpenAPI-diff, tesztek lefedettséggel, NuGet-sérülékenységek), `frontend` (generált típusok diffje, lint, Vitest, build, `npm audit`), `e2e` (Docker Compose stack + Playwright). Az első CI-futás linkje a push után kerül ide.
+- Lefedettség: a `coverlet.MTP` Cobertura-riportot készít (`dotnet test --coverlet --coverlet-output-format cobertura`), a CI artifactként tölti fel. Küszöbérték (kapu) még nincs: a ≥ 80%-os Domain/Application-cél és a kizárások (generált migrációk, DTO-k) a test_strategy.md-ben dőlnek el.
 - Élő AI API-hívás nem futhat CI-ban (`[Trait("Category","LiveAI")]` jelöléssel különítendő el).
 
 ## Flaky / instabil tesztek

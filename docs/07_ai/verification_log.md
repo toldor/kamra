@@ -119,3 +119,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Teszt: a Playwright e2e ([auth.spec.ts](../../tests/e2e/auth.spec.ts)) Chromiumban, `http://localhost:5083`-on: regisztráció, oldal-újratöltés után is bejelentkezett állapot, kijelentkezés, bejelentkezés (asztali és 360 px-es nézet).
 - **Eredmény:** **PASS.** Mind a 4 futás zöld; a session az újratöltés után is megmaradt.
 - **Következtetés:** A helyi telepítés HTTP-n marad. Korlát: a böngészők ezt csak a `localhost`-ra engedik; más gépnévvel vagy IP-címmel elért telepítéshez TLS kell (a deploy runbookban rögzítendő).
+
+### V-14 – A bejelentkezés túléli az api konténer újraindítását (Data Protection kulcsok volume-on)
+- **Dátum:** 2026-10-04
+- **Állítás:** Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) szerint a Data Protection kulcsok (a cookie és az antiforgery token titkosítása) Docker volume-on vannak, ezért az api konténer újraindítása, deployja vagy rollbackje nem jelentkezteti ki a felhasználókat. A nem-root `app` felhasználó miatt a Claude Code a `/keys` mappát az image-ben előre létrehozta az `app` tulajdonában, hogy az új named volume írható legyen.
+- **Kockázat:** Közepes. Ha nem igaz, minden újraindítás kijelentkezteti a felhasználókat (G2 megtartás), és a régi antiforgery tokenek érvénytelenek lesznek.
+- **Ellenőrzési módszer:** PoC a Docker Compose stacken (Claude Code): Playwright-szkripttel regisztráció, `docker compose restart api`, oldal-újratöltés; a `/keys` tartalmának és az api naplójának ellenőrzése.
+- **Eredmény:** **PASS.** Újraindítás után a felhasználó bejelentkezve maradt; a `/keys`-ben egy kulcsfájl van az `app` tulajdonában, és újraindításkor nem generálódott új kulcs. (Egy első próbaszkript hamis negatív eredményt adott, mert az újratöltés után nem várta meg az oldal betöltését; ezt javítottuk.)
+- **Következtetés:** A [Dockerfile](../../Dockerfile) és a [docker-compose.yml](../../docker-compose.yml) beállítása marad. Maradó kockázat: a kulcsok titkosítatlan XML-ként vannak a volume-on (a keretrendszer erre figyelmeztet: „No XML encryptor configured”); a volume-hoz hozzáférő ember a cookie-kat visszafejtheti. A threat modelbe kerül.

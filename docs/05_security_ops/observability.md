@@ -7,6 +7,7 @@
 - **Mezők minden bejegyzésnél:**
   - `correlationId` – a szerver által generált kérésazonosító (`TraceIdentifier`); ugyanez jön az `X-Correlation-Id` válaszfejlécben és a hibaválasz `correlationId` mezőjében
   - `@t` (időbélyeg), `@l` (szint, `Information`-nél hiányzik), `@m` (üzenet), `SourceContext`
+- **Hol olvasható:** a konténer stdoutján, Docker Compose-ban `docker compose logs api` (a migrátoré: `docker compose logs migrator`); egy hibához tartozó sorok: `docker compose logs api | grep <correlationId>`
 - **Kérésenként egy összefoglaló sor** (`UseSerilogRequestLogging`): metódus, útvonal, státusz, időtartam
 
 ### Naplóminta
