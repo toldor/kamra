@@ -26,6 +26,9 @@ public class ErrorHandlingTests(KamraApiFactory factory) : IClassFixture<KamraAp
         response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
         Code(body).Should().Be("INTERNAL_ERROR");
         body.Should().NotContain("hunter2").And.NotContain("InvalidOperationException").And.NotContain(" at ");
+        // The exception handler clears response headers; the correlation id must survive it (ADR-0011).
+        JsonDocument.Parse(body).RootElement.GetProperty("correlationId").GetString()
+            .Should().Be(response.Headers.GetValues("X-Correlation-Id").Single());
     }
 
     [Fact]
@@ -48,6 +51,17 @@ public class ErrorHandlingTests(KamraApiFactory factory) : IClassFixture<KamraAp
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
         Code(body).Should().Be("NOT_FOUND");
+        Title(body).Should().Be("A kért oldal vagy adat nem található.");
+    }
+
+    [Fact]
+    public async Task Wrong_http_method_returns_405_problem_details()
+    {
+        var response = await _client.PostAsync("/api/v1/test-errors/conflict", content: null, TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
+        Code(body).Should().Be("METHOD_NOT_ALLOWED");
     }
 
     [Fact]
@@ -64,4 +78,7 @@ public class ErrorHandlingTests(KamraApiFactory factory) : IClassFixture<KamraAp
 
     private static string? Code(string body) =>
         JsonDocument.Parse(body).RootElement.GetProperty("code").GetString();
+
+    private static string? Title(string body) =>
+        JsonDocument.Parse(body).RootElement.GetProperty("title").GetString();
 }

@@ -18,4 +18,14 @@ public class ErrorCategoryMappingTests
     {
         AppExceptionHandler.ToStatusCode(category).Should().Be(expectedStatus);
     }
+
+    [Theory]
+    [InlineData(404, "NOT_FOUND")]
+    [InlineData(405, "METHOD_NOT_ALLOWED")]
+    [InlineData(415, "REQUEST_REJECTED")]
+    [InlineData(500, "INTERNAL_ERROR")]
+    public void Framework_status_without_code_gets_a_default_code(int status, string expectedCode)
+    {
+        AppExceptionHandler.DefaultCodeFor(status).Should().Be(expectedCode);
+    }
 }
