@@ -19,6 +19,8 @@ public sealed partial class AppExceptionHandler(IProblemDetailsService problemDe
         var (status, code, title) = exception switch
         {
             AppException app => (ToStatusCode(app.Category), app.Code, app.Message),
+            // Framework rejections carry their own 4xx status (e.g. 413 request too large).
+            BadHttpRequestException bad => (bad.StatusCode, DefaultCodeFor(bad.StatusCode), DefaultTitleFor(bad.StatusCode)),
             _ => (StatusCodes.Status500InternalServerError, DefaultCodeFor(500), DefaultTitleFor(500)),
         };
 

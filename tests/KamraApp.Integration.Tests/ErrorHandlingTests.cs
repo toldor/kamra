@@ -32,6 +32,17 @@ public class ErrorHandlingTests(KamraApiFactory factory) : IClassFixture<KamraAp
     }
 
     [Fact]
+    public async Task Framework_bad_request_exception_keeps_its_4xx_status_without_details()
+    {
+        var response = await _client.GetAsync("/api/v1/test-errors/bad-request", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        Code(body).Should().Be("REQUEST_REJECTED");
+        body.Should().NotContain("hunter2");
+    }
+
+    [Fact]
     public async Task App_exception_returns_its_category_status_code_and_title()
     {
         var response = await _client.GetAsync("/api/v1/test-errors/conflict", TestContext.Current.CancellationToken);
@@ -74,6 +85,7 @@ public class ErrorHandlingTests(KamraApiFactory factory) : IClassFixture<KamraAp
         headerId.Should().NotBeNullOrWhiteSpace();
         problem.GetProperty("correlationId").GetString().Should().Be(headerId);
         response.Headers.GetValues("Content-Security-Policy").Single().Should().Be("default-src 'self'");
+        response.Headers.GetValues("X-Content-Type-Options").Single().Should().Be("nosniff");
     }
 
     private static string? Code(string body) =>

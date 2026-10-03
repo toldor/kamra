@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using KamraApp.Application.Common;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,9 @@ public sealed class TestErrorsController : ControllerBase
 
     [HttpGet("unexpected")]
     public IActionResult ThrowUnexpected() => throw new InvalidOperationException(SecretDetail);
+
+    [HttpGet("bad-request")]
+    public IActionResult ThrowBadRequest() => throw new BadHttpRequestException(SecretDetail);
 
     [HttpGet("conflict")]
     public IActionResult ThrowConflict() => throw new TestConflictException();

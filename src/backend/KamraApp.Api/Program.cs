@@ -26,6 +26,7 @@ app.Use(async (context, next) =>
     {
         context.Response.Headers["X-Correlation-Id"] = context.TraceIdentifier;
         context.Response.Headers.ContentSecurityPolicy = "default-src 'self'";
+        context.Response.Headers.XContentTypeOptions = "nosniff";
         return Task.CompletedTask;
     });
     using (LogContext.PushProperty("correlationId", context.TraceIdentifier))
