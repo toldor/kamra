@@ -1,3 +1,4 @@
+using System.Reflection;
 using KamraApp.Api.Auth;
 using KamraApp.Api.ErrorHandling;
 using KamraApp.Infrastructure;
@@ -16,8 +17,16 @@ builder.Services.AddSerilog((services, logger) => logger
 // ADR-0004: validation runs in the use cases, so MVC's automatic model validation is switched off.
 // The antiforgery filters are registered by the "with views" variant; no views are used.
 builder.Services.AddControllersWithViews().ConfigureApiBehaviorOptions(options => options.SuppressModelStateInvalidFilter = true);
+// Build-time OpenAPI generation (ADR-0007) starts the app without deployment configuration; only then
+// does it get a placeholder connection string, so the fail-fast check stays strict at runtime.
+if (Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider")
+{
+    builder.Configuration["ConnectionStrings:Default"] ??= "Host=localhost;Database=openapi-generation";
+}
+
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddKamraAuthentication(builder.Configuration);
+builder.Services.AddOpenApi();
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = AppExceptionHandler.Customize);
 
@@ -42,6 +51,10 @@ app.Use(async (context, next) =>
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+// ADR-0006: the built SPA (src/frontend, `npm run build`) is served from wwwroot on the same origin.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
