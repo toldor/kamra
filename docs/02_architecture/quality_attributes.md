@@ -13,7 +13,7 @@ Az akadálymentesség a [ux_flows.md](../01_product/ux_flows.md), a naplózás �
 | QA-4 | **Adatintegritás** | A készlet soha nem negatív; egy tételjavaslat jóváhagyása egyszer fut le; párhuzamos levonásnál nem vész el levonás; minden mennyiségváltozás a készletmozgás-naplóba kerül. | Integrációs tesztek valódi Postgresszel (Testcontainers); a konkurenciakezelés módja külön ADR-ben | US-1, US-2, US-4 |
 | QA-5 | **Teljesítmény** | LLM válaszidő p95 ≤ 10 mp; ajánlás-végpont p95 ≤ 300 ms (S-3). | LLM-PoC és a backend strukturált logja; terheléses mérés | Metrics G3 (LLM); az ajánlás célértéke ebben a dokumentumban rögzített új elvárás |
 | QA-6 | **Modularitás és tesztelhetőség** | A rétegszabályok ([AGENTS.md](../../AGENTS.md) 3. pont) sértetlenek; minden LLM-hívás az Application rétegben definiált interfész mögött van, és tesztben mockolható; a Domain és az Application réteg sorlefedettsége ≥ 80%. | Projekthivatkozások + reflexiós rétegszabály-teszt; lefedettségi riport a CI-ban | Scope contract, DoD |
-| QA-7 | **Telepíthetőség** | Tiszta gépen, a README alapján, `docker compose up` paranccsal 15 percen belül elindul; hiányzó vagy érvénytelen konfiguráció esetén az alkalmazás induláskor hibával leáll. | Friss klónból végzett, időmért indítási próba | Scope contract, DoD; v1.2 futtathatósági kapufeltétel |
+| QA-7 | **Telepíthetőség** | Tiszta gépen, a README alapján, `docker compose up` paranccsal 15 percen belül elindul; hiányzó vagy érvénytelen konfiguráció esetén az alkalmazás induláskor hibával leáll. | Friss klónból végzett, időmért indítási próba; integrációs teszt: hiányzó kötelező konfigurációval az alkalmazás nem indul el | Scope contract, DoD; v1.2 futtathatósági kapufeltétel |
 
 ## 2. Scenariók
 

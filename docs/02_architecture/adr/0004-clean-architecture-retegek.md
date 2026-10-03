@@ -1,7 +1,7 @@
 # 0004 - Clean Architecture rétegek használati eset osztályokkal és aggregátumonkénti repositoryval
 
 Dátum: 2026-10-02
-Státusz: Proposed
+Státusz: Accepted
 
 ## Context
 

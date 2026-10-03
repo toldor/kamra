@@ -1,7 +1,7 @@
 # 0005 - PostgreSQL EF Core-ral, külön migrator-szolgáltatással és GUID v7 azonosítókkal
 
 Dátum: 2026-10-02
-Státusz: Proposed
+Státusz: Accepted
 
 ## Context
 

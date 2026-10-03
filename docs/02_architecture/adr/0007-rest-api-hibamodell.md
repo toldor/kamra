@@ -1,7 +1,7 @@
 # 0007 - REST API controllerekkel, /api/v1 prefixszel és kivétel-alapú ProblemDetails hibamodellel
 
 Dátum: 2026-10-02
-Státusz: Proposed
+Státusz: Accepted
 
 ## Context
 
@@ -85,7 +85,7 @@ Státusz: Proposed
 
 - **Hogyan ellenőrizzük?**
   - CI: a generált `openapi.json` egyezik a commitolttal (`git diff --exit-code`); a frontend a generált típusokkal fordul.
-  - Integrációs tesztek: minden hibakódhoz legalább egy negatív teszt, amely a státuszt és a `code`-ot ellenőrzi; váratlan hibánál 500, és a válasz nem tartalmaz stack trace-t vagy belső részletet; antiforgery token nélküli módosító kérés elutasítva; ismételt jóváhagyás 200 azonos eredménnyel, ellentmondó művelet 409.
+  - Integrációs tesztek: minden hibakódhoz legalább egy negatív teszt, amely a státuszt és a `code`-ot ellenőrzi; váratlan hibánál 500, és a válasz nem tartalmaz stack trace-t vagy belső részletet; antiforgery token nélküli módosító kérés elutasítva; ismételt jóváhagyás 200 azonos eredménnyel, ellentmondó művelet 409; egy validációs teszt azt is ellenőrzi, hogy az `errors` a hibás mezőhöz nem üres, saját (nem keretrendszer-alapértelmezett) üzenetet ad.
   - S-1 teszt: LLM-kiesésnél 503 `LLM_UNAVAILABLE`, sémahibánál 502 `LLM_INVALID_RESPONSE`.
   - Tervezési validáció: [P-12](../../07_ai/prompt_log.md), vak trianguláció; az eltérések az Alternatives 3., 8. és 11. pontjában.
 - **Evidence link:** a walking skeleton hibakezelő middleware-je és az 1. lépcső negatív tesztjei; a link az implementációval együtt kerül ide.

@@ -1,7 +1,7 @@
 # 0006 - Cookie-alapú authentikáció ASP.NET Core Identity-vel, azonos originről kiszolgált SPA-val
 
 Dátum: 2026-10-02
-Státusz: Proposed
+Státusz: Accepted
 
 ## Context
 
@@ -86,5 +86,6 @@ Státusz: Proposed
   - 15 karakternél rövidebb jelszó elutasítva;
   - a regisztráció fiókot és háztartást is létrehoz;
   - foglalt e-mail elutasítva.
+  - A deploy runbook újraindítási és rollback-próbája: az api konténer újraindítása után a bejelentkezett session érvényes marad (Data Protection kulcsok).
   - Tervezési validáció: [P-12](../../07_ai/prompt_log.md), vak trianguláció; az eltérések az Alternatives 4. és 11. pontjában, a reviewer elavult jelszóhossz-állítása a [V-06](../../07_ai/verification_log.md)-ban.
 - **Evidence link:** a walking skeleton auth-tesztjei; a link az implementációval együtt kerül ide.

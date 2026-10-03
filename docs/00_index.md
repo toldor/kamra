@@ -25,16 +25,16 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *c4_context_container.md* | C4 Context + Container diagram | **Hiányzik** |
+| [c4_context_container.md](02_architecture/c4_context_container.md) | C4 Context + Container diagram, deployment view | Kész (váz – a kódhoz igazítás az 1. lépcső végén) |
 | *c4_component.md* | C4 Component diagram (backend modulhatárok) | **Hiányzik** |
 | [quality_attributes.md](02_architecture/quality_attributes.md) | 7 nemfunkcionális elvárás, 3 quality scenario mérőszámmal | Kész (váz – igazolás a megvalósítással) |
 | [adr/0001-template.md](02_architecture/adr/0001-template.md) | ADR sablon (másolható, min. 8 ADR kell) | Kész (sablon) |
 | [adr/0002-fix-atvalthato-mertekegysegek.md](02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md) | Fix, átváltható mértékegységek „csomag” nélkül | Accepted |
 | [adr/0003-kanonikus-hozzavalo-lista.md](02_architecture/adr/0003-kanonikus-hozzavalo-lista.md) | Kanonikus hozzávaló-lista hierarchia nélkül | Accepted |
-| [adr/0004-clean-architecture-retegek.md](02_architecture/adr/0004-clean-architecture-retegek.md) | Clean Architecture rétegek, használati eset osztályok, aggregátumonkénti repository | Proposed |
-| [adr/0005-postgresql-ef-core-migraciok.md](02_architecture/adr/0005-postgresql-ef-core-migraciok.md) | PostgreSQL + EF Core, migrator-szolgáltatás, JSON seed, GUID v7 | Proposed |
-| [adr/0006-cookie-auth-identity.md](02_architecture/adr/0006-cookie-auth-identity.md) | Cookie-alapú authentikáció ASP.NET Core Identity-vel, azonos origin, antiforgery | Proposed |
-| [adr/0007-rest-api-hibamodell.md](02_architecture/adr/0007-rest-api-hibamodell.md) | REST + controllerek, /api/v1, kivétel-alapú ProblemDetails, generált OpenAPI | Proposed |
+| [adr/0004-clean-architecture-retegek.md](02_architecture/adr/0004-clean-architecture-retegek.md) | Clean Architecture rétegek, használati eset osztályok, aggregátumonkénti repository | Accepted |
+| [adr/0005-postgresql-ef-core-migraciok.md](02_architecture/adr/0005-postgresql-ef-core-migraciok.md) | PostgreSQL + EF Core, migrator-szolgáltatás, JSON seed, GUID v7 | Accepted |
+| [adr/0006-cookie-auth-identity.md](02_architecture/adr/0006-cookie-auth-identity.md) | Cookie-alapú authentikáció ASP.NET Core Identity-vel, azonos origin, antiforgery | Accepted |
+| [adr/0007-rest-api-hibamodell.md](02_architecture/adr/0007-rest-api-hibamodell.md) | REST + controllerek, /api/v1, kivétel-alapú ProblemDetails, generált OpenAPI | Accepted |
 
 ---
 
@@ -85,7 +85,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-2, 3 tanulság) |
-| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-11 bejegyzéssel) |
+| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-12 bejegyzéssel) |
 | [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Folyamatban (V-01–V-06) |
 
 ---
@@ -101,7 +101,6 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 ## Hiányzó fájlok összesítve (teendők)
 
-- `docs/02_architecture/c4_context_container.md`
 - `docs/02_architecture/c4_component.md`
 - `docs/02_architecture/adr/0008-*.md` … (min. 8 ADR kell összesen, eddig 6: 0002–0007; kötelezően még: LLM-szolgáltató; további tervezett: egyidejű készletlevonás / konkurenciakezelés, MCP-integráció, naplózási stratégia)
 - `docs/04_quality/test_strategy.md`
