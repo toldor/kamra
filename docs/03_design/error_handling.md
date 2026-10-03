@@ -40,6 +40,14 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 |---|---|---|---|
 | `INTERNAL_ERROR` | 500 | Váratlan hiba; a válasz nem tartalmaz belső részletet, a részletek a naplóba kerülnek | Megvalósítva |
 | `NOT_FOUND` | 404 | Ismeretlen útvonal (keretrendszer által generált 404) | Megvalósítva |
+| `VALIDATION_FAILED` | 400 | Mezőnkénti validációs hiba; az `errors` mező magyar üzeneteket tartalmaz (kulcs: a JSON-mező neve) | Megvalósítva |
+| `ANTIFORGERY_TOKEN_INVALID` | 400 | Hiányzó vagy érvénytelen antiforgery token módosító kérésnél | Megvalósítva |
+| `UNAUTHENTICATED` | 401 | Bejelentkezés nélküli, lejárt vagy hamisított cookie-val érkező kérés | Megvalósítva |
+| `INVALID_CREDENTIALS` | 401 | Hibás e-mail-cím vagy jelszó (a kettő megkülönböztethetetlen, ux_flows H4) | Megvalósítva |
+| `FORBIDDEN` | 403 | Bejelentkezett, de nincs jogosultsága | Megvalósítva |
+| `EMAIL_ALREADY_REGISTERED` | 409 | A regisztrációs e-mail-cím foglalt (kis- és nagybetűtől függetlenül) | Megvalósítva |
+| `RATE_LIMITED` | 429 | Túl sok kérés ugyanarról az IP-címről a bejelentkezésnél vagy a regisztrációnál | Megvalósítva |
+| `LOGIN_LOCKED_OUT` | 429 | A fiók 5 sikertelen bejelentkezés után 5 percre zárolva (ux_flows H5) | Megvalósítva |
 | `METHOD_NOT_ALLOWED` | 405 | A végpont nem támogatja a HTTP-metódust | Megvalósítva |
 | `REQUEST_REJECTED` | 4xx | Egyéb, a keretrendszer által elutasított kérés (pl. 415, vagy `BadHttpRequestException` saját 4xx státusszal), saját kód nélkül | Megvalósítva |
 | `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik | Tervezett |

@@ -57,6 +57,7 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 | H2 | Hiányzó vagy nem átváltható egység | *„Mennyi van a csomagban? Add meg grammban vagy darabban.”* | A jóváhagyás addig nem engedett, amíg meg nem adja |
 | H3 | Hálózati hiba mentéskor | *„Nem sikerült menteni, mert megszakadt a kapcsolat. Semmi nem veszett el – próbáld újra.”* | A kitöltött adatok megmaradnak; „Újra” gomb |
 | H4 | Hibás bejelentkezési adatok | *„Hibás e-mail-cím vagy jelszó.”* (nem árulja el, melyik volt rossz) | Az e-mail mező kitöltve marad |
+| H5 | Zárolt fiók (5 sikertelen bejelentkezés után) | *„Túl sok sikertelen próbálkozás. Várj 5 percet, és próbáld újra.”* | Az e-mail mező kitöltve marad; 5 perc múlva újra próbálható |
 
 **További edge case-ek:**
 

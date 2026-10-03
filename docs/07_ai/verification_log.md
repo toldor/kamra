@@ -79,3 +79,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Forrásellenőrzés ([Microsoft Learn – unit testing with dotnet test](https://learn.microsoft.com/nb-no/dotnet/core/testing/unit-testing-with-dotnet-test), [.NET blog](https://devblogs.microsoft.com/dotnet/?p=57713)) és kísérlet (Claude Code).
 - **Eredmény:** **FAIL.** A .NET 10 SDK-ban a `TestingPlatformDotnetTestSupport` elavult, a `global.json` `test.runner` a dokumentált mód. A beállítás nélkül a `dotnet test` „Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later” hibával leáll, vele a 4 teszt zöld.
 - **Következtetés:** A [global.json](../../global.json) változatlan. Tanulság: a reviewer keretrendszer-verziós állítását kísérlettel ellenőrizzük (vö. V-04, V-06).
+
+### V-09 – Az adatbázis-hiba részletei alapból nem kerülnek a kivételbe (Npgsql)
+- **Dátum:** 2026-10-03
+- **Állítás:** A Claude Code az ADR-0011-ben és az S2 Gemini-reviewjának szétválogatásában azt állította, hogy az Npgsql a PostgreSQL-hibák részleteit (amelyekben sor- és mezőértékek, így személyes adat is lehet) alapból nem teszi a kivételbe, csak az `Include Error Detail` kapcsolati beállítással; ezért elég ezt (és az EF Core `EnableSensitiveDataLogging`-ot) kikapcsolva tartani, külön napló-tisztító nem kell.
+- **Kockázat:** Közepes. Ha nem igaz, egy egyedi index megsértésekor (például foglalt e-mail-cím) az e-mail-cím a váratlan kivétel üzenetével a naplóba kerülhet, ami sérti az AGENTS.md 5. és 7. pontját.
+- **Ellenőrzési módszer:** Forrásellenőrzés: [Npgsql – Connection String Parameters](https://www.npgsql.org/doc/connection-string-parameters) (Claude Code, webkeresés).
+- **Eredmény:** **PASS.** A dokumentáció szerint az `Include Error Detail` bekapcsolásakor kerülnek a részletek a `PostgresException.Detail`-be, és ezek „can contain sensitive data”; az alapértelmezés `false`.
+- **Következtetés:** A [DependencyInjection.cs](../../src/backend/KamraApp.Infrastructure/DependencyInjection.cs) egyik beállítást sem kapcsolja be, a szabály az [ADR-0011](../02_architecture/adr/0011-serilog-strukturalt-naplozas.md) „Figyelni kell” részében szerepel. A foglalt e-mail esetét a kód amúgy is kezelt `EMAIL_ALREADY_REGISTERED` hibává alakítja, így az nem jut el a váratlan-kivétel naplóig.

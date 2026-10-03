@@ -32,7 +32,7 @@ Státusz: Accepted
 - **Figyelni kell a megvalósítás során:**
   - A naplószint konfigurációból jön (`Serilog:MinimumLevel`), alapértelmezetten `Information`; fejlesztésben a `http` launch profile állítja `Debug`-ra (`Serilog__MinimumLevel__Default`), mert az `appsettings.Development.json` nem verziózott.
   - Naplóüzenet csak strukturált sablonnal készül (`LoggerMessage` forrásgenerátor, a CA1848 analyzer kikényszeríti); kérés- és választörzs, cookie, jelszó és prompt nem naplózható.
-  - Adatbázis-hiba üzenete se vigyen adatértéket a naplóba: az Npgsql `Include Error Detail` kapcsolati beállítása és az EF Core `EnableSensitiveDataLogging` nem kapcsolható be (az adatbázis-réteggel együtt forrással ellenőrizve).
+  - Adatbázis-hiba üzenete se vigyen adatértéket a naplóba: az Npgsql `Include Error Detail` kapcsolati beállítása és az EF Core `EnableSensitiveDataLogging` nem kapcsolható be ([V-09](../../07_ai/verification_log.md)).
   - A `correlationId`-t és a biztonsági fejléceket a válasz elküldésekor kell beállítani (`OnStarting`), mert a kivételkezelő a hibaválasz írása előtt törli a válaszfejléceket.
 
 ## Verification
