@@ -1,4 +1,5 @@
 <Solution>
+  <Folder Name="/src/" />
   <Folder Name="/src/backend/">
     <Project Path="src/backend/KamraApp.Api/KamraApp.Api.csproj" />
     <Project Path="src/backend/KamraApp.Application/KamraApp.Application.csproj" />
@@ -6,6 +7,7 @@
     <Project Path="src/backend/KamraApp.Infrastructure/KamraApp.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/KamraApp.Integration.Tests/KamraApp.Integration.Tests.csproj" />
     <Project Path="tests/KamraApp.Unit.Tests/KamraApp.Unit.Tests.csproj" />
   </Folder>
 </Solution>

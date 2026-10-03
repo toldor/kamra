@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
@@ -16,8 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\backend\KamraApp.Application\KamraApp.Application.csproj" />
-    <ProjectReference Include="..\..\src\backend\KamraApp.Domain\KamraApp.Domain.csproj" />
     <ProjectReference Include="..\..\src\backend\KamraApp.Api\KamraApp.Api.csproj" />
   </ItemGroup>
 
