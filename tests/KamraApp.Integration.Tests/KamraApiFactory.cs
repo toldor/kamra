@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using KamraApp.Application.Common;
 using KamraApp.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +34,8 @@ public sealed class KamraApiFactory : WebApplicationFactory<Program>, IAsyncLife
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Default", _postgres.GetConnectionString());
+        // Tests share one client address; the rate-limit test lowers this on its own app instance.
+        builder.UseSetting("RateLimiting:Auth:PermitLimit", "1000");
         builder.ConfigureServices(services =>
             services.AddControllers().AddApplicationPart(typeof(TestErrorsController).Assembly));
     }
@@ -43,6 +46,7 @@ public sealed class ApiTestGroup : ICollectionFixture<KamraApiFactory>;
 
 // Test-only endpoints that trigger the error paths; registered only by KamraApiFactory.
 [ApiController]
+[AllowAnonymous]
 [SuppressMessage("Performance", "CA1822", Justification = "MVC actions must be instance methods to be discovered.")]
 [Route("api/v1/test-errors")]
 public sealed class TestErrorsController : ControllerBase
