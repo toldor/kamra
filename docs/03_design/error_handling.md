@@ -8,13 +8,17 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 
 ```json
 {
-  "type": "https://kamra.app/errors/PANTRY_ITEM_NOT_FOUND",
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
   "title": "A készlettétel nem található.",
   "status": 404,
   "code": "PANTRY_ITEM_NOT_FOUND",
-  "correlationId": "abc-123"
+  "correlationId": "0HNP1E56RH33M"
 }
 ```
+
+- A `type` az ASP.NET Core alapértelmezése (a státuszkódhoz tartozó RFC 9110 szakasz); saját hiba-URI nincs.
+- A `correlationId` a szerver által generált kérésazonosító; ugyanez az érték jön az `X-Correlation-Id` válaszfejlécben, és ezzel kereshető a naplóban ([ADR-0011](../02_architecture/adr/0011-serilog-strukturalt-naplozas.md)).
+- A leképezés egy helyen történik: [AppExceptionHandler.cs](../../src/backend/KamraApp.Api/ErrorHandling/AppExceptionHandler.cs). A használati esetek az `AppException` ([AppException.cs](../../src/backend/KamraApp.Application/Common/AppException.cs)) leszármazottait dobják; a kategória határozza meg a státuszt.
 
 ## HTTP státusz kategóriák
 
@@ -34,6 +38,9 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 
 | Kód | Státusz | Leírás | Állapot |
 |---|---|---|---|
+| `INTERNAL_ERROR` | 500 | Váratlan hiba; a válasz nem tartalmaz belső részletet, a részletek a naplóba kerülnek | Megvalósítva |
+| `NOT_FOUND` | 404 | Ismeretlen útvonal (keretrendszer által generált 404) | Megvalósítva |
+| `METHOD_NOT_ALLOWED` | 405 | A végpont nem támogatja a HTTP-metódust | Megvalósítva |
 | `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik | Tervezett |
 | `INVALID_QUANTITY` | 400 | Érvénytelen mennyiség | Tervezett |
 | `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el (időtúllépés vagy kiesés újrapróbálás után) | Tervezett |

@@ -7,27 +7,29 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 - OS: Windows 11 (fejlesztői gép)
 - Runtime/SDK: .NET SDK 10.0.201 (`global.json`), xUnit v3 Microsoft Testing Platform módban
-- DB: – (még nincs adatbázis-teszt)
+- DB: – (még nincs adatbázis-teszt; az integrációs tesztek `WebApplicationFactory`-val, adatbázis nélkül futnak)
 - Teszt adat: –
 
 ## Teszt suite-ek és futtatás
 
-- Unit: `dotnet test` (a repo gyökeréből; `tests/KamraApp.Unit.Tests`)
+- Összes: `dotnet test` (a repo gyökeréből)
+- Unit: `dotnet test --project tests/KamraApp.Unit.Tests`
+- Integrációs: `dotnet test --project tests/KamraApp.Integration.Tests`
 
 ## Összesítés
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
-| Unit | ≥ 18 | 4 | 4 |
-| Integrációs | ≥ 6 | 0 | – |
+| Unit | ≥ 18 | 12 | 12 |
+| Integrációs | ≥ 6 | 5 | 5 |
 | E2E | ≥ 6 | 0 | – |
-| Negatív esetek | ≥ 5 | 0 | – |
-| **Összesen** | **≥ 30** | **4** | **4** |
+| Negatív esetek | ≥ 5 | 2 | 2 |
+| **Összesen** | **≥ 30** | **17** | **17** |
 
 ## Legutolsó futás eredménye
 
 - Dátum: 2026-10-03
-- Eredmény: PASS (4/4), helyi futás
+- Eredmény: PASS (17/17), helyi futás, háromszor egymás után (flaky-ellenőrzés)
 - CI link: –
 
 ## Tesztelt modulok
@@ -35,6 +37,8 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Modul | Típus | Leírás | Állapot |
 |---|---|---|---|
 | Rétegszabályok ([LayerRulesTests.cs](../../tests/KamraApp.Unit.Tests/LayerRulesTests.cs)) | Unit | A Domain és az Application assembly-hivatkozásai és projektfájl-hivatkozásai az [ADR-0004](../02_architecture/adr/0004-clean-architecture-retegek.md) szerint | ✅ 4/4 |
+| Hibakategória → HTTP-státusz ([ErrorCategoryMappingTests.cs](../../tests/KamraApp.Unit.Tests/ErrorCategoryMappingTests.cs)) | Unit | Mind a 8 `ErrorCategory` az [ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md) szerinti státuszra képeződik | ✅ 8/8 |
+| Hibakezelés, health, correlationId ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)) | Integrációs | `/health` 200; váratlan hiba 500 belső részlet nélkül (negatív); `AppException` → saját státusz, kód, cím; ismeretlen útvonal 404 ProblemDetails (negatív); a `correlationId` egyezik a fejléccel, CSP-fejléc | ✅ 5/5 |
 
 ## Lefedetlen területek
 
@@ -42,7 +46,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 ## Ismert hiányosságok
 
-- A rétegszabály-tesztek jelenleg üres rétegeken futnak: az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
+- A Domain réteg még üres (az Applicationben csak az `AppException` van): az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
 - Még nincs CI: a tesztek egyelőre csak helyben futnak; a CI a walking skeleton S5 szakaszában készül.
 - Még nincs lefedettségmérés: a lefedettség-gyűjtő eszköz a CI-val együtt kerül be.
 - Élő AI API-hívás nem futhat CI-ban (`[Trait("Category","LiveAI")]` jelöléssel különítendő el).
