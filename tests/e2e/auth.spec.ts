@@ -1,7 +1,13 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 const password = 'correct horse battery staple'
 const newEmail = () => `e2e-${crypto.randomUUID()}@example.com`
+
+// scope_contract: usable down to 360 px wide without horizontal scrolling.
+async function expectNoHorizontalScroll(page: Page) {
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(0)
+}
 
 // Walking skeleton smoke test: the real browser accepts the Secure, SameSite=Strict session cookie,
 // the antiforgery token round trip works, and the Api serves the SPA on the same origin (ADR-0006).
@@ -9,11 +15,14 @@ test('register, see the empty pantry, log out and log back in', async ({ page })
   const email = newEmail()
   await page.goto('/')
 
+  await expect(page.getByRole('heading', { name: 'Bejelentkezés' })).toBeVisible()
+  await expectNoHorizontalScroll(page)
   await page.getByRole('button', { name: /Regisztrálj/ }).click()
   await page.getByLabel('E-mail-cím').fill(email)
   await page.getByLabel('Jelszó').fill(password)
   await page.getByRole('button', { name: 'Fiók létrehozása' }).click()
   await expect(page.getByText('Még üres a kamrád.')).toBeVisible()
+  await expectNoHorizontalScroll(page)
 
   await page.reload()
   await expect(page.getByText('Még üres a kamrád.'), 'the session survives a reload').toBeVisible()
