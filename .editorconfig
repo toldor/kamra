@@ -25,3 +25,7 @@ csharp_prefer_braces = true:suggestion
 # Test method names use underscores (Domain_references_only_system_assemblies).
 [tests/**.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+# EF Core migrations are generated code; style and analyzer rules do not apply.
+[src/backend/KamraApp.Infrastructure/Persistence/Migrations/*.cs]
+generated_code = true

@@ -1,4 +1,5 @@
 using KamraApp.Api.ErrorHandling;
+using KamraApp.Infrastructure;
 using Serilog;
 using Serilog.Context;
 using Serilog.Formatting.Compact;
@@ -12,7 +13,7 @@ builder.Services.AddSerilog((services, logger) => logger
     .WriteTo.Console(new RenderedCompactJsonFormatter()));
 
 builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = AppExceptionHandler.Customize);
 
