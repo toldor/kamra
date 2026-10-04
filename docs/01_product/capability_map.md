@@ -59,4 +59,4 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
 
 ## Ismert hiányosságok
 
-- Egyik képesség sincs még implementálva, ezért evidence- és tesztlink sincs.
+- A felhasználói értéket adó képességek (CAP-01 – CAP-06) még nincsenek implementálva, ezért ezekhez evidence- és tesztlink sincs. A walking skeleton a CAP-07, CAP-09 és CAP-10 egy részét valósította meg (*Partial*); a hiányzó részeket a táblázat Státusz oszlopa nevezi meg.

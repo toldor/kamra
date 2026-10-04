@@ -32,10 +32,9 @@ Egy kezelt üzleti hiba (409) és a kérés összefoglaló sora, ugyanazzal a `c
 
 ## Health Check
 
-- **Végpont:** `GET /health` – válasz: `200 Healthy` (szöveg), ha a folyamat fut ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs) `Health_returns_200`)
+- **Végpont:** `GET /health` (nyilvános) – válasz: `200 Healthy` (szöveg), ha a folyamat fut és az adatbázis elérhető ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs) `Health_returns_200`)
 - **Ellenőrzések:**
-  - jelenleg csak élő-ellenőrzés (a folyamat válaszol)
-  - PostgreSQL kapcsolat – az adatbázissal együtt kerül be
+  - PostgreSQL kapcsolat (`DatabaseHealthCheck`, `CanConnectAsync`): elérhetetlen adatbázisnál a válasz **503 `Unhealthy`** ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs) `Health_returns_503_when_the_database_is_unreachable`)
   - LLM API elérhetőség – opcionális, a nem AI-alapú funkciók degraded állapotban is működjenek
 
 ## Metrikák
@@ -44,6 +43,5 @@ Jelenleg nem implementált. Jövőbeli lehetőség: Prometheus + Grafana.
 
 ## Ismert hiányosságok
 
-- A `/health` még nem ellenőrzi az adatbázist (az adatbázis-réteggel együtt kerül be).
 - Váratlan kivételnél a kivétel üzenete és stack trace-e a naplóba kerül (a válaszba nem); ha egy külső könyvtár üzenete személyes adatot tartalmazna, az a naplóba jutna ([ADR-0011](../02_architecture/adr/0011-serilog-strukturalt-naplozas.md) Consequences).
 - Metrikák és riasztás még nincsenek.
