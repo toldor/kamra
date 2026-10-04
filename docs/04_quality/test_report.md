@@ -33,7 +33,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 - Dátum: 2026-10-03
 - Eredmény: PASS – .NET 52/52 (háromszor egymás után), Vitest 7/7 (egyszer), Playwright 4/4 futás – asztali Chrome és 360 px (háromszor egymás után, helyi stacken), helyi futás, háromszor egymás után (flaky-ellenőrzés)
-- CI link: –
+- CI link: [GitHub Actions – CI #37157528207](https://github.com/toldor/kamra/actions/runs/37157528207) (2026-10-04, `feature/walking-skeleton`): `backend`, `frontend` és `e2e` job zöld
 
 ## Tesztelt modulok
 
@@ -60,8 +60,8 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 - Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listájából két pont még nincs lefedve: a „más háztartás erőforrása 404” (S-2) az első háztartáshoz kötött végponttal (US-1) készül, a „session megmarad az api konténer újraindítása után” pontot a [V-14](../07_ai/verification_log.md) próbája igazolta (Docker Compose, kézi Playwright-szkript); a deploy runbookba az S6-ban kerül.
 - A ux_flows „Lejárt munkamenet” üzenete („Biztonsági okból kiléptettünk…”) az első adatlekérő végponttal (US-1, készlet betöltése) kap valódi kiváltó eseményt; a szöveg már az üzenetkatalógusban van.
 - Az üres készlet képernyő csak a „Még üres a kamrád.” mondatot mutatja; a ux_flows szövegének a mondatos bevitelre hívó folytatása a US-2-vel kerül be.
-- Az e2e teszteket az S4-ben helyben futtattuk (Postgres-konténer + `dotnet run` + buildelt SPA); a CI-ban a Docker Compose stack ellen az S5-ben futnak.
-- CI: [.github/workflows/ci.yml](../../.github/workflows/ci.yml) – `backend` (build, format, OpenAPI-diff, tesztek lefedettséggel, NuGet-sérülékenységek), `frontend` (generált típusok diffje, lint, Vitest, build, `npm audit`), `e2e` (Docker Compose stack + Playwright). Az első CI-futás linkje a push után kerül ide.
+- Az e2e tesztek a CI-ban a Docker Compose stack ellen futnak (helyben is lefuttatva a Compose ellen).
+- CI: [.github/workflows/ci.yml](../../.github/workflows/ci.yml) – `backend` (build, format, OpenAPI-diff, tesztek lefedettséggel, NuGet-sérülékenységek), `frontend` (generált típusok diffje, lint, Vitest, build, `npm audit`), `e2e` (Docker Compose stack + Playwright). Az első sikeres futás linkje a „Legutolsó futás eredménye” szakaszban.
 - Lefedettség: a `coverlet.MTP` Cobertura-riportot készít (`dotnet test --coverlet --coverlet-output-format cobertura`), a CI artifactként tölti fel. Küszöbérték (kapu) még nincs: a ≥ 80%-os Domain/Application-cél és a kizárások (generált migrációk, DTO-k) a test_strategy.md-ben dőlnek el.
 - Élő AI API-hívás nem futhat CI-ban (`[Trait("Category","LiveAI")]` jelöléssel különítendő el).
 
