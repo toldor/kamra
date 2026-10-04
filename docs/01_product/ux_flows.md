@@ -86,4 +86,4 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 
 ## Ismert hiányosságok
 
-- A felület még nincs implementálva, ezért screenshot és e2e teszt sincs; a flow-k a scope_contract story-jain alapuló tervek.
+- A három fő flow felülete még nincs implementálva, ezért screenshot és e2e teszt sincs hozzájuk; a flow-k a scope_contract story-jain alapuló tervek. A walking skeletonban a bejelentkezés, a regisztráció, az üres készlet és a H4 hibaüzenet már él, Playwright e2e teszttel ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).

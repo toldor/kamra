@@ -43,9 +43,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| [api.md](03_design/api.md) | REST végpontok, auth, hibakódok, OpenAPI | Kész (skeleton) |
-| [data_model.md](03_design/data_model.md) | Entitások, kapcsolatok, migrációs stratégia | Kész (skeleton) |
-| [error_handling.md](03_design/error_handling.md) | Hibakategóriák, RFC 7807, retry, logolás | Kész (skeleton) |
+| [api.md](03_design/api.md) | REST végpontok, auth, hibakódok, OpenAPI | Folyamatban (auth-végpontok, generált OpenAPI) |
+| [data_model.md](03_design/data_model.md) | Entitások, kapcsolatok, migrációs stratégia | Folyamatban (Households + Identity; újratervezés a B kapuban) |
+| [error_handling.md](03_design/error_handling.md) | Hibakategóriák, RFC 7807, retry, logolás | Folyamatban (auth- és keretrendszer-kódok megvalósítva) |
 | [mcp_tools.md](03_design/mcp_tools.md) | MCP eszközök leírása, input séma, biztonság | Kész (skeleton) |
 
 ---
@@ -55,7 +55,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | *test_strategy.md* | Teszt piramis, mock stratégia, CI quality gate-ek | **Hiányzik** |
-| [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Kész (skeleton) |
+| [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Folyamatban (61 teszt, zöld CI) |
 | *performance.md* | Teljesítmény-alapmérés, legalább egy mért szűk keresztmetszet | **Hiányzik** |
 
 ---
@@ -67,7 +67,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | *threat_model.md* | STRIDE fenyegetések (≥6), mitigáció, residual risk | **Hiányzik** |
 | *privacy_licensing.md* | Adatkategóriák, adatáramlás, AI adatküldési szabály, licencek | **Hiányzik** |
 | *deploy_runbook.md* | Deploy lépések, rollback, ≥2 incident forgatókönyv | **Hiányzik** |
-| [observability.md](05_security_ops/observability.md) | Naplózás, health check, metrikák, debugging guide | Kész (skeleton) |
+| [observability.md](05_security_ops/observability.md) | Naplózás, health check, metrikák, debugging guide | Folyamatban (Serilog JSON, `/health`; metrikák hiányoznak) |
 
 ---
 
@@ -77,7 +77,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 |---|---|---|
 | *demo_script.md* | 5-7 perces stabil demo forgatókönyv | **Hiányzik** |
 | *self_assessment.md* | Kötelező önértékelés kategóriánként (4.5 pont a PDF-ben) | **Hiányzik** |
-| *changelog.md* | Release notes, scope változások | **Hiányzik** |
+| [changelog.md](06_release/changelog.md) | Release notes, scope változások | Folyamatban (0.1.0 – walking skeleton) |
 
 ---
 
@@ -85,9 +85,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-2, 3 tanulság) |
-| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-12 bejegyzéssel) |
-| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Folyamatban (V-01–V-14) |
+| [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-3, 7 tanulság) |
+| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-13 bejegyzéssel) |
+| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Kész (V-01–V-16) |
 | [review_prompts.md](07_ai/review_prompts.md) | Verziózott review-, ellenséges teszt- és megértés-ellenőrző promptsablonok | Kész |
 
 ---

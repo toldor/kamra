@@ -7,7 +7,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 - OS: Windows 11 (fejlesztői gép)
 - Runtime/SDK: .NET SDK 10.0.201 (`global.json`), xUnit v3 Microsoft Testing Platform módban
-- DB: PostgreSQL 18 (`postgres:18` image Testcontainersszel; a Docker Compose ugyanezt az image-et kapja a walking skeleton S5 szakaszában, [ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)); a teszteknél futó Docker szükséges
+- DB: PostgreSQL 18 (`postgres:18` image Testcontainersszel; a Docker Compose ugyanezt az image-et használja, [ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)); a teszteknél futó Docker szükséges
 - Teszt adat: –
 
 ## Teszt suite-ek és futtatás
@@ -61,7 +61,8 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 - A ux_flows „Lejárt munkamenet” üzenete („Biztonsági okból kiléptettünk…”) az első adatlekérő végponttal (US-1, készlet betöltése) kap valódi kiváltó eseményt; a szöveg már az üzenetkatalógusban van.
 - Az üres készlet képernyő csak a „Még üres a kamrád.” mondatot mutatja; a ux_flows szövegének a mondatos bevitelre hívó folytatása a US-2-vel kerül be.
 - Az e2e tesztek a CI-ban a Docker Compose stack ellen futnak (helyben is lefuttatva a Compose ellen).
-- CI: [.github/workflows/ci.yml](../../.github/workflows/ci.yml) – `backend` (build, format, OpenAPI-diff, tesztek lefedettséggel, NuGet-sérülékenységek), `frontend` (generált típusok diffje, lint, Vitest, build, `npm audit`), `e2e` (Docker Compose stack + Playwright). Az első sikeres futás linkje a „Legutolsó futás eredménye” szakaszban.
+- CI: [.github/workflows/ci.yml](../../.github/workflows/ci.yml) – `secrets` (gitleaks a teljes git-historyra, [V-15](../07_ai/verification_log.md)), `backend` (build, format, OpenAPI-diff, tesztek lefedettséggel, NuGet-sérülékenységek), `frontend` (generált típusok diffje, lint, Vitest, build, `npm audit`), `e2e` (Docker Compose stack + Playwright). Az első sikeres futás linkje a „Legutolsó futás eredménye” szakaszban.
+- Branch-védelem: a `develop` és a `main` ágra csak PR-ral, zöld `backend`, `frontend` és `e2e` checkkel lehet mergelni, force push és törlés tiltva ([képernyőkép](../assets/branch-ruleset.png)); a `secrets` check a következő CI-futás után vehető fel kötelezőnek.
 - Lefedettség: a `coverlet.MTP` Cobertura-riportot készít (`dotnet test --coverlet --coverlet-output-format cobertura`), a CI artifactként tölti fel. Küszöbérték (kapu) még nincs: a ≥ 80%-os Domain/Application-cél és a kizárások (generált migrációk, DTO-k) a test_strategy.md-ben dőlnek el.
 - Élő AI API-hívás nem futhat CI-ban (`[Trait("Category","LiveAI")]` jelöléssel különítendő el).
 

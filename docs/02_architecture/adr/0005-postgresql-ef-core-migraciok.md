@@ -71,4 +71,4 @@ Státusz: Accepted
   - A rollback kipróbálása a deploy runbook szerint, az eredmény a runbookba kerül.
   - Friss klónos indítási próba (QA-7).
   - Tervezési validáció: [P-12](../../07_ai/prompt_log.md); az architektúra-kapu keresztvalidációjának eredménye ide kerül.
-- **Evidence link:** a walking skeleton migrációja és az 1. lépcső integrációs tesztjei; a link az implementációval együtt kerül ide.
+- **Evidence link:** első migráció: `InitialIdentityAndHousehold`; migrator-szolgáltatás EF migration bundle-lel: [Dockerfile](../../../Dockerfile), [docker-compose.yml](../../../docker-compose.yml); integrációs tesztek valódi PostgreSQL 18-cal (Testcontainers, a Compose-zal azonos `postgres:18` image): [KamraApiFactory.cs](../../../tests/KamraApp.Integration.Tests/KamraApiFactory.cs); GUID v7 a Domainben: [HouseholdTests.cs](../../../tests/KamraApp.Unit.Tests/HouseholdTests.cs); friss klónos indítási mérés: [V-16](../../07_ai/verification_log.md); [CI #37157528207](https://github.com/toldor/kamra/actions/runs/37157528207). A seed-folyamat és a rollback-próba a deploy runbookkal és az 1. lépcsővel készül.

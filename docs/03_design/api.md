@@ -58,5 +58,5 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 - Az auth-végpontokon és a `/health`-en kívül még egyetlen végpont sincs implementálva.
 - A rate limit a kapcsolat IP-címét használja. Proxy vagy Docker Desktop porttovábbítás mögött minden kérés ugyanarról a (gateway-) címről érkezhet, ilyenkor a limit közös az összes kliensre. Megbízható reverse proxy jelenleg nincs, ezért a továbbított IP-fejléceket (`X-Forwarded-For`) szándékosan nem fogadjuk el, mert azt a kliens hamisíthatná.
 - Az `openapi.json` a sikeres válaszokat és a kérés-sémákat írja le; a ProblemDetails-hibaválaszok még nincsenek benne végpontonként, azok listája ebben a dokumentumban és az [error_handling.md](error_handling.md)-ben van.
-- A CI-ellenőrzés (a generált fájl egyezik a commitolttal) a walking skeleton S5 szakaszában kerül be.
+- A CI elbukik, ha a generált `openapi.json` vagy a belőle generált frontend-típusok eltérnek a commitolttól ([ci.yml](../../.github/workflows/ci.yml)).
 - A végpontlista még a scope_contract előtti állapotot tükrözi. Hiányzik többek között a tételjavaslatok jóváhagyása és elvetése, a kézi készletcsökkentés, a receptkezelés, a bevásárlójavaslatok elfogadása és elutasítása. A lista az API-tervezéskor igazodik a [scope_contract.md](../01_product/scope_contract.md) US-1–US-6 story-jaihoz.

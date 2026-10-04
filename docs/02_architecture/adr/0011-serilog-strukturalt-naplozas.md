@@ -40,6 +40,6 @@ Státusz: Accepted
 - **Hogyan ellenőrizzük?**
   - Integrációs teszt: a hibaválasz `correlationId`-je egyezik az `X-Correlation-Id` fejléccel ([ErrorHandlingTests.cs](../../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs)); ez a teszt találta meg, hogy a kivételkezelő törli a fejlécet.
   - Integrációs teszt: váratlan hibánál a válasz nem tartalmazza a kivétel üzenetét és stack trace-ét.
-  - Naplóminta az [observability.md](../../05_security_ops/observability.md)-ben (a walking skeleton S6 szakaszában).
+  - Naplóminta az [observability.md](../../05_security_ops/observability.md)-ben, valódi tesztfutásból.
   - Tervezési validáció: [P-13](../../07_ai/prompt_log.md); az Antigravity (Gemini 3.1 Pro) reviewja a naplózási kérdésről (a Serilog melletti érvelés), és az S2 szakasz Antigravity (Gemini 3.1 Pro) kódreviewja, amely után a `X-Content-Type-Options` fejléc és a `BadHttpRequestException` státuszának megtartása bekerült.
-- **Evidence link:** a fenti tesztek és a naplóminta; a CI-futás linkje az S5 szakasz után kerül ide.
+- **Evidence link:** [ErrorHandlingTests.cs](../../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs) (correlationId a 409-es és az 500-as úton), naplóminta: [observability.md](../../05_security_ops/observability.md#naplóminta); [CI #37157528207](https://github.com/toldor/kamra/actions/runs/37157528207).
