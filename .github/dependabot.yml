@@ -1,0 +1,53 @@
+# Dependency update policy (v1.2 5.3.6): weekly, grouped per ecosystem to limit PR noise.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      nuget:
+        patterns: ['*']
+    ignore:
+      # Stay on .NET 10 LTS; Npgsql's major must match EF Core's (ADR-0005).
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+      # 8.x is commercially licensed (V-07).
+      - dependency-name: FluentAssertions
+        versions: ['>= 8.0.0']
+
+  - package-ecosystem: npm
+    directory: /src/frontend
+    schedule:
+      interval: weekly
+    groups:
+      frontend:
+        patterns: ['*']
+    ignore:
+      # openapi-typescript supports TypeScript 5 only (S4).
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: npm
+    directory: /tests/e2e
+    schedule:
+      interval: weekly
+    groups:
+      e2e:
+        patterns: ['*']
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']

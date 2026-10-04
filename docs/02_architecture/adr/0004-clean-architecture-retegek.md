@@ -59,4 +59,4 @@ Státusz: Accepted
   - A Domain és az Application réteg sorlefedettsége ≥ 80% a CI-ban (QA-6).
   - Az S-2 paraméterezett integrációs teszt minden háztartáshoz kötött végpontra (QA-1).
   - Tervezési validáció: [P-12](../../07_ai/prompt_log.md); az architektúra-kapu keresztvalidációjának eredménye ide kerül.
-- **Evidence link:** a walking skeleton és az 1. lépcső tesztjei; a link az implementációval együtt kerül ide.
+- **Evidence link:** rétegszabály-tesztek (assembly- és projektfájl-hivatkozás, engedélylistával): [LayerRulesTests.cs](../../../tests/KamraApp.Unit.Tests/LayerRulesTests.cs); használati esetek fake porttal: [AuthUseCaseTests.cs](../../../tests/KamraApp.Unit.Tests/AuthUseCaseTests.cs); [CI #37157528207](https://github.com/toldor/kamra/actions/runs/37157528207). A Domain/Application lefedettség mérése (Cobertura) a CI-ban fut, a ≥ 80%-os kapu a test_strategy.md-vel kerül be. Az S-2 (más háztartás → 404) az első háztartáshoz kötött végponttal (US-1) készül.

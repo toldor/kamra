@@ -1,5 +1,7 @@
 # Kamra – Smart Pantry & Recipe Manager
 
+[![CI](https://github.com/toldor/kamra/actions/workflows/ci.yml/badge.svg)](https://github.com/toldor/kamra/actions/workflows/ci.yml)
+
 ## A projektről
 
 A **Kamra** egy webalapú háztartási készlet- és receptkezelő rendszer, amelynek egyik célja az otthoni élelmiszer-pazarlás csökkentése.
@@ -35,40 +37,17 @@ A projekt célja egy olyan mérnökileg ellenőrizhető rendszer megtervezése �
 4. főzés után következetesen frissíti a készletet;
 5. az AI-t csak ellenőrzött, validált és felhasználói jóváhagyással működő folyamatokban használja.
 
-## Jelenlegi állapot – 2026. október 2.
+## Jelenlegi állapot – 2026. október 4.
 
-A repository jelenleg **tervezési és dokumentációs fázisban van**. Az alkalmazás fő funkciói még nincsenek implementálva.
+Elkészült a **walking skeleton**: a teljes rendszer végponttól végpontig fut egy vékony szeleten, üzleti funkció nélkül.
 
-### Elkészült vagy folyamatban lévő részek
+- regisztráció, bejelentkezés, kijelentkezés (cookie-alapú session ASP.NET Core Identity-vel, antiforgery, fiókzárolás, rate limit);
+- üres készlet-képernyő a React SPA-ban (asztali és 360 px-es mobil nézet);
+- PostgreSQL EF Core migrációkkal, külön migrator-szolgáltatással;
+- egységes hibamodell (RFC 7807 ProblemDetails, magyar üzenetek), strukturált JSON-napló `correlationId`-vel, `/health`;
+- Docker Compose stack, GitHub Actions CI (build, formázás, lint, unit-, integrációs és e2e tesztek, OpenAPI-szerződés, sérülékenység- és secret-szkennelés).
 
-- projektvízió és probléma-meghatározás;
-- fogalmi szótár és domainnyelv;
-- MVP-hatókör és felhasználói történetek;
-- elfogadási kritériumok és Definition of Done;
-- képességtérkép és fejlesztési roadmap;
-- fő felhasználói folyamatok terve;
-- versenytárselemzés;
-- adatmodell-, API- és hibakezelési vázlat;
-- Clean Architecture- és PostgreSQL/EF Core-döntési tervezetek;
-- AI-használati, prompt- és ellenőrzési dokumentáció;
-- `.env.example` konfigurációs sablon.
-
-### Jelenleg hiányzó fő részek
-
-- működő backend és REST API;
-- működő React frontend;
-- PostgreSQL-adatbázis és EF Core migrációk;
-- regisztráció és bejelentkezés;
-- készletkezelés;
-- receptkezelés és determinisztikus receptajánlás;
-- főzés utáni készletcsökkentés;
-- bevásárlójavaslatok és bevásárlólista;
-- AI-alapú természetes nyelvű bevitel;
-- MCP-alapú, csak olvasási célú chatasszisztens;
-- automatizált tesztek és CI quality gate-ek;
-- teljes futtatási és telepítési útmutató.
-
-Az aktuális képességállapot részletesen a [capability mapben](https://github.com/toldor/kamra/blob/develop/docs/01_product/capability_map.md) található.
+Még **nincs kész**: készletkezelés, receptek és ajánlás, főzés, bevásárlólista, AI-alapú bevitel, chatasszisztens. Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md); a tesztek állapota: [test report](docs/04_quality/test_report.md).
 
 ## Tervezett MVP-lépcsők
 
@@ -98,7 +77,7 @@ A chatasszisztens a tervek szerint csak olvasási célú MCP-eszközöket haszn�
 
 A chat nem módosíthat közvetlenül adatot.
 
-## Tervezett technológiai stack
+## Technológiai stack
 
 | Terület | Technológia |
 |---|---|
@@ -109,7 +88,7 @@ A chat nem módosíthat közvetlenül adatot.
 | Frontend | React, TypeScript, Vite |
 | AI | ChatCompletion API alkalmazási rétegben definiált interfész mögött |
 | Chat-integráció | Külön MCP-szerver, közös Application use case-ekkel |
-| Tesztelés | xUnit, FluentAssertions, Testcontainers, Vitest, Playwright |
+| Tesztelés | xUnit v3, FluentAssertions 7, Testcontainers, Vitest, Playwright |
 | Környezet | Docker Compose, GitHub Actions |
 
 ## Tervezett architektúra
@@ -158,26 +137,71 @@ A teljes dokumentáció a repository `docs` könyvtárában található.
 
 ## Futtatás
 
-### Jelenlegi állapot
+### Gyors indítás (Docker Compose)
 
-Az alkalmazás futtatható verziója még nincs elkészítve, ezért a projekt jelenlegi állapotában nincs működő `docker compose up`, backend-, frontend- vagy tesztfuttatási útmutató.
+Előfeltétel: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (vagy Docker Engine + Compose v2), futó állapotban. Más nem kell.
 
-A futtatási útmutató akkor kerül véglegesítésre, amikor elkészül az első működő walking skeleton, és a parancsokat tiszta környezetben is ellenőriztem.
+```bash
+git clone https://github.com/toldor/kamra.git
+cd kamra
+cp .env.example .env        # Windows PowerShell: Copy-Item .env.example .env
+docker compose up --build
+```
 
-### Tervezett előkészítés
+Ezután nyisd meg: **http://localhost:8080** → *Regisztrálj* → e-mail-cím és legalább 15 karakteres jelszó → az üres készlet-képernyő jelenik meg.
 
-Ha a fejlesztési környezet elkészült:
+- Az első indítás (image-ek letöltése és buildelése) friss gépen mért ideje: lásd [V-16](docs/07_ai/verification_log.md) (kb. 2 perc a `/health`-ig, cache nélküli builddel, az alap-image-ek letöltése nélkül); a további indítások gyorsabbak.
+- A `docker compose up` sorrendben indítja a szolgáltatásokat: `db` (PostgreSQL 18) → `migrator` (EF Core migrációk, egyszer fut le) → `api` (REST API és a React SPA ugyanarról a címről).
+- Állapot: `curl http://localhost:8080/health` → `Healthy`. Napló: `docker compose logs api`.
+- Leállítás: `docker compose down` (az adatok megmaradnak); minden adat törlése: `docker compose down -v`.
+- A `.env` csak a gépeden létezik, soha nem kerül a repóba. Helyi futtatáshoz a `.env.example` helykitöltő értékei elegendők; más környezetben cseréld le a jelszót.
 
-1. a repository gyökerében létre kell hozni a `.env` fájlt a `.env.example` alapján;
-2. az érzékeny értékeket csak lokálisan, a `.env` fájlban szabad megadni;
-3. a `.env` fájlt nem szabad commitolni;
-4. a projekt indítását és az adatbázis-migrációkat a későbbi, ellenőrzött futtatási útmutató szerint kell végrehajtani.
+### Környezeti változók
+
+| Változó | Jelentés | Alapérték (`.env.example`) |
+|---|---|---|
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Az adatbázis neve, felhasználója és jelszava (a Compose ebből állítja össze a connection stringet) | `pantry`, `pantry_user`, `change_me` |
+| `POSTGRES_PORT` | Az adatbázis portja a gépen | `5432` |
+| `API_PORT` | Az alkalmazás portja a gépen | `8080` |
+| `ConnectionStrings__Default` | Csak a Compose nélküli, helyi `dotnet run`-hoz | `Host=localhost;…` |
+| `DataProtection__KeysPath` | A cookie-kulcsok helye (Compose-ban a `dpkeys` volume, így újraindítás után is bejelentkezve maradsz) | Compose-ban `/keys` |
+| `RateLimiting__Auth__PermitLimit`, `RateLimiting__Auth__WindowSeconds` | Bejelentkezés és regisztráció: kérések száma IP-címenként egy időablakban | `10`, `60` |
+
+Hiányzó kötelező beállítással az alkalmazás induláskor hibával leáll (fail-fast).
+
+### Fejlesztés és tesztek
+
+| Feladat | Parancs |
+|---|---|
+| Backend build (figyelmeztetés = hiba) | `dotnet build -warnaserror` |
+| Formázás ellenőrzése | `dotnet format --verify-no-changes` |
+| Backend tesztek (unit + integrációs, Dockerrel futó PostgreSQL-lel) | `dotnet test` |
+| Lefedettség (Cobertura, `TestResults/`) | `dotnet test --coverlet --coverlet-output-format cobertura` |
+| Csak az adatbázis indítása helyi fejlesztéshez | `docker compose up -d db` |
+| Migrációk alkalmazása helyben | `dotnet ef database update -p src/backend/KamraApp.Infrastructure -s src/backend/KamraApp.Api` |
+| Backend helyben | `dotnet run --project src/backend/KamraApp.Api` (http://localhost:5083) |
+| Frontend fejlesztői szerver (az `/api`-t a backendre proxyzza) | `cd src/frontend && npm ci && npm run dev` |
+| Frontend lint, teszt, build | `cd src/frontend && npm run lint && npm test && npm run build` |
+| Frontend API-típusok újragenerálása az `openapi.json`-ból | `cd src/frontend && npm run gen:api` |
+| E2E (futó stack ellen, például Compose: `E2E_BASE_URL=http://localhost:8080`) | `cd tests/e2e && npm ci && npx playwright install chromium && npx playwright test` |
+
+Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indítani (`RateLimiting__Auth__PermitLimit=1000`), különben a gyorsan ismételt futások elérik az alapértelmezett 10 kérés/perc limitet.
+
+### Gyakori hibák
+
+| Tünet | Megoldás |
+|---|---|
+| `Set POSTGRES_PASSWORD in .env` | Hiányzik a `.env`: `cp .env.example .env` |
+| `port is already allocated` (5432 vagy 8080) | Más program használja a portot: állítsd át a `.env`-ben a `POSTGRES_PORT`-ot vagy az `API_PORT`-ot |
+| `Cannot connect to the Docker daemon` | Indítsd el a Docker Desktopot, és várd meg, amíg fut |
+| A böngésző nem tart meg bejelentkezést, ha nem `localhost`-on nyitod meg | A biztonságos (`Secure`) cookie-t a böngészők HTTP-n csak `localhost`-ra engedik; más gépnévhez vagy IP-címhez HTTPS kell |
+| Az integrációs tesztek nem indulnak (`Docker is either not running…`) | A tesztek Testcontainersszel PostgreSQL-konténert indítanak: futó Docker kell |
 
 ## Fejlesztési roadmap
 
 | Szakasz | Tervezett tartalom | Állapot |
 |---|---|---|
-| Alapok | Repository, CI, architektúra, autentikáció előkészítése | Folyamatban |
+| Alapok | Repository, CI, architektúra, walking skeleton (autentikáció, Docker Compose) | Kész (2026-10-04) |
 | 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Tervezett |
 | 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett |
 | 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett |

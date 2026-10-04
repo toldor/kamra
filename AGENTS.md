@@ -55,15 +55,19 @@ docs/                                 # Docs-as-Code (00_index.md is the index)
 The exact commands live in the README; if they change, update both places.
 
 ```bash
-docker compose up -d db                 # database
-dotnet build                            # backend build
-dotnet test                             # all .NET tests
+docker compose up --build               # full system: db -> migrator -> api (+ SPA) at http://localhost:8080
+docker compose up -d db                 # database only, for local development
+dotnet build -warnaserror               # backend build (analyzers, warnings as errors)
+dotnet test                             # all .NET tests (integration tests need Docker: Testcontainers)
+dotnet test --coverlet --coverlet-output-format cobertura   # with coverage
 dotnet format --verify-no-changes       # formatting check
-dotnet ef database update -p src/backend/KamraApp.Infrastructure -s src/backend/KamraApp.Api
+dotnet ef database update -p src/backend/KamraApp.Infrastructure -s src/backend/KamraApp.Api   # local migrations
 cd src/frontend && npm ci && npm run lint && npm test && npm run build
-npx playwright test                     # e2e (requires running stack)
-docker compose up --build               # full system
+cd src/frontend && npm run gen:api      # regenerate API types after openapi.json changed
+cd tests/e2e && npm ci && npx playwright test   # e2e (requires running stack, E2E_BASE_URL)
 ```
+
+In Docker Compose the `migrator` service applies the migrations (EF migration bundle) before the Api starts; the Api never runs DDL. `openapi.json` is regenerated on every backend build and must be committed (CI fails on a diff).
 
 A task is done only when build, format, lint and **all** tests are green.
 

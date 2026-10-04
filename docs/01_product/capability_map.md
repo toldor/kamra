@@ -14,10 +14,10 @@ A termék képességei és megvalósítottsági állapotuk: mennyi a felhasznál
 | CAP-04 Főzés és a készlet automatikus frissítése (US-4) | Value | – | – | Planned |
 | CAP-05 Bevásárlólista javaslatokkal (US-5) | Value | – | – | Planned |
 | CAP-06 Kérdezés a kamráról élő nyelven (US-6) | Value | – | – | Planned |
-| CAP-07 Bejelentkezés és háztartásonkénti adatelkülönítés | Productization | – | – | Planned |
+| CAP-07 Bejelentkezés és háztartásonkénti adatelkülönítés | Productization | [CI](https://github.com/toldor/kamra/actions/runs/37157528207); [e2e](../../tests/e2e/auth.spec.ts) (regisztráció → üres készlet); [V-10](../07_ai/verification_log.md), [V-11](../07_ai/verification_log.md) | [AuthTests.cs](../../tests/KamraApp.Integration.Tests/AuthTests.cs), [AdversarialAuthTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialAuthTests.cs), [AuthUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/AuthUseCaseTests.cs) | Partial – a bejelentkezés kész; az adatelkülönítés (S-2) az első háztartáshoz kötött végponttal (US-1) jön |
 | CAP-08 Készletváltozások naplózása okkal | Productization | – | – | Planned |
-| CAP-09 Folyamatos minőségellenőrzés (build, lint, tesztek, lefedettség, függőségvizsgálat) | Productization | – | – | Planned |
-| CAP-10 Üzemeltethetőség: strukturált naplózás és állapotfigyelés | Productization | – | – | Planned |
+| CAP-09 Folyamatos minőségellenőrzés (build, lint, tesztek, lefedettség, függőségvizsgálat) | Productization | [CI](https://github.com/toldor/kamra/actions/runs/37157528207); [ci.yml](../../.github/workflows/ci.yml); [branch-védelem](../assets/branch-ruleset.png) | [test_report.md](../04_quality/test_report.md) (61 teszt) | Partial – a lefedettségi küszöb (kapu) a test_strategy.md-vel jön |
+| CAP-10 Üzemeltethetőség: strukturált naplózás és állapotfigyelés | Productization | [observability.md](../05_security_ops/observability.md) (naplóminta, `/health`); [V-14](../07_ai/verification_log.md) | [ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs), [StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs) | Partial – metrikák és deploy runbook még nincsenek |
 | CAP-11 Működés AI-kiesés esetén | Productization | – | – | Planned |
 | CAP-12 A siker mérése: North Star és guardrail metrikák | Productization | – | – | Planned |
 
@@ -59,4 +59,4 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
 
 ## Ismert hiányosságok
 
-- Egyik képesség sincs még implementálva, ezért evidence- és tesztlink sincs.
+- A felhasználói értéket adó képességek (CAP-01 – CAP-06) még nincsenek implementálva, ezért ezekhez evidence- és tesztlink sincs. A walking skeleton a CAP-07, CAP-09 és CAP-10 egy részét valósította meg (*Partial*); a hiányzó részeket a táblázat Státusz oszlopa nevezi meg.
