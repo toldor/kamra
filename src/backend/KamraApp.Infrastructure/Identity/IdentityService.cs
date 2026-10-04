@@ -46,10 +46,12 @@ public sealed class IdentityService(KamraDbContext db, UserManager<AppUser> user
     public async Task<SignInOutcome> PasswordSignInAsync(string email, string password, CancellationToken cancellationToken)
     {
         // Identity increments the failed-attempt counter with optimistic concurrency, so parallel
-        // wrong passwords lose increments and slip past the lockout (found by an adversarial test, V-10).
-        // ponytail: one process-wide lock serializes password checks (~10-20 logins/s with PBKDF2);
-        // a multi-instance deployment would need an atomic counter update in the database instead.
-        await LoginLock.WaitAsync(cancellationToken);
+        // wrong passwords for one account lose increments and slip past the lockout (V-10). Attempts
+        // for the same e-mail are serialized; different accounts run in parallel on other stripes.
+        // ponytail: in-process striped locks; a multi-instance deployment would need an atomic
+        // counter update in the database instead.
+        var loginLock = LoginLocks[(int)((uint)StringComparer.OrdinalIgnoreCase.GetHashCode(email) % LoginLocks.Length)];
+        await loginLock.WaitAsync(cancellationToken);
         try
         {
             // The cookie's security-stamp check may already have loaded this user into the request's
@@ -66,7 +68,7 @@ public sealed class IdentityService(KamraDbContext db, UserManager<AppUser> user
         }
         finally
         {
-            LoginLock.Release();
+            loginLock.Release();
         }
     }
 
@@ -77,13 +79,21 @@ public sealed class IdentityService(KamraDbContext db, UserManager<AppUser> user
         var user = await users.GetUserAsync(signIn.Context.User);
         if (user is not null)
         {
-            await users.UpdateSecurityStampAsync(user);
+            // If the stamp cannot be changed, older cookies would stay valid: fail loudly instead of
+            // reporting a logout that did not revoke the other sessions.
+            var stamp = await users.UpdateSecurityStampAsync(user);
+            if (!stamp.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Security stamp update failed: {string.Join(", ", stamp.Errors.Select(e => e.Code))}");
+            }
         }
 
         await signIn.SignOutAsync();
     }
 
-    private static readonly SemaphoreSlim LoginLock = new(1, 1);
+    // A fixed number of locks keeps memory bounded however many e-mail addresses are tried.
+    private static readonly SemaphoreSlim[] LoginLocks = Enumerable.Range(0, 64).Select(_ => new SemaphoreSlim(1, 1)).ToArray();
 
     private static void ThrowIfFailed(IdentityResult result)
     {
