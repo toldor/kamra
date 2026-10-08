@@ -6,7 +6,7 @@
 
 A **Kamra** egy webalapú háztartási készlet- és receptkezelő rendszer, amelynek egyik célja az otthoni élelmiszer-pazarlás csökkentése.
 
-A rendszer tervezett működése:
+A rendszer tervezett teljes működése (hogy ebből mi készült el, azt a „Jelenlegi állapot” szakasz mutatja):
 
 - a felhasználó nyilvántarthatja az otthoni készlettételeit;
 - kezelheti a mennyiségeket, mértékegységeket és lejárati dátumokat;
@@ -37,7 +37,7 @@ A projekt célja egy olyan mérnökileg ellenőrizhető rendszer megtervezése �
 4. főzés után következetesen frissíti a készletet;
 5. az AI-t csak ellenőrzött, validált és felhasználói jóváhagyással működő folyamatokban használja.
 
-## Jelenlegi állapot – 2026. október 4.
+## Jelenlegi állapot – 2026. október 8.
 
 Elkészült a **walking skeleton**: a teljes rendszer végponttól végpontig fut egy vékony szeleten, üzleti funkció nélkül.
 
@@ -48,6 +48,8 @@ Elkészült a **walking skeleton**: a teljes rendszer végponttól végpontig fu
 - Docker Compose stack, GitHub Actions CI (build, formázás, lint, unit-, integrációs és e2e tesztek, OpenAPI-szerződés, sérülékenység- és secret-szkennelés).
 
 Még **nincs kész**: készletkezelés, receptek és ajánlás, főzés, bevásárlólista, AI-alapú bevitel, chatasszisztens. Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md); a tesztek állapota: [test report](docs/04_quality/test_report.md).
+
+Következő mérföldkő: **okt. 16.** – készletkezelés, valamint ajánlás és főzés 3–5 recepttel. A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 
@@ -86,12 +88,14 @@ A chat nem módosíthat közvetlenül adatot.
 | Adatbázis | PostgreSQL |
 | Adatkezelés | Entity Framework Core, migrációk |
 | Frontend | React, TypeScript, Vite |
-| AI | ChatCompletion API alkalmazási rétegben definiált interfész mögött |
-| Chat-integráció | Külön MCP-szerver, közös Application use case-ekkel |
+| AI (tervezett, 2. lépcső) | ChatCompletion API alkalmazási rétegben definiált interfész mögött |
+| Chat-integráció (tervezett, 3. lépcső) | MCP-eszközök közös Application use case-ekkel; a felépítésről az ADR-0010 dönt |
 | Tesztelés | xUnit v3, FluentAssertions 7, Testcontainers, Vitest, Playwright |
 | Környezet | Docker Compose, GitHub Actions |
 
-## Tervezett architektúra
+## Architektúra
+
+Megvalósult (v0.1.0): React-frontend, Web API, Application, Domain, Infrastructure, PostgreSQL. Tervezett: LLM-adapter (2. lépcső) és MCP-szerver (3. lépcső).
 
 ```text
 React + TypeScript frontend
@@ -202,10 +206,10 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 | Szakasz | Tervezett tartalom | Állapot |
 |---|---|---|
 | Alapok | Repository, CI, architektúra, walking skeleton (autentikáció, Docker Compose) | Kész (2026-10-04) |
-| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Tervezett |
-| 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett |
-| 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett |
-| Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett |
+| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Folyamatban (cél: okt. 23.) |
+| 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett (cél: nov. 6.) |
+| 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett (cél: nov. 20.) |
+| Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett (cél: dec. 4.) |
 
 ## Biztonsági és minőségi alapelvek
 

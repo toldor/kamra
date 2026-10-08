@@ -47,12 +47,12 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
 | Lépcső | Céldátum | Capability-k |
 |---|---|---|
 | Alapok | okt. 4. | CAP-07, CAP-09 (bővül a teljes fejlesztés alatt) |
-| 1. lépcső – determinisztikus mag | nov. 1. | CAP-01, CAP-03, CAP-04, CAP-05, CAP-08, CAP-10 |
-| 2. lépcső – AI-bevitel | nov. 15. | CAP-02, CAP-11 |
-| 3. lépcső – chat és mérés | nov. 22. | CAP-06, CAP-12 |
+| 1. lépcső – determinisztikus mag | okt. 23. | CAP-01, CAP-03, CAP-04, CAP-05, CAP-08, CAP-10 |
+| 2. lépcső – AI-bevitel | nov. 6. | CAP-02, CAP-11 |
+| 3. lépcső – chat és mérés | nov. 20. | CAP-06, CAP-12 |
 
 - **Csúszás esetén** először a CAP-06 szűkül; az 1. és a 2. lépcső képességei védettek.
-- **Stretch** (nem vállalt, csak ha a 3. lépcső a nov. 22-i feature freeze előtt kész és zöld):
+- **Stretch** (nem vállalt, csak ha a 3. lépcső a nov. 20-i feature freeze előtt kész és zöld):
   - *AI-receptötlet mentése jóváhagyással:* a hideg indulást az induló receptkészlet már kezeli, ez csak kényelmi bővítés.
   - *AI-os helyettesítés és adagjavaslat:* a lineáris adagskálázás az MVP-ben van; az AI-os rész nem szükséges a fő flow-hoz.
   - *Kipipált bevásárlólista-tételből készletbevitel:* a készletbevitel e nélkül is működik; ez a kör zárását kényelmesíti.

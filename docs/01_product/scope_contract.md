@@ -92,19 +92,24 @@ Sorrendben, az MVP Definition of Done teljesülése után:
 
 ### Idő
 
-Leadás: **2026. december 5.** Kapacitás: kb. 20 óra/hét, összesen kb. 200 óra.
+Kapacitás: kb. 20 óra/hét, összesen kb. 200 óra. Az ütemezés a témavezetővel egyeztetett (2026. okt.) mérföldkövekhez igazodik.
 
-| Időszak | Tartalom |
-|---|---|
-| szept. 28 – okt. 4. | Alapok: repo, Docker Compose, CI, regisztráció és bejelentkezés, tervezési dokumentumok |
-| okt. 5 – nov. 1. | 1. lépcső: US-1, US-3, US-4, US-5 |
-| nov. 2 – nov. 15. | 2. lépcső: US-2 |
-| nov. 16 – nov. 22. | 3. lépcső: US-6 |
-| nov. 23 – dec. 5. | Feature freeze: hibajavítás, tesztek, dokumentáció, demó |
+| Időszak | Tartalom | Mérföldkő |
+|---|---|---|
+| szept. 28 – okt. 4. | Alapok: repo, Docker Compose, CI, regisztráció és bejelentkezés, tervezési dokumentumok | Kész: v0.1.0 |
+| okt. 5 – okt. 16. | Az 1. lépcső tervezési dokumentumai; US-1; ajánlás és főzés 3–5 recepttel (US-3, US-4 alapútja) | okt. 16.: működő készletkezelés és bemutatható ajánlás–főzés folyamat, kézzel ellenőrzött mennyiségekkel |
+| okt. 17 – okt. 23. | US-5; US-3 és US-4 hibás esetei; az induló recept- és hozzávalólista bővítése | okt. 23.: a készlet–recept–főzés–bevásárlás teljes útja (1. lépcső kész) |
+| okt. 24 – nov. 6. | 2. lépcső: LLM-mérés (PoC), US-2 | nov. 6.: stabil szakmai mag és kipróbálható MI-bevitel |
+| nov. 7 – nov. 20. | 3. lépcső: US-6; mérések | nov. 20.: feature freeze és a dolgozat teljes első változata |
+| nov. 21 – dec. 4. | Hibajavítás, telepítés kipróbálása, felhasználói próbák, a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás (saját befejezési cél) |
+| dec. 5 – dec. 11. | Végső ellenőrzés | dec. 11.: végső belső ellenőrzési csomag |
 
-- **Feature freeze: nov. 22.** Utána csak javítás és dokumentáció kerül be.
+- **Feature freeze: nov. 20.** Utána csak javítás és dokumentáció kerül be.
+- **Hivatalos határidők** (a témavezető tájékoztatása szerint a TTIK kari naptára alapján, egyedileg ellenőrizendő): jelentkezés a januári záróvizsgára okt. 31., dolgozatbeadás dec. 19.
+- **Döntési pont – okt. 23.:** az 1. lépcső eredménye alapján a témavezetővel döntünk a januári záróvizsga tarthatóságáról; csúszás esetén későbbi záróvizsga.
+- A dolgozat a fejlesztéssel párhuzamosan készül: minden lépcső végén a hozzá tartozó fejezet.
 - Stretch csak akkor, ha a 3. lépcső a freeze előtt kész és zöld. A jelenlegi ütemezés alapján valószínűleg nem fér bele.
-- Csúszás esetén először a US-6 szűkül. Az 1. és a 2. lépcső védett.
+- Csúszás esetén először a US-6 szűkül, **előzetesen egyeztetve a témavezetővel**. Az 1. és a 2. lépcső védett.
 
 ### Adat
 
