@@ -50,12 +50,19 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `LOGIN_LOCKED_OUT` | 429 | A fiók 5 sikertelen bejelentkezés után 5 percre zárolva (ux_flows H5) | Megvalósítva |
 | `METHOD_NOT_ALLOWED` | 405 | A végpont nem támogatja a HTTP-metódust | Megvalósítva |
 | `REQUEST_REJECTED` | 4xx | Egyéb, a keretrendszer által elutasított kérés (pl. 415, vagy `BadHttpRequestException` saját 4xx státusszal), saját kód nélkül | Megvalósítva |
+| `INGREDIENT_NOT_FOUND` | 404 | Hozzávaló nem létezik, vagy más háztartás saját hozzávalója | Tervezett |
+| `INGREDIENT_NAME_TAKEN` | 409 | Saját hozzávaló neve foglalt a háztartásban vagy a rendszerlistán | Tervezett |
 | `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik | Tervezett |
-| `INVALID_QUANTITY` | 400 | Érvénytelen mennyiség | Tervezett |
+| `PANTRY_ITEM_MODIFIED` | 409 | A készlettétel a kliens által látott verzió óta megváltozott ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)); a kliens újratölti | Tervezett |
+| `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Tervezett |
+| `INSUFFICIENT_STOCK` | 409 | A megerősített felhasznált mennyiség több a jelenlegi készletnél; a válasz a friss mennyiségeket tartalmazza (US-4) | Tervezett |
+| `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
+| `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik | Tervezett |
+| `SHOPPING_SUGGESTION_NOT_FOUND` | 404 | Bevásárlójavaslat nem létezik | Tervezett |
+| `ITEM_PROPOSAL_STATE_CONFLICT` | 409 | Elvetett tételjavaslat jóváhagyása vagy jóváhagyott elvetése (ADR-0007, ADR-0008) | Tervezett |
 | `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el (időtúllépés vagy kiesés újrapróbálás után) | Tervezett |
 | `LLM_INVALID_RESPONSE` | 502 | Az LLM válasza nem felel meg a sémának | Tervezett |
 | `ITEM_PROPOSAL_NO_ITEMS` | 400 | A szövegből egyetlen tétel sem nyerhető ki | Tervezett |
-| `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Tervezett |
 
 ## Felhasználói üzenetek
 
@@ -66,4 +73,4 @@ A `title` mindig biztonságos, általános magyar szöveg; mezőnkénti validác
 - Ha a kivétel azután történik, hogy a válasz küldése már elkezdődött (például streamelt válasz közben), az ASP.NET Core nem tud ProblemDetails-t írni: a kliens csonka választ kap, a kivételt a keretrendszer és a kérésnapló naplózza. A jelenlegi végpontok a választ egyben írják ki.
 
 - A hibakódok listája bővülni fog az implementáció során.
-- Ismételt jóváhagyás: jóváhagyott tételjavaslat újbóli jóváhagyása 200 ugyanazzal az eredménnyel; ellentmondó művelet (elvetett jóváhagyása, jóváhagyott elvetése) 409. Az egyidejű kérések atomikus kezelése a konkurenciakezelési ADR-ben dől el.
+- Ismételt jóváhagyás: jóváhagyott tételjavaslat újbóli jóváhagyása 200 ugyanazzal az eredménnyel; ellentmondó művelet (elvetett jóváhagyása, jóváhagyott elvetése) 409. Az egyidejű kérések atomikus kezelése: [ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md).
