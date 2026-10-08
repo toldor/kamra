@@ -13,18 +13,20 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
   4. Tomi szükség esetén javít, majd a „Jóváhagyás” gombbal menti. Új készlettételek jönnek létre.
 - **Sikerkritérium:** a jóváhagyott tételek a készletben vannak; a hamarosan lejárók a kezdőképernyő tetején látszanak.
 - **Edge case – dupla jóváhagyás:** a gomb a kérés idejére letiltódik, és a jóváhagyás egy tételjavaslatra csak egyszer fut le (idempotens), így dupla kattintás vagy újraküldés nem hoz létre duplikált készletet.
+- **Edge case – másik fülön módosított tétel:** ha Tomi egy készlettételt szerkeszt, amelyet közben egy másik fülön módosított, a mentés nem fut le; a képernyő a friss adatokat mutatja a változás kiemelésével, és Tomi újra dönthet.
 
 ## 2. „Mit főzzek?” – főzés és a készlet frissítése (US-3, US-4)
 
 - **Cél:** Tomi este gyorsan kiválaszt egy receptet abból, ami otthon van, elsősorban a hamarosan lejáró alapanyagokból.
 - **Előfeltétel:** van készlet.
 - **Lépések:**
-  1. Tomi megnyitja a „Mit főzzek?” oldalt. Elöl az elkészíthető receptek állnak, mindegyik egy mondatos indoklással (*„2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”*), alattuk a majdnem elkészíthetők a hiányzó hozzávalókkal.
+  1. Tomi megnyitja a „Mit főzzek?” oldalt. Elöl az elkészíthető receptek állnak, mindegyik egy mondatos indoklással (*„2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”*), alattuk a majdnem elkészíthetők a hiányzó mennyiségekkel (*„tejföl: 50 g hiányzik (150 g van, 200 g kell)”*).
   2. Kiválaszt egy receptet, és a „Megfőztem” gombbal megadja az adagszámot (Betti négyfős családnál nagyobb adagot ad meg).
-  3. A megerősítő képernyő mutatja, mi mennyi vonódik le, és melyik készlettételből (a legkorábban lejárótól). A mennyiségek itt módosíthatók.
+  3. A megerősítő képernyő hozzávalónként mutatja a szükséges és a felhasznált mennyiséget, és azt, hogy melyik készlettételből vonódik le (a legkorábban lejárótól). A felhasznált mennyiség itt módosítható; ha valamiből kevesebb van, a hiány külön látszik, és egy kattintással a bevásárlólistára tehető.
   4. A megerősítés után a készlet frissül. Ha közben valami elfogyott, egy összegző sor jelzi: *„Elfogyott: tej, tojás. Felvettem őket a bevásárlójavaslatok közé.”*, „Megnézem” linkkel.
 - **Sikerkritérium:** a felhasznált mennyiségek levonódtak, a főzés rögzült, és Tomi tudja, mi fogyott el.
-- **Edge case – közben változott készlet:** a megerősítő képernyő a megerősítés pillanatában számol újra; ha valamiből kevesebb van, a tétel 0-ra csökken, és a képernyő jelzi az eltérést (*„tejföl: csak 150 g volt, 200 g helyett”*).
+- **Edge case – közben változott készlet:** ha a megerősítéskor valamiből már kevesebb van, mint a megadott felhasznált mennyiség, a főzés nem mentődik; a képernyő a friss készlettel újraszámol, kiemeli az eltérést (*„tejföl: már csak 150 g van, 200 g helyett”*), és újra megerősítést kér.
+- **Edge case – dupla kattintás vagy újraküldés:** a főzés megerősítése egyszer fut le; az ismételt kérés nem von le újra, hanem az eredeti főzés összegzését mutatja.
 
 ## 3. Bevásárlójavaslattól a listáig (US-5)
 
@@ -34,7 +36,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
   1. A főzés vagy a kézi levonás megerősítése után Tomi az összegző sorban látja, mi került a javaslatok közé, és a „Megnézem” linkkel a bevásárlólistára lép.
   2. A lista fölött a *„Javaslatok (2)”* blokk soronként „Hozzáadom” és „Nem kell” gombbal.
   3. A „Hozzáadom” a listára teszi a tételt; a „Nem kell” eltünteti, és addig nem jön vissza, amíg Tomi újra nem vesz belőle.
-  4. A „Majdnem elkészíthető” receptnél a „Bevásárlólistára” gomb a hiányzó hozzávalókat közvetlenül a listára teszi.
+  4. A „Majdnem elkészíthető” receptnél a „Bevásárlólistára” gomb a hiányzó mennyiségeket közvetlenül a listára teszi.
   5. A boltban Tomi kipipálja a megvett tételeket.
 - **Sikerkritérium:** a lista csak a Tomi által elfogadott vagy kézzel felvett tételeket tartalmazza, és egy hozzávaló nem szerepel rajta kétszer.
 

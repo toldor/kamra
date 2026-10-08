@@ -24,9 +24,10 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 
 - Készlettétel mezői: hozzávaló, mennyiség, mértékegység (g, dkg, kg, ml, dl, l, db), kategória (fix lista), lejárat (opcionális).
 - Ha nincs megadva lejárat, a rendszer a kategória alapértelmezett eltarthatóságából **becsült lejáratot** számol, amely becsültként jelölve látszik és szerkeszthető. Az „egyéb” kategóriánál a lejárat kötelező.
-- Érvénytelen bevitel (0 vagy negatív mennyiség, ismeretlen egység, hiányzó hozzávaló) nem mentődik, és a hibaüzenet megmondja, mit kell javítani.
+- Érvénytelen bevitel (0 vagy negatív mennyiség, ismeretlen vagy a hozzávaló dimenziójához nem illő egység, hiányzó hozzávaló) nem mentődik, és a hibaüzenet megmondja, mit kell javítani.
 - A lista kereshető név szerint, szűrhető kategória szerint, és van **„hamarosan lejáró”** szűrő (lejárat ma, holnap vagy holnapután). A lejárt tételek külön jelölve látszanak.
 - Kézi készletcsökkentésnél a **csökkenési ok** kötelező (elfogyott / kidobtam / hibás rögzítés), és minden változás a készletmozgás-naplóba kerül. Ez a törlésre és a mennyiség szerkesztéssel történő csökkentésére is vonatkozik: a törlés egy 0-ra csökkentés csökkenési okkal.
+- Ha egy készlettételt a felhasználó által látott állapot óta máshol módosítottak (például egy másik böngészőfülön vagy főzéssel), a szerkesztés, a csökkentés és a törlés nem írja felül csendben a változást: a mentés nem fut le, a felület a friss adatokat mutatja a változás kiemelésével, és a felhasználó újra dönthet. Egyetlen sikeresen mentett változás sem vész el.
 
 ### US-2 – Egy mondatos bevitel
 
@@ -37,7 +38,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 - Nem átváltható egység („egy csomag tejföl”) esetén a tételjavaslatból hiányzik az egység, és jóváhagyás előtt meg kell adni.
 - LLM-időtúllépés (15 mp próbálkozásonként) vagy kiesés esetén egy automatikus újrapróbálás történik. Ha az is sikertelen, vagy a válasz nem felel meg a sémának, vagy egyetlen tétel sem nyerhető ki: magyar nyelvű hibaüzenet jelenik meg, a beírt szöveg megmarad, egy kattintással elérhető a kézi form, és semmi nem mentődik.
 - Ha egy hozzávalóból már van készlet, a tételjavaslat tájékoztat róla („Már van otthon: tej 0,5 l, okt. 2-án jár le”), és jóváhagyáskor mindig új készlettétel jön létre (nincs összevonás).
-- A jóváhagyás egy tételjavaslatra csak egyszer fut le (idempotens): dupla kattintás vagy a kérés újraküldése nem hoz létre duplikált készletet.
+- A jóváhagyás egy tételjavaslatra csak egyszer fut le (idempotens): dupla kattintás vagy a kérés újraküldése nem hoz létre duplikált készletet, hanem az első jóváhagyás eredményét adja vissza.
 - A tételjavaslat beküldési és jóváhagyási időpontja tárolódik (G3 metrika, [metrics.md](metrics.md)).
 
 ### US-3 – Receptek és ajánlás
@@ -46,8 +47,8 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 
 - Induló receptkészlet: 20–40 magyar hétköznapi recept, strukturált hozzávalókkal. Saját recept kézzel is felvihető (név, adagszám, hozzávalók mennyiséggel és egységgel, elkészítés).
 - **Elkészíthető** a recept, ha minden hozzávaló megvan a szükséges mennyiségben. Rangsor: (1) a felhasznált hamarosan lejáró készlettételek száma szerint csökkenő, (2) a legkorábbi lejárat szerint, (3) név szerint.
-- **Majdnem elkészíthető** a recept, ha legfeljebb 2 hozzávaló hiányzik vagy kevés. A hiányzók látszanak, és egy kattintással a bevásárlólistára tehetők.
-- Minden ajánlás mellett egy mondatos indoklás áll (például „2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”).
+- **Majdnem elkészíthető** a recept, ha legfeljebb 2 hozzávaló hiányzik vagy kevés. Hozzávalónként látszik a hiányzó mennyiség, valamint az, hogy mennyi van és mennyi kell (például „tejföl: 50 g hiányzik (150 g van, 200 g kell)”); a hiány a recept alapértelmezett adagszámára számolódik. A „Bevásárlólistára” gomb egy kattintással a hiányzó mennyiségeket teszi a listára.
+- Minden ajánlás mellett indoklás áll: elkészíthető receptnél a felhasznált hamarosan lejáró hozzávalók (például „2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”), ennek hiányában „Minden hozzávaló megvan.”; majdnem elkészíthető receptnél a hiányzó mennyiségek.
 - Az **alaphozzávalók** (víz, só, bors) nem számítanak bele az illesztésbe.
 - Azonos készletre és receptkészletre az ajánlás sorrendje mindig ugyanaz (determinisztikus, unit teszttel rögzítve).
 
@@ -56,11 +57,12 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 *Felhasználóként jelezni akarom, hogy megfőztem egy receptet, és azt akarom, hogy a készlet ehhez igazodjon.*
 
 - Főzéskor megadható az adagszám (alapértelmezés: a recept adagszáma). A levonandó mennyiség lineárisan skálázódik; darabnál felfelé kerekítünk egészre, g-nál és ml-nél egészre.
-- Levonás előtt egy megerősítő képernyő mutatja a levonandó mennyiségeket, és ott tételenként módosíthatók.
-- A levonás a legkorábban lejáró készlettételből indul (FEFO). A készlet nem lehet negatív: ha nincs elég, a tétel 0-ra csökken, és a képernyő jelzi az eltérést.
-- A levonandó mennyiségek a megerősítés pillanatában a friss készletből számolódnak; ha a készlet az ajánlás megnyitása óta változott, a megerősítő képernyő az eltérést jelzi.
+- A megerősítő képernyő hozzávalónként mutatja a **szükséges** mennyiséget (az adagszámmal skálázva) és a **felhasznált** mennyiséget, amely szerkeszthető, és alapértéke a szükséges mennyiség és a készlet közül a kisebb. A kettő különbsége **hiányként** látszik, és egy kattintással a bevásárlólistára tehető (US-5). A felhasznált mennyiség nem lehet több a készletnél.
+- Levonás és készletmozgás-napló csak a ténylegesen felhasznált mennyiségre készül; a hiány nem könyvelődik. A levonás a legkorábban lejáró készlettételből indul (FEFO). Például 200 g korábban és 400 g később lejáró paradicsomnál egy 300 g-os felhasználás után 0 g és 300 g marad.
+- Ha a megerősítéskor a készlet már kevesebb, mint a megadott felhasznált mennyiség (például egy másik fülön közben változott), a főzés nem mentődik: a képernyő a friss készlettel újraszámol, kiemeli az eltérést, és újra megerősítést kér. A rendszer soha nem vonja le csendben a megerősítettnél kevesebbet vagy többet.
+- A főzés megerősítése egyszer fut le (idempotens): a megerősítő képernyő minden megnyitása egyedi kérésazonosítót kap, és az ugyanazzal az azonosítóval ismételten elküldött kérés (dupla kattintás, újraküldés, frissítés) nem von le újra, hanem az eredeti főzés eredményét adja vissza. Ugyanaz a recept szándékosan többször is megfőzhető: minden új megerősítő képernyő új főzés.
 - A megerősítés után egy összegző sor jelzi, mely hozzávalók fogytak el, és kerültek a bevásárlójavaslatok közé (US-5).
-- Minden levonás *elfogyott* okkal kerül a készletmozgás-naplóba, a főzés-esemény pedig tárolódik (időpont, recept, felhasznált tételek; North Star metrika).
+- Minden levonás *elfogyott* okkal kerül a készletmozgás-naplóba, a főzés-esemény pedig tárolódik (időpont, recept, adagszám, hozzávalónként a szükséges és a felhasznált mennyiség; North Star metrika).
 
 ### US-5 – Bevásárlólista
 
