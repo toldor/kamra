@@ -42,8 +42,14 @@ jobs:
       - name: OpenAPI contract unchanged (generated on build, committed)
         run: git diff --exit-code -- src/backend/KamraApp.Api/openapi.json
 
-      - name: Tests (unit + integration with PostgreSQL in Testcontainers) with coverage
-        run: dotnet test --no-build --coverlet --coverlet-output-format cobertura
+      - name: Unit tests with coverage gate (Domain + Application line coverage >= 80%, test_strategy.md)
+        run: >-
+          dotnet test --no-build --project tests/KamraApp.Unit.Tests --coverlet --coverlet-output-format cobertura
+          --coverlet-include "[KamraApp.Domain]*" --coverlet-include "[KamraApp.Application]*"
+          --coverlet-threshold 80 --coverlet-threshold-type line
+
+      - name: Integration tests (PostgreSQL in Testcontainers) with coverage
+        run: dotnet test --no-build --project tests/KamraApp.Integration.Tests --coverlet --coverlet-output-format cobertura
 
       - name: Vulnerable NuGet packages
         run: |
