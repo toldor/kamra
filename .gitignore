@@ -110,3 +110,10 @@ $RECYCLE.BIN/
 *.log
 *.tmp
 *.temp
+
+# ==========================================
+# Frontend build output and e2e reports
+# ==========================================
+src/backend/KamraApp.Api/wwwroot/
+tests/e2e/playwright-report/
+tests/e2e/test-results/

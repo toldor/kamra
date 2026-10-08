@@ -1,0 +1,97 @@
+/* ux_flows accessibility minimum: 16px base font, 44x44px touch targets, visible focus, 4.5:1 contrast. */
+:root {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #ffffff;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+input {
+  font: inherit;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid #5c5c5c;
+  border-radius: 6px;
+}
+
+input[aria-invalid='true'] {
+  border-color: #b00020;
+}
+
+button {
+  font: inherit;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #1d5e3a;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #6b6b6b;
+  cursor: wait;
+}
+
+button.link {
+  background: none;
+  color: #1d5e3a;
+  text-decoration: underline;
+  margin-top: 1rem;
+}
+
+:focus-visible {
+  outline: 3px solid #0b57d0;
+  outline-offset: 2px;
+}
+
+.field-error,
+.form-error {
+  color: #b00020;
+  margin: 0;
+}
+
+.hint {
+  color: #4a4a4a;
+  margin: 0;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Long e-mail addresses must wrap instead of pushing the page wider than 360 px. */
+.topbar span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  font-size: 1.125rem;
+}

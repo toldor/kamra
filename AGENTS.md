@@ -9,8 +9,8 @@ A web-based pantry and recipe management app with AI-assisted inventory tracking
 
 - Add inventory items via a form **or** via natural-language quick entry (the LLM extracts name, quantity, expiry date).
 - Expiry estimation based on product category when the date is missing.
-- Recipe suggestions from current stock, prioritising items that expire soon; AI-driven serving adjustment and ingredient substitution.
-- Automatic stock deduction after cooking; low-stock items are added to the shopping list.
+- Recipe recommendations from current stock, prioritising items that expire soon (deterministic ranking); AI-driven serving adjustment and ingredient substitution are stretch goals.
+- Automatic stock deduction after cooking; depleted or low-stock ingredients become shopping list suggestions that the user accepts or rejects.
 - Chat assistant that queries data through **MCP** tools.
 
 ## 2. Tech stack
@@ -48,21 +48,26 @@ docs/                                 # Docs-as-Code (00_index.md is the index)
 - `Api` and `McpServer` → `Application` (plus `Infrastructure` for DI registration).
 - No business logic in controllers, MCP tools or React components.
 - The API and the MCP server call the **same** Application use cases – no duplicated logic.
+- Application: one class per use case, aggregate-level repository interfaces, no generic repository, no mediator; every household-scoped repository method takes `HouseholdId`.
 
 ## 4. Commands
 
 The exact commands live in the README; if they change, update both places.
 
 ```bash
-docker compose up -d db                 # database
-dotnet build                            # backend build
-dotnet test                             # all .NET tests
+docker compose up --build               # full system: db -> migrator -> api (+ SPA) at http://localhost:8080
+docker compose up -d db                 # database only, for local development
+dotnet build -warnaserror               # backend build (analyzers, warnings as errors)
+dotnet test                             # all .NET tests (integration tests need Docker: Testcontainers)
+dotnet test --coverlet --coverlet-output-format cobertura   # with coverage
 dotnet format --verify-no-changes       # formatting check
-dotnet ef database update -p src/backend/KamraApp.Infrastructure -s src/backend/KamraApp.Api
+dotnet ef database update -p src/backend/KamraApp.Infrastructure -s src/backend/KamraApp.Api   # local migrations
 cd src/frontend && npm ci && npm run lint && npm test && npm run build
-npx playwright test                     # e2e (requires running stack)
-docker compose up --build               # full system
+cd src/frontend && npm run gen:api      # regenerate API types after openapi.json changed
+cd tests/e2e && npm ci && npx playwright test   # e2e (requires running stack, E2E_BASE_URL)
 ```
+
+In Docker Compose the `migrator` service applies the migrations (EF migration bundle) before the Api starts; the Api never runs DDL. `openapi.json` is regenerated on every backend build and must be committed (CI fails on a diff).
 
 A task is done only when build, format, lint and **all** tests are green.
 
@@ -71,9 +76,9 @@ A task is done only when build, format, lint and **all** tests are green.
 ### Backend
 - `nullable` enabled, warnings as errors.
 - Async I/O everywhere, passing `CancellationToken` through.
-- Validation in the Application layer (FluentValidation or equivalent).
+- Validation in the Application layer with DataAnnotations (see ADR-0004).
 - Unified error model: RFC 7807 `ProblemDetails` with a stable `code` field (e.g. `PANTRY_ITEM_NOT_FOUND`). Never send stack traces to the client.
-- Error categories: validation (400), unauthorized (401), forbidden (403), not found (404), conflict (409), rate limit (429), internal (500).
+- Error categories: validation (400), unauthorized (401), forbidden (403), not found (404), conflict (409), rate limit (429), internal (500), bad gateway (502, invalid LLM response), unavailable (503, LLM unavailable). Use cases throw `AppException` subclasses; mapping to ProblemDetails happens in one place (see ADR-0007).
 - Structured logging (Serilog, JSON) with `correlationId`. **Never log PII, prompts or API keys.**
 - Configuration: `appsettings.json` + environment overrides, validated at startup (fail fast).
 - Schema changes only via EF migrations with descriptive names (`AddExpiryEstimateToPantryItem`).
@@ -81,13 +86,14 @@ A task is done only when build, format, lint and **all** tests are green.
 ### AI / MCP
 - Every LLM call sits behind an interface defined in the Application layer (e.g. `IIngredientParser`) so it can be mocked.
 - **Always** validate LLM output against a schema (JSON schema or DTO validation) before it reaches the database; on invalid output return a clear error – do not guess.
-- MCP tools are read-only or write only through narrow, validated use cases. Never expose raw SQL or arbitrary queries.
+- MCP tools are read-only; they never modify or propose data changes. Never expose raw SQL or arbitrary queries.
 - Every MCP tool has a description, an input schema and a test. The list lives in `docs/03_design/mcp_tools.md`.
 - Keep prompt texts in dedicated files or constants, versioned, not scattered across the code.
 
 ### Frontend
 - Function components, TypeScript `strict`.
 - API calls live under `src/frontend/src/api/`; no direct `fetch` from components.
+- No `dangerouslySetInnerHTML`; LLM output is always rendered as plain text.
 - Every data-loading view has loading, empty, error and success states.
 - User-facing messages are in **Hungarian**, clear, and tell the user what to do next. No HTTP codes or technical text.
 - Basic a11y: labelled inputs, keyboard-operable controls, sufficient contrast.
@@ -116,6 +122,7 @@ A task is done only when build, format, lint and **all** tests are green.
 ## 8. Git workflow
 
 - Branches: `main` (stable, PR-only), `feature/<short-name>`, `fix/<short-name>`, `docs/<short-name>`.
+- `develop` (integration): `docs/*` and `feature/*` branches merge here via PR; `develop` → `main` via PR when releasable.
 - Conventional Commits: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`, `chore:`, `style:` – max 72 characters, imperative mood.
 - Small, focused commits: prompt → review → test → commit. No giant end-of-day commit.
 - Never push directly to `main`; no force pushes.
