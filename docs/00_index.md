@@ -35,7 +35,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [adr/0005-postgresql-ef-core-migraciok.md](02_architecture/adr/0005-postgresql-ef-core-migraciok.md) | PostgreSQL + EF Core, migrator-szolgáltatás, JSON seed, GUID v7 | Accepted |
 | [adr/0006-cookie-auth-identity.md](02_architecture/adr/0006-cookie-auth-identity.md) | Cookie-alapú authentikáció ASP.NET Core Identity-vel, azonos origin, antiforgery | Accepted |
 | [adr/0007-rest-api-hibamodell.md](02_architecture/adr/0007-rest-api-hibamodell.md) | REST + controllerek, /api/v1, kivétel-alapú ProblemDetails, generált OpenAPI | Accepted |
-| [adr/0008-konkurencia-es-idempotencia.md](02_architecture/adr/0008-konkurencia-es-idempotencia.md) | Optimista zárolás xmin-nel, főzés-idempotencia kérésazonosítóval, upsert és egyedi kényszerek | Proposed |
+| [adr/0008-konkurencia-es-idempotencia.md](02_architecture/adr/0008-konkurencia-es-idempotencia.md) | Optimista zárolás xmin-nel, főzés-idempotencia kérésazonosítóval, upsert és egyedi kényszerek | Accepted |
 | [adr/0011-serilog-strukturalt-naplozas.md](02_architecture/adr/0011-serilog-strukturalt-naplozas.md) | Serilog JSON-napló, szerver által generált correlationId | Accepted |
 
 ---

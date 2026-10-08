@@ -45,7 +45,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 
 *Felhasználóként látni akarom, mit főzhetek abból, ami otthon van, elöl azzal, ami hamarosan lejáró alapanyagot használ fel.*
 
-- Induló receptkészlet: 20–40 magyar hétköznapi recept, strukturált hozzávalókkal. Saját recept kézzel is felvihető (név, adagszám, hozzávalók mennyiséggel és egységgel, elkészítés).
+- Induló receptkészlet: 20–40 magyar hétköznapi recept, strukturált hozzávalókkal. Saját recept kézzel is felvihető (név, adagszám, hozzávalók mennyiséggel és egységgel, elkészítés). A saját recept archiválható: az archivált recept nem jelenik meg az ajánlásban, a korábbi főzések megmaradnak.
 - **Elkészíthető** a recept, ha minden hozzávaló megvan a szükséges mennyiségben. Rangsor: (1) a felhasznált hamarosan lejáró készlettételek száma szerint csökkenő, (2) a legkorábbi lejárat szerint, (3) név szerint.
 - **Majdnem elkészíthető** a recept, ha legfeljebb 2 hozzávaló hiányzik vagy kevés. Hozzávalónként látszik a hiányzó mennyiség, valamint az, hogy mennyi van és mennyi kell (például „tejföl: 50 g hiányzik (150 g van, 200 g kell)”); a hiány a recept alapértelmezett adagszámára számolódik. A „Bevásárlólistára” gomb egy kattintással a hiányzó mennyiségeket teszi a listára.
 - Minden ajánlás mellett indoklás áll: elkészíthető receptnél a felhasznált hamarosan lejáró hozzávalók (például „2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”), ennek hiányában „Minden hozzávaló megvan.”; majdnem elkészíthető receptnél a hiányzó mennyiségek.

@@ -46,8 +46,8 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | PUT | `/shopping-list/items/{id}` | Kipipálás, mennyiség módosítása | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Tervezett |
 | DELETE | `/shopping-list/items/{id}` | Tétel törlése → 204 | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Tervezett |
 | GET | `/shopping-suggestions` | Nyitott bevásárlójavaslatok | US-5 | – | Tervezett |
-| POST | `/shopping-suggestions/{id}/accept` | Elfogadás: a tétel a listára kerül | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND` | Tervezett |
-| POST | `/shopping-suggestions/{id}/reject` | Elutasítás | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND` | Tervezett |
+| POST | `/shopping-suggestions/{id}/accept` | Elfogadás: a tétel a listára kerül | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Tervezett |
+| POST | `/shopping-suggestions/{id}/reject` | Elutasítás | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Tervezett |
 | PUT | `/ingredients/{id}/minimum` | Minimumszint beállítása vagy törlése (null) | US-5 | `INGREDIENT_NOT_FOUND`, `VALIDATION_FAILED` | Tervezett |
 
 A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. és a 3. lépcső előtt kerülnek be.

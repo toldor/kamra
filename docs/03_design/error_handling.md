@@ -59,6 +59,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
 | `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik | Tervezett |
 | `SHOPPING_SUGGESTION_NOT_FOUND` | 404 | Bevásárlójavaslat nem létezik | Tervezett |
+| `SHOPPING_SUGGESTION_STATE_CONFLICT` | 409 | Elutasított bevásárlójavaslat elfogadása vagy elfogadott elutasítása ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
 | `ITEM_PROPOSAL_STATE_CONFLICT` | 409 | Elvetett tételjavaslat jóváhagyása vagy jóváhagyott elvetése (ADR-0007, ADR-0008) | Tervezett |
 | `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el (időtúllépés vagy kiesés újrapróbálás után) | Tervezett |
 | `LLM_INVALID_RESPONSE` | 502 | Az LLM válasza nem felel meg a sémának | Tervezett |

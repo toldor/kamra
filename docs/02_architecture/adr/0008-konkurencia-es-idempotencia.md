@@ -1,7 +1,7 @@
 # 0008 - Konkurenciakezelés és idempotencia: optimista zárolás xmin-nel, kérésazonosító és adatbázis-kényszerek
 
 Dátum: 2026-10-08
-Státusz: Proposed
+Státusz: Accepted
 
 ## Context
 
@@ -16,9 +16,9 @@ Státusz: Proposed
 Részletek:
 
 1. **Készlettétel (abszolút módosítás):** a verzió az `xmin` (`uint` property, `IsRowVersion()`); a lekérdezés visszaadja, a módosító kérés törzsében kötelező `version` mezőként érkezik vissza. Eltérésnél a mentés nem fut le: 409 `PANTRY_ITEM_MODIFIED`, a kliens újratölti a tételt.
-2. **Főzés:** egy tranzakcióban a szerver beolvassa az érintett hozzávalók készlettételeit, a megerősített felhasznált mennyiségeket FEFO szerint felosztja, és ha valamelyikből nincs elég, 409 `INSUFFICIENT_STOCK` a friss mennyiségekkel (nincs csendes levágás). A mentést az `xmin` védi: ha közben bármelyik érintett tétel változott, 409 `PANTRY_ITEM_MODIFIED`, a felület újraszámol és újra megerősítést kér (US-4).
+2. **Főzés:** egy tranzakcióban a szerver beolvassa az érintett hozzávalók készlettételeit, a megerősített felhasznált mennyiségeket FEFO szerint felosztja, és ha valamelyikből nincs elég, 409 `INSUFFICIENT_STOCK` a friss mennyiségekkel (nincs csendes levágás). A mentést az `xmin` védi: ha közben bármelyik érintett tétel változott, 409 `PANTRY_ITEM_MODIFIED`, a felület újraszámol és újra megerősítést kér (US-4). A kliens hozzávalónként erősít meg felhasznált mennyiséget, nem készlettételt: a felosztás a megerősítés pillanatának friss készletén a FEFO-szabály szerint történik, a válasz a tényleges felosztást mutatja, ezért a kérés nem tartalmazza a tételek verzióját (a versenyhelyzetet a szerveroldali olvasás és az `xmin` kezeli).
 3. **Főzés idempotenciája:** a `requestId` (uuid) a kérés törzsében érkezik; a `Cooking` tábla (`HouseholdId`, `RequestId`) egyedi. Ha a kérésazonosító már létezik: azonos recept és adagszám esetén 200 a tárolt adatokból újraépített eredménnyel (az első kérés 201), eltérő tartalomnál 409 `IDEMPOTENCY_CONFLICT`. **Bármely mentési hiba (egyedikulcs-sértés vagy verzióütközés) után a szerver először a kérésazonosítót keresi**, mert egyidejű duplikátumnál a második kérés a verzióütközésbe is belefuthat előbb; csak ha nincs ilyen főzés, akkor adja vissza az eredeti hibát.
-4. **Tételjavaslat (US-2):** feltételes állapotváltás (`ExecuteUpdateAsync`, `WHERE State = 'Pending'`), ugyanabban a tranzakcióban a készlettételek létrehozásával; 0 érintett sornál újraolvasás: jóváhagyott → 200 azonos eredmény, elvetett → 409 `ITEM_PROPOSAL_STATE_CONFLICT`.
+4. **Állapotváltások:** a tételjavaslat (US-2, `Pending`) és a bevásárlójavaslat (US-5, `Open`) jóváhagyása vagy elutasítása feltételes frissítéssel (`ExecuteUpdateAsync`, `WHERE State = 'Pending'`, illetve `WHERE State = 'Open'`), ugyanabban a tranzakcióban a következményével (új készlettételek, illetve a listára vétel upserttel); 0 érintett sornál újraolvasás: azonos célállapot → 200 azonos eredmény, ellentétes → 409 `ITEM_PROPOSAL_STATE_CONFLICT`, illetve `SHOPPING_SUGGESTION_STATE_CONFLICT`.
 5. **Bevásárlólista:** (`HouseholdId`, `IngredientId`) egyedi, a felvétel `INSERT … ON CONFLICT DO UPDATE` (mennyiség-összeadás) paraméterezett SQL-lel; a bevásárlójavaslatnál részleges egyedi index (`Open`, vagy `Rejected` és `ClearedAt` null) és `ON CONFLICT DO NOTHING`.
 
 ## Alternatives
@@ -29,6 +29,7 @@ Részletek:
 4) **Csak feltételes `UPDATE … WHERE Quantity >= @delta` a főzésnél** – előny: nincs verzió; hátrány: az olvasáskor számolt FEFO-felosztás elavulhat, és az abszolút szerkesztést nem védi.
 5) **`Idempotency-Key` fejléc tárolt válasszal** – előny: az IETF-tervezet szerinti forma, gyors ismétlés; hátrány: külön tábla és válasz-szerializálás; a főzés eredménye a tárolt adatokból újraépíthető, a generált OpenAPI-típusokhoz pedig a törzsmező egyszerűbb.
 6) **Csak kliensoldali gombtiltás / utolsó mentés nyer** – előny: nincs szerveroldali kód; hátrány: a hálózati újraküldést és a két fület nem védi, a változás csendben elveszhet.
+7) **A főzéskérés a látott készlettételek verzióját is elküldi** (a kapu-review javaslata) – előny: a kliens által látott állapothoz köt; hátrány: a közben felvett új készlettételt nem fogja meg, egy nem mennyiségi mező szerkesztésére feleslegesen 409-et ad, és a felhasználó amúgy is hozzávalónként, nem csomagonként erősít meg; az elveszett módosítást a szerveroldali olvasás és az `xmin` már kizárja ([V-21](../../07_ai/verification_log.md)).
 
 ## Consequences
 
@@ -42,7 +43,7 @@ Részletek:
   - elavult `version`-nel küldött szerkesztés → 409 `PANTRY_ITEM_MODIFIED`, a tétel változatlan (a „másik fül” közvetlen SQL-módosítással szimulálva);
   - két egyidejű főzés, amelyek együtt meghaladják a készletet → az egyik 201, a másik 409; a készlet nem negatív, a napló-invariáns teljesül;
   - ugyanaz a `requestId` kétszer, egymás után és egyszerre → egy főzés, egy levonás, azonos választörzs; eltérő tartalommal → 409 `IDEMPOTENCY_CONFLICT`;
-  - egyidejű jóváhagyás és elvetés → az egyik 200, a másik 409 (US-2-vel);
+  - egyidejű jóváhagyás és elvetés → az egyik 200, a másik 409 (tételjavaslat a US-2-vel, bevásárlójavaslat a US-5-tel);
   - két fülről egyszerre felvett azonos hozzávaló → egy listasor, összeadott mennyiség.
-  - Tervezési validáció: P-14 (Gemini), vak trianguláció; egyezés: 3–5. pont; eltérés: a verzió forrása (Alternatives 1, V-19) és a főzés zárolása (Alternatives 2, a reviewer javaslata elfogadva).
+  - Tervezési validáció: P-14 (Gemini), vak trianguláció; egyezés: 3–5. pont; eltérés: a verzió forrása (Alternatives 1, V-19) és a főzés zárolása (Alternatives 2, a reviewer javaslata elfogadva). Kapu-review (P-14): a bevásárlójavaslat állapotváltása pótolva (4. pont); a tételverziók küldése elutasítva (Alternatives 7, V-21).
 - **Evidence link:** az 1. lépcső (US-1, US-4, US-5) és a 2. lépcső (US-2) integrációs tesztjei; a link az implementációval együtt kerül ide.
