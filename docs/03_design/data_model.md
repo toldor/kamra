@@ -101,6 +101,7 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik.
 | Delta | numeric(12,3) | Előjeles változás alapegységben (+ bevitel, − csökkenés) |
 | Reason | text | `Added` (bevitel), `Consumed` (*elfogyott*), `Discarded` (*kidobtam*), `Corrected` (*hibás rögzítés*) |
 | CookingId | uuid (FK → Cooking.Id), null | Kitöltve, ha a mozgást főzés okozta (mindig `Consumed`) |
+| ExpiryDateAtMovement | date | A készlettétel lejárata a mozgás pillanatában; a metrikák (megmentett főzés, G1) ezzel számolnak, így a lejárat utólagos szerkesztése nem írja át a múltat |
 | OccurredAt | timestamptz | Időpont (UTC) |
 
 - A kézi csökkentésnél a felhasználó választja az okot (US-1); a mennyiség szerkesztéssel történő növelése `Corrected`, mert az új vásárlás új készlettétel.
@@ -155,9 +156,9 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik.
 | RequiredQuantity | numeric(12,3) | Szükséges mennyiség: a recept mennyisége az adagszámmal skálázva és kerekítve (US-4) |
 | UsedQuantity | numeric(12,3) | A felhasználó által megerősített, ténylegesen felhasznált mennyiség; 0 ≤ `UsedQuantity` |
 
-- A hiány = `RequiredQuantity` − `UsedQuantity`; nem könyvelődik, csak megjelenik, és a bevásárlólistára tehető.
+- A hiány = max(0, `RequiredQuantity` − `UsedQuantity`); nem könyvelődik, csak megjelenik, és a bevásárlólistára tehető. A felhasznált mennyiség a szükségesnél több is lehet (a készlet erejéig): ilyenkor nincs hiány.
 - A készlettételenkénti (FEFO) levonás a `StockMovement` `CookingId`-s soraiban van; hozzávalónként ezek összege = `UsedQuantity` (teszt ellenőrzi).
-- A „megmentett főzés” (North Star) a főzés mozgásaiból számolódik: van-e köztük olyan készlettétel, amely a főzés napján hamarosan lejáró volt ([metrics.md](../01_product/metrics.md)).
+- A „megmentett főzés” (North Star) a főzés mozgásaiból, a mozgáskori lejárat (`ExpiryDateAtMovement`) alapján számolódik: van-e köztük olyan készlettétel, amely a főzés napján hamarosan lejáró volt ([metrics.md](../01_product/metrics.md)).
 
 ### Bevásárlólista (vázlat – a US-5 előtt véglegesítve)
 
@@ -191,6 +192,7 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik.
 | AddedAt | timestamptz | Felvétel (UTC) |
 
 - Forrás: elfogadott javaslat, kézi felvétel, majdnem elkészíthető recept hiánya (US-3) vagy a főzés hiánya (US-4).
+- Mennyiség összevonása azonos hozzávalónál: két ismert mennyiség összeadódik; ismeretlen (null) és ismert találkozásakor az ismert marad (és az egysége); két ismeretlenből ismeretlen lesz. Az upsert ezt kifejezetten kezeli (`CASE`/`COALESCE`), mert a PostgreSQL-ben a null-lal végzett összeadás null; mindkét beszúrási sorrend tesztelve.
 - Nyitott a US-5 előtt: kipipált tételhez újra hozzáadott mennyiség kezelése; a „feltétel fölé kerül” pontos vizsgálata (a bevitel tranzakciójában).
 
 ## Migrációk

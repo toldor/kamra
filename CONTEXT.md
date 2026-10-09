@@ -82,7 +82,7 @@ _Avoid_: receptfelhasználás
 Olyan recept, amelynek minden hozzávalója (az alaphozzávalók kivételével) megvan a készletben a szükséges mennyiségben.
 
 **Hiány**:
-Egy hozzávalóból hiányzó mennyiség: ajánlásnál a szükséges és a készleten lévő, főzésnél a szükséges és a felhasznált mennyiség különbsége. Nem könyvelődik, de egy kattintással bevásárlólistára tehető.
+Egy hozzávalóból hiányzó mennyiség: ajánlásnál a szükséges és a készleten lévő, főzésnél a szükséges és a felhasznált mennyiség különbsége, de legalább 0. Nem könyvelődik, de egy kattintással bevásárlólistára tehető.
 _Avoid_: hiánycikk, maradék
 
 **Majdnem elkészíthető**:

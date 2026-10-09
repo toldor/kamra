@@ -56,7 +56,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `PANTRY_ITEM_MODIFIED` | 409 | A készlettétel a kliens által látott verzió óta megváltozott ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)); a kliens újratölti | Tervezett |
 | `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Tervezett |
 | `INSUFFICIENT_STOCK` | 409 | A megerősített felhasznált mennyiség több a jelenlegi készletnél; a válasz a friss mennyiségeket tartalmazza (US-4) | Tervezett |
-| `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
+| `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú (recept, adagszám vagy mennyiség) főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
 | `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik | Tervezett |
 | `SHOPPING_SUGGESTION_NOT_FOUND` | 404 | Bevásárlójavaslat nem létezik | Tervezett |
 | `SHOPPING_SUGGESTION_STATE_CONFLICT` | 409 | Elutasított bevásárlójavaslat elfogadása vagy elfogadott elutasítása ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
