@@ -16,7 +16,7 @@ A termék képességei és megvalósítottsági állapotuk: mennyi a felhasznál
 | CAP-06 Kérdezés a kamráról élő nyelven (US-6) | Value | – | – | Planned |
 | CAP-07 Bejelentkezés és háztartásonkénti adatelkülönítés | Productization | [CI](https://github.com/toldor/kamra/actions/runs/37157528207); [e2e](../../tests/e2e/auth.spec.ts) (regisztráció → üres készlet); [V-10](../07_ai/verification_log.md), [V-11](../07_ai/verification_log.md) | [AuthTests.cs](../../tests/KamraApp.Integration.Tests/AuthTests.cs), [AdversarialAuthTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialAuthTests.cs), [AuthUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/AuthUseCaseTests.cs) | Partial – a bejelentkezés kész; az adatelkülönítés (S-2) az első háztartáshoz kötött végponttal (US-1) jön |
 | CAP-08 Készletváltozások naplózása okkal | Productization | – | – | Planned |
-| CAP-09 Folyamatos minőségellenőrzés (build, lint, tesztek, lefedettség, függőségvizsgálat) | Productization | [CI](https://github.com/toldor/kamra/actions/runs/37157528207); [ci.yml](../../.github/workflows/ci.yml); [branch-védelem](../assets/branch-ruleset.png) | [test_report.md](../04_quality/test_report.md) (61 teszt) | Partial – a lefedettségi küszöb (kapu) a test_strategy.md-vel jön |
+| CAP-09 Folyamatos minőségellenőrzés (build, lint, tesztek, lefedettség, függőségvizsgálat) | Productization | [CI](https://github.com/toldor/kamra/actions/runs/37157528207); [ci.yml](../../.github/workflows/ci.yml); [branch-védelem](../assets/branch-ruleset.png) | [test_report.md](../04_quality/test_report.md) (61 teszt) | Partial – a lefedettségi kapu bekerült ([test_strategy.md](../04_quality/test_strategy.md)); Done az első zöld, kapuval futó CI linkjével |
 | CAP-10 Üzemeltethetőség: strukturált naplózás és állapotfigyelés | Productization | [observability.md](../05_security_ops/observability.md) (naplóminta, `/health`); [V-14](../07_ai/verification_log.md) | [ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs), [StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs) | Partial – metrikák és deploy runbook még nincsenek |
 | CAP-11 Működés AI-kiesés esetén | Productization | – | – | Planned |
 | CAP-12 A siker mérése: North Star és guardrail metrikák | Productization | – | – | Planned |
@@ -47,12 +47,12 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
 | Lépcső | Céldátum | Capability-k |
 |---|---|---|
 | Alapok | okt. 4. | CAP-07, CAP-09 (bővül a teljes fejlesztés alatt) |
-| 1. lépcső – determinisztikus mag | nov. 1. | CAP-01, CAP-03, CAP-04, CAP-05, CAP-08, CAP-10 |
-| 2. lépcső – AI-bevitel | nov. 15. | CAP-02, CAP-11 |
-| 3. lépcső – chat és mérés | nov. 22. | CAP-06, CAP-12 |
+| 1. lépcső – determinisztikus mag | okt. 23. | CAP-01, CAP-03, CAP-04, CAP-05, CAP-08, CAP-10 |
+| 2. lépcső – AI-bevitel | nov. 6. | CAP-02, CAP-11 |
+| 3. lépcső – chat és mérés | nov. 20. | CAP-06, CAP-12 |
 
 - **Csúszás esetén** először a CAP-06 szűkül; az 1. és a 2. lépcső képességei védettek.
-- **Stretch** (nem vállalt, csak ha a 3. lépcső a nov. 22-i feature freeze előtt kész és zöld):
+- **Stretch** (nem vállalt, csak ha a 3. lépcső a nov. 20-i feature freeze előtt kész és zöld):
   - *AI-receptötlet mentése jóváhagyással:* a hideg indulást az induló receptkészlet már kezeli, ez csak kényelmi bővítés.
   - *AI-os helyettesítés és adagjavaslat:* a lineáris adagskálázás az MVP-ben van; az AI-os rész nem szükséges a fő flow-hoz.
   - *Kipipált bevásárlólista-tételből készletbevitel:* a készletbevitel e nélkül is működik; ez a kör zárását kényelmesíti.

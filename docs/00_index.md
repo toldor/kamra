@@ -35,6 +35,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [adr/0005-postgresql-ef-core-migraciok.md](02_architecture/adr/0005-postgresql-ef-core-migraciok.md) | PostgreSQL + EF Core, migrator-szolgáltatás, JSON seed, GUID v7 | Accepted |
 | [adr/0006-cookie-auth-identity.md](02_architecture/adr/0006-cookie-auth-identity.md) | Cookie-alapú authentikáció ASP.NET Core Identity-vel, azonos origin, antiforgery | Accepted |
 | [adr/0007-rest-api-hibamodell.md](02_architecture/adr/0007-rest-api-hibamodell.md) | REST + controllerek, /api/v1, kivétel-alapú ProblemDetails, generált OpenAPI | Accepted |
+| [adr/0008-konkurencia-es-idempotencia.md](02_architecture/adr/0008-konkurencia-es-idempotencia.md) | Optimista zárolás xmin-nel, főzés-idempotencia kérésazonosítóval, upsert és egyedi kényszerek | Accepted |
 | [adr/0011-serilog-strukturalt-naplozas.md](02_architecture/adr/0011-serilog-strukturalt-naplozas.md) | Serilog JSON-napló, szerver által generált correlationId | Accepted |
 
 ---
@@ -44,7 +45,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | [api.md](03_design/api.md) | REST végpontok, auth, hibakódok, OpenAPI | Folyamatban (auth-végpontok, generált OpenAPI) |
-| [data_model.md](03_design/data_model.md) | Entitások, kapcsolatok, migrációs stratégia | Folyamatban (Households + Identity; újratervezés a B kapuban) |
+| [data_model.md](03_design/data_model.md) | Entitások, kapcsolatok, migrációs stratégia | Folyamatban (1. lépcső tervezve; megvalósítva: Households + Identity) |
 | [error_handling.md](03_design/error_handling.md) | Hibakategóriák, RFC 7807, retry, logolás | Folyamatban (auth- és keretrendszer-kódok megvalósítva) |
 | [mcp_tools.md](03_design/mcp_tools.md) | MCP eszközök leírása, input séma, biztonság | Kész (skeleton) |
 
@@ -54,7 +55,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *test_strategy.md* | Teszt piramis, mock stratégia, CI quality gate-ek | **Hiányzik** |
+| [test_strategy.md](04_quality/test_strategy.md) | Teszt piramis, mock stratégia, CI quality gate-ek | Kész (1. lépcső) |
 | [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Folyamatban (61 teszt, zöld CI) |
 | *performance.md* | Teljesítmény-alapmérés, legalább egy mért szűk keresztmetszet | **Hiányzik** |
 
@@ -104,8 +105,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 ## Hiányzó fájlok összesítve (teendők)
 
 - `docs/02_architecture/c4_component.md`
-- `docs/02_architecture/adr/0008-*.md` … (min. 8 ADR kell összesen, eddig 7: 0002–0007 és 0011; kötelezően még: LLM-szolgáltató; további tervezett: egyidejű készletlevonás / konkurenciakezelés, MCP-integráció)
-- `docs/04_quality/test_strategy.md`
+- `docs/02_architecture/adr/0009-*.md`, `0010-*.md` (8 ADR megvan: 0002–0008 és 0011; kötelezően még: LLM-szolgáltató; tervezett: MCP-integráció)
 - `docs/04_quality/performance.md`
 - `docs/05_security_ops/threat_model.md`
 - `docs/05_security_ops/privacy_licensing.md`

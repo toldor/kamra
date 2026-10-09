@@ -40,7 +40,7 @@ A készlettétel rendszer által adott, fix típusa (pl. tejtermék, konzerv), a
 _Avoid_: címke, csoport
 
 **Mértékegység**:
-A mennyiség fix, átváltható egysége: tömeg (g, dkg, kg), térfogat (ml, dl, l) vagy darab (db); tömeg és térfogat között nincs átváltás.
+A mennyiség fix, átváltható egysége: tömeg (g, dkg, kg), térfogat (ml, dl, l) vagy darab (db); tömeg és térfogat között nincs átváltás. Minden hozzávalónak fix dimenziója van (tömeg, térfogat vagy darab), és egysége csak ebből választható; a mennyiség alapegységben (g, ml, db) tárolódik, így a 30 dkg és a 300 g ugyanaz.
 _Avoid_: csomag, fej, kiszerelés
 
 **Becsült lejárat**:
@@ -66,12 +66,24 @@ _Avoid_: audit log, history
 **Recept**:
 Mentett elkészítési leírás adagszámmal és hozzávalókkal (mennyiséggel és mértékegységgel); forrása az induló receptkészlet, a felhasználó kézi felvitele vagy egy jóváhagyott AI-receptötlet.
 
+**Szükséges mennyiség**:
+Főzésnél egy hozzávalóból a recept szerint kellő mennyiség, a megadott adagszámmal skálázva és kerekítve.
+_Avoid_: receptigény, levonandó mennyiség
+
+**Felhasznált mennyiség**:
+A főzés megerősítésekor a felhasználó által jóváhagyott, ténylegesen felhasznált mennyiség; a készletből és a készletmozgás-naplóba csak ez kerül, és nem lehet több a készletnél.
+_Avoid_: levont mennyiség
+
 **Főzés**:
 Az az esemény, amikor a felhasználó jelzi, hogy egy receptet adott adagszámmal megfőzött; a megerősítés után a felhasznált mennyiségek *elfogyott* okkal levonódnak a készletből.
 _Avoid_: receptfelhasználás
 
 **Elkészíthető**:
 Olyan recept, amelynek minden hozzávalója (az alaphozzávalók kivételével) megvan a készletben a szükséges mennyiségben.
+
+**Hiány**:
+Egy hozzávalóból hiányzó mennyiség: ajánlásnál a szükséges és a készleten lévő, főzésnél a szükséges és a felhasznált mennyiség különbsége, de legalább 0. Nem könyvelődik, de egy kattintással bevásárlólistára tehető.
+_Avoid_: hiánycikk, maradék
 
 **Majdnem elkészíthető**:
 Olyan recept, amelynek legfeljebb 2 hozzávalója hiányzik a készletből vagy van belőle kevesebb a szükségesnél.
