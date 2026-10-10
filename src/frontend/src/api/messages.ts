@@ -2,6 +2,7 @@
 // codes for which ux_flows.md defines a different text or next step.
 const overrides: Record<string, string> = {
   UNAUTHENTICATED: 'Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.',
+  PANTRY_ITEM_NOT_FOUND: 'Ez a tétel már nincs a kamrádban. Frissítettem a listát.',
 }
 
 export const NETWORK_MESSAGE =

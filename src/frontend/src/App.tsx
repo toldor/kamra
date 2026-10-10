@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api, errorMessage, type Me } from './api/client'
 import { AuthForm } from './AuthForm'
 import { PantryPage } from './PantryPage'
@@ -7,7 +7,7 @@ import { PantryPage } from './PantryPage'
 type State =
   | { screen: 'loading' }
   | { screen: 'error'; message: string }
-  | { screen: 'login' | 'register' }
+  | { screen: 'login' | 'register'; notice?: string }
   | { screen: 'pantry'; me: Me }
 
 async function loadSession(): Promise<State> {
@@ -21,6 +21,8 @@ async function loadSession(): Promise<State> {
 
 export default function App() {
   const [state, setState] = useState<State>({ screen: 'loading' })
+  // Stable, so the pantry page does not reload its data whenever App renders.
+  const signOut = useCallback((notice?: string) => setState({ screen: 'login', notice }), [])
 
   useEffect(() => {
     let active = true
@@ -52,12 +54,13 @@ export default function App() {
         </main>
       )
     case 'pantry':
-      return <PantryPage me={state.me} onSignedOut={() => setState({ screen: 'login' })} />
+      return <PantryPage me={state.me} onSignedOut={signOut} />
     default:
       return (
         <AuthForm
           key={state.screen}
           mode={state.screen}
+          notice={state.notice}
           onSignedIn={(me) => setState({ screen: 'pantry', me })}
           onSwitchMode={() => setState({ screen: state.screen === 'login' ? 'register' : 'login' })}
         />

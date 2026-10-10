@@ -28,7 +28,8 @@ label {
   margin-top: 0.5rem;
 }
 
-input {
+input,
+select {
   font: inherit;
   min-height: 44px;
   padding: 0 0.75rem;
@@ -36,7 +37,8 @@ input {
   border-radius: 6px;
 }
 
-input[aria-invalid='true'] {
+input[aria-invalid='true'],
+select[aria-invalid='true'] {
   border-color: #b00020;
 }
 
@@ -94,4 +96,118 @@ button.link {
 
 .empty {
   font-size: 1.125rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  font-weight: 400;
+}
+
+.check input {
+  min-height: auto;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.notice:empty {
+  display: none;
+}
+
+button.secondary {
+  background: #ffffff;
+  color: #1d5e3a;
+  border: 1px solid #1d5e3a;
+}
+
+button.danger {
+  background: #b00020;
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* One card per item; the content wraps instead of widening the page at 360 px. */
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #c4c4c4;
+  border-radius: 8px;
+}
+
+.item-name {
+  font-weight: 600;
+  flex-basis: 100%;
+}
+
+.item button {
+  margin-left: auto;
+}
+
+.badge {
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.badge.expired {
+  background: #fde7e9;
+  color: #8a0019;
+}
+
+.badge.soon {
+  background: #fff4ce;
+  color: #5c4400;
+}
+
+dialog {
+  width: min(28rem, calc(100vw - 2rem));
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.changes {
+  font-weight: 600;
 }

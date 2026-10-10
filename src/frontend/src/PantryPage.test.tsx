@@ -114,6 +114,19 @@ describe('pantry list', () => {
     expect(await screen.findByRole('listitem', { name: /tejföl/ })).toBeTruthy()
   })
 
+  it('shows a catalog failure and loads the catalog again on retry', async () => {
+    pantryBackend([pantry()], {
+      'GET /api/v1/categories': [{ status: 500, body: { code: 'INTERNAL_ERROR', title: 'Váratlan hiba történt. Próbáld újra később.' } }, categories],
+    })
+    render(<App />)
+
+    expect(await screen.findByText('Váratlan hiba történt. Próbáld újra később.')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Újra' }))
+
+    await waitFor(() => expect(form().getByRole('option', { name: 'Tejtermék' })).toBeTruthy())
+    expect(screen.queryByText('Váratlan hiba történt. Próbáld újra később.')).toBeNull()
+  })
+
   it('sends the search, category and soon-expiring filters', async () => {
     const calls = pantryBackend([pantry(sourCream)], {
       'GET /api/v1/pantry-items?search=tej': [pantry(sourCream)],
@@ -196,7 +209,7 @@ describe('new item form', () => {
 
 describe('item editor', () => {
   async function openEditor() {
-    fireEvent.click(within(await screen.findByRole('listitem', { name: /tejföl/ })).getByRole('button', { name: 'Módosítás' }))
+    fireEvent.click(within(await screen.findByRole('listitem', { name: /tejföl/ })).getByRole('button', { name: /Módosítás/ }))
     return within(screen.getByRole('dialog', { name: 'tejföl módosítása' }))
   }
 
@@ -238,6 +251,113 @@ describe('item editor', () => {
     expect(await dialog.findByText('Közben változott – mennyiség: 20 dkg → 15 dkg')).toBeTruthy()
     expect(dialog.getByText(/közben máshol módosították/)).toBeTruthy()
     expect((dialog.getByLabelText('Mennyiség') as HTMLInputElement).value).toBe('15')
+  })
+
+  it('an empty amount is not a delete: no reason is asked, the amount goes as null and the error is shown', async () => {
+    const amountError = 'A mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.'
+    const calls = pantryBackend([pantry(sourCream)], {
+      'PUT /api/v1/pantry-items/p-1': [{ status: 400, body: { code: 'VALIDATION_FAILED', title: 'Néhány mező hibás.', errors: { amount: [amountError] } } }],
+    })
+    render(<App />)
+    const dialog = await openEditor()
+
+    fireEvent.change(dialog.getByLabelText('Mennyiség'), { target: { value: '' } })
+    expect(dialog.queryByLabelText('Miért csökken?')).toBeNull()
+    fireEvent.click(dialog.getByRole('button', { name: 'Mentés' }))
+
+    const amountInput = dialog.getByLabelText('Mennyiség')
+    const fieldError = await dialog.findByText(amountError)
+    expect(amountInput.getAttribute('aria-describedby')).toBe(fieldError.id)
+    await waitFor(() => expect(document.activeElement).toBe(amountInput))
+    const put = calls.find((c) => c.init.method === 'PUT')!
+    expect(JSON.parse(put.init.body as string)).toMatchObject({ amount: null, reason: null })
+  })
+
+  it('shows unit and category errors under their fields and focuses the first', async () => {
+    pantryBackend([pantry(sourCream)], {
+      'PUT /api/v1/pantry-items/p-1': [{
+        status: 400,
+        body: { code: 'VALIDATION_FAILED', title: 'Néhány mező hibás.', errors: { category: ['Válassz kategóriát a listából.'] } },
+      }],
+    })
+    render(<App />)
+    const dialog = await openEditor()
+
+    fireEvent.click(dialog.getByRole('button', { name: 'Mentés' }))
+
+    const categorySelect = dialog.getByLabelText('Kategória')
+    const fieldError = await dialog.findByText('Válassz kategóriát a listából.')
+    expect(categorySelect.getAttribute('aria-describedby')).toBe(fieldError.id)
+    await waitFor(() => expect(document.activeElement).toBe(categorySelect))
+  })
+
+  it('sends a cleared real expiry date as null, so the backend estimates it', async () => {
+    const dated = { ...sourCream, expiryEstimated: false }
+    const calls = pantryBackend([pantry(dated)], { 'PUT /api/v1/pantry-items/p-1': [{ status: 200, body: dated }] })
+    render(<App />)
+    const dialog = await openEditor()
+
+    fireEvent.change(dialog.getByLabelText('Lejárat'), { target: { value: '' } })
+    fireEvent.click(dialog.getByRole('button', { name: 'Mentés' }))
+
+    await waitFor(() => expect(calls.some((c) => c.init.method === 'PUT')).toBe(true))
+    const put = calls.find((c) => c.init.method === 'PUT')!
+    expect(JSON.parse(put.init.body as string).expiryDate).toBeNull()
+  })
+
+  it('marks an estimated date in the editor', async () => {
+    pantryBackend([pantry(sourCream)])
+    render(<App />)
+    const dialog = await openEditor()
+
+    expect(dialog.getByText('Becsült dátum: ha nem módosítod, kategóriaváltáskor újraszámoljuk.')).toBeTruthy()
+  })
+
+  it('does not count an unchanged decimal amount as a decrease', async () => {
+    const cream = { ...sourCream, ingredientName: 'tejföl', amount: 1.15, unit: 'dl', quantity: 115 }
+    pantryBackend([pantry(cream)])
+    render(<App />)
+    const dialog = await openEditor()
+
+    expect(dialog.queryByLabelText('Miért csökken?')).toBeNull()
+  })
+
+  it('moves the focus to the reason when deleting', async () => {
+    pantryBackend([pantry(sourCream)])
+    render(<App />)
+    const dialog = await openEditor()
+
+    fireEvent.click(dialog.getByRole('button', { name: 'Törlés' }))
+
+    await waitFor(() => expect(document.activeElement).toBe(dialog.getByLabelText('Miért csökken?')))
+  })
+
+  it('on a conflict also refreshes the list behind the dialog', async () => {
+    const fresh = { ...sourCream, amount: 15, quantity: 150, version: 6 }
+    const calls = pantryBackend([pantry(sourCream), pantry(fresh)], {
+      'PUT /api/v1/pantry-items/p-1': [{ status: 409, body: { code: 'PANTRY_ITEM_MODIFIED', title: 'Ezt a tételt közben máshol módosították.' } }],
+    })
+    render(<App />)
+    const dialog = await openEditor()
+
+    fireEvent.click(dialog.getByRole('button', { name: 'Mentés' }))
+
+    await dialog.findByText(/Közben változott/)
+    await waitFor(() => expect(within(screen.getByRole('list')).getByRole('listitem', { name: /tejföl/ }).textContent).toContain('15 dkg'))
+    expect(calls.filter((c) => c.url === '/api/v1/pantry-items')).toHaveLength(3)
+  })
+
+  it('if the session ends while reloading after a conflict, returns to sign-in', async () => {
+    pantryBackend([pantry(sourCream), { status: 401, body: { code: 'UNAUTHENTICATED', title: 'Jelentkezz be a folytatáshoz.' } }], {
+      'PUT /api/v1/pantry-items/p-1': [{ status: 409, body: { code: 'PANTRY_ITEM_MODIFIED', title: 'Ezt a tételt közben máshol módosították.' } }],
+    })
+    render(<App />)
+    const dialog = await openEditor()
+
+    fireEvent.click(dialog.getByRole('button', { name: 'Mentés' }))
+
+    expect(await screen.findByRole('heading', { name: 'Bejelentkezés' })).toBeTruthy()
+    expect(screen.getByText('Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.')).toBeTruthy()
   })
 
   it('on a deleted item closes the dialog, refreshes the list and tells why', async () => {

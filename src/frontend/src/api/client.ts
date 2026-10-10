@@ -8,6 +8,17 @@ const BASE_URL = '/api/v1'
 export type Me = components['schemas']['MeResponse']
 export type LoginRequest = components['schemas']['LoginRequest']
 export type RegisterRequest = components['schemas']['RegisterRequest']
+export type Category = components['schemas']['Category']
+export type CategoryInfo = components['schemas']['CategoryResponse']
+export type Dimension = components['schemas']['Dimension']
+export type Ingredient = components['schemas']['IngredientResponse']
+export type PantryItem = components['schemas']['PantryItemResponse']
+export type AddPantryItemRequest = components['schemas']['AddPantryItemRequest']
+export type UpdatePantryItemRequest = components['schemas']['UpdatePantryItemRequest']
+export type Unit = components['schemas']['Unit']
+export type PantryFilter = { search: string; category: Category | ''; expiringSoon: boolean }
+
+export const noFilter: PantryFilter = { search: '', category: '', expiringSoon: false }
 
 export class ApiError extends Error {
   readonly status: number
@@ -27,12 +38,16 @@ export function errorMessage(caught: unknown): string {
   return caught instanceof ApiError ? caught.message : FALLBACK_MESSAGE
 }
 
+// ux_flows: an expired session sends the user back to sign-in with an explanation; any other error is shown.
+export const failWith = (onSignedOut: (notice: string) => void, show: (message: string) => void) => (caught: unknown) =>
+  caught instanceof ApiError && caught.status === 401 ? onSignedOut(caught.message) : show(errorMessage(caught))
+
 // ADR-0006: every state-changing request carries the antiforgery token. The token is bound to the
 // signed-in user, so it is dropped after login, registration and logout and fetched again lazily
 // before the next POST - a failed refresh can then never turn a successful login into an error.
 let antiforgeryToken: string | null = null
 
-async function send(method: 'GET' | 'POST', path: string, body?: unknown): Promise<Response> {
+async function send(method: 'GET' | 'POST' | 'PUT', path: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {}
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   if (method !== 'GET' && antiforgeryToken) headers['X-XSRF-TOKEN'] = antiforgeryToken
@@ -67,16 +82,30 @@ async function refreshAntiforgeryToken(): Promise<void> {
   antiforgeryToken = ((await response.json()) as components['schemas']['AntiforgeryTokenResponse']).requestToken
 }
 
-async function post(path: string, body: unknown = {}): Promise<void> {
+async function write(method: 'POST' | 'PUT', path: string, body: unknown = {}): Promise<Response> {
   if (!antiforgeryToken) await refreshAntiforgeryToken()
   try {
-    await send('POST', path, body)
+    return await send(method, path, body)
   } catch (error) {
     // A stale token (e.g. the user signed in or out in another tab): retry once with a fresh one.
     if (!(error instanceof ApiError && error.code === 'ANTIFORGERY_TOKEN_INVALID')) throw error
     await refreshAntiforgeryToken()
-    await send('POST', path, body)
+    return await send(method, path, body)
   }
+}
+
+const post = (path: string, body: unknown = {}) => write('POST', path, body)
+
+const json = async <T>(response: Promise<Response>): Promise<T> => (await (await response).json()) as T
+
+// Only the filters in use go into the query string, always in the same order.
+function pantryQuery({ search, category, expiringSoon }: PantryFilter): string {
+  const query = new URLSearchParams()
+  if (search.trim()) query.set('search', search.trim())
+  if (category) query.set('category', category)
+  if (expiringSoon) query.set('expiringSoon', 'true')
+  const text = query.toString()
+  return text ? `?${text}` : ''
 }
 
 export const api = {
@@ -104,6 +133,17 @@ export const api = {
     await post('/auth/logout')
     antiforgeryToken = null
   },
+
+  categories: () => json<CategoryInfo[]>(send('GET', '/categories')),
+
+  ingredients: () => json<Ingredient[]>(send('GET', '/ingredients')),
+
+  pantryItems: (filter: PantryFilter) => json<PantryItem[]>(send('GET', `/pantry-items${pantryQuery(filter)}`)),
+
+  addPantryItem: (request: AddPantryItemRequest) => json<PantryItem>(write('POST', '/pantry-items', request)),
+
+  updatePantryItem: (id: string, request: UpdatePantryItemRequest) =>
+    json<PantryItem>(write('PUT', `/pantry-items/${id}`, request)),
 }
 
 // Tests start every case without a cached token.
