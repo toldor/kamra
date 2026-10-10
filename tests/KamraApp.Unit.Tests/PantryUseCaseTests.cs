@@ -205,6 +205,17 @@ public class PantryUseCaseTests
     }
 
     [Fact]
+    public async Task Update_increases_and_records_a_Corrected_movement()
+    {
+        var item = StockItem();
+
+        var updated = await UpdateAsync(item.Id, Edit(item, amount: 25, unit: "dkg"));
+
+        updated.Quantity.Should().Be(250m);
+        _pantry.Movements.Should().ContainSingle(m => m.Reason == MovementReason.Corrected && m.Delta == 50m);
+    }
+
+    [Fact]
     public async Task Update_re_estimates_a_missing_expiry_from_the_entry_day()
     {
         var item = StockItem();
