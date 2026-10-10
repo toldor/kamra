@@ -24,6 +24,17 @@ public class QuantityTests
     }
 
     [Theory]
+    [InlineData(Unit.Dkg, "300", "30")]
+    [InlineData(Unit.Kg, "1", "0.001")]
+    [InlineData(Unit.Dl, "750", "7.5")]
+    [InlineData(Unit.Db, "5", "5")]
+    public void FromBase_converts_back_to_the_entered_unit(Unit unit, string quantity, string expected)
+    {
+        Units.FromBase(decimal.Parse(quantity, CultureInfo.InvariantCulture), unit)
+            .Should().Be(decimal.Parse(expected, CultureInfo.InvariantCulture));
+    }
+
+    [Theory]
     [InlineData(Unit.G, Dimension.Mass)]
     [InlineData(Unit.Dkg, Dimension.Mass)]
     [InlineData(Unit.Kg, Dimension.Mass)]

@@ -45,6 +45,24 @@ public sealed class ApiClient
         return response;
     }
 
+    public Task<HttpResponseMessage> PutAsync(string path, object? body) =>
+        Http.PutAsJsonAsync(path, body, TestContext.Current.CancellationToken);
+
+    public async Task<JsonElement> GetJsonAsync(string path)
+    {
+        var response = await Http.GetAsync(path, TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+    }
+
+    // A browser that registered a fresh account, so every test has its own household.
+    public static async Task<ApiClient> SignedInAsync(WebApplicationFactory<Program> factory)
+    {
+        var client = await CreateAsync(factory);
+        (await client.RegisterAsync(NewEmail())).EnsureSuccessStatusCode();
+        return client;
+    }
+
     public Task<HttpResponseMessage> RegisterAsync(string email, string password = ValidPassword) =>
         PostAsync("/api/v1/auth/register", new { email, password });
 

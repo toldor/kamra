@@ -31,7 +31,12 @@ public static class Units
         _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, "Unknown unit."),
     };
 
-    public static decimal ToBase(decimal amount, Unit unit) => amount * unit switch
+    public static decimal ToBase(decimal amount, Unit unit) => amount * Factor(unit);
+
+    // The amount in the unit the user entered, for display.
+    public static decimal FromBase(decimal quantity, Unit unit) => throw new NotImplementedException();
+
+    private static decimal Factor(Unit unit) => unit switch
     {
         Unit.G or Unit.Ml or Unit.Db => 1m,
         Unit.Dkg => 10m,

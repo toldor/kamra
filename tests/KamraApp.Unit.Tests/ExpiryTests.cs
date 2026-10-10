@@ -60,4 +60,11 @@ public class ExpiryTests
 
         Today.Of(time).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
     }
+
+    [Fact]
+    public void Today_of_an_instant_is_the_Budapest_day()
+    {
+        // The entry day of a pantry item created at 23:30 UTC is the next day in Budapest.
+        Today.Of(new DateTimeOffset(2026, 10, 9, 23, 30, 0, TimeSpan.Zero)).Should().Be(new DateOnly(2026, 10, 10));
+    }
 }

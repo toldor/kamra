@@ -1,6 +1,11 @@
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using KamraApp.Api.Auth;
 using KamraApp.Api.ErrorHandling;
+using KamraApp.Application.Categories;
+using KamraApp.Application.Ingredients;
+using KamraApp.Application.Pantry;
 using KamraApp.Infrastructure;
 using Serilog;
 using Serilog.Context;
@@ -16,7 +21,10 @@ builder.Services.AddSerilog((services, logger) => logger
 
 // ADR-0004: validation runs in the use cases, so MVC's automatic model validation is switched off.
 // The antiforgery filters are registered by the "with views" variant; no views are used.
-builder.Services.AddControllersWithViews().ConfigureApiBehaviorOptions(options => options.SuppressModelStateInvalidFilter = true);
+// Enums travel as camelCase names ("dkg", "dairy"), never as numbers.
+builder.Services.AddControllersWithViews()
+    .ConfigureApiBehaviorOptions(options => options.SuppressModelStateInvalidFilter = true)
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
 // Build-time OpenAPI generation (ADR-0007) starts the app without deployment configuration; only then
 // does it get a placeholder connection string, so the fail-fast check stays strict at runtime.
 if (Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider")
@@ -26,6 +34,12 @@ if (Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider")
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddKamraAuthentication(builder.Configuration);
+// US-1 use cases (ADR-0004: one class per use case, no mediator).
+builder.Services.AddScoped<ListCategories>();
+builder.Services.AddScoped<ListIngredients>();
+builder.Services.AddScoped<ListPantryItems>();
+builder.Services.AddScoped<AddPantryItem>();
+builder.Services.AddScoped<UpdatePantryItem>();
 builder.Services.AddOpenApi();
 builder.Services.AddExceptionHandler<AppExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = AppExceptionHandler.Customize);
