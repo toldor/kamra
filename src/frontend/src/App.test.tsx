@@ -23,6 +23,12 @@ function fakeBackend(routes: Record<string, Reply[]>) {
 const notSignedIn: Reply = { status: 401, body: { code: 'UNAUTHENTICATED', title: 'Jelentkezz be a folytatáshoz.' } }
 const token: Reply = { status: 200, body: { requestToken: 'token-1' } }
 const lockedOut = 'Túl sok sikertelen próbálkozás. Várj 5 percet, és próbáld újra.'
+// The pantry page loads its data (US-1); these tests only need it to be empty.
+const emptyPantry: Record<string, Reply[]> = {
+  'GET /api/v1/pantry-items': [{ status: 200, body: [] }],
+  'GET /api/v1/categories': [{ status: 200, body: [] }],
+  'GET /api/v1/ingredients': [{ status: 200, body: [] }],
+}
 
 beforeEach(() => resetClientForTests())
 afterEach(() => {
@@ -111,6 +117,7 @@ describe('sign-in screens', () => {
       'GET /api/v1/auth/me': [{ status: 200, body: { email: 'tomi@example.com', householdId: 'h-1' } }],
       'GET /api/v1/auth/antiforgery': [token],
       'POST /api/v1/auth/logout': [notSignedIn],
+      ...emptyPantry,
     })
     render(<App />)
 
@@ -125,6 +132,7 @@ describe('sign-in screens', () => {
       'GET /api/v1/auth/me': [notSignedIn, { status: 200, body: { email: 'tomi@example.com', householdId: 'h-1' } }],
       'GET /api/v1/auth/antiforgery': [token],
       'POST /api/v1/auth/register': [{ status: 204 }],
+      ...emptyPantry,
     })
     render(<App />)
 
