@@ -16,7 +16,7 @@
     <!-- 8.x: Xceed commercial license; stay on the last Apache-2.0 major (V-07). -->
     <PackageVersion Include="FluentAssertions" Version="[7.2.2,8.0)" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.1" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
   </ItemGroup>
 </Project>
