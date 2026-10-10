@@ -8,7 +8,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 - OS: Windows 11 (fejlesztői gép)
 - Runtime/SDK: .NET SDK 10.0.201 (`global.json`), xUnit v3 Microsoft Testing Platform módban
 - DB: PostgreSQL 18 (`postgres:18` image Testcontainersszel; a Docker Compose ugyanezt az image-et használja, [ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)); a teszteknél futó Docker szükséges
-- Teszt adat: –
+- Teszt adat: a migrációval betöltött induló hozzávaló-lista (36 elem, [ingredients.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/ingredients.json)); minden más adat szintetikus, tesztenként egyedi felhasználóval és háztartással
 
 ## Teszt suite-ek és futtatás
 
@@ -22,18 +22,18 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
-| Unit | ≥ 18 | 24 | 24 |
-| Integrációs | ≥ 6 | 28 | 28 |
+| Unit | ≥ 18 | 87 | 87 |
+| Integrációs | ≥ 6 | 30 | 30 |
 | Frontend (Vitest) | – | 7 | 7 |
 | E2E | ≥ 6 | 2 (×2 nézet) | 2 |
-| Negatív esetek | ≥ 5 | 31 | 31 |
-| **Összesen** | **≥ 30** | **61** | **61** |
+| Negatív esetek | ≥ 5 | 50 | 50 |
+| **Összesen** | **≥ 30** | **126** | **126** |
 
 ## Legutolsó futás eredménye
 
-- Dátum: 2026-10-03
-- Eredmény: PASS – .NET 52/52 (háromszor egymás után), Vitest 7/7 (egyszer), Playwright 4/4 futás – asztali Chrome és 360 px (háromszor egymás után, helyi stacken), helyi futás, háromszor egymás után (flaky-ellenőrzés)
-- CI link: [GitHub Actions – CI #37157528207](https://github.com/toldor/kamra/actions/runs/37157528207) (2026-10-04, `feature/walking-skeleton`): `backend`, `frontend` és `e2e` job zöld
+- Dátum: 2026-10-10
+- Eredmény: PASS – .NET 117/117 helyben (az integrációs tesztek háromszor egymás után, flaky-ellenőrzés); Domain + Application sorlefedettség 95,3% (kapu: 80%); Vitest 7/7 és Playwright 4/4 futás a CI-ban
+- CI link: [GitHub Actions – run 38069303341](https://github.com/toldor/kamra/actions/runs/38069303341) (2026-10-10, `feature/us-1-pantry`, `988f6ea`): `secrets`, `backend`, `frontend` és `e2e` job zöld
 
 ## Tesztelt modulok
 
@@ -49,10 +49,16 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Frontend ([App.test.tsx](../../src/frontend/src/App.test.tsx)) | Unit (Vitest) | Az API-kliens elküldi az antiforgery tokent, a ProblemDetails-ből magyar `ApiError` lesz; elavult tokennél egyszer újrapróbál friss tokennel; hálózati hibára magyar üzenet (negatív); hibás belépésnél H4 üzenet, az e-mail megmarad (negatív); a jelszó mezőhibája a mező alatt, `aria-describedby`-jal, és a fókusz a hibás mezőre ugrik (negatív); kijelentkezés már lejárt sessionnel üzenet nélkül a bejelentkezésre visz (negatív); sikeres regisztráció után üres készlet | ✅ 7/7 |
 | E2E ([auth.spec.ts](../../tests/e2e/auth.spec.ts)) | E2E (Playwright) | Regisztráció → üres készlet → újratöltés után is bejelentkezve → kijelentkezés → bejelentkezés; 360 px-en nincs vízszintes görgetés; hibás belépés H4 üzenettel (negatív). Asztali Chrome és 360 px-es mobil nézet | ✅ 2/2 (4 futás) |
 | Indítás ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs)) | Integrációs | Connection string nélkül az alkalmazás nem indul el (fail-fast, QA-7, negatív); elérhetetlen adatbázisnál a `/health` 503 (negatív); az antiforgery token sima HTTP-n is kiadható (V-12) | ✅ 3/3 |
+| Mértékegységek ([QuantityTests.cs](../../tests/KamraApp.Unit.Tests/QuantityTests.cs)) | Unit | Átváltás alapegységre (dkg → g, kg → g, dl → ml, l → ml), minden egység pontosan egy dimenzióhoz tartozik ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md)) | ✅ 14/14 |
+| Lejárat ([ExpiryTests.cs](../../tests/KamraApp.Unit.Tests/ExpiryTests.cs)) | Unit | Becsült lejárat mind a 13 kategóriára a [data_model.md](../03_design/data_model.md) napértékeivel; „Egyéb” kategóriánál nincs becslés (negatív); a „hamarosan lejáró” ablak határai (tegnap: lejárt; ma, holnap, holnapután: igen; +3 nap: nem); a „ma” a budapesti naptári nap nyári és téli időben, évváltáskor is ([V-23](../07_ai/verification_log.md)) | ✅ 23/23 |
+| Készlettétel ([PantryItemTests.cs](../../tests/KamraApp.Unit.Tests/PantryItemTests.cs)) | Unit | Létrehozás alapegységben `Added` mozgással; megadott és becsült lejárat, szerkesztéskor a bevitel napjától; elutasítva (negatív): „Egyéb” lejárat nélkül (létrehozáskor és szerkesztéskor), idegen dimenziójú egység, 0 és negatív mennyiség, 3-nál több tizedes és a `numeric(12,3)` fölötti mennyiség ([V-24](../07_ai/verification_log.md)), ok nélküli csökkentés, csökkenési ok növelésnél, 0 alá csökkentés; a növelés `Corrected`; változatlan mennyiségnél nincs mozgás; a mennyiség = a mozgások összege (CAP-08) | ✅ 20/20 |
+| Seed-adat ([SeedDataTests.cs](../../tests/KamraApp.Unit.Tests/SeedDataTests.cs)) | Unit | Az induló hozzávaló-lista egyedi azonosítókkal (GUID v7), kulcsokkal és nevekkel, a három alaphozzávalóval; duplikált `SeedKey`, üres kulcs vagy név és ismeretlen kategória leállítja a betöltést (negatív); névnormalizálás ([ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)) | ✅ 6/6 |
+| Seed-migráció ([SeedMigrationTests.cs](../../tests/KamraApp.Integration.Tests/SeedMigrationTests.cs)) | Integrációs | A migráció után az adatbázisban pontosan a seed-fájl rendszer-hozzávalói vannak ([ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)) | ✅ 1/1 |
+| Készletmozgás-napló ([StockMovementLogTests.cs](../../tests/KamraApp.Integration.Tests/StockMovementLogTests.cs)) | Integrációs | Mozgással rendelkező készlettétel nem törölhető: a napló csak hozzáfűzhető, az adatbázis kényszere védi (negatív) | ✅ 1/1 |
 
 ## Lefedetlen területek
 
-- Minden üzleti modul – az implementáció még nem kezdődött el.
+- A készlet-, recept-, főzés- és bevásárlólista-végpontok és a felület; az eddigi üzleti tesztek a készlet domainjét, a hozzávaló-seedet és a napló adatbázis-kényszerét fedik.
 
 ## Ismert hiányosságok
 

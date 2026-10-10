@@ -191,3 +191,27 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Mérés PostgreSQL 18.6-on (`postgres:18` image, ugyanaz, mint a Compose-ban és a Testcontainersben; Claude Code): `SELECT (NULL::numeric + 5) IS NULL` → `t`; a `numeric_add` függvény `proisstrict = t` (null bemenetre null az eredmény); a javasolt `CASE WHEN mindkettő null THEN NULL ELSE COALESCE(a,0) + COALESCE(b,0) END` kifejezés `NULL` és 5 esetén 5-öt ad. A `COALESCE` viselkedése: [PostgreSQL 18 – Conditional Expressions](https://www.postgresql.org/docs/18/functions-conditional.html) („az első nem null argumentumát adja vissza”).
 - **Eredmény:** **PASS.** A null + ismert összeadás null; a sima összeadó upsert valóban elvesztené az ismert mennyiséget.
 - **Következtetés:** A data_model.md rögzíti az összevonási szabályt (ismert + ismert = összeg; ismeretlen + ismert = ismert; ismeretlen + ismeretlen = ismeretlen), az ADR-0008 5. pontja erre hivatkozik; integrációs teszt mindkét beszúrási sorrendre a US-5-tel készül.
+
+### V-23 – A „ma” Budapest szerint a konténerben is számolható (időzóna-adat)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az AI (az 1. lépcső tervének Q4 döntésénél) azt állította, hogy a `Europe/Budapest` IANA-időzóna a futtató `mcr.microsoft.com/dotnet/aspnet:10.0` image-ben és a Windows-os fejlesztői gépen is feloldható, így a „ma” (hamarosan lejáró, becsült lejárat) gépfüggetlenül, fix időzónával számolható.
+- **Kockázat:** Közepes. Hiányzó időzóna-adatnál a `TimeZoneInfo.FindSystemTimeZoneById` kivételt dob; UTC-re visszaesve éjfél és 1–2 óra között rossz napot kapnánk.
+- **Ellenőrzési módszer:** Mérés (Claude Code): `docker run --rm --entrypoint ls mcr.microsoft.com/dotnet/aspnet:10.0 -l /usr/share/zoneinfo/Europe/Budapest` → a fájl létezik (az image Ubuntu 24.04.5 LTS-alapú). Teszt: `Today_is_the_calendar_day_in_Budapest` ([ExpiryTests.cs](../../tests/KamraApp.Unit.Tests/ExpiryTests.cs); UTC okt. 9. 23:30 → okt. 10., dec. 31. 23:30 UTC → jan. 1., nyári és téli idő) Windowson és a Linuxos CI-runneren ([run 38069303341](https://github.com/toldor/kamra/actions/runs/38069303341)).
+- **Eredmény:** **PASS.**
+- **Következtetés:** A „ma” egyetlen helyen számolódik ([Today.cs](../../src/backend/KamraApp.Application/Common/Today.cs)); az egy időzóna korlátja a [data_model.md](../03_design/data_model.md) ismert hiányosságai között szerepel.
+
+### V-24 – A `numeric(12,3)` oszlop kerekít és túlcsordul (elő-review)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az S1 elő-reviewja (Claude Code `/code-review`, spec-tengely) azt állította, hogy a Domain bármilyen decimalt elfogad, a PostgreSQL viszont a `numeric(12,3)` oszlopban a 3. tizedes után kerekít, így a memóriabeli mennyiség és napló eltérhet a tárolttól, és 10^9 fölött a mentés elbukik.
+- **Kockázat:** Közepes. A napló-invariáns (mennyiség = a mozgások összege) csendben sérülhetne.
+- **Ellenőrzési módszer:** Mérés PostgreSQL 18.6-on (`postgres:18` image, Claude Code): `SELECT 1.2345::numeric(12,3)` → `1.235`; `SELECT 1000000000::numeric(12,3)` → `ERROR: numeric field overflow`. Teszt: `More_than_three_decimals_in_base_units_is_rejected`, `A_quantity_above_the_column_capacity_is_rejected` ([PantryItemTests.cs](../../tests/KamraApp.Unit.Tests/PantryItemTests.cs)).
+- **Eredmény:** **PASS.** Az állítás igaz volt; a Domain most alapegységben legfeljebb 3 tizedest és 999 999 999,999-et fogad el.
+- **Következtetés:** A korlát a [data_model.md](../03_design/data_model.md) PantryItems szakaszában; a felhasználóbarát validáció (400) a US-1 API-val készül.
+
+### V-25 – A Domain invariáns-kivételei 500-ként érnének el a felhasználóig (Gemini-review)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az S1 Gemini-reviewja (Antigravity, Gemini 3.1 Pro) azt állította, hogy a Domain `ArgumentException`-jei a későbbi végpontokon kezeletlenül, 500-as hibaként jutnának el a felhasználóig; javaslata saját `DomainException` vagy validáció az Application rétegben.
+- **Kockázat:** Közepes. Hibás bemenetre a felhasználó „Váratlan hiba” üzenetet kapna, és a hibaarány torzulna.
+- **Ellenőrzési módszer:** Kódvizsgálat (Claude Code): [AppExceptionHandler.cs](../../src/backend/KamraApp.Api/ErrorHandling/AppExceptionHandler.cs) – az `AppException`-ön és a `BadHttpRequestException`-ön kívül minden kivétel 500 `INTERNAL_ERROR`. A reviewer által megadott sor (`PantryItem.cs:219`) nem létezik (a fájl 125 soros), a megállapítás tartalma ettől független.
+- **Eredmény:** **PASS.**
+- **Következtetés:** A `DomainException` helyett a már tervezett megoldás marad: a használati eset validál a Domain hívása előtt (ADR-0004: validáció az Application rétegben; a Domain nem hivatkozhat az `AppException`-re). A US-1 API negatív integrációs tesztjei minden Domain-invariánsra 400 `VALIDATION_FAILED`-et ellenőriznek.
