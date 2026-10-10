@@ -3,6 +3,7 @@ using System;
 using KamraApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KamraApp.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(KamraDbContext))]
-    partial class KamraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261010164249_AddIngredientsAndPantryItems")]
+    partial class AddIngredientsAndPantryItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

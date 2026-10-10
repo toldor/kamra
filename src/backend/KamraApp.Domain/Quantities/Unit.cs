@@ -23,7 +23,20 @@ public enum Dimension
 // and 300 g are the same amount (data_model.md, Mennyiségek).
 public static class Units
 {
-    public static Dimension DimensionOf(Unit unit) => throw new NotImplementedException();
+    public static Dimension DimensionOf(Unit unit) => unit switch
+    {
+        Unit.G or Unit.Dkg or Unit.Kg => Dimension.Mass,
+        Unit.Ml or Unit.Dl or Unit.L => Dimension.Volume,
+        Unit.Db => Dimension.Count,
+        _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, "Unknown unit."),
+    };
 
-    public static decimal ToBase(decimal amount, Unit unit) => throw new NotImplementedException();
+    public static decimal ToBase(decimal amount, Unit unit) => amount * unit switch
+    {
+        Unit.G or Unit.Ml or Unit.Db => 1m,
+        Unit.Dkg => 10m,
+        Unit.Dl => 100m,
+        Unit.Kg or Unit.L => 1000m,
+        _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, "Unknown unit."),
+    };
 }

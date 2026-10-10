@@ -73,6 +73,30 @@ public class PantryItemTests
     }
 
     [Fact]
+    public void More_than_three_decimals_in_base_units_is_rejected()
+    {
+        // numeric(12,3): PostgreSQL would round the value, and the stored log would drift from memory.
+        var create = () => PantryItem.Create(HouseholdId, SourCream, 1.2345m, Unit.G, Category.Dairy, expiryDate: null, Day, Now);
+        var (item, _) = PantryItem.Create(HouseholdId, SourCream, 200m, Unit.G, Category.Dairy, expiryDate: null, Day, Now);
+        var change = () => item.ChangeQuantity(0.0000001m, Unit.Kg, MovementReason.Consumed, Now);
+
+        create.Should().Throw<ArgumentException>();
+        change.Should().Throw<ArgumentException>();
+        item.Quantity.Should().Be(200m);
+    }
+
+    [Fact]
+    public void A_quantity_above_the_column_capacity_is_rejected()
+    {
+        var create = () => PantryItem.Create(HouseholdId, SourCream, 1_000_000m, Unit.Kg, Category.Dairy, expiryDate: null, Day, Now);
+        var (item, _) = PantryItem.Create(HouseholdId, SourCream, 200m, Unit.G, Category.Dairy, expiryDate: null, Day, Now);
+        var change = () => item.ChangeQuantity(1_000_000m, Unit.Kg, reason: null, Now);
+
+        create.Should().Throw<ArgumentException>();
+        change.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void A_decrease_without_reason_is_rejected_and_changes_nothing()
     {
         var (item, _) = PantryItem.Create(HouseholdId, SourCream, 200m, Unit.G, Category.Dairy, expiryDate: null, Day, Now);
@@ -158,11 +182,12 @@ public class PantryItemTests
     }
 
     [Fact]
-    public void Changing_details_re_estimates_a_missing_expiry_from_the_new_category()
+    public void Changing_details_re_estimates_a_missing_expiry_from_the_entry_day()
     {
         var (item, _) = PantryItem.Create(HouseholdId, SourCream, 200m, Unit.G, Category.Dairy, expiryDate: null, Day, Now);
 
-        item.UpdateDetails(Category.Frozen, expiryDate: null, Day, Now);
+        // data_model.md: the estimate is the entry day + the category's days, also when edited days later.
+        item.UpdateDetails(Category.Frozen, expiryDate: null, entryDay: Day, Now.AddDays(5));
 
         item.Category.Should().Be(Category.Frozen);
         item.ExpiryDate.Should().Be(Day.AddDays(90));

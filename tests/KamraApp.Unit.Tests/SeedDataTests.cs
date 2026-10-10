@@ -36,6 +36,20 @@ public class SeedDataTests
         load.Should().Throw<InvalidOperationException>().WithMessage("*tej*");
     }
 
+    [Theory]
+    [InlineData("", "tej")]
+    [InlineData("tej", " ")]
+    public void A_blank_seed_key_or_name_stops_the_load(string seedKey, string name)
+    {
+        var json = $$"""
+            [ { "id": "0199c9a0-0000-7000-8000-000000000001", "seedKey": "{{seedKey}}", "name": "{{name}}", "dimension": "Volume", "defaultCategory": "Dairy" } ]
+            """;
+
+        var load = () => SeedData.LoadIngredients(json);
+
+        load.Should().Throw<InvalidOperationException>();
+    }
+
     [Fact]
     public void An_unknown_category_stops_the_load()
     {

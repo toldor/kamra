@@ -5,7 +5,8 @@ public static class Expiry
 {
     public const int SoonExpiringDays = 2;
 
-    public static bool IsExpired(DateOnly expiryDate, DateOnly today) => throw new NotImplementedException();
+    public static bool IsExpired(DateOnly expiryDate, DateOnly today) => expiryDate < today;
 
-    public static bool IsSoonExpiring(DateOnly expiryDate, DateOnly today) => throw new NotImplementedException();
+    public static bool IsSoonExpiring(DateOnly expiryDate, DateOnly today) =>
+        expiryDate >= today && expiryDate <= today.AddDays(SoonExpiringDays);
 }

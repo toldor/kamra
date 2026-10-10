@@ -37,10 +37,12 @@ public sealed class Ingredient
     public DateTimeOffset? RetiredAt { get; private set; }
 
     // CONTEXT.md, Alaphozzávaló: water, salt and pepper are ignored by matching and deduction.
-    public bool IsStaple => throw new NotImplementedException();
+    public bool IsStaple => SeedKey is "viz" or "so" or "bors";
 
     public static Ingredient CreateSystem(Guid id, string seedKey, string name, Dimension dimension, Category defaultCategory) =>
-        throw new NotImplementedException();
+        new(id, householdId: null, name, Normalize(name), dimension, defaultCategory, seedKey, retiredAt: null);
 
-    public static string Normalize(string name) => throw new NotImplementedException();
+    // Lower case with single spaces, the form used for name uniqueness (data_model.md).
+    public static string Normalize(string name) =>
+        string.Join(' ', name.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
 }
