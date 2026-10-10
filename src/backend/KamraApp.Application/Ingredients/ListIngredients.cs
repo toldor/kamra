@@ -9,6 +9,11 @@ public sealed record IngredientResponse(Guid Id, string Name, Dimension Dimensio
 
 public sealed class ListIngredients(IIngredientRepository ingredients, ICurrentHousehold household)
 {
-    public Task<IReadOnlyList<IngredientResponse>> ExecuteAsync(string? search, CancellationToken cancellationToken) =>
-        throw new NotImplementedException($"red phase {ingredients.GetHashCode() + household.GetHashCode()}");
+    public async Task<IReadOnlyList<IngredientResponse>> ExecuteAsync(ListIngredientsQuery query, CancellationToken cancellationToken)
+    {
+        var search = RequestValidator.Validate(query).Search;
+        var normalized = string.IsNullOrWhiteSpace(search) ? null : Ingredient.Normalize(search);
+        var visible = await ingredients.ListVisibleAsync(household.HouseholdId, normalized, cancellationToken);
+        return [.. visible.Select(i => new IngredientResponse(i.Id, i.Name, i.Dimension, i.DefaultCategory))];
+    }
 }

@@ -20,10 +20,7 @@ public sealed record PantryItemResponse(
     uint Version)
 {
     public static PantryItemResponse From(PantryItem item, string ingredientName, DateOnly today) =>
-        throw new NotImplementedException();
+        new(item.Id, item.IngredientId, ingredientName, Units.FromBase(item.Quantity, item.EnteredUnit), item.EnteredUnit,
+            item.Quantity, item.Category, item.ExpiryDate, item.ExpiryEstimated, Expiry.IsExpired(item.ExpiryDate, today),
+            Expiry.IsSoonExpiring(item.ExpiryDate, today), item.Version);
 }
-
-// A pantry item with its ingredient's name, as the repository reads it.
-public sealed record PantryEntry(PantryItem Item, string IngredientName);
-
-public sealed record PantryFilter(string? NormalizedSearch, Category? Category, DateOnly? SoonExpiringOn);

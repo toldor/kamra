@@ -1,4 +1,4 @@
-using KamraApp.Application.Categories;
+using KamraApp.Application.Pantry;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KamraApp.Api.Pantry;
@@ -9,5 +9,5 @@ public sealed class CategoriesController : ControllerBase
 {
     [HttpGet]
     [Produces("application/json")]
-    public IReadOnlyList<CategoryResponse> List([FromServices] ListCategories listCategories) => listCategories.Execute();
+    public IReadOnlyList<CategoryResponse> List() => ListCategories.Execute();
 }

@@ -170,6 +170,28 @@ public class PantryUseCaseTests
     }
 
     [Fact]
+    public async Task Update_with_a_stale_version_is_rejected_before_the_amount_is_judged()
+    {
+        // Found by the concurrency test: the losing edit was judged against the winner's amount (400
+        // "increase with a decrease reason") instead of being reported as modified (409).
+        var item = StockItem();
+        var stale = Edit(item, amount: 250, reason: "consumed");
+        var request = new UpdatePantryItemRequest
+        {
+            Amount = stale.Amount,
+            Unit = stale.Unit,
+            Category = stale.Category,
+            Reason = stale.Reason,
+            Version = item.Version + 1,
+        };
+
+        var error = await FluentActions.Awaiting(() => UpdateAsync(item.Id, request)).Should().ThrowAsync<ConflictException>();
+
+        error.Which.Code.Should().Be("PANTRY_ITEM_MODIFIED");
+        _pantry.Saves.Should().Be(0);
+    }
+
+    [Fact]
     public async Task Update_decreases_with_a_reason_and_records_the_movement()
     {
         var item = StockItem();
@@ -193,13 +215,29 @@ public class PantryUseCaseTests
         updated.ExpiryEstimated.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task List_rejects_an_unknown_category_filter()
+    [Theory]
+    [InlineData(null, "tejtermek", "category")]
+    [InlineData("toolong", null, "search")]
+    public async Task List_rejects_an_invalid_filter(string? search, string? category, string field)
     {
+        var query = new ListPantryItemsQuery { Search = search == "toolong" ? new string('a', 101) : search, Category = category };
         var list = () => new ListPantryItems(_pantry, new FixedHousehold(HouseholdId), new FixedTime(Now))
-            .ExecuteAsync(search: null, category: "tejtermek", expiringSoon: null, CancellationToken.None);
+            .ExecuteAsync(query, CancellationToken.None);
 
-        (await list.Should().ThrowAsync<ValidationException>()).Which.Errors.Should().ContainKey("category");
+        (await list.Should().ThrowAsync<ValidationException>()).Which.Errors.Should().ContainKey(field);
+    }
+
+    [Theory]
+    [InlineData("added")]
+    [InlineData("elfogyott")]
+    public async Task An_unknown_or_added_reason_gets_the_reason_list_message(string reason)
+    {
+        var item = StockItem();
+
+        var error = await FluentActions.Awaiting(() => UpdateAsync(item.Id, Edit(item, amount: 100, reason: reason)))
+            .Should().ThrowAsync<ValidationException>();
+
+        error.Which.Errors["reason"].Should().Equal(PantryInput.ReasonMessage);
     }
 
     private Task<PantryItemResponse> AddAsync(AddPantryItemRequest request, DateTimeOffset? now = null) =>

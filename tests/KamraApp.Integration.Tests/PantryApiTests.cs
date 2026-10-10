@@ -157,7 +157,7 @@ public class PantryApiTests(KamraApiFactory factory)
         (await other.GetJsonAsync("/api/v1/pantry-items")).EnumerateArray().Should().BeEmpty();
         foreign.StatusCode.Should().Be(HttpStatusCode.NotFound);
         missing.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        WithoutCorrelationId(await ApiClient.ProblemAsync(foreign)).Should().Be(WithoutCorrelationId(await ApiClient.ProblemAsync(missing)));
+        WithoutRequestIds(await ApiClient.ProblemAsync(foreign)).Should().Be(WithoutRequestIds(await ApiClient.ProblemAsync(missing)));
         (await MovementsAsync(Id(item))).Should().Equal(("Added", 1000m));
     }
 
@@ -198,6 +198,7 @@ public class PantryApiTests(KamraApiFactory factory)
     [InlineData("""{ "amount": 1.2345, "unit": "g" }""", "amount")]
     [InlineData("""{ "amount": 2, "unit": "dl" }""", "unit")]
     [InlineData("""{ "amount": 200, "unit": "g", "expiryDate": "2026-13-45" }""", "")]
+    [InlineData("""{ "amount": "200", "unit": "g" }""", "")]
     public async Task Invalid_input_returns_400_not_500(string body, string field)
     {
         var client = await ApiClient.SignedInAsync(factory);
@@ -211,6 +212,67 @@ public class PantryApiTests(KamraApiFactory factory)
         var problem = await ApiClient.ProblemAsync(response);
         problem.GetProperty("code").GetString().Should().Be("VALIDATION_FAILED");
         problem.GetProperty("errors").TryGetProperty(field, out _).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("""{ "amount": 5, "unit": "dl", "category": "dairy", "reason": "consumed", "version": -1 }""", "")]
+    [InlineData("""{ "amount": 5, "unit": "dl", "category": "dairy", "reason": "added", "version": 1 }""", "reason")]
+    [InlineData("""{ "amount": 5, "unit": "dl", "category": "dairy", "reason": "consumed", "expiryDate": "tomorrow", "version": 1 }""", "")]
+    [InlineData("""{ "amount": 0.0001, "unit": "dl", "category": "dairy", "reason": "consumed", "version": 1 }""", "amount")]
+    public async Task Invalid_update_returns_400_not_500(string body, string field)
+    {
+        var client = await ApiClient.SignedInAsync(factory);
+        var item = await ReadAsync(await AddAsync(client, "tej", 1, "l"));
+
+        var response = await client.Http.PutAsync(ItemPath(item),
+            new StringContent(body, System.Text.Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await ApiClient.ProblemAsync(response);
+        problem.GetProperty("code").GetString().Should().Be("VALIDATION_FAILED");
+        problem.GetProperty("errors").TryGetProperty(field, out _).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("%25")]
+    [InlineData("_")]
+    public async Task Search_wildcards_are_matched_literally(string search)
+    {
+        var client = await ApiClient.SignedInAsync(factory);
+        await AddAsync(client, "tej", 1, "l");
+
+        (await client.GetJsonAsync($"/api/v1/ingredients?search={search}")).EnumerateArray().Should().BeEmpty();
+        (await client.GetJsonAsync($"/api/v1/pantry-items?search={search}")).EnumerateArray().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task A_too_long_search_returns_400()
+    {
+        var client = await ApiClient.SignedInAsync(factory);
+
+        foreach (var path in new[] { "/api/v1/pantry-items", "/api/v1/ingredients" })
+        {
+            var response = await client.Http.GetAsync($"{path}?search={new string('a', 101)}", TestContext.Current.CancellationToken);
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest, path);
+            (await ApiClient.ProblemAsync(response)).GetProperty("errors").TryGetProperty("search", out _).Should().BeTrue(path);
+        }
+    }
+
+    [Fact]
+    public async Task The_csp_is_strict_on_the_api_and_relaxed_only_for_the_scalar_page()
+    {
+        var client = await ApiClient.SignedInAsync(factory);
+
+        var api = await client.Http.GetAsync("/api/v1/categories", TestContext.Current.CancellationToken);
+        var scalar = await client.Http.GetAsync("/scalar/", TestContext.Current.CancellationToken);
+
+        api.Headers.GetValues("Content-Security-Policy").Should().Equal("default-src 'self'");
+        var scalarCsp = scalar.Headers.GetValues("Content-Security-Policy").Single();
+        var nonce = System.Text.RegularExpressions.Regex.Match(scalarCsp, "script-src 'self' 'nonce-([^']+)'").Groups[1].Value;
+        nonce.Should().NotBeEmpty("the inline scripts are allowed only by a per-request nonce");
+        scalarCsp.Should().NotContain("script-src 'self' 'unsafe-inline'");
+        (await scalar.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Should().Contain($"nonce=\"{nonce}\"");
     }
 
     [Fact]
@@ -265,8 +327,9 @@ public class PantryApiTests(KamraApiFactory factory)
         version = item.GetProperty("version").GetUInt32(),
     };
 
-    private static string WithoutCorrelationId(JsonElement problem) =>
-        JsonSerializer.Serialize(problem.EnumerateObject().Where(p => p.Name != "correlationId").ToDictionary(p => p.Name, p => p.Value));
+    // correlationId and traceId identify the request, so they differ for every response.
+    private static string WithoutRequestIds(JsonElement problem) =>
+        JsonSerializer.Serialize(problem.EnumerateObject().Where(p => p.Name is not ("correlationId" or "traceId")).ToDictionary(p => p.Name, p => p.Value));
 
     private async Task<List<(string Reason, decimal Delta)>> MovementsAsync(Guid pantryItemId)
     {

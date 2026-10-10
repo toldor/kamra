@@ -10,9 +10,11 @@ public sealed class PantryItemsController : ControllerBase
 {
     [HttpGet]
     [Produces("application/json")]
+    // Separate parameters keep the camelCase names in the OpenAPI contract; the use case validates them.
     public Task<IReadOnlyList<PantryItemResponse>> List([FromQuery] string? search, [FromQuery] string? category,
         [FromQuery] bool? expiringSoon, [FromServices] ListPantryItems listPantryItems, CancellationToken cancellationToken) =>
-        listPantryItems.ExecuteAsync(search, category, expiringSoon, cancellationToken);
+        listPantryItems.ExecuteAsync(new ListPantryItemsQuery { Search = search, Category = category, ExpiringSoon = expiringSoon },
+            cancellationToken);
 
     [HttpPost]
     [ProducesResponseType<PantryItemResponse>(StatusCodes.Status201Created)]

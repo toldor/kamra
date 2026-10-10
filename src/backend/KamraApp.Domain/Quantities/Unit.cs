@@ -34,7 +34,7 @@ public static class Units
     public static decimal ToBase(decimal amount, Unit unit) => amount * Factor(unit);
 
     // The amount in the unit the user entered, for display.
-    public static decimal FromBase(decimal quantity, Unit unit) => throw new NotImplementedException();
+    public static decimal FromBase(decimal quantity, Unit unit) => quantity / Factor(unit);
 
     private static decimal Factor(Unit unit) => unit switch
     {

@@ -11,5 +11,5 @@ public sealed class IngredientsController : ControllerBase
     [Produces("application/json")]
     public Task<IReadOnlyList<IngredientResponse>> List([FromQuery] string? search, [FromServices] ListIngredients listIngredients,
         CancellationToken cancellationToken) =>
-        listIngredients.ExecuteAsync(search, cancellationToken);
+        listIngredients.ExecuteAsync(new ListIngredientsQuery { Search = search }, cancellationToken);
 }

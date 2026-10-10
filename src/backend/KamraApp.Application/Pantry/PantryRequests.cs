@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
+using QuantityUnit = KamraApp.Domain.Quantities.Unit;
+using ValidationException = KamraApp.Application.Common.ValidationException;
 
 namespace KamraApp.Application.Pantry;
 
@@ -24,8 +26,23 @@ public sealed class AddPantryItemRequest : IValidatableObject
     // Missing: estimated from the category.
     public DateOnly? ExpiryDate { get; init; }
 
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) =>
-        throw new NotImplementedException();
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (!PantryInput.IsValidAmount(Amount!.Value, minimum: 0.001m))
+        {
+            yield return new ValidationResult(PantryInput.AmountMessage, [nameof(Amount)]);
+        }
+
+        if (!PantryInput.TryParse<QuantityUnit>(Unit, out _))
+        {
+            yield return new ValidationResult(PantryInput.UnitMessage, [nameof(Unit)]);
+        }
+
+        if (Category is not null && !PantryInput.TryParse<Category>(Category, out _))
+        {
+            yield return new ValidationResult(PantryInput.CategoryMessage, [nameof(Category)]);
+        }
+    }
 }
 
 public sealed class UpdatePantryItemRequest : IValidatableObject
@@ -49,14 +66,37 @@ public sealed class UpdatePantryItemRequest : IValidatableObject
     [Required(ErrorMessage = PantryInput.VersionMessage)]
     public uint? Version { get; init; }
 
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) =>
-        throw new NotImplementedException();
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (!PantryInput.IsValidAmount(Amount!.Value, minimum: 0m))
+        {
+            yield return new ValidationResult(PantryInput.AmountUpdateMessage, [nameof(Amount)]);
+        }
+
+        if (!PantryInput.TryParse<QuantityUnit>(Unit, out _))
+        {
+            yield return new ValidationResult(PantryInput.UnitMessage, [nameof(Unit)]);
+        }
+
+        if (!PantryInput.TryParse<Category>(Category, out _))
+        {
+            yield return new ValidationResult(PantryInput.CategoryMessage, [nameof(Category)]);
+        }
+
+        // Added is the reason of a new item, never of an edit.
+        if (Reason is not null && !(PantryInput.TryParse<MovementReason>(Reason, out var reason) && reason != MovementReason.Added))
+        {
+            yield return new ValidationResult(PantryInput.ReasonMessage, [nameof(Reason)]);
+        }
+    }
 }
 
 // Parsing and the user-facing messages of the pantry inputs, shared by the requests and use cases.
 public static class PantryInput
 {
     public const decimal MaxAmount = 100_000m;
+    public const int MaxSearchLength = 100;
+    public const string SearchMessage = "A keresett szöveg legfeljebb 100 karakter lehet.";
     public const string IngredientMessage = "Válassz hozzávalót a listából.";
     public const string AmountMessage = "A mennyiség 0,001 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.";
     public const string AmountUpdateMessage = "A mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.";
@@ -65,15 +105,46 @@ public static class PantryInput
     public const string OtherNeedsExpiryMessage = "Az „egyéb” kategóriánál add meg a lejáratot.";
     public const string DecreaseNeedsReasonMessage = "Add meg, miért csökken a mennyiség: elfogyott, kidobtam vagy hibás rögzítés.";
     public const string IncreaseReasonMessage = "Növelésnél csak a hibás rögzítés javítása adható meg okként.";
+    public const string ReasonMessage = "Válassz okot a listából: elfogyott, kidobtam vagy hibás rögzítés.";
     public const string VersionMessage = "Hiányzik a tétel verziója. Töltsd újra a listát.";
 
     // Only enum names are accepted (case-insensitive), never numbers.
-    public static bool TryParse<TEnum>(string? value, out TEnum result) where TEnum : struct, Enum =>
-        throw new NotImplementedException();
+    public static bool TryParse<TEnum>(string? value, out TEnum result) where TEnum : struct, Enum
+    {
+        var name = Enum.GetNames<TEnum>().FirstOrDefault(n => string.Equals(n, value, StringComparison.OrdinalIgnoreCase));
+        result = name is null ? default : Enum.Parse<TEnum>(name);
+        return name is not null;
+    }
+
+    // Base units stay within numeric(12,3), because every conversion factor is at least 1 (V-24).
+    public static bool IsValidAmount(decimal amount, decimal minimum) =>
+        amount >= minimum && amount <= MaxAmount && decimal.Round(amount, 3) == amount;
 
     public static TEnum Parse<TEnum>(string value) where TEnum : struct, Enum =>
         TryParse<TEnum>(value, out var result) ? result : throw new ArgumentException($"Unvalidated {typeof(TEnum).Name}: {value}", nameof(value));
 
+    // The checks that need the ingredient or the resolved category, shared by adding and editing.
+    public static void EnsureUnitFits(Unit unit, Dimension dimension, string ingredientName)
+    {
+        if (Units.DimensionOf(unit) != dimension)
+        {
+            throw ValidationException.ForField("unit", UnitForMessage(ingredientName, dimension));
+        }
+    }
+
+    public static void EnsureExpiryKnown(Category category, DateOnly? expiryDate)
+    {
+        if (expiryDate is null && Categories.ShelfLifeDays(category) is null)
+        {
+            throw ValidationException.ForField("expiryDate", OtherNeedsExpiryMessage);
+        }
+    }
+
     // "A(z) tejföl tömegben mérhető: g, dkg vagy kg."
-    public static string UnitForMessage(string ingredientName, Dimension dimension) => throw new NotImplementedException();
+    public static string UnitForMessage(string ingredientName, Dimension dimension) => dimension switch
+    {
+        Dimension.Mass => $"A(z) {ingredientName} tömegben mérhető: g, dkg vagy kg.",
+        Dimension.Volume => $"A(z) {ingredientName} térfogatban mérhető: ml, dl vagy l.",
+        _ => $"A(z) {ingredientName} darabban mérhető: db.",
+    };
 }
