@@ -193,4 +193,27 @@ public class PantryItemTests
         item.ExpiryDate.Should().Be(Day.AddDays(90));
         item.ExpiryEstimated.Should().BeTrue();
     }
+
+    [Fact]
+    public void A_given_expiry_date_on_edit_replaces_the_estimate()
+    {
+        var (item, _) = PantryItem.Create(HouseholdId, SourCream, 200m, Unit.G, Category.Dairy, expiryDate: null, Day, Now);
+
+        item.UpdateDetails(Category.Dairy, Day.AddDays(4), entryDay: Day, Now);
+
+        item.ExpiryDate.Should().Be(Day.AddDays(4));
+        item.ExpiryEstimated.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Changing_to_Other_without_expiry_date_is_rejected_and_changes_nothing()
+    {
+        var (item, _) = PantryItem.Create(HouseholdId, SourCream, 200m, Unit.G, Category.Dairy, expiryDate: null, Day, Now);
+
+        var update = () => item.UpdateDetails(Category.Other, expiryDate: null, entryDay: Day, Now);
+
+        update.Should().Throw<ArgumentException>();
+        item.Category.Should().Be(Category.Dairy);
+        item.ExpiryDate.Should().Be(Day.AddDays(7));
+    }
 }
