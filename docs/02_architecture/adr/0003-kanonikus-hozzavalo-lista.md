@@ -28,4 +28,4 @@ Státusz: Accepted
 ## Verification
 
 - **Hogyan ellenőrizzük?** Unit tesztek: azonos hozzávalóra hivatkozó tételek összesítése; a „trappista sajt” nem illeszkedik a „sajt”-ot kérő recepthez. Integrációs tesztek: a háztartás saját hozzávalója más háztartásban nem látszik; az induló receptkészlet minden hozzávalója szerepel az induló hozzávaló-listán.
-- **Evidence link:** az 1. lépcső (US-1, US-3) tesztjei; a link az implementációval együtt kerül ide.
+- **Evidence link:** a háztartás csak a rendszer- és a saját, nem visszavont hozzávalókat látja: [IngredientRepository.cs](../../../src/backend/KamraApp.Infrastructure/Persistence/IngredientRepository.cs); normalizált keresés: [PantryApiTests.cs](../../../tests/KamraApp.Integration.Tests/PantryApiTests.cs); az induló lista egyedisége: [SeedDataTests.cs](../../../tests/KamraApp.Unit.Tests/SeedDataTests.cs); [CI run 38076499766](https://github.com/toldor/kamra/actions/runs/38076499766). A „trappista sajt ≠ sajt” illesztés és az induló receptkészlet konzisztenciája a US-3-mal készül.

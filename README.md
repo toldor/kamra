@@ -184,6 +184,7 @@ Hiányzó kötelező beállítással az alkalmazás induláskor hibával leáll 
 | Csak az adatbázis indítása helyi fejlesztéshez | `docker compose up -d db` |
 | Migrációk alkalmazása helyben | `dotnet ef database update -p src/backend/KamraApp.Infrastructure -s src/backend/KamraApp.Api` |
 | Backend helyben | `dotnet run --project src/backend/KamraApp.Api` (http://localhost:5083) |
+| API-leírás fejlesztésben (Scalar, csak `Development`) | http://localhost:5083/scalar – módosító kéréshez előbb kérj tokent a `GET /api/v1/auth/antiforgery`-vel, és add meg `X-XSRF-TOKEN` fejlécként |
 | Frontend fejlesztői szerver (az `/api`-t a backendre proxyzza) | `cd src/frontend && npm ci && npm run dev` |
 | Frontend lint, teszt, build | `cd src/frontend && npm run lint && npm test && npm run build` |
 | Frontend API-típusok újragenerálása az `openapi.json`-ból | `cd src/frontend && npm run gen:api` |

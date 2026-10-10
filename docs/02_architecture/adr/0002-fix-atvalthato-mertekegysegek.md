@@ -28,4 +28,4 @@ Státusz: Accepted
 ## Verification
 
 - **Hogyan ellenőrizzük?** Unit tesztek: egységátváltás (dkg → g, dl → ml), tömeg–térfogat átváltás elutasítása, adagskálázás és kerekítés (US-4). US-2 teszteset: „egy csomag tejföl” bemenetre a tételjavaslat egység nélkül jön vissza, és mentés előtt a megadása kötelező.
-- **Evidence link:** az 1. lépcső (US-1, US-4) és a 2. lépcső (US-2) tesztjei; a link az implementációval együtt kerül ide.
+- **Evidence link:** átváltás és dimenzió: [QuantityTests.cs](../../../tests/KamraApp.Unit.Tests/QuantityTests.cs), [PantryItemTests.cs](../../../tests/KamraApp.Unit.Tests/PantryItemTests.cs); idegen dimenziójú egység 400 a végponton: [PantryApiTests.cs](../../../tests/KamraApp.Integration.Tests/PantryApiTests.cs), [AdversarialPantryApiTests.cs](../../../tests/KamraApp.Integration.Tests/AdversarialPantryApiTests.cs); [CI run 38076499766](https://github.com/toldor/kamra/actions/runs/38076499766). Az adagskálázás és a kerekítés (US-4), valamint a US-2 tesztjei a következő szakaszokkal készülnek.

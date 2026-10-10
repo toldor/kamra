@@ -50,10 +50,10 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `LOGIN_LOCKED_OUT` | 429 | A fiók 5 sikertelen bejelentkezés után 5 percre zárolva (ux_flows H5) | Megvalósítva |
 | `METHOD_NOT_ALLOWED` | 405 | A végpont nem támogatja a HTTP-metódust | Megvalósítva |
 | `REQUEST_REJECTED` | 4xx | Egyéb, a keretrendszer által elutasított kérés (pl. 415, vagy `BadHttpRequestException` saját 4xx státusszal), saját kód nélkül | Megvalósítva |
-| `INGREDIENT_NOT_FOUND` | 404 | Hozzávaló nem létezik, vagy más háztartás saját hozzávalója | Tervezett |
+| `INGREDIENT_NOT_FOUND` | 404 | Hozzávaló nem létezik, visszavont, vagy más háztartás saját hozzávalója | Megvalósítva |
 | `INGREDIENT_NAME_TAKEN` | 409 | Saját hozzávaló neve foglalt a háztartásban vagy a rendszerlistán | Tervezett |
-| `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik | Tervezett |
-| `PANTRY_ITEM_MODIFIED` | 409 | A készlettétel a kliens által látott verzió óta megváltozott ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)); a kliens újratölti | Tervezett |
+| `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik, 0-ra csökkent, vagy más háztartásé (a válasz a három esetben azonos) | Megvalósítva |
+| `PANTRY_ITEM_MODIFIED` | 409 | A készlettétel a kliens által látott verzió óta megváltozott ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)); a kliens újratölti; elavult verziónál minden más ellenőrzés előtt | Megvalósítva |
 | `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Tervezett |
 | `INSUFFICIENT_STOCK` | 409 | A megerősített felhasznált mennyiség több a jelenlegi készletnél; a válasz a friss mennyiségeket tartalmazza (US-4) | Tervezett |
 | `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú (recept, adagszám vagy mennyiség) főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
