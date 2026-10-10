@@ -16,18 +16,19 @@ Tiltások:
 
 Kontextus (olvasd el először):
 - AGENTS.md (kötelező szabályok), CONTEXT.md (fogalmak)
-- docs/02_architecture/adr/0004–0007 (+0011, ha létezik)
+- docs/02_architecture/adr/: <érintett ADR-ek> (az 1. lépcsőben: 0002, 0003, 0004, 0005, 0007, 0008)
 - A szakasz célja: <szakasz és lépései, 2–3 mondat>
 
-Review tárgya: `git diff <előző szakasz utolsó commitja>..HEAD` a feature/walking-skeleton branchen.
+Review tárgya: `git diff <előző szakasz utolsó commitja>..HEAD` a <branch> branchen. Csak a commitolt állapotot nézd, a munkakönyvtár változásait ne.
 
 Szempontok:
-1. Rétegszabályok és ADR-megfelelés (ADR-0004–0007): eltér-e a kód az elfogadott döntésektől?
+1. Rétegszabályok és ADR-megfelelés (a fenti ADR-ek): eltér-e a kód az elfogadott döntésektől?
 2. Biztonság: auth-megkerülés, hiányzó validáció, adatszivárgás a hibaválaszban vagy a logban, CSRF, XSS.
 3. Edge case-ek: üres vagy null bemenet, túl hosszú érték, párhuzamos kérés, hiányzó konfiguráció.
 4. Hibakezelés: minden hibaút a ProblemDetails modellen megy-e át, stabil code-dal.
 5. Tesztek: mi hiányzik? Van-e olyan teszt, amely zöld, de nem azt ellenőrzi, amit a neve állít?
 6. Felesleges bonyolultság: absztrakció egyetlen megvalósítással, nem használt kód.
+7. Mennyiségek és adatelkülönítés: alapegységben számol-e (ADR-0002), helyes-e a kerekítés és a FEFO, minden mennyiségváltozás a készletmozgás-naplóval egy tranzakcióban történik-e, és minden lekérdezés szűr-e a HouseholdId-re.
 
 Kimenet: táblázat, oszlopok: # | Megállapítás | Fájl:sor | Szabály vagy forrás (idézet az AGENTS.md-ből, ADR-ből vagy hivatalos doksiból) | Súlyosság (Kritikus/Közepes/Alacsony) | Javaslat.
 Ha nincs megállapításod egy szempontnál, írd ki, hogy „nincs”. Ne dicsérj, ne foglalj össze.

@@ -79,7 +79,7 @@ Az az esemény, amikor a felhasználó jelzi, hogy egy receptet adott adagszámm
 _Avoid_: receptfelhasználás
 
 **Elkészíthető**:
-Olyan recept, amelynek minden hozzávalója (az alaphozzávalók kivételével) megvan a készletben a szükséges mennyiségben.
+Olyan recept, amelynek minden hozzávalója (az alaphozzávalók kivételével) megvan a készletben a szükséges mennyiségben. A lejárt készlettétel is beleszámít.
 
 **Hiány**:
 Egy hozzávalóból hiányzó mennyiség: ajánlásnál a szükséges és a készleten lévő, főzésnél a szükséges és a felhasznált mennyiség különbsége, de legalább 0. Nem könyvelődik, de egy kattintással bevásárlólistára tehető.
