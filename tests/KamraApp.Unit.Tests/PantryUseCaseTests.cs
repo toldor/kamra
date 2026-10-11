@@ -238,6 +238,31 @@ public class PantryUseCaseTests
         (await list.Should().ThrowAsync<ValidationException>()).Which.Errors.Should().ContainKey(field);
     }
 
+    // V-33: the database's en_US collation puts "őrölt" before "ostya"; in Hungarian "o" comes before "ő".
+    [Fact]
+    public async Task The_ingredient_list_is_in_Hungarian_order()
+    {
+        var ingredients = new FakeIngredients(Mass("őrölt pirospaprika"), Mass("ostya"), Mass("olaj"));
+
+        var list = await new ListIngredients(ingredients, new FixedHousehold(HouseholdId))
+            .ExecuteAsync(new ListIngredientsQuery(), CancellationToken.None);
+
+        list.Select(i => i.Name).Should().Equal("olaj", "ostya", "őrölt pirospaprika");
+    }
+
+    [Fact]
+    public async Task Items_expiring_on_the_same_day_are_listed_in_Hungarian_order()
+    {
+        Stock(Mass("őrölt pirospaprika"), daysToExpiry: 5);
+        Stock(Mass("ostya"), daysToExpiry: 5);
+        Stock(SourCream, daysToExpiry: 1);
+
+        var list = await new ListPantryItems(_pantry, new FixedHousehold(HouseholdId), new FixedTime(Now))
+            .ExecuteAsync(new ListPantryItemsQuery(), CancellationToken.None);
+
+        list.Select(i => i.IngredientName).Should().Equal("tejföl", "ostya", "őrölt pirospaprika");
+    }
+
     [Theory]
     [InlineData("added")]
     [InlineData("elfogyott")]
@@ -267,6 +292,17 @@ public class PantryUseCaseTests
         return item;
     }
 
+    private static Ingredient Mass(string name) =>
+        Ingredient.CreateSystem(Guid.CreateVersion7(), Ingredient.Normalize(name), name, Dimension.Mass, Category.DryGoods);
+
+    private void Stock(Ingredient ingredient, int daysToExpiry)
+    {
+        var (item, _) = PantryItem.Create(HouseholdId, ingredient, 100m, Unit.G, ingredient.DefaultCategory,
+            new DateOnly(2026, 10, 10).AddDays(daysToExpiry), new DateOnly(2026, 10, 10), Now);
+        _pantry.Items.Add(item);
+        _pantry.Names[item.Id] = ingredient.Name;
+    }
+
     private static UpdatePantryItemRequest Edit(PantryItem item, decimal amount, string unit = "g", string category = "dairy", string? reason = null) =>
         new() { Amount = amount, Unit = unit, Category = category, Reason = reason, Version = item.Version };
 
@@ -290,10 +326,13 @@ public class PantryUseCaseTests
 
         public List<StockMovement> Movements { get; } = [];
 
+        // Ingredient names by item; sour cream when not given.
+        public Dictionary<Guid, string> Names { get; } = [];
+
         public int Saves { get; private set; }
 
         public Task<IReadOnlyList<PantryEntry>> ListAsync(Guid householdId, PantryFilter filter, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<PantryEntry>>([.. Items.Select(i => new PantryEntry(i, SourCream.Name))]);
+            Task.FromResult<IReadOnlyList<PantryEntry>>([.. Items.Select(i => new PantryEntry(i, Names.GetValueOrDefault(i.Id, SourCream.Name)))]);
 
         public Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
             Task.FromResult(Items.FirstOrDefault(i => i.Id == id && i.HouseholdId == householdId && i.Quantity > 0) is { } item

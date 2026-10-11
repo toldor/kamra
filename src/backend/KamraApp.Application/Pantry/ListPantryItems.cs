@@ -1,4 +1,5 @@
 using KamraApp.Application.Common;
+using KamraApp.Domain;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
 
@@ -17,6 +18,8 @@ public sealed class ListPantryItems(IPantryRepository pantry, ICurrentHousehold 
             valid.ExpiringSoon == true ? today : null);
         var entries = await pantry.ListAsync(household.HouseholdId, filter, cancellationToken);
 
-        return [.. entries.Select(e => PantryItemResponse.From(e.Item, e.IngredientName, today))];
+        // Earliest expiry first, then the Hungarian alphabet (V-33: not the database's en_US collation).
+        return [.. entries.OrderBy(e => e.Item.ExpiryDate).ThenBy(e => e.IngredientName, Collation.Hungarian).ThenBy(e => e.Item.Id)
+            .Select(e => PantryItemResponse.From(e.Item, e.IngredientName, today))];
     }
 }

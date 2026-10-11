@@ -217,7 +217,7 @@ describe('cooking', () => {
     await waitFor(() => expect(document.activeElement).toBe(input))
     expect(input.getAttribute('aria-invalid')).toBe('true')
     const message = document.getElementById(input.getAttribute('aria-describedby')!)
-    expect(message?.textContent).toBe('A felhasznált mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.')
+    expect(message?.textContent).toBe('A felhasznált mennyiség 0 és 100 000 között legyen.')
     expect(calls.filter((c) => c.key === confirm)).toHaveLength(0)
   })
 

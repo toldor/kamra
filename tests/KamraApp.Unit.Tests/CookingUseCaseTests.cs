@@ -199,7 +199,7 @@ public class CookingUseCaseTests
             Used = [new UsedAmount { IngredientId = Burgonya.Id, Amount = 0.0000001m }],
         })).Should().ThrowAsync<ValidationException>();
 
-        error.Which.Errors["used"].Should().Equal(CookingInput.AmountMessage);
+        error.Which.Errors["used"].Should().Equal(CookingInput.PrecisionMessage);
         _cookings.Saves.Should().Be(0);
     }
 

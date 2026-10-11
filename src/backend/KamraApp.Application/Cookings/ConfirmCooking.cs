@@ -30,7 +30,7 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
         var used = UsedInBaseUnits(recipe, valid) ?? throw ValidationException.ForField("used", CookingInput.UsedMessage);
         if (!used.Values.All(CookingInput.IsStorable))
         {
-            throw ValidationException.ForField("used", CookingInput.AmountMessage);
+            throw ValidationException.ForField("used", CookingInput.PrecisionMessage);
         }
 
         try

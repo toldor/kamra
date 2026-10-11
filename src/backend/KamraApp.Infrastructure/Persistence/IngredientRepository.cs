@@ -10,7 +10,6 @@ public sealed class IngredientRepository(KamraDbContext db) : IIngredientReposit
     public async Task<IReadOnlyList<Ingredient>> ListVisibleAsync(Guid householdId, string? normalizedSearch, CancellationToken cancellationToken) =>
         await Visible(householdId)
             .Where(i => normalizedSearch == null || i.NormalizedName.Contains(normalizedSearch))
-            .OrderBy(i => i.Name)
             .ToListAsync(cancellationToken);
 
     public Task<Ingredient?> FindVisibleAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>

@@ -60,7 +60,8 @@ public static class CookingInput
 {
     public const int MaxServings = Cooking.MaxServings;
     public const string ServingsMessage = "Az adagszám 1 és 100 között legyen.";
-    public const string AmountMessage = "A felhasznált mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.";
+    public const string AmountMessage = "A felhasznált mennyiség 0 és 100 000 között legyen.";
+    public const string PrecisionMessage = "Ilyen apró mennyiséget nem tudunk rögzíteni: grammban és milliliterben legfeljebb 3 tizedesjegy lehet.";
     public const string UsedMessage = "A felhasznált mennyiségeket a recept minden hozzávalójához add meg.";
     public const string RequestIdMessage = "Hiányzik a főzés azonosítója. Töltsd újra az oldalt.";
     public const string RecipeMessage = "Válassz receptet.";

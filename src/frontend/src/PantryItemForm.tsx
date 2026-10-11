@@ -4,6 +4,9 @@ import { useFieldErrors } from './fieldErrors'
 import { categoryName, unitsOf } from './format'
 
 const allUnits = Object.values(unitsOf).flat()
+
+// Like the backend's Ingredient.Normalize: case and extra spaces do not matter.
+const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase()
 const fieldOrder = ['ingredientId', 'amount', 'unit', 'category', 'expiryDate'] as const
 
 // US-1: a new pantry item. The ingredient is chosen from the list (ADR-0003); the units follow its
@@ -23,7 +26,7 @@ export function PantryItemForm({ categories, ingredients, onAdded, onSignedOut }
   const [error, setError] = useState<string | null>(null)
   const fields = useFieldErrors('new', fieldOrder)
 
-  const ingredient = ingredients.find((i) => i.name.toLowerCase() === ingredientName.trim().toLowerCase())
+  const ingredient = ingredients.find((i) => normalize(i.name) === normalize(ingredientName))
   const units = ingredient ? unitsOf[ingredient.dimension] : allUnits
   const chosenUnit = units.includes(unit) ? unit : units[0]
   const chosenCategory = category || ingredient?.defaultCategory || ''

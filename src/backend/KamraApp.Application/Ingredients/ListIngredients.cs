@@ -1,4 +1,5 @@
 using KamraApp.Application.Common;
+using KamraApp.Domain;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
@@ -14,6 +15,7 @@ public sealed class ListIngredients(IIngredientRepository ingredients, ICurrentH
         var search = RequestValidator.Validate(query).Search;
         var normalized = string.IsNullOrWhiteSpace(search) ? null : Ingredient.Normalize(search);
         var visible = await ingredients.ListVisibleAsync(household.HouseholdId, normalized, cancellationToken);
-        return [.. visible.Select(i => new IngredientResponse(i.Id, i.Name, i.Dimension, i.DefaultCategory))];
+        // V-33: sorted here, because the database's en_US collation is not the Hungarian alphabet.
+        return [.. visible.OrderBy(i => i.Name, Collation.Hungarian).Select(i => new IngredientResponse(i.Id, i.Name, i.Dimension, i.DefaultCategory))];
     }
 }

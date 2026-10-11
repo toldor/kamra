@@ -29,7 +29,8 @@ public sealed class PantryRepository(KamraDbContext db) : IPantryRepository
             query = query.Where(x => x.Item.ExpiryDate >= today && x.Item.ExpiryDate <= lastDay);
         }
 
-        var rows = await query.OrderBy(x => x.Item.ExpiryDate).ThenBy(x => x.Name).ThenBy(x => x.Item.Id).ToListAsync(cancellationToken);
+        // The order is the use case's (Hungarian alphabet, V-33).
+        var rows = await query.ToListAsync(cancellationToken);
         return [.. rows.Select(x => new PantryEntry(x.Item, x.Name))];
     }
 

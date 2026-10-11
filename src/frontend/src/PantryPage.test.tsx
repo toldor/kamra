@@ -34,6 +34,7 @@ const ingredients: Reply = {
   body: [
     { id: 'i-tejfol', name: 'tejföl', dimension: 'mass', defaultCategory: 'dairy' },
     { id: 'i-tej', name: 'tej', dimension: 'volume', defaultCategory: 'dairy' },
+    { id: 'i-oroltpirospaprika', name: 'őrölt pirospaprika', dimension: 'mass', defaultCategory: 'dryGoods' },
   ],
 }
 const sourCream = {
@@ -173,6 +174,18 @@ describe('new item form', () => {
 
     fireEvent.change(form().getByLabelText('Hozzávaló'), { target: { value: 'tej' } })
     expect(units()).toEqual(['ml', 'dl', 'l'])
+  })
+
+  it('recognises an ingredient typed with extra spaces, like the backend does', async () => {
+    pantryBackend([pantry()])
+    render(<App />)
+    await screen.findByText('Még üres a kamrád.')
+
+    fireEvent.change(form().getByLabelText('Hozzávaló'), { target: { value: ' Őrölt   pirospaprika ' } })
+
+    const units = form().getAllByRole('option').map((o) => o.textContent)
+      .filter((u) => ['g', 'dkg', 'kg', 'ml', 'dl', 'l', 'db'].includes(u ?? ''))
+    expect(units).toEqual(['g', 'dkg', 'kg'])
   })
 
   it('rejects an unknown ingredient without sending a request', async () => {

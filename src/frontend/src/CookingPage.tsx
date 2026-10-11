@@ -38,7 +38,7 @@ const validServings = (text: string) => /^\d+$/.test(text) && Number(text) >= 1 
 // D-d: the same range as the backend; the decimals are checked there, in base units (D-a).
 const validUsed = (text: string) => text.trim() !== '' && Number(text) >= 0 && Number(text) <= 100_000
 
-const usedMessage = 'A felhasznált mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.'
+const usedMessage = 'A felhasznált mennyiség 0 és 100 000 között legyen.'
 
 // D-b: on this screen a changed item means the stock changed, not that an edit must be saved again.
 const stockChangedMessage = 'Közben megváltozott a készlet. Számold újra, és erősítsd meg újra.'
