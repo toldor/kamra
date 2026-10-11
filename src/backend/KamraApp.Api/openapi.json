@@ -636,7 +636,7 @@
           }
         }
       },
-      "Recommendation": {
+      "RecommendationResponse": {
         "required": [
           "recipeId",
           "name",
@@ -673,7 +673,7 @@
           "shortages": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Shortage"
+              "$ref": "#/components/schemas/ShortageResponse"
             }
           }
         }
@@ -692,13 +692,13 @@
           "makeable": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Recommendation"
+              "$ref": "#/components/schemas/RecommendationResponse"
             }
           },
           "almostMakeable": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Recommendation"
+              "$ref": "#/components/schemas/RecommendationResponse"
             }
           }
         }
@@ -728,7 +728,7 @@
           }
         }
       },
-      "Shortage": {
+      "ShortageResponse": {
         "required": [
           "ingredientName",
           "missing",

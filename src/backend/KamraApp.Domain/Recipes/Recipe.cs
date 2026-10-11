@@ -1,3 +1,4 @@
+using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Quantities;
 
 namespace KamraApp.Domain.Recipes;
@@ -38,8 +39,11 @@ public sealed class Recipe
 
     public DateTimeOffset? RetiredAt { get; private set; }
 
-    public static Recipe CreateSystem(Guid id, string seedKey, string name, int servings, string instructions, DateTimeOffset createdAt) =>
-        throw new NotImplementedException();
+    public static Recipe CreateSystem(Guid id, string seedKey, string name, int servings, string instructions, DateTimeOffset createdAt)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(servings);
+        return new Recipe(id, householdId: null, name, servings, instructions, RecipeSource.Seed, seedKey, createdAt, retiredAt: null);
+    }
 }
 
 public enum RecipeSource
@@ -68,6 +72,10 @@ public sealed class RecipeIngredient
 
     public Unit EnteredUnit { get; private set; }
 
-    public static RecipeIngredient Create(Guid recipeId, Guid ingredientId, decimal amount, Unit unit) =>
-        throw new NotImplementedException();
+    public static RecipeIngredient Create(Guid recipeId, Ingredient ingredient, decimal amount, Unit unit)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        Units.EnsureDimension(unit, ingredient.Dimension);
+        return new RecipeIngredient(recipeId, ingredient.Id, Units.ToBase(amount, unit), unit);
+    }
 }

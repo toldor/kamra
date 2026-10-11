@@ -37,7 +37,9 @@ public sealed class Ingredient
     public DateTimeOffset? RetiredAt { get; private set; }
 
     // CONTEXT.md, Alaphozzávaló: water, salt and pepper are ignored by matching and deduction.
-    public bool IsStaple => SeedKey is "viz" or "so" or "bors";
+    public bool IsStaple => IsStapleKey(SeedKey);
+
+    public static bool IsStapleKey(string? seedKey) => seedKey is "viz" or "so" or "bors";
 
     public static Ingredient CreateSystem(Guid id, string seedKey, string name, Dimension dimension, Category defaultCategory) =>
         new(id, householdId: null, name, Normalize(name), dimension, defaultCategory, seedKey, retiredAt: null);

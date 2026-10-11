@@ -4,6 +4,41 @@
  */
 
 export interface paths {
+    "/api/v1/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecommendationsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categories": {
         parameters: {
             query?: never;
@@ -428,9 +463,34 @@ export interface components {
             /** Format: uint32 */
             version: number;
         };
+        RecommendationResponse: {
+            /** Format: uuid */
+            recipeId: string;
+            name: string;
+            /** Format: int32 */
+            servings: number;
+            soonExpiringIngredients: string[];
+            expiredIngredients: string[];
+            shortages: components["schemas"]["ShortageResponse"][];
+        };
+        RecommendationsResponse: {
+            pantryIsEmpty: boolean;
+            makeable: components["schemas"]["RecommendationResponse"][];
+            almostMakeable: components["schemas"]["RecommendationResponse"][];
+        };
         RegisterRequest: {
             email: null | string;
             password: null | string;
+        };
+        ShortageResponse: {
+            ingredientName: string;
+            /** Format: double */
+            missing: number;
+            /** Format: double */
+            available: number;
+            /** Format: double */
+            required: number;
+            unit: components["schemas"]["Unit"];
         };
         /** @enum {unknown} */
         Unit: "g" | "dkg" | "kg" | "ml" | "dl" | "l" | "db";

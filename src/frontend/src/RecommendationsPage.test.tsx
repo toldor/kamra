@@ -62,6 +62,20 @@ describe('navigation', () => {
     expect(screen.getByRole('link', { name: 'Készlet' }).getAttribute('aria-current')).toBeNull()
   })
 
+  it('moves the focus to the new page heading, and treats an unknown address as the pantry', async () => {
+    window.location.hash = '#/ismeretlen'
+    backend([recommendations({})])
+    render(<App />)
+
+    expect(await screen.findByRole('heading', { name: 'Kamra' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Készlet' }).getAttribute('aria-current')).toBe('page')
+
+    fireEvent.click(screen.getByRole('link', { name: 'Mit főzzek?' }))
+
+    const heading = await screen.findByRole('heading', { name: 'Mit főzzek?' })
+    await waitFor(() => expect(document.activeElement).toBe(heading))
+  })
+
   it('returns to the same page after signing in again', async () => {
     fakeBackend({
       'GET /api/v1/auth/me': [notSignedIn, signedIn],

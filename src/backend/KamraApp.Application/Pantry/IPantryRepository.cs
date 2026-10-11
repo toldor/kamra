@@ -5,7 +5,10 @@ namespace KamraApp.Application.Pantry;
 // A pantry item with its ingredient's name, as the repository reads it.
 public sealed record PantryEntry(PantryItem Item, string IngredientName);
 
-public sealed record PantryFilter(string? NormalizedSearch, Category? Category, DateOnly? SoonExpiringOn);
+public sealed record PantryFilter(string? NormalizedSearch, Category? Category, DateOnly? SoonExpiringOn)
+{
+    public static readonly PantryFilter None = new(null, null, null);
+}
 
 // Aggregate-level port (AGENTS.md): every read takes the household, and a depleted (0) item counts as
 // missing. Add and AddMovement take no household id: the new item and movement already carry the one

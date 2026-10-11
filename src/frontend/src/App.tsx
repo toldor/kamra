@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, errorMessage, type Me } from './api/client'
 import { AuthForm } from './AuthForm'
+import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
+import { RecommendationsPage } from './RecommendationsPage'
+import { routes, useHashRoute } from './useHashRoute'
 
-// Three screens and no URLs yet, so plain state instead of a router (added with US-1).
+// Signed out: the auth screens; signed in: the pages chosen by the hash route (useHashRoute).
 type State =
   | { screen: 'loading' }
   | { screen: 'error'; message: string }
@@ -21,6 +24,7 @@ async function loadSession(): Promise<State> {
 
 export default function App() {
   const [state, setState] = useState<State>({ screen: 'loading' })
+  const route = useHashRoute()
   // Stable, so the pantry page does not reload its data whenever App renders.
   const signOut = useCallback((notice?: string) => setState({ screen: 'login', notice }), [])
 
@@ -54,7 +58,11 @@ export default function App() {
         </main>
       )
     case 'pantry':
-      return <PantryPage me={state.me} onSignedOut={signOut} />
+      return (
+        <Layout me={state.me} route={route} onSignedOut={signOut}>
+          {route === routes.recommendations ? <RecommendationsPage onSignedOut={signOut} /> : <PantryPage onSignedOut={signOut} />}
+        </Layout>
+      )
     default:
       return (
         <AuthForm

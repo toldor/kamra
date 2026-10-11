@@ -19,15 +19,54 @@ public static class SeedData
         RespectRequiredConstructorParameters = true,
     };
 
+    // Fixed, so regenerating the migration does not change the seeded rows.
+    public static readonly DateTimeOffset SeededAt = new(2026, 10, 11, 0, 0, 0, TimeSpan.Zero);
+
     private static readonly Lazy<IReadOnlyList<Ingredient>> SystemIngredients =
         new(() => LoadIngredients(ReadResource("ingredients.json")));
 
+    private static readonly Lazy<SeedRecipes> SystemRecipes =
+        new(() => LoadRecipes(ReadResource("recipes.json"), Ingredients));
+
     public static IReadOnlyList<Ingredient> Ingredients => SystemIngredients.Value;
 
-    public static SeedRecipes Recipes => throw new NotImplementedException();
+    public static SeedRecipes Recipes => SystemRecipes.Value;
 
-    // Recipe ingredients refer to the ingredient list by SeedKey (ADR-0005).
-    public static SeedRecipes LoadRecipes(string json, IReadOnlyList<Ingredient> ingredients) => throw new NotImplementedException();
+    // Recipe ingredients refer to the ingredient list by SeedKey (ADR-0005); an unknown key, a unit of
+    // another dimension (ADR-0002) or a repeated ingredient stops the load.
+    public static SeedRecipes LoadRecipes(string json, IReadOnlyList<Ingredient> ingredients)
+    {
+        var rows = JsonSerializer.Deserialize<List<RecipeRow>>(json, Options) ?? [];
+        if (rows.Any(r => string.IsNullOrWhiteSpace(r.SeedKey) || string.IsNullOrWhiteSpace(r.Name)))
+        {
+            throw new InvalidOperationException("Blank seedKey or name in the recipe seed.");
+        }
+
+        EnsureUnique(rows, r => r.Id.ToString(), "recipe id");
+        EnsureUnique(rows, r => r.SeedKey, "recipe seedKey");
+        var bySeedKey = ingredients.Where(i => i.SeedKey is not null).ToDictionary(i => i.SeedKey!);
+
+        var recipes = new List<Recipe>();
+        var recipeIngredients = new List<RecipeIngredient>();
+        foreach (var row in rows)
+        {
+            recipes.Add(Recipe.CreateSystem(row.Id, row.SeedKey, row.Name, row.Servings, row.Instructions, SeededAt));
+            EnsureUnique(row.Ingredients, i => i.SeedKey, $"ingredient of recipe {row.SeedKey}");
+            foreach (var line in row.Ingredients)
+            {
+                var ingredient = bySeedKey.GetValueOrDefault(line.SeedKey)
+                    ?? throw new InvalidOperationException($"Unknown ingredient seedKey in recipe {row.SeedKey}: {line.SeedKey}");
+                if (Units.DimensionOf(line.Unit) != ingredient.Dimension)
+                {
+                    throw new InvalidOperationException($"Unit {line.Unit} does not measure {ingredient.Dimension} for {line.SeedKey} in recipe {row.SeedKey}");
+                }
+
+                recipeIngredients.Add(RecipeIngredient.Create(row.Id, ingredient, line.Amount, line.Unit));
+            }
+        }
+
+        return new SeedRecipes(recipes, recipeIngredients);
+    }
 
     public static IReadOnlyList<Ingredient> LoadIngredients(string json)
     {
@@ -60,6 +99,10 @@ public static class SeedData
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }
+
+    private sealed record RecipeRow(Guid Id, string SeedKey, string Name, int Servings, string Instructions, List<RecipeLineRow> Ingredients);
+
+    private sealed record RecipeLineRow(string SeedKey, decimal Amount, Unit Unit);
 
     private sealed record IngredientRow(Guid Id, string SeedKey, string Name, Dimension Dimension, Category DefaultCategory);
 }

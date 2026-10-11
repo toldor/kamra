@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, ApiError, errorMessage, failWith, noFilter, type Category, type CategoryInfo, type Ingredient, type Me, type PantryItem } from './api/client'
+import { api, failWith, noFilter, type Category, type CategoryInfo, type Ingredient, type PantryItem } from './api/client'
 import { categoryName, formatAmount, formatDate } from './format'
 import { PantryItemEditor } from './PantryItemEditor'
 import { PantryItemForm } from './PantryItemForm'
@@ -12,7 +12,7 @@ type Catalog =
 
 // US-1: the pantry with its filters, the new item form and the item editor. Expired and soon-expiring
 // items come first, because the backend orders by expiry date.
-export function PantryPage({ me, onSignedOut }: { me: Me; onSignedOut: (notice?: string) => void }) {
+export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => void }) {
   const [filter, setFilter] = useState(noFilter)
   const [searchInput, setSearchInput] = useState('')
   const [list, setList] = useState<List>({ status: 'loading' })
@@ -21,8 +21,6 @@ export function PantryPage({ me, onSignedOut }: { me: Me; onSignedOut: (notice?:
   const [catalogTries, setCatalogTries] = useState(0)
   const [editing, setEditing] = useState<PantryItem | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [logoutError, setLogoutError] = useState<string | null>(null)
 
   const reload = () => setReloads((n) => n + 1)
 
@@ -55,34 +53,12 @@ export function PantryPage({ me, onSignedOut }: { me: Me; onSignedOut: (notice?:
     }
   }, [filter, reloads, onSignedOut])
 
-  async function logout() {
-    setBusy(true)
-    setLogoutError(null)
-    try {
-      await api.logout()
-      onSignedOut()
-    } catch (caught) {
-      // 401: the session had already ended - the user wanted to be signed out, and is.
-      if (caught instanceof ApiError && caught.status === 401) {
-        onSignedOut()
-        return
-      }
-      setLogoutError(errorMessage(caught))
-      setBusy(false)
-    }
-  }
-
   const filtered = filter.search.trim() !== '' || filter.category !== '' || filter.expiringSoon
   const categories = catalog.status === 'ready' ? catalog.categories : []
 
   return (
     <main>
-      <header className="topbar">
-        <span>{me.email}</span>
-        <button type="button" onClick={logout} disabled={busy}>Kijelentkezés</button>
-      </header>
-      <div role="alert" className="form-error">{logoutError}</div>
-      <h1>Kamra</h1>
+      <h1 tabIndex={-1}>Kamra</h1>
       <p role="status" className="notice">{notice}</p>
 
       {catalog.status === 'loading' && <p role="status">Betöltés…</p>}

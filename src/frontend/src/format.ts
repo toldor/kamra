@@ -1,4 +1,4 @@
-import type { Category, Dimension, Unit } from './api/client'
+import type { Category, Dimension, Shortage, Unit } from './api/client'
 
 // Display helpers for the pantry; the names follow data_model.md (Kategórialista).
 const categoryNames: Record<Category, string> = {
@@ -35,3 +35,7 @@ export const formatAmount = (amount: number, unit: Unit) => `${numberFormat.form
 const dateFormat = new Intl.DateTimeFormat('hu-HU', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 
 export const formatDate = (isoDate: string) => dateFormat.format(new Date(`${isoDate}T00:00:00Z`))
+
+// US-3: "tejföl: 50 g hiányzik (150 g van, 200 g kell)", in the recipe's unit.
+export const formatShortage = ({ ingredientName, missing, available, required, unit }: Shortage) =>
+  `${ingredientName}: ${formatAmount(missing, unit)} hiányzik (${formatAmount(available, unit)} van, ${formatAmount(required, unit)} kell)`

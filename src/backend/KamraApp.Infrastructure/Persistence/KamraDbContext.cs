@@ -1,6 +1,7 @@
 using KamraApp.Domain.Households;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
+using KamraApp.Domain.Recipes;
 using KamraApp.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,10 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
     public DbSet<PantryItem> PantryItems => Set<PantryItem>();
 
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+
+    public DbSet<Recipe> Recipes => Set<Recipe>();
+
+    public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -73,6 +78,29 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             // Append-only log (data_model.md): a pantry item with movements cannot be deleted; a household
             // deletion still removes both through their own household cascades.
             movement.HasOne<PantryItem>().WithMany().HasForeignKey(m => m.PantryItemId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // data_model.md, Recipe and RecipeIngredient; the system recipes come from recipes.json (ADR-0005).
+        builder.Entity<Recipe>(recipe =>
+        {
+            recipe.HasKey(r => r.Id);
+            recipe.Property(r => r.Id).ValueGeneratedNever();
+            recipe.Property(r => r.Source).HasConversion<string>();
+            recipe.ToTable(t => t.HasCheckConstraint("CK_Recipes_Servings_Positive", "\"Servings\" > 0"));
+            recipe.HasOne<Household>().WithMany().HasForeignKey(r => r.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            recipe.HasIndex(r => r.SeedKey).IsUnique().HasFilter("\"SeedKey\" IS NOT NULL");
+            recipe.HasData(SeedData.Recipes.Recipes);
+        });
+
+        builder.Entity<RecipeIngredient>(line =>
+        {
+            line.HasKey(l => new { l.RecipeId, l.IngredientId });
+            line.Property(l => l.Quantity).HasPrecision(12, 3);
+            line.Property(l => l.EnteredUnit).HasConversion<string>();
+            line.ToTable(t => t.HasCheckConstraint("CK_RecipeIngredients_Quantity_Positive", "\"Quantity\" > 0"));
+            line.HasOne<Recipe>().WithMany().HasForeignKey(l => l.RecipeId).OnDelete(DeleteBehavior.Cascade);
+            line.HasOne<Ingredient>().WithMany().HasForeignKey(l => l.IngredientId).OnDelete(DeleteBehavior.NoAction);
+            line.HasData(SeedData.Recipes.Ingredients);
         });
     }
 }

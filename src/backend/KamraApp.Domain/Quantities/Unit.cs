@@ -33,6 +33,15 @@ public static class Units
 
     public static decimal ToBase(decimal amount, Unit unit) => amount * Factor(unit);
 
+    // ADR-0002: an ingredient is measured only in the units of its dimension.
+    public static void EnsureDimension(Unit unit, Dimension dimension)
+    {
+        if (DimensionOf(unit) != dimension)
+        {
+            throw new ArgumentException($"The unit {unit} does not measure {dimension} (ADR-0002).", nameof(unit));
+        }
+    }
+
     // The amount in the unit the user entered, for display.
     public static decimal FromBase(decimal quantity, Unit unit) => quantity / Factor(unit);
 

@@ -17,6 +17,64 @@ main {
   padding: 1.5rem 1rem;
 }
 
+/* The signed-in pages: header and navigation above the page's own main. */
+.shell {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 0;
+}
+
+.shell main {
+  padding: 0 0 1.5rem;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  margin: 0.75rem 0 0;
+}
+
+.nav a,
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #1d5e3a;
+  font-weight: 600;
+}
+
+.nav a[aria-current='page'] {
+  text-decoration-thickness: 3px;
+}
+
+.button-link {
+  padding: 0 1rem;
+  border: 1px solid #1d5e3a;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.recipe {
+  padding: 0.75rem;
+  border: 1px solid #c4c4c4;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.recipe h3 {
+  margin: 0;
+}
+
+.recipe ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.warning {
+  color: #8a0019;
+  margin: 0.5rem 0 0;
+}
+
 form {
   display: flex;
   flex-direction: column;

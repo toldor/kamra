@@ -127,12 +127,34 @@ public class RecommenderTests
     [Fact]
     public void An_expired_item_is_stock_marked_as_expired_and_does_not_rank_a_recipe_up()
     {
-        var stock = new[] { Stock("tojás", 3, -1), Stock("vaj", 100, 20) };
+        // Q5/E1: Rántotta uses an expired egg (the earliest date of all) and butter expiring in 20 days;
+        // Tejfölös uses sour cream expiring in 5 days; neither is soon expiring. The expired egg must not
+        // move Rántotta ahead (key 2 looks only at items that have not expired: 20 vs 5 days), and by name
+        // "Rántotta" would come first, so only that rule can put Tejfölös ahead.
+        var tejfolos = new RecipeCandidate(Guid.CreateVersion7(), "Tejfölös", 2, [Need("tejföl", 10, Unit.G)]);
+        var stock = new[] { Stock("tojás", 3, -1), Stock("vaj", 100, 20), Stock("tejföl", 10, 5) };
 
-        var rantotta = Recommender.Recommend([Rantotta], stock, T).Makeable.Single();
+        var result = Recommender.Recommend([Rantotta, tejfolos], stock, T);
 
+        result.Makeable.Select(r => r.Name).Should().Equal("Tejfölös", "Rántotta");
+        var rantotta = result.Makeable[1];
         rantotta.ExpiredIngredients.Should().Equal("tojás");
         rantotta.SoonExpiringIngredients.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void The_ranking_counts_soon_expiring_items_and_the_reason_names_the_ingredients()
+    {
+        // Two soon-expiring items of one ingredient: rank key 1 counts 2 items (US-3 "készlettételek
+        // száma"), the reason lists the ingredient once ("1 hamarosan lejáró hozzávalót").
+        var zoldseges = new RecipeCandidate(Guid.CreateVersion7(), "Zöldséges", 2, [Need("paradicsom", 300, Unit.G)]);
+        var agyas = new RecipeCandidate(Guid.CreateVersion7(), "Ágyas", 2, [Need("paprika", 100, Unit.G)]);
+        var stock = new[] { Stock("paradicsom", 200, 1), Stock("paradicsom", 200, 2), Stock("paprika", 100, 1) };
+
+        var result = Recommender.Recommend([agyas, zoldseges], stock, T);
+
+        result.Makeable.Select(r => r.Name).Should().Equal("Zöldséges", "Ágyas");
+        result.Makeable[0].SoonExpiringIngredients.Should().Equal("paradicsom");
     }
 
     [Fact]

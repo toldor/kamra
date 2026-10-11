@@ -1,3 +1,4 @@
+using System.Globalization;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
 
@@ -28,6 +29,65 @@ public static class Recommender
 {
     public const int MaxShortagesForAlmostMakeable = 2;
 
-    public static Recommendations Recommend(IEnumerable<RecipeCandidate> recipes, IEnumerable<StockItem> stock, DateOnly today) =>
-        throw new NotImplementedException();
+    // Names are ordered the Hungarian way ("Ágyas" before "Bableves"); the id settles exact ties.
+    private static readonly StringComparer HungarianOrder = StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), ignoreCase: false);
+
+    public static Recommendations Recommend(IEnumerable<RecipeCandidate> recipes, IEnumerable<StockItem> stock, DateOnly today)
+    {
+        var stockByIngredient = stock.ToLookup(s => s.IngredientId);
+        var evaluated = recipes.Select(r => Evaluate(r, stockByIngredient, today)).ToList();
+
+        // US-3: soon-expiring items used (desc), earliest expiry, name.
+        var makeable = evaluated.Where(e => e.Recommendation.Shortages.Count == 0)
+            .OrderByDescending(e => e.SoonExpiringItems)
+            .ThenBy(e => e.EarliestExpiry ?? DateOnly.MaxValue)
+            .ThenBy(e => e.Recommendation.Name, HungarianOrder)
+            .ThenBy(e => e.Recommendation.RecipeId);
+
+        // D1: fewer shortages, soon-expiring items used (desc), name.
+        var almostMakeable = evaluated
+            .Where(e => e.Recommendation.Shortages.Count is > 0 and <= MaxShortagesForAlmostMakeable)
+            .OrderBy(e => e.Recommendation.Shortages.Count)
+            .ThenByDescending(e => e.SoonExpiringItems)
+            .ThenBy(e => e.Recommendation.Name, HungarianOrder)
+            .ThenBy(e => e.Recommendation.RecipeId);
+
+        return new Recommendations([.. makeable.Select(e => e.Recommendation)], [.. almostMakeable.Select(e => e.Recommendation)]);
+    }
+
+    private static Evaluated Evaluate(RecipeCandidate recipe, ILookup<Guid, StockItem> stock, DateOnly today)
+    {
+        var used = new List<(string Ingredient, StockItem Item)>();
+        var shortages = new List<Shortage>();
+        foreach (var need in recipe.Needs.Where(n => !n.IsStaple))
+        {
+            var items = stock[need.IngredientId].ToList();
+            used.AddRange(Fefo.Allocate(items, need.Quantity).Select(a => (need.IngredientName, a.Item)));
+
+            var available = items.Sum(i => i.Quantity);
+            if (available < need.Quantity)
+            {
+                shortages.Add(new Shortage(need.IngredientName, Units.FromBase(need.Quantity - available, need.Unit),
+                    Units.FromBase(available, need.Unit), Units.FromBase(need.Quantity, need.Unit), need.Unit));
+            }
+        }
+
+        var soon = used.Where(u => Expiry.IsSoonExpiring(u.Item.ExpiryDate, today)).ToList();
+        var recommendation = new Recommendation(recipe.RecipeId, recipe.Name, recipe.Servings,
+            NamesByExpiry(soon), NamesByExpiry(used.Where(u => Expiry.IsExpired(u.Item.ExpiryDate, today))),
+            [.. shortages.OrderBy(s => s.IngredientName, HungarianOrder)]);
+        // Rank key 2 looks only at items that have not expired: an expired item is stock, but it never moves a
+        // recipe up the list (Q5, E1).
+        var notExpired = used.Where(u => !Expiry.IsExpired(u.Item.ExpiryDate, today)).ToList();
+        return new Evaluated(recommendation, soon.Count, notExpired.Count == 0 ? null : notExpired.Min(u => u.Item.ExpiryDate));
+    }
+
+    // "2 hamarosan lejáró hozzávalót használ fel: paradicsom, paprika" - the earliest expiring first.
+    private static List<string> NamesByExpiry(IEnumerable<(string Ingredient, StockItem Item)> used) =>
+        [.. used.GroupBy(u => u.Ingredient)
+            .OrderBy(g => g.Min(u => u.Item.ExpiryDate))
+            .ThenBy(g => g.Key, HungarianOrder)
+            .Select(g => g.Key)];
+
+    private sealed record Evaluated(Recommendation Recommendation, int SoonExpiringItems, DateOnly? EarliestExpiry);
 }

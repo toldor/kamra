@@ -55,7 +55,7 @@ public sealed class PantryItem
         Category category, DateOnly? expiryDate, DateOnly today, DateTimeOffset now)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
-        EnsureDimension(unit, ingredient.Dimension);
+        Units.EnsureDimension(unit, ingredient.Dimension);
         var (expiry, estimated) = ResolveExpiry(category, expiryDate, today);
 
         var item = new PantryItem(Guid.CreateVersion7(), householdId, ingredient.Id, ToStoredQuantity(amount, unit), unit, category,
@@ -68,7 +68,7 @@ public sealed class PantryItem
     public StockMovement? ChangeQuantity(decimal amount, Unit unit, MovementReason? reason, DateTimeOffset now)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(amount);
-        EnsureDimension(unit, Units.DimensionOf(EnteredUnit));
+        Units.EnsureDimension(unit, Units.DimensionOf(EnteredUnit));
         var quantity = ToStoredQuantity(amount, unit);
         var delta = quantity - Quantity;
         MovementReason? movementReason = delta switch
@@ -108,14 +108,6 @@ public sealed class PantryItem
         }
 
         return quantity;
-    }
-
-    private static void EnsureDimension(Unit unit, Dimension dimension)
-    {
-        if (Units.DimensionOf(unit) != dimension)
-        {
-            throw new ArgumentException($"The unit {unit} does not measure {dimension} (ADR-0002).", nameof(unit));
-        }
     }
 
     private static (DateOnly ExpiryDate, bool Estimated) ResolveExpiry(Category category, DateOnly? expiryDate, DateOnly today) =>

@@ -16,6 +16,9 @@ export type PantryItem = components['schemas']['PantryItemResponse']
 export type AddPantryItemRequest = components['schemas']['AddPantryItemRequest']
 export type UpdatePantryItemRequest = components['schemas']['UpdatePantryItemRequest']
 export type Unit = components['schemas']['Unit']
+export type Recommendation = components['schemas']['RecommendationResponse']
+export type RecommendationsResponse = components['schemas']['RecommendationsResponse']
+export type Shortage = components['schemas']['ShortageResponse']
 export type PantryFilter = { search: string; category: Category | ''; expiringSoon: boolean }
 
 export const noFilter: PantryFilter = { search: '', category: '', expiringSoon: false }
@@ -144,6 +147,8 @@ export const api = {
 
   updatePantryItem: (id: string, request: UpdatePantryItemRequest) =>
     json<PantryItem>(write('PUT', `/pantry-items/${id}`, request)),
+
+  recommendations: () => json<RecommendationsResponse>(send('GET', '/recommendations')),
 }
 
 // Tests start every case without a cached token.

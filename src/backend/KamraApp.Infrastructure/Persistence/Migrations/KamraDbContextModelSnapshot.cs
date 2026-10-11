@@ -501,6 +501,321 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                     b.ToTable("StockMovements");
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.Recipes.Recipe", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("RetiredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SeedKey")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Servings")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseholdId");
+
+                    b.HasIndex("SeedKey")
+                        .IsUnique()
+                        .HasFilter("\"SeedKey\" IS NOT NULL");
+
+                    b.ToTable("Recipes", t =>
+                        {
+                            t.HasCheckConstraint("CK_Recipes_Servings_Positive", "\"Servings\" > 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("01a12a66-c629-7eea-a91a-3998c61b506e"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A hagymát megtisztítjuk, felaprítjuk, és az olajon üvegesre pároljuk. Hozzáadjuk a csíkokra vágott paprikát, és néhány percig pirítjuk. Belekerül a felkockázott paradicsom és a só, majd fedő alatt, közepes lángon addig főzzük, amíg a zöldségek megpuhulnak és a leve besűrűsödik.",
+                            Name = "Lecsó",
+                            SeedKey = "lecso",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a12a66-c62a-78fc-8abb-f65daf385a30"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A tésztát sós vízben kifőzzük és leszűrjük. A szalonnát felkockázzuk, és a zsírját kisütjük; a pörcöt félretesszük. A tésztát a zsírral összeforgatjuk, a tetejére morzsolt túró, tejföl és a pörc kerül.",
+                            Name = "Túrós csusza",
+                            SeedKey = "turos-csusza",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a12a66-c62b-736b-9d11-e73ca344ab68"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A tojást a tejjel, a vízzel és egy csipet sóval összekeverjük, majd csomómentesre dolgozzuk bele a lisztet és az olaj felét. Fél órát pihentetjük. Forró, kevés olajjal kikent serpenyőben vékony palacsintákat sütünk, mindkét oldalukat aranybarnára.",
+                            Name = "Palacsinta",
+                            SeedKey = "palacsinta",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a12a66-c62c-70f3-99c5-e37c3007d5fb"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A tojásokat egy tálban sóval, borssal felverjük. A vajat serpenyőben felolvasztjuk, ráöntjük a tojást, és alacsony lángon, folyamatosan kevergetve addig sütjük, amíg krémesre szilárdul.",
+                            Name = "Rántotta",
+                            SeedKey = "rantotta",
+                            Servings = 2,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A hagymát az olajon megdinszteljük, levesszük a tűzről, és elkeverjük benne a pirospaprikát. Hozzáadjuk a felkockázott burgonyát és a karikára vágott kolbászt, felöntjük annyi vízzel, hogy épp ellepje, megsózzuk, és fedő alatt puhára főzzük.",
+                            Name = "Paprikás krumpli",
+                            SeedKey = "paprikas-krumpli",
+                            Servings = 4,
+                            Source = "Seed"
+                        });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeIngredient", b =>
+                {
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EnteredUnit")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("RecipeId", "IngredientId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("RecipeIngredients", t =>
+                        {
+                            t.HasCheckConstraint("CK_RecipeIngredients_Quantity_Positive", "\"Quantity\" > 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c629-7eea-a91a-3998c61b506e"),
+                            IngredientId = new Guid("01a126a0-f496-7926-80c2-fffa4640a3c7"),
+                            EnteredUnit = "G",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c629-7eea-a91a-3998c61b506e"),
+                            IngredientId = new Guid("01a126a0-f497-711a-a974-dff897cec5ad"),
+                            EnteredUnit = "G",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c629-7eea-a91a-3998c61b506e"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c629-7eea-a91a-3998c61b506e"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c629-7eea-a91a-3998c61b506e"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 5m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62a-78fc-8abb-f65daf385a30"),
+                            IngredientId = new Guid("01a126a0-f49b-7dc6-bf52-af8623e29f9b"),
+                            EnteredUnit = "G",
+                            Quantity = 400m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62a-78fc-8abb-f65daf385a30"),
+                            IngredientId = new Guid("01a126a0-f49c-7f22-8df0-24c8b87a3b6d"),
+                            EnteredUnit = "G",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62a-78fc-8abb-f65daf385a30"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62a-78fc-8abb-f65daf385a30"),
+                            IngredientId = new Guid("01a126a0-f49e-7d6a-b637-443ba18a4984"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62a-78fc-8abb-f65daf385a30"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62b-736b-9d11-e73ca344ab68"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62b-736b-9d11-e73ca344ab68"),
+                            IngredientId = new Guid("01a126a0-f4a0-7528-a0fa-827975890a2c"),
+                            EnteredUnit = "Dl",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62b-736b-9d11-e73ca344ab68"),
+                            IngredientId = new Guid("01a126a0-f4a1-76ae-8300-46253511172a"),
+                            EnteredUnit = "Db",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62b-736b-9d11-e73ca344ab68"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62b-736b-9d11-e73ca344ab68"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "Dl",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62b-736b-9d11-e73ca344ab68"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62c-70f3-99c5-e37c3007d5fb"),
+                            IngredientId = new Guid("01a126a0-f4a1-76ae-8300-46253511172a"),
+                            EnteredUnit = "Db",
+                            Quantity = 3m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62c-70f3-99c5-e37c3007d5fb"),
+                            IngredientId = new Guid("01a126a0-f4a2-7ba6-9efe-59bd7fd8e1bc"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62c-70f3-99c5-e37c3007d5fb"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62c-70f3-99c5-e37c3007d5fb"),
+                            IngredientId = new Guid("01a126a0-f4a6-79c2-a6b4-083b402ee44a"),
+                            EnteredUnit = "G",
+                            Quantity = 1m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            IngredientId = new Guid("01a126a0-f499-70f0-baca-644f79523c11"),
+                            EnteredUnit = "Kg",
+                            Quantity = 1000m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            IngredientId = new Guid("01a126a0-f4a3-761c-ba7a-3ba388ba03e9"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            IngredientId = new Guid("01a126a0-f4a4-748b-acd6-1ce2382afd1e"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a12a66-c62d-74a2-9140-cf77c5877302"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "Dl",
+                            Quantity = 500m
+                        });
+                });
+
             modelBuilder.Entity("KamraApp.Infrastructure.Persistence.AppUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -674,6 +989,29 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("PantryItemId")
                         .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Recipes.Recipe", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeIngredient", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Recipes.Recipe", null)
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
