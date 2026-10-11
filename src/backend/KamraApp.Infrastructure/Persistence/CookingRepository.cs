@@ -21,8 +21,10 @@ public sealed class CookingRepository(KamraDbContext db) : ICookingRepository
         db.StockMovements.AddRange(movements);
     }
 
-    // One transaction (SaveChanges). After a failure the tracked, already deducted items are dropped, so the
-    // caller's next query reads the database, not the rolled-back changes.
+    // One transaction (SaveChanges) for the cooking, its movements and the pantry items that
+    // IPantryRepository.ListForCookingAsync loaded into the same DbContext (ADR-0008: one unit of work for
+    // the cooking). After a failure the tracked, already deducted items are dropped, so the caller's next
+    // query reads the database, not the rolled-back changes.
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         try

@@ -29,6 +29,7 @@ public class CookingUseCaseTests
     private static readonly Ingredient Etolaj = Ingredient.CreateSystem(Guid.CreateVersion7(), "etolaj", "étolaj", Dimension.Volume, Category.Other);
     private static readonly Ingredient Viz = Ingredient.CreateSystem(Guid.CreateVersion7(), "viz", "víz", Dimension.Volume, Category.Beverages);
     private static readonly Ingredient So = Ingredient.CreateSystem(Guid.CreateVersion7(), "so", "só", Dimension.Mass, Category.DryGoods);
+    private static readonly Ingredient Burgonya = Ingredient.CreateSystem(Guid.CreateVersion7(), "burgonya", "burgonya", Dimension.Mass, Category.Vegetables);
 
     // The approved seed recipe (recipes.json), 4 servings.
     private static readonly RecipeCandidate Palacsinta = new(Guid.CreateVersion7(), "Palacsinta", 4,
@@ -36,6 +37,9 @@ public class CookingUseCaseTests
         Need(Liszt, 200, Unit.G), Need(Tej, 5, Unit.Dl), Need(Tojas, 2, Unit.Db), Need(Etolaj, 30, Unit.Ml),
         Need(Viz, 1, Unit.Dl, staple: true), Need(So, 2, Unit.G, staple: true),
     ]);
+
+    // A recipe in kg, so a default taken from grams in stock has more than 3 decimals (D-a).
+    private static readonly RecipeCandidate Krumpli = new(Guid.CreateVersion7(), "Paprikás krumpli", 4, [Need(Burgonya, 1, Unit.Kg)]);
 
     private readonly FakePantry _pantry = new();
     private readonly FakeCookings _cookings = new();
@@ -80,7 +84,7 @@ public class CookingUseCaseTests
 
     private Task<CookingPreviewResponse> PreviewAsync(Guid recipeId, int? servings) =>
         new PreviewCooking(new FakeRecipes(), _pantry, new FixedHousehold(), new FixedTime(Now))
-            .ExecuteAsync(recipeId, servings, CancellationToken.None);
+            .ExecuteAsync(recipeId, new CookingPreviewQuery { Servings = servings }, CancellationToken.None);
 
     public static TheoryData<string, ConfirmCookingRequest> InvalidRequests() => new()
     {
@@ -91,10 +95,11 @@ public class CookingUseCaseTests
         { "used", new ConfirmCookingRequest { RequestId = Guid.CreateVersion7(), RecipeId = Palacsinta.RecipeId, Servings = 4 } },
         { "used", Request(liszt: -1) },
         { "used", Request(liszt: 100_001) },
-        { "used", Request(tej: 7.5001m) },
+        { "used", Request(tej: 7.500001m) },  // 750.0001 ml: finer than the stored 3 decimals in base units (D-a)
         { "used", WithUsed(new UsedAmount { IngredientId = Liszt.Id, Amount = 1 }) },
         { "used", WithUsed(new UsedAmount { Amount = 1 }) },
         { "used", WithUsed(new UsedAmount { IngredientId = So.Id }) },
+        { "used", WithUsed(null!) },
     };
 
     // The full valid list plus one more entry.
@@ -158,6 +163,42 @@ public class CookingUseCaseTests
         })).Should().ThrowAsync<ValidationException>();
 
         error.Which.Errors["used"].Should().Equal(CookingInput.UsedMessage);
+        _cookings.Saves.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task The_preview_default_in_kg_from_grams_in_stock_is_accepted_as_it_is()
+    {
+        Stock(Burgonya, 12.5m, Unit.G, 30);
+        var line = (await PreviewAsync(Krumpli.RecipeId, 4)).Lines.Single();
+
+        var result = await ConfirmAsync(new ConfirmCookingRequest
+        {
+            RequestId = Guid.CreateVersion7(),
+            RecipeId = Krumpli.RecipeId,
+            Servings = 4,
+            Used = [new UsedAmount { IngredientId = Burgonya.Id, Amount = line.DefaultUsed }],
+        });
+
+        line.DefaultUsed.Should().Be(0.0125m);
+        result.Created.Should().BeTrue();
+        _pantry.Items.Single().Quantity.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task An_amount_finer_than_the_stored_precision_is_a_field_error()
+    {
+        Stock(Burgonya, 1, Unit.Kg, 30);
+
+        var error = await FluentActions.Awaiting(() => ConfirmAsync(new ConfirmCookingRequest
+        {
+            RequestId = Guid.CreateVersion7(),
+            RecipeId = Krumpli.RecipeId,
+            Servings = 4,
+            Used = [new UsedAmount { IngredientId = Burgonya.Id, Amount = 0.0000001m }],
+        })).Should().ThrowAsync<ValidationException>();
+
+        error.Which.Errors["used"].Should().Equal(CookingInput.AmountMessage);
         _cookings.Saves.Should().Be(0);
     }
 
@@ -340,7 +381,10 @@ public class CookingUseCaseTests
             throw new NotSupportedException();
 
         public Task<RecipeDetails?> FindAsync(Guid householdId, Guid recipeId, CancellationToken cancellationToken) =>
-            Task.FromResult(householdId == HouseholdId && recipeId == Palacsinta.RecipeId ? new RecipeDetails(Palacsinta, "Keverd ki.") : null);
+            Task.FromResult(householdId != HouseholdId ? null
+                : recipeId == Palacsinta.RecipeId ? new RecipeDetails(Palacsinta, "Keverd ki.")
+                : recipeId == Krumpli.RecipeId ? new RecipeDetails(Krumpli, "Főzd meg.")
+                : null);
     }
 
     private sealed class FakePantry : IPantryRepository

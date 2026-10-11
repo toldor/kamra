@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { api, ApiError, failWith, type Cooking, type CookingPreview, type CookingPreviewLine } from './api/client'
+import { useFieldErrors } from './fieldErrors'
 import { formatAmount, formatDate } from './format'
 import { routes } from './useHashRoute'
 
@@ -34,8 +35,23 @@ function forgetRequestId(recipeId: string) {
 
 const validServings = (text: string) => /^\d+$/.test(text) && Number(text) >= 1 && Number(text) <= 100
 
-function Line({ line, value, onChange }: { line: CookingPreviewLine; value: string; onChange: (value: string) => void }) {
-  const inputId = useId()
+// D-d: the same range as the backend; the decimals are checked there, in base units (D-a).
+const validUsed = (text: string) => text.trim() !== '' && Number(text) >= 0 && Number(text) <= 100_000
+
+const usedMessage = 'A felhasznált mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.'
+
+// D-b: on this screen a changed item means the stock changed, not that an edit must be saved again.
+const stockChangedMessage = 'Közben megváltozott a készlet. Számold újra, és erősítsd meg újra.'
+
+type FieldProps = ReturnType<ReturnType<typeof useFieldErrors>['props']>
+
+function Line({ line, value, onChange, field, error }: {
+  line: CookingPreviewLine
+  value: string
+  onChange: (value: string) => void
+  field: FieldProps
+  error: ReactNode
+}) {
   const used = value.trim() === '' ? 0 : Number(value)
   const shortage = Number.isFinite(used) ? roundToThousandths(Math.max(0, line.required - used)) : 0
   // F5: the split of the default amount; an edited amount is split by the backend the same way.
@@ -47,8 +63,9 @@ function Line({ line, value, onChange }: { line: CookingPreviewLine; value: stri
     <fieldset className="cooking-line">
       <legend>{line.ingredientName}</legend>
       <p className="hint">Kell: {formatAmount(line.required, line.unit)} · Van: {formatAmount(line.available, line.unit)}</p>
-      <label htmlFor={inputId}>Felhasznált ({line.unit})</label>
-      <input id={inputId} type="number" inputMode="decimal" min="0" step="any" value={value} onChange={(e) => onChange(e.target.value)} />
+      <label htmlFor={field.id}>Felhasznált ({line.unit})</label>
+      <input {...field} type="number" inputMode="decimal" min="0" step="any" value={value} onChange={(e) => onChange(e.target.value)} />
+      {error}
       {shortage > 0 && <p className="warning">Hiány: {formatAmount(shortage, line.unit)}</p>}
       {deduction && <p className="hint">Levonás: {deduction}</p>}
     </fieldset>
@@ -87,6 +104,10 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
   const [error, setError] = useState<{ message: string; recalculate: boolean } | null>(null)
   const [cooked, setCooked] = useState<Cooking | null>(null)
   const hintId = useId()
+  const preview = load.status === 'ready' ? load.preview : null
+  // The first invalid line gets the focus; the order follows the screen.
+  const lineOrder = useMemo(() => preview?.lines.map((l) => l.ingredientId) ?? [], [preview])
+  const fields = useFieldErrors('used', lineOrder)
 
   useEffect(() => {
     let active = true
@@ -110,8 +131,12 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
   }
 
   async function confirm(preview: CookingPreview) {
-    setBusy(true)
     setError(null)
+    const invalid = preview.lines.filter((l) => !validUsed(used[l.ingredientId] ?? ''))
+    fields.setErrors(Object.fromEntries(invalid.map((l) => [l.ingredientId, [usedMessage]])))
+    if (invalid.length > 0) return
+
+    setBusy(true)
     try {
       const cooking = await api.confirmCooking({
         requestId,
@@ -127,14 +152,15 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
     } catch (caught) {
       // A conflicting earlier cooking with this id: the next screen starts with a new one.
       if (caught instanceof ApiError && caught.code === 'IDEMPOTENCY_CONFLICT') forgetRequestId(recipeId)
-      const recalculate = caught instanceof ApiError && (caught.code === 'INSUFFICIENT_STOCK' || caught.code === 'PANTRY_ITEM_MODIFIED')
+      const code = caught instanceof ApiError ? caught.code : ''
+      const recalculate = code === 'INSUFFICIENT_STOCK' || code === 'PANTRY_ITEM_MODIFIED'
       const fieldErrors = caught instanceof ApiError ? Object.values(caught.errors).flat() : []
-      failWith(onSignedOut, (message) => setError({ message: fieldErrors.length > 0 ? fieldErrors.join(' ') : message, recalculate }))(caught)
+      const show = (message: string) =>
+        setError({ message: code === 'PANTRY_ITEM_MODIFIED' ? stockChangedMessage : fieldErrors.length > 0 ? fieldErrors.join(' ') : message, recalculate })
+      failWith(onSignedOut, show)(caught)
       setBusy(false)
     }
   }
-
-  const preview = load.status === 'ready' ? load.preview : null
 
   return (
     <main>
@@ -176,6 +202,8 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
               line={line}
               value={used[line.ingredientId] ?? ''}
               onChange={(value) => setUsed((current) => ({ ...current, [line.ingredientId]: value }))}
+              field={fields.props(line.ingredientId)}
+              error={fields.error(line.ingredientId)}
             />
           ))}
           {preview.staples.length > 0 && <p className="hint">Alaphozzávalók, ezek nem vonódnak le: {preview.staples.join(', ')}.</p>}

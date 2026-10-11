@@ -206,6 +206,37 @@ describe('cooking', () => {
     await waitFor(() => expect(calls.filter((c) => c.key === preview)).toHaveLength(2))
   })
 
+  it('marks an invalid used amount at its field, focuses it and sends nothing', async () => {
+    const calls = backend()
+    render(<App />)
+
+    const input = within(await screen.findByRole('group', { name: 'paradicsom' })).getByLabelText('Felhasznált (g)')
+    fireEvent.change(input, { target: { value: '-1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Főzés megerősítése' }))
+
+    await waitFor(() => expect(document.activeElement).toBe(input))
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    const message = document.getElementById(input.getAttribute('aria-describedby')!)
+    expect(message?.textContent).toBe('A felhasznált mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.')
+    expect(calls.filter((c) => c.key === confirm)).toHaveLength(0)
+  })
+
+  it('explains an item changed meanwhile in cooking terms', async () => {
+    backend({
+      [confirm]: [{
+        status: 409,
+        body: { code: 'PANTRY_ITEM_MODIFIED', title: 'Ezt a tételt közben máshol módosították. Nézd át a friss adatokat, és mentsd újra.' },
+      }],
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
+
+    const alert = await screen.findByText('Közben megváltozott a készlet. Számold újra, és erősítsd meg újra.')
+    expect(alert.getAttribute('role')).toBe('alert')
+    expect(screen.getByRole('button', { name: 'Újraszámolás' })).toBeTruthy()
+  })
+
   it('says so when the recipe does not exist', async () => {
     backend({ [preview]: [{ status: 404, body: { code: 'RECIPE_NOT_FOUND', title: 'Ez a recept nem található.' } }] })
     render(<App />)

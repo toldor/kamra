@@ -1,3 +1,4 @@
+using KamraApp.Application.Common;
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Pantry;
 
@@ -14,6 +15,10 @@ public interface ICookingRepository
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 
-// The (household, request id) unique index rejected the save: the same request was saved meanwhile.
+// ADR-0008: the (household, request id) unique index rejected the save - the same request was saved
+// meanwhile. ConfirmCooking answers it from the stored cooking; on its own it is an idempotency conflict.
 public sealed class DuplicateCookingRequestException(Exception inner)
-    : Exception("The cooking request id is already used.", inner);
+    : AppException(ErrorCategory.Conflict, CookingErrors.IdempotencyConflict().Code, CookingErrors.IdempotencyConflict().Message)
+{
+    public Exception Cause { get; } = inner;
+}

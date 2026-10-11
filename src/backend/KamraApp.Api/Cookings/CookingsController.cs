@@ -12,7 +12,7 @@ public sealed class CookingsController : ControllerBase
     [Produces("application/json")]
     public Task<CookingPreviewResponse> Preview(Guid id, [FromQuery] int? servings, [FromServices] PreviewCooking previewCooking,
         CancellationToken cancellationToken) =>
-        previewCooking.ExecuteAsync(id, servings, cancellationToken);
+        previewCooking.ExecuteAsync(id, new CookingPreviewQuery { Servings = servings }, cancellationToken);
 
     [HttpPost("cookings")]
     [ProducesResponseType<CookingResponse>(StatusCodes.Status201Created)]

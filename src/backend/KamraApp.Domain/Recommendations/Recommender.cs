@@ -1,11 +1,14 @@
-using System.Globalization;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
 
 namespace KamraApp.Domain.Recommendations;
 
 // A recipe as the recommendation sees it. Quantities are in base units for the default servings.
-public sealed record RecipeCandidate(Guid RecipeId, string Name, int Servings, IReadOnlyList<RecipeNeed> Needs);
+public sealed record RecipeCandidate(Guid RecipeId, string Name, int Servings, IReadOnlyList<RecipeNeed> Needs)
+{
+    // CONTEXT.md, Alaphozzávaló: staples are never matched, deducted or listed as a shortage.
+    public IEnumerable<RecipeNeed> NonStapleNeeds => Needs.Where(n => !n.IsStaple);
+}
 
 public sealed record RecipeNeed(Guid IngredientId, string IngredientName, decimal Quantity, Unit Unit, bool IsStaple);
 
@@ -30,8 +33,6 @@ public static class Recommender
     public const int MaxShortagesForAlmostMakeable = 2;
 
     // Names are ordered the Hungarian way ("Ágyas" before "Bableves"); the id settles exact ties.
-    // Hungarian alphabetical order ("á" right after "a"), also used by the cooking screens.
-    public static readonly StringComparer HungarianOrder = StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), ignoreCase: false);
 
     public static Recommendations Recommend(IEnumerable<RecipeCandidate> recipes, IEnumerable<StockItem> stock, DateOnly today)
     {
@@ -42,7 +43,7 @@ public static class Recommender
         var makeable = evaluated.Where(e => e.Recommendation.Shortages.Count == 0)
             .OrderByDescending(e => e.SoonExpiringItems)
             .ThenBy(e => e.EarliestExpiry ?? DateOnly.MaxValue)
-            .ThenBy(e => e.Recommendation.Name, HungarianOrder)
+            .ThenBy(e => e.Recommendation.Name, Collation.Hungarian)
             .ThenBy(e => e.Recommendation.RecipeId);
 
         // D1: fewer shortages, soon-expiring items used (desc), name.
@@ -50,7 +51,7 @@ public static class Recommender
             .Where(e => e.Recommendation.Shortages.Count is > 0 and <= MaxShortagesForAlmostMakeable)
             .OrderBy(e => e.Recommendation.Shortages.Count)
             .ThenByDescending(e => e.SoonExpiringItems)
-            .ThenBy(e => e.Recommendation.Name, HungarianOrder)
+            .ThenBy(e => e.Recommendation.Name, Collation.Hungarian)
             .ThenBy(e => e.Recommendation.RecipeId);
 
         return new Recommendations([.. makeable.Select(e => e.Recommendation)], [.. almostMakeable.Select(e => e.Recommendation)]);
@@ -60,7 +61,7 @@ public static class Recommender
     {
         var used = new List<(string Ingredient, StockItem Item)>();
         var shortages = new List<Shortage>();
-        foreach (var need in recipe.Needs.Where(n => !n.IsStaple))
+        foreach (var need in recipe.NonStapleNeeds)
         {
             var items = stock[need.IngredientId].ToList();
             used.AddRange(Fefo.Allocate(items, need.Quantity).Select(a => (need.IngredientName, a.Item)));
@@ -76,7 +77,7 @@ public static class Recommender
         var soon = used.Where(u => Expiry.IsSoonExpiring(u.Item.ExpiryDate, today)).ToList();
         var recommendation = new Recommendation(recipe.RecipeId, recipe.Name, recipe.Servings,
             NamesByExpiry(soon), NamesByExpiry(used.Where(u => Expiry.IsExpired(u.Item.ExpiryDate, today))),
-            [.. shortages.OrderBy(s => s.IngredientName, HungarianOrder)]);
+            [.. shortages.OrderBy(s => s.IngredientName, Collation.Hungarian)]);
         // Rank key 2 looks only at items that have not expired: an expired item is stock, but it never moves a
         // recipe up the list (Q5, E1).
         var notExpired = used.Where(u => !Expiry.IsExpired(u.Item.ExpiryDate, today)).ToList();
@@ -87,7 +88,7 @@ public static class Recommender
     private static List<string> NamesByExpiry(IEnumerable<(string Ingredient, StockItem Item)> used) =>
         [.. used.GroupBy(u => u.Ingredient)
             .OrderBy(g => g.Min(u => u.Item.ExpiryDate))
-            .ThenBy(g => g.Key, HungarianOrder)
+            .ThenBy(g => g.Key, Collation.Hungarian)
             .Select(g => g.Key)];
 
     private sealed record Evaluated(Recommendation Recommendation, int SoonExpiringItems, DateOnly? EarliestExpiry);

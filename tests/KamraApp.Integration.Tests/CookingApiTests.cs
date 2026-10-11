@@ -128,6 +128,7 @@ public class CookingApiTests(KamraApiFactory factory)
     [Theory]
     [InlineData("servings")]
     [InlineData("amount")]
+    [InlineData("recipe")]
     public async Task The_same_request_id_with_other_content_is_refused(string change)
     {
         var client = await ApiClient.SignedInAsync(factory);
@@ -137,9 +138,13 @@ public class CookingApiTests(KamraApiFactory factory)
         (await client.PostAsync("/api/v1/cookings", Body(requestId, "Lecsó", 4, used))).EnsureSuccessStatusCode();
         var pantry = await PantryAsync(client);
 
-        var response = change == "servings"
-            ? await client.PostAsync("/api/v1/cookings", Body(requestId, "Lecsó", 5, used))
-            : await client.PostAsync("/api/v1/cookings", Body(requestId, "Lecsó", 4, [.. used.Select(u => u with { Amount = 0 })]));
+        var other = change switch
+        {
+            "servings" => Body(requestId, "Lecsó", 5, used),
+            "amount" => Body(requestId, "Lecsó", 4, [.. used.Select(u => u with { Amount = 0 })]),
+            _ => Body(requestId, "Palacsinta", 4, Used(await PreviewAsync(client, "Palacsinta", 4))),
+        };
+        var response = await client.PostAsync("/api/v1/cookings", other);
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await ApiClient.ProblemAsync(response)).GetProperty("code").GetString().Should().Be("IDEMPOTENCY_CONFLICT");
@@ -247,6 +252,33 @@ public class CookingApiTests(KamraApiFactory factory)
         (await ApiClient.ProblemAsync(preview)).GetProperty("code").GetString().Should().Be("RECIPE_NOT_FOUND");
         cooking.StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await ApiClient.ProblemAsync(cooking)).GetProperty("code").GetString().Should().Be("RECIPE_NOT_FOUND");
+    }
+
+    // D-a: 12.5 g of potatoes is 0.0125 kg in the recipe's unit; the preview's default must be accepted.
+    [Fact]
+    public async Task The_preview_default_from_finer_stock_than_the_recipe_unit_can_be_confirmed()
+    {
+        var client = await ApiClient.SignedInAsync(factory);
+        await AddAsync(client, "burgonya", 12.5m, "g", 30);
+        var preview = await PreviewAsync(client, "Paprikás krumpli", 4);
+
+        var response = await client.PostAsync("/api/v1/cookings", Body(Guid.CreateVersion7(), "Paprikás krumpli", 4, Used(preview)));
+
+        Line(preview, "burgonya").GetProperty("defaultUsed").GetDecimal().Should().Be(0.0125m);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        (await PantryAsync(client)).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task A_missing_used_entry_is_a_field_error_not_a_server_error()
+    {
+        var client = await ApiClient.SignedInAsync(factory);
+
+        var response = await client.PostAsync("/api/v1/cookings",
+            new { requestId = Guid.CreateVersion7(), recipeId = RecipeId("Lecsó"), servings = 4, used = new object?[] { null } });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ApiClient.ProblemAsync(response)).GetProperty("errors").TryGetProperty("used", out _).Should().BeTrue();
     }
 
     [Fact]

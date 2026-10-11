@@ -7,7 +7,11 @@ namespace KamraApp.Domain.Cookings;
 // One line of the confirmation screen, in base units: what the servings need, what is in stock, the
 // default used amount (the smaller of the two) and the FEFO split of that default.
 public sealed record PreviewLine(RecipeNeed Need, decimal Required, decimal Available, decimal DefaultUsed,
-    IReadOnlyList<(StockItem Item, decimal Amount)> Allocations);
+    IReadOnlyList<(StockItem Item, decimal Amount)> Allocations)
+{
+    // CONTEXT.md, Hiány: what the stock lacks for the servings.
+    public decimal Shortage => Math.Max(0, Required - Available);
+}
 
 // US-4: linear scaling to the servings; g and ml are rounded to whole numbers (a half rounds up, not to
 // even), pieces always up.
@@ -25,7 +29,7 @@ public static class CookingCalculator
     public static IReadOnlyList<PreviewLine> Preview(RecipeCandidate recipe, int servings, IEnumerable<StockItem> stock)
     {
         var byIngredient = stock.ToLookup(s => s.IngredientId);
-        return [.. recipe.Needs.Where(n => !n.IsStaple).Select(need =>
+        return [.. recipe.NonStapleNeeds.Select(need =>
         {
             var required = ScaleRequired(need.Quantity, need.Unit, recipe.Servings, servings);
             var items = byIngredient[need.IngredientId].ToList();

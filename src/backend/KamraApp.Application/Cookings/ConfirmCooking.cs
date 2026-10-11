@@ -1,6 +1,7 @@
 using KamraApp.Application.Common;
 using KamraApp.Application.Pantry;
 using KamraApp.Application.Recommendations;
+using KamraApp.Domain;
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
@@ -27,6 +28,11 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
 
         var recipe = (await recipes.FindAsync(householdId, valid.RecipeId!.Value, cancellationToken) ?? throw CookingErrors.RecipeNotFound()).Candidate;
         var used = UsedInBaseUnits(recipe, valid) ?? throw ValidationException.ForField("used", CookingInput.UsedMessage);
+        if (!used.Values.All(CookingInput.IsStorable))
+        {
+            throw ValidationException.ForField("used", CookingInput.AmountMessage);
+        }
+
         try
         {
             var items = await pantry.ListForCookingAsync(householdId, [.. used.Keys], cancellationToken);
@@ -35,8 +41,7 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
             cookings.Add(cooking, movements);
             await cookings.SaveChangesAsync(cancellationToken);
         }
-        catch (Exception exception) when (exception is DuplicateCookingRequestException or InsufficientStockException
-                                              or AppException { Code: PantryErrors.ItemModifiedCode })
+        catch (AppException exception) when (exception.Category == ErrorCategory.Conflict)
         {
             var winner = await cookings.FindByRequestAsync(householdId, requestId, cancellationToken);
             if (winner is null)
@@ -69,7 +74,7 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
     // Null unless the request lists exactly the recipe's non-staple ingredients (duplicates are rejected earlier).
     private static Dictionary<Guid, decimal>? UsedInBaseUnits(RecipeCandidate recipe, ConfirmCookingRequest request)
     {
-        var needs = recipe.Needs.Where(n => !n.IsStaple).ToDictionary(n => n.IngredientId);
+        var needs = recipe.NonStapleNeeds.ToDictionary(n => n.IngredientId);
         var used = request.Used!;
         if (used.Count != needs.Count || used.Any(u => !needs.ContainsKey(u.IngredientId!.Value)))
         {
@@ -87,16 +92,18 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
             return;
         }
 
-        throw new InsufficientStockException([.. recipe.Needs.Where(n => !n.IsStaple)
-            .OrderBy(n => n.IngredientName, Recommender.HungarianOrder)
+        throw new InsufficientStockException([.. recipe.NonStapleNeeds
+            .OrderBy(n => n.IngredientName, Collation.Hungarian)
             .Select(n => new AvailableAmount(n.IngredientId, n.IngredientName, Units.FromBase(stock[n.IngredientId].Sum(i => i.Quantity), n.Unit), n.Unit))]);
     }
 
+    // Names and units come from the recipe, which never changes after creation (data_model: no recipe
+    // editing in the MVP); every amount comes from the stored cooking.
     private static CookingResponse Respond(Cooking cooking, RecipeCandidate recipe)
     {
         var needs = recipe.Needs.ToDictionary(n => n.IngredientId);
         var lines = cooking.Lines.Select(l => (Need: needs[l.IngredientId], Line: l))
-            .OrderBy(x => x.Need.IngredientName, Recommender.HungarianOrder)
+            .OrderBy(x => x.Need.IngredientName, Collation.Hungarian)
             .ToList();
         return new CookingResponse(cooking.Id, cooking.RecipeId, recipe.Name, cooking.Servings, cooking.CookedAt,
             [.. lines.Select(x => new CookingResponseLine(x.Need.IngredientName, x.Need.Unit, Units.FromBase(x.Line.RequiredQuantity, x.Need.Unit),

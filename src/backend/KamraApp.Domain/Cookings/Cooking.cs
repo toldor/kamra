@@ -40,7 +40,7 @@ public sealed class Cooking
         int servings, Guid requestId, IReadOnlyDictionary<Guid, decimal> used, IReadOnlyList<PantryItem> items, DateTimeOffset now)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(servings);
-        var needs = recipe.Needs.Where(n => !n.IsStaple).ToList();
+        var needs = recipe.NonStapleNeeds.ToList();
         if (needs.Count != used.Count || needs.Any(n => !used.ContainsKey(n.IngredientId)))
         {
             throw new ArgumentException("A used amount is needed for every non-staple ingredient, and only for those.", nameof(used));
