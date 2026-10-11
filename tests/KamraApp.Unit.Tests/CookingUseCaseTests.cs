@@ -91,6 +91,7 @@ public class CookingUseCaseTests
         { "servings", Request(servings: 0) },
         { "servings", Request(servings: 101) },
         { "requestId", new ConfirmCookingRequest { RecipeId = Palacsinta.RecipeId, Servings = 4, Used = Request().Used } },
+        { "requestId", Request(requestId: Guid.Empty) },  // V-31: an empty id would make later cookings silent repeats
         { "recipeId", new ConfirmCookingRequest { RequestId = Guid.CreateVersion7(), Servings = 4, Used = Request().Used } },
         { "used", new ConfirmCookingRequest { RequestId = Guid.CreateVersion7(), RecipeId = Palacsinta.RecipeId, Servings = 4 } },
         { "used", Request(liszt: -1) },

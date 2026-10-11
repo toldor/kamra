@@ -7,6 +7,9 @@ namespace KamraApp.Domain.Cookings;
 // (scaled) and what was really used; only the used amount leaves the pantry (US-4).
 public sealed class Cooking
 {
+    // S5-D5: keeps the scaled amounts inside numeric(12,3), like PantryItem's quantity limit.
+    public const int MaxServings = 100;
+
     private readonly List<CookingLine> _lines = [];
 
     private Cooking(Guid id, Guid householdId, Guid recipeId, int servings, Guid requestId, DateTimeOffset cookedAt)
@@ -40,6 +43,7 @@ public sealed class Cooking
         int servings, Guid requestId, IReadOnlyDictionary<Guid, decimal> used, IReadOnlyList<PantryItem> items, DateTimeOffset now)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(servings);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(servings, MaxServings);
         var needs = recipe.NonStapleNeeds.ToList();
         if (needs.Count != used.Count || needs.Any(n => !used.ContainsKey(n.IngredientId)))
         {

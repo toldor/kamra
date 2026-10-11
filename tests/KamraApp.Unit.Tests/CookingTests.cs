@@ -186,6 +186,18 @@ public class CookingTests
         tomato.Quantity.Should().Be(200);
     }
 
+    // ADR-0004: the servings limit (S5-D5) is the entity's own invariant, as PantryItem's quantity limit is:
+    // it keeps the scaled amounts inside numeric(12,3).
+    [Theory]
+    [InlineData(0)]
+    [InlineData(101)]
+    public void Servings_are_between_1_and_100(int servings)
+    {
+        var act = () => Cooking.Create(HouseholdId, Lecso, servings, Guid.CreateVersion7(), LecsoUsed(0), [], Now);
+
+        act.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
     [Fact]
     public void A_used_amount_is_needed_for_every_non_staple_ingredient()
     {

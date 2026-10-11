@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using KamraApp.Application.Pantry;
+using KamraApp.Domain.Cookings;
 
 namespace KamraApp.Application.Cookings;
 
@@ -23,6 +24,12 @@ public sealed class ConfirmCookingRequest : IValidatableObject
     // The decimals are checked in base units once the recipe's units are known (ConfirmCooking).
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        // V-31: an empty id would turn every later identical cooking into a silent repeat without deduction.
+        if (RequestId == Guid.Empty)
+        {
+            yield return new ValidationResult(CookingInput.RequestIdMessage, [nameof(RequestId)]);
+        }
+
         if (Used!.Any(u => u?.IngredientId is null) || Used!.GroupBy(u => u?.IngredientId).Any(g => g.Count() > 1))
         {
             yield return new ValidationResult(CookingInput.UsedMessage, [nameof(Used)]);
@@ -51,7 +58,7 @@ public sealed class UsedAmount
 
 public static class CookingInput
 {
-    public const int MaxServings = 100;
+    public const int MaxServings = Cooking.MaxServings;
     public const string ServingsMessage = "Az adagszám 1 és 100 között legyen.";
     public const string AmountMessage = "A felhasznált mennyiség 0 és 100 000 között legyen, legfeljebb 3 tizedesjeggyel.";
     public const string UsedMessage = "A felhasznált mennyiségeket a recept minden hozzávalójához add meg.";

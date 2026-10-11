@@ -188,7 +188,9 @@ public class CookingApiTests(KamraApiFactory factory)
     }
 
     // ADR-0008 Verification: an item changed between loading and saving (another tab, another cooking)
-    // makes the whole save fail - deterministic, unlike the race of P9.
+    // makes the whole save fail - deterministic, unlike the race of P9. Deliberately below the API: the
+    // change must land between the two steps; the HTTP path of the same conflict is covered by P9 and
+    // AdversarialCookingApiTests (cooking and a manual edit at once).
     [Fact]
     public async Task An_item_changed_after_loading_fails_the_save_with_PANTRY_ITEM_MODIFIED_and_nothing_is_saved()
     {
