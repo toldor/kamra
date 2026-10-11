@@ -8,7 +8,7 @@ A termék képességei és megvalósítottsági állapotuk: mennyi a felhasznál
 
 | Capability | Kategória | Evidence (link) | Teszt (link) | Státusz |
 |---|---|---|---|---|
-| CAP-01 Készlet rögzítése és áttekintése (US-1) | Value | [api.md](../03_design/api.md) (Készlet, US-1); [CI](https://github.com/toldor/kamra/actions/runs/38076499766) | [PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs), [PantryUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/PantryUseCaseTests.cs) | Partial – a backend kész; a felület az S3-ban |
+| CAP-01 Készlet rögzítése és áttekintése (US-1) | Value | [pantry-360.png](../assets/pantry-360.png); [api.md](../03_design/api.md) (Készlet, US-1); [CI](https://github.com/toldor/kamra/actions/runs/38127353373) | [PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs), [PantryUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/PantryUseCaseTests.cs), [PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx), [pantry.spec.ts](../../tests/e2e/pantry.spec.ts) | Done |
 | CAP-02 Bevásárlás rögzítése egy mondattal (US-2) | Value | – | – | Planned |
 | CAP-03 „Mit főzzek?” – ajánlás a készletből (US-3) | Value | – | – | Planned |
 | CAP-04 Főzés és a készlet automatikus frissítése (US-4) | Value | – | – | Planned |
@@ -59,4 +59,4 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
 
 ## Ismert hiányosságok
 
-- A felhasználói értéket adó képességek közül a CAP-01 backendje kész (*Partial*); a CAP-02 – CAP-06 még nincs implementálva, ezért ezekhez evidence- és tesztlink sincs. A CAP-07, a CAP-08 és a CAP-09 kész, a CAP-10 *Partial*; a hiányzó részeket a táblázat Státusz oszlopa nevezi meg.
+- A felhasználói értéket adó képességek közül a CAP-01 kész; a háztartás saját hozzávalójának létrehozása (`POST /ingredients`, [ADR-0003](../02_architecture/adr/0003-kanonikus-hozzavalo-lista.md)) okt. 23-ig készül, addig a rögzítés az induló hozzávaló-listából választ. A CAP-02 – CAP-06 még nincs implementálva, ezért ezekhez evidence- és tesztlink sincs. A CAP-07, a CAP-08 és a CAP-09 kész, a CAP-10 *Partial*; a hiányzó részeket a táblázat Státusz oszlopa nevezi meg.

@@ -20,7 +20,7 @@ Legalább 5 negatív teszt (érvénytelen bemenet, jogosultság, ütközés, hi�
 ## Kritikus e2e utak
 
 1. Regisztráció → bejelentkezés → üres készlet (megvan).
-2. Készlettétel rögzítése → megjelenik, a becsült lejárat jelölve (US-1).
+2. Készlettétel rögzítése → megjelenik, a becsült lejárat jelölve (US-1) (megvan: [pantry.spec.ts](../../tests/e2e/pantry.spec.ts)).
 3. Ajánlás → főzés megerősítése → helyes maradék a készletben (US-3, US-4) – a fő flow.
 4. Elfogyott hozzávaló → bevásárlójavaslat → elfogadás → a listán (US-5).
 5. A 2. és a 3. lépcsőben: egy mondatos bevitel mockolt LLM-mel, chat-kérdés.

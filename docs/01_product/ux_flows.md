@@ -13,7 +13,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
   4. Tomi szükség esetén javít, majd a „Jóváhagyás” gombbal menti. Új készlettételek jönnek létre.
 - **Sikerkritérium:** a jóváhagyott tételek a készletben vannak; a hamarosan lejárók a kezdőképernyő tetején látszanak.
 - **Edge case – dupla jóváhagyás:** a gomb a kérés idejére letiltódik, és a jóváhagyás egy tételjavaslatra csak egyszer fut le (idempotens), így dupla kattintás vagy újraküldés nem hoz létre duplikált készletet.
-- **Edge case – másik fülön módosított tétel:** ha Tomi egy készlettételt szerkeszt, amelyet közben egy másik fülön módosított, a mentés nem fut le; a képernyő a friss adatokat mutatja a változás kiemelésével, és Tomi újra dönthet.
+- **Edge case – másik fülön módosított tétel:** ha Tomi egy készlettételt szerkeszt, amelyet közben egy másik fülön módosított, a mentés nem fut le; a képernyő a friss adatokat mutatja a változás kiemelésével, és Tomi újra dönthet. *Megvalósítva:* *„Közben változott – mennyiség: 20 dkg → 15 dkg”* ([PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx)).
 
 ## 2. „Mit főzzek?” – főzés és a készlet frissítése (US-3, US-4)
 
@@ -64,7 +64,7 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 **További edge case-ek:**
 
 - **Lejárt munkamenet:** *„Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.”* Bejelentkezés után ugyanarra az oldalra kerül vissza.
-- **Közben törölt tétel:** *„Ez a tétel már nincs a kamrádban. Frissítettem a listát.”*
+- **Közben törölt tétel:** *„Ez a tétel már nincs a kamrádban. Frissítettem a listát.”* *Megvalósítva:* a szerkesztőablak bezárul, a lista frissül ([PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx)).
 
 ## Akadálymentesség (minimum)
 
@@ -81,11 +81,13 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 
 | Flow | Screenshot / GIF | E2E teszt |
 |---|---|---|
-| 1. Első indulás és bevásárlás rögzítése | `docs/assets/` alá, az implementációval | Playwright, az 1. és 2. lépcsőben |
+| 1. Első indulás és bevásárlás rögzítése | Kézi ág: [pantry-360.png](../assets/pantry-360.png) (360 px); a mondatos ág a US-2-vel | Kézi ág: [pantry.spec.ts](../../tests/e2e/pantry.spec.ts) (rögzítés becsült lejárattal, csökkentés okkal, törlés, fókusz-visszaadás); a mondatos ág a 2. lépcsőben |
 | 2. „Mit főzzek?” – főzés | `docs/assets/` alá, az implementációval | Playwright, az 1. lépcsőben |
 | 3. Bevásárlójavaslattól a listáig | `docs/assets/` alá, az implementációval | Playwright, az 1. lépcsőben |
 | Hibakezelés (H1, H3) | Screenshot a hibaüzenettel és a helyreállítással | Playwright: AI-kiesés mockkal, hálózati hiba |
 
 ## Ismert hiányosságok
 
-- A három fő flow felülete még nincs implementálva, ezért screenshot és e2e teszt sincs hozzájuk; a flow-k a scope_contract story-jain alapuló tervek. A walking skeletonban a bejelentkezés, a regisztráció, az üres készlet és a H4 hibaüzenet már él, Playwright e2e teszttel ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).
+- A 2. és a 3. flow felülete még nincs implementálva, ezért screenshot és e2e teszt sincs hozzájuk; ezek a scope_contract story-jain alapuló tervek. Az 1. flow kézi ága kész ([pantry.spec.ts](../../tests/e2e/pantry.spec.ts)), a mondatos bevitel a US-2-vel jön; addig az üres készlet szövege: *„Még üres a kamrád. Rögzítsd az első tételt az »Új tétel« űrlappal.”* A bejelentkezés, a regisztráció és a H4 hibaüzenet a walking skeleton óta él ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).
+- Lejárt munkamenet után a felhasználó a bejelentkezésre kerül az üzenettel, de a visszatérés ugyanarra az oldalra a több képernyővel (útválasztás, S4) készül.
+- A szerkesztőablak bezárásakor a fókusz visszakerül a megnyitó „Módosítás” gombra ([V-28](../07_ai/verification_log.md)); törléskor a gomb megszűnik, ilyenkor a fókusz a lap elejére kerül.

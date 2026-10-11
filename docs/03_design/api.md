@@ -70,6 +70,8 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 
 ## Ismert hiányosságok
 
+- Egy készlettétel friss adatát (például verzióütközés után) a felület a teljes készletlistából veszi; tételenkénti `GET /pantry-items/{id}` végpont nincs, háztartási méretnél erre nincs szükség.
+
 - A rate limit a kapcsolat IP-címét használja. Proxy vagy Docker Desktop porttovábbítás mögött minden kérés ugyanarról a (gateway-) címről érkezhet, ilyenkor a limit közös az összes kliensre. Megbízható reverse proxy jelenleg nincs, ezért a továbbított IP-fejléceket (`X-Forwarded-For`) szándékosan nem fogadjuk el, mert azt a kliens hamisíthatná.
 - Az `openapi.json` a sikeres válaszokat és a kérés-sémákat írja le; a ProblemDetails-hibaválaszok még nincsenek benne végpontonként, azok listája ebben a dokumentumban és az [error_handling.md](error_handling.md)-ben van.
 - A CI elbukik, ha a generált `openapi.json` vagy a belőle generált frontend-típusok eltérnek a commitolttól ([ci.yml](../../.github/workflows/ci.yml)).
