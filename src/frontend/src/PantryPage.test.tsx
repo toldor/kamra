@@ -127,6 +127,19 @@ describe('pantry list', () => {
     expect(screen.queryByText('Váratlan hiba történt. Próbáld újra később.')).toBeNull()
   })
 
+  it('a retry gives feedback at once: the old error goes and the loading state shows', async () => {
+    const failure: Reply = { status: 500, body: { code: 'INTERNAL_ERROR', title: 'Váratlan hiba történt. Próbáld újra később.' } }
+    pantryBackend([failure, pantry(sourCream)], { 'GET /api/v1/categories': [failure, categories] })
+    render(<App />)
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Újra' })).toHaveLength(2))
+
+    for (const retry of screen.getAllByRole('button', { name: 'Újra' })) fireEvent.click(retry)
+
+    expect(screen.queryByText('Váratlan hiba történt. Próbáld újra később.')).toBeNull()
+    expect(screen.getAllByText('Betöltés…')).toHaveLength(2)
+    expect(await screen.findByRole('listitem', { name: /tejföl/ })).toBeTruthy()
+  })
+
   it('sends the search, category and soon-expiring filters', async () => {
     const calls = pantryBackend([pantry(sourCream)], {
       'GET /api/v1/pantry-items?search=tej': [pantry(sourCream)],
@@ -230,7 +243,7 @@ describe('item editor', () => {
     expect(JSON.parse(put.init.body as string)).toEqual({
       amount: 15, unit: 'dkg', category: 'dairy', expiryDate: null, reason: 'discarded', version: 5,
     })
-    expect((await screen.findByRole('listitem', { name: /tejföl/ })).textContent).toContain('15 dkg')
+    await waitFor(() => expect(screen.getByRole('listitem', { name: /tejföl/ }).textContent).toContain('15 dkg'))
   })
 
   it('on a conflict shows the fresh values and highlights what changed', async () => {

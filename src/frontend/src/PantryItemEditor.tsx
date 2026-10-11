@@ -54,8 +54,14 @@ export function PantryItemEditor({ item, categories, onDone, onCancel, onStale, 
   const [changes, setChanges] = useState<string | null>(null)
   const fields = useFieldErrors('edit', fieldOrder)
 
-  // The dialog leaves the top layer when it is removed from the page, so no close() on unmount.
   useEffect(() => dialog.current?.showModal(), [])
+
+  // close() before the dialog leaves the page: only then does the browser return the focus to the
+  // button that opened it (ux_flows a11y; V-28).
+  function closeThen(next: () => void) {
+    dialog.current?.close()
+    next()
+  }
 
   // The delete button is replaced by the confirming one, so the focus moves to the reason first.
   const { focus } = fields
@@ -94,7 +100,7 @@ export function PantryItemEditor({ item, categories, onDone, onCancel, onStale, 
         reason: decreasing ? reason || null : null,
         version: base.version,
       })
-      onDone()
+      closeThen(onDone)
     } catch (caught) {
       await handleError(caught)
     } finally {
@@ -107,14 +113,14 @@ export function PantryItemEditor({ item, categories, onDone, onCancel, onStale, 
     if (!(caught instanceof ApiError) || caught.status === 401) {
       fail(caught)
     } else if (caught.code === 'PANTRY_ITEM_NOT_FOUND') {
-      onGone(caught.message)
+      closeThen(() => onGone(caught.message))
     } else if (caught.code === 'PANTRY_ITEM_MODIFIED') {
       setError(caught.message)
       onStale()
       try {
         const fresh = (await api.pantryItems(noFilter)).find((i) => i.id === base.id)
         if (!fresh) {
-          onGone(messageFor('PANTRY_ITEM_NOT_FOUND', undefined))
+          closeThen(() => onGone(messageFor('PANTRY_ITEM_NOT_FOUND', undefined)))
           return
         }
         setChanges(describeChanges(base, fresh))
@@ -205,7 +211,7 @@ export function PantryItemEditor({ item, categories, onDone, onCancel, onStale, 
               <button type="button" className="danger" onClick={() => setDeleting(true)}>Törlés</button>
             </>
           )}
-          <button type="button" className="secondary" onClick={onCancel}>Mégse</button>
+          <button type="button" className="secondary" onClick={() => closeThen(onCancel)}>Mégse</button>
         </div>
       </form>
     </dialog>

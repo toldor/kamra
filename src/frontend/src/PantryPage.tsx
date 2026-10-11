@@ -85,10 +85,20 @@ export function PantryPage({ me, onSignedOut }: { me: Me; onSignedOut: (notice?:
       <h1>Kamra</h1>
       <p role="status" className="notice">{notice}</p>
 
+      {catalog.status === 'loading' && <p role="status">Betöltés…</p>}
       {catalog.status === 'error' && (
         <div>
           <p role="alert">{catalog.message}</p>
-          <button type="button" onClick={() => setCatalogTries((n) => n + 1)}>Újra</button>
+          <button
+            type="button"
+            onClick={() => {
+              // A retry shows the loading state at once, so the old error does not linger.
+              setCatalog({ status: 'loading' })
+              setCatalogTries((n) => n + 1)
+            }}
+          >
+            Újra
+          </button>
         </div>
       )}
       {catalog.status === 'ready' && (
@@ -136,7 +146,15 @@ export function PantryPage({ me, onSignedOut }: { me: Me; onSignedOut: (notice?:
         {list.status === 'error' && (
           <div>
             <p role="alert">{list.message}</p>
-            <button type="button" onClick={reload}>Újra</button>
+            <button
+              type="button"
+              onClick={() => {
+                setList({ status: 'loading' })
+                reload()
+              }}
+            >
+              Újra
+            </button>
           </div>
         )}
         {list.status === 'ready' && list.items.length === 0 && (filtered

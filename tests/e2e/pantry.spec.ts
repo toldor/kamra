@@ -37,6 +37,21 @@ test('adds an item without expiry and shows the estimated date', async ({ page }
   await expectNoHorizontalScroll(page)
 })
 
+// ux_flows a11y: after the dialog closes, the keyboard focus is back on the button that opened it.
+test('returns the focus to the edit button after saving', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await addItem(page, 'tej', '1', 'l')
+  const edit = page.getByRole('listitem', { name: /tej\b/ }).getByRole('button', { name: /Módosítás/ })
+
+  await edit.focus()
+  await page.keyboard.press('Enter')
+  const dialog = page.getByRole('dialog', { name: 'tej módosítása' })
+  await dialog.getByRole('button', { name: 'Mentés' }).click()
+
+  await expect(dialog).toBeHidden()
+  await expect(edit).toBeFocused()
+})
+
 // US-1: a decrease needs a reason, and deleting is a decrease to zero with a reason.
 test('decreases with a reason and deletes an item', async ({ page }) => {
   await registerFreshHousehold(page)
