@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
+using KamraApp.Domain.Recipes;
 
 namespace KamraApp.Infrastructure.Persistence.Seed;
 
@@ -22,6 +23,11 @@ public static class SeedData
         new(() => LoadIngredients(ReadResource("ingredients.json")));
 
     public static IReadOnlyList<Ingredient> Ingredients => SystemIngredients.Value;
+
+    public static SeedRecipes Recipes => throw new NotImplementedException();
+
+    // Recipe ingredients refer to the ingredient list by SeedKey (ADR-0005).
+    public static SeedRecipes LoadRecipes(string json, IReadOnlyList<Ingredient> ingredients) => throw new NotImplementedException();
 
     public static IReadOnlyList<Ingredient> LoadIngredients(string json)
     {
@@ -57,3 +63,5 @@ public static class SeedData
 
     private sealed record IngredientRow(Guid Id, string SeedKey, string Name, Dimension Dimension, Category DefaultCategory);
 }
+
+public sealed record SeedRecipes(IReadOnlyList<Recipe> Recipes, IReadOnlyList<RecipeIngredient> Ingredients);

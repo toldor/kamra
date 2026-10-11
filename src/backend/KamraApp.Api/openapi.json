@@ -5,6 +5,25 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/recommendations": {
+      "get": {
+        "tags": [
+          "Recommendations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/categories": {
       "get": {
         "tags": [
@@ -617,6 +636,73 @@
           }
         }
       },
+      "Recommendation": {
+        "required": [
+          "recipeId",
+          "name",
+          "servings",
+          "soonExpiringIngredients",
+          "expiredIngredients",
+          "shortages"
+        ],
+        "type": "object",
+        "properties": {
+          "recipeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "servings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "soonExpiringIngredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expiredIngredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shortages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Shortage"
+            }
+          }
+        }
+      },
+      "RecommendationsResponse": {
+        "required": [
+          "pantryIsEmpty",
+          "makeable",
+          "almostMakeable"
+        ],
+        "type": "object",
+        "properties": {
+          "pantryIsEmpty": {
+            "type": "boolean"
+          },
+          "makeable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            }
+          },
+          "almostMakeable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            }
+          }
+        }
+      },
       "RegisterRequest": {
         "required": [
           "email",
@@ -639,6 +725,36 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "Shortage": {
+        "required": [
+          "ingredientName",
+          "missing",
+          "available",
+          "required",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "ingredientName": {
+            "type": "string"
+          },
+          "missing": {
+            "type": "number",
+            "format": "double"
+          },
+          "available": {
+            "type": "number",
+            "format": "double"
+          },
+          "required": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
           }
         }
       },
@@ -706,6 +822,9 @@
     }
   },
   "tags": [
+    {
+      "name": "Recommendations"
+    },
     {
       "name": "Categories"
     },

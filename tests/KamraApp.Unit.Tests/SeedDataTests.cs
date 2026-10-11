@@ -63,6 +63,44 @@ public class SeedDataTests
     }
 
     [Fact]
+    public void The_recipe_list_loads_the_five_recipes_on_known_ingredients()
+    {
+        var ingredientIds = SeedData.Ingredients.Select(i => i.Id).ToHashSet();
+
+        SeedData.Recipes.Recipes.Select(r => r.SeedKey).Should()
+            .BeEquivalentTo("lecso", "turos-csusza", "palacsinta", "rantotta", "paprikas-krumpli");
+        SeedData.Recipes.Recipes.Should().OnlyContain(r => r.Id.Version == 7 && r.HouseholdId == null && r.Servings > 0);
+        SeedData.Recipes.Ingredients.Should().OnlyContain(i => ingredientIds.Contains(i.IngredientId) && i.Quantity > 0);
+        SeedData.Recipes.Ingredients.Select(i => (i.RecipeId, i.IngredientId)).Should().OnlyHaveUniqueItems();
+    }
+
+    [Fact]
+    public void An_unknown_ingredient_seed_key_stops_the_recipe_load()
+    {
+        // ADR-0005: seed files refer to each other by SeedKey; an unknown key stops the load.
+        var json = Recipe("""{ "seedKey": "sarkanygyokér", "amount": 1, "unit": "db" }""");
+
+        var load = () => SeedData.LoadRecipes(json, SeedData.Ingredients);
+
+        load.Should().Throw<InvalidOperationException>().WithMessage("*sarkanygyokér*");
+    }
+
+    [Fact]
+    public void A_unit_from_another_dimension_stops_the_recipe_load()
+    {
+        var json = Recipe("""{ "seedKey": "tej", "amount": 200, "unit": "g" }""");
+
+        var load = () => SeedData.LoadRecipes(json, SeedData.Ingredients);
+
+        load.Should().Throw<InvalidOperationException>().WithMessage("*tej*");
+    }
+
+    private static string Recipe(string ingredient) => $$"""
+        [ { "id": "0199c9a0-0000-7000-8000-000000000009", "seedKey": "proba", "name": "Próba", "servings": 2,
+            "instructions": "Összekeverjük.", "ingredients": [ {{ingredient}} ] } ]
+        """;
+
+    [Fact]
     public void Names_are_normalized_for_uniqueness()
     {
         Ingredient.Normalize("  Őrölt   Pirospaprika ").Should().Be("őrölt pirospaprika");
