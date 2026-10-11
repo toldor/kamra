@@ -191,3 +191,99 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Mérés PostgreSQL 18.6-on (`postgres:18` image, ugyanaz, mint a Compose-ban és a Testcontainersben; Claude Code): `SELECT (NULL::numeric + 5) IS NULL` → `t`; a `numeric_add` függvény `proisstrict = t` (null bemenetre null az eredmény); a javasolt `CASE WHEN mindkettő null THEN NULL ELSE COALESCE(a,0) + COALESCE(b,0) END` kifejezés `NULL` és 5 esetén 5-öt ad. A `COALESCE` viselkedése: [PostgreSQL 18 – Conditional Expressions](https://www.postgresql.org/docs/18/functions-conditional.html) („az első nem null argumentumát adja vissza”).
 - **Eredmény:** **PASS.** A null + ismert összeadás null; a sima összeadó upsert valóban elvesztené az ismert mennyiséget.
 - **Következtetés:** A data_model.md rögzíti az összevonási szabályt (ismert + ismert = összeg; ismeretlen + ismert = ismert; ismeretlen + ismeretlen = ismeretlen), az ADR-0008 5. pontja erre hivatkozik; integrációs teszt mindkét beszúrási sorrendre a US-5-tel készül.
+
+### V-23 – A „ma” Budapest szerint a konténerben is számolható (időzóna-adat)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az AI (az 1. lépcső tervének Q4 döntésénél) azt állította, hogy a `Europe/Budapest` IANA-időzóna a futtató `mcr.microsoft.com/dotnet/aspnet:10.0` image-ben és a Windows-os fejlesztői gépen is feloldható, így a „ma” (hamarosan lejáró, becsült lejárat) gépfüggetlenül, fix időzónával számolható.
+- **Kockázat:** Közepes. Hiányzó időzóna-adatnál a `TimeZoneInfo.FindSystemTimeZoneById` kivételt dob; UTC-re visszaesve éjfél és 1–2 óra között rossz napot kapnánk.
+- **Ellenőrzési módszer:** Mérés (Claude Code): `docker run --rm --entrypoint ls mcr.microsoft.com/dotnet/aspnet:10.0 -l /usr/share/zoneinfo/Europe/Budapest` → a fájl létezik (az image Ubuntu 24.04.5 LTS-alapú). Teszt: `Today_is_the_calendar_day_in_Budapest` ([ExpiryTests.cs](../../tests/KamraApp.Unit.Tests/ExpiryTests.cs); UTC okt. 9. 23:30 → okt. 10., dec. 31. 23:30 UTC → jan. 1., nyári és téli idő) Windowson és a Linuxos CI-runneren ([run 38069303341](https://github.com/toldor/kamra/actions/runs/38069303341)).
+- **Eredmény:** **PASS.**
+- **Következtetés:** A „ma” egyetlen helyen számolódik ([Today.cs](../../src/backend/KamraApp.Application/Common/Today.cs)); az egy időzóna korlátja a [data_model.md](../03_design/data_model.md) ismert hiányosságai között szerepel.
+
+### V-24 – A `numeric(12,3)` oszlop kerekít és túlcsordul (elő-review)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az S1 elő-reviewja (Claude Code `/code-review`, spec-tengely) azt állította, hogy a Domain bármilyen decimalt elfogad, a PostgreSQL viszont a `numeric(12,3)` oszlopban a 3. tizedes után kerekít, így a memóriabeli mennyiség és napló eltérhet a tárolttól, és 10^9 fölött a mentés elbukik.
+- **Kockázat:** Közepes. A napló-invariáns (mennyiség = a mozgások összege) csendben sérülhetne.
+- **Ellenőrzési módszer:** Mérés PostgreSQL 18.6-on (`postgres:18` image, Claude Code): `SELECT 1.2345::numeric(12,3)` → `1.235`; `SELECT 1000000000::numeric(12,3)` → `ERROR: numeric field overflow`. Teszt: `More_than_three_decimals_in_base_units_is_rejected`, `A_quantity_above_the_column_capacity_is_rejected` ([PantryItemTests.cs](../../tests/KamraApp.Unit.Tests/PantryItemTests.cs)).
+- **Eredmény:** **PASS.** Az állítás igaz volt; a Domain most alapegységben legfeljebb 3 tizedest és 999 999 999,999-et fogad el.
+- **Következtetés:** A korlát a [data_model.md](../03_design/data_model.md) PantryItems szakaszában; a felhasználóbarát validáció (400) a US-1 API-val készül.
+
+### V-25 – A Domain invariáns-kivételei 500-ként érnének el a felhasználóig (Gemini-review)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az S1 Gemini-reviewja (Antigravity, Gemini 3.1 Pro) azt állította, hogy a Domain `ArgumentException`-jei a későbbi végpontokon kezeletlenül, 500-as hibaként jutnának el a felhasználóig; javaslata saját `DomainException` vagy validáció az Application rétegben.
+- **Kockázat:** Közepes. Hibás bemenetre a felhasználó „Váratlan hiba” üzenetet kapna, és a hibaarány torzulna.
+- **Ellenőrzési módszer:** Kódvizsgálat (Claude Code): [AppExceptionHandler.cs](../../src/backend/KamraApp.Api/ErrorHandling/AppExceptionHandler.cs) – az `AppException`-ön és a `BadHttpRequestException`-ön kívül minden kivétel 500 `INTERNAL_ERROR`. A reviewer által megadott sor (`PantryItem.cs:219`) nem létezik (a fájl 125 soros), a megállapítás tartalma ettől független.
+- **Eredmény:** **PASS.**
+- **Következtetés:** A `DomainException` helyett a már tervezett megoldás marad: a használati eset validál a Domain hívása előtt (ADR-0004: validáció az Application rétegben; a Domain nem hivatkozhat az `AppException`-re). A US-1 API negatív integrációs tesztjei minden Domain-invariánsra 400 `VALIDATION_FAILED`-et ellenőriznek.
+
+### V-26 – Az OpenAPI-generátor nem az MVC JSON-beállításait olvassa (mérés)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az AI az S2 piros fázisában azt feltételezte, hogy a build közben generált `openapi.json` azért írja le a `Unit`/`Category` enumot `integer`-ként, mert a `JsonStringEnumConverter` csak az MVC JSON-beállításaiban (`AddJsonOptions`) szerepel, a `Microsoft.AspNetCore.OpenApi` pedig a minimal API (`Microsoft.AspNetCore.Http.Json.JsonOptions`) beállításait használja; futás közben viszont az MVC stringeket küld.
+- **Kockázat:** Közepes. A generált frontend-típusok számot várnának ott, ahol a szerver szöveget küld, és a contract-ellenőrzés ezt nem venné észre.
+- **Ellenőrzési módszer:** Mérés (Claude Code) a buildelt `openapi.json`-on: csak `AddJsonOptions`-szel `Unit: {"type":"integer"}`; a `ConfigureHttpJsonOptions` hozzáadása után `Unit: {"enum":["g","dkg","kg","ml","dl","l","db"]}`. Ugyanígy a számkezelés: az alapértelmezett webes beállításokkal az `amount` sémája `number | string` mintával, a `JsonNumberHandling.Strict` után `number`. Futás közben: `"200"` mennyiség → 400 ([PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs) `Invalid_input_returns_400_not_500`).
+- **Eredmény:** **PASS.** A feltételezés igazolódott.
+- **Következtetés:** Mindkét JSON-beállítás ugyanazt a konvertert és számkezelést kapja ([Program.cs](../../src/backend/KamraApp.Api/Program.cs)); a CI contract-diffje azóta a string enumokat és a szigorú számokat őrzi.
+
+### V-27 – A Scalar API-felület működik-e a szigorú CSP mellett (mérés)
+- **Dátum:** 2026-10-10
+- **Állítás:** Az AI (a Q7 döntésénél) azt állította, hogy a `Scalar.AspNetCore` 2.17.14 (MIT, net10.0, NuGet-függőség nélkül) a felületét a csomagba ágyazva, CDN nélkül szolgálja ki, de a beágyazott `<script type="module">` miatt a jelenlegi `default-src 'self'` CSP-vel csak lazítással működik.
+- **Kockázat:** Közepes. Túl tág lazítás az egész alkalmazás XSS-védelmét gyengítené; lazítás nélkül a fejlesztői felület nem használható.
+- **Ellenőrzési módszer:** Forrás: a letöltött csomag tartalma és XML-dokumentációja (`WithNonce()`: kérésenkénti nonce a `HttpContext.Items`-ben; `DisableDefaultFonts()`: a CDN-betűk kikapcsolása). Mérés (Claude Code): az Api `Development`-ben, a `/scalar/` oldal Chromiumban (Playwright) – (1) csak script-nonce-szal: 7 CSP-sértés (inline stílusok), a felület nem jelenik meg; (2) `style-src 'self' 'unsafe-inline'`-nal, csak a Scalar-oldalon: 0 CSP-sértés, 0 külső kérés, a végpontok megjelennek. Integrációs teszt: az API-válaszok CSP-je `default-src 'self'`, a Scalaré nonce-os, `script-src 'unsafe-inline'` nélkül; `Production`-ben a `/scalar` és az `/openapi/v1.json` 404 ([PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs), [AdversarialPantryApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialPantryApiTests.cs)).
+- **Eredmény:** **PASS, korláttal.** A scriptek nonce-szal védettek; az inline stílusokra nonce nem alkalmazható (style-attribútumok), ezért ott `'unsafe-inline'` kell.
+- **Következtetés:** A lazítás csak a Scalar-oldal válaszára és csak `Development`-ben érvényes; az ADR-0007 16. alternatívája rögzíti.
+
+### V-28 – Bezárás nélkül megszüntetett modális dialog után elvész a fókusz (Gemini-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az S3 Gemini-reviewja (Antigravity, Gemini 3.1 Pro) azt állította, hogy ha a `<dialog>`-ot (`showModal`) a React a `close()` hívása nélkül távolítja el, a böngésző nem adja vissza a fókuszt a megnyitó „Módosítás” gombra, így a billentyűzetes használat megtörik (ux_flows: „a fókusz mindig látható”). A reviewer súlyossága „Kritikus” volt.
+- **Kockázat:** Közepes. A flow billentyűzettel végigvihető, de mentés után a fókusz a lap elejére ugrik.
+- **Ellenőrzési módszer:** Mérés valódi böngészőben (Claude Code): Playwright, Chromium, asztali és 360 px-es nézet, Docker Compose stack ellen. A teszt (`returns the focus to the edit button after saving`, [pantry.spec.ts](../../tests/e2e/pantry.spec.ts)) a javítás előtt elbukott (`toBeFocused` – „Received: inactive”); a javítás után (`close()` a dialog eltávolítása előtt, [PantryItemEditor.tsx](../../src/frontend/src/PantryItemEditor.tsx)) három egymás utáni futásban zöld. A jsdom ezt nem tudja ellenőrizni, ezért e2e teszt készült.
+- **Eredmény:** **PASS.** Az állítás igaz volt; a súlyosság túlzó (nem akadályozza a használatot).
+- **Következtetés:** A szerkesztőablak mentésnél, „Mégse”-nél és közben törölt tételnél is előbb bezárul; törléskor a megnyitó gomb megszűnik, ezért ott a fókusz a lap elejére kerül (ux_flows, Ismert hiányosságok). Megjegyzés: a Spec-elő-review korábban a lecsatoláskori `close()` eltávolítását javasolta; az a hívás amúgy is későn, a dialog eltávolítása után futott volna.
+
+### V-29 – A magyar névsorrend a futtató konténerben is működik (ICU)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az AI az S4-ben a receptek névsorát magyar kollációval (`StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"))`) rendezi, és azt állította, hogy ez a futtató `mcr.microsoft.com/dotnet/aspnet:10.0` konténerben is működik, nem csak a fejlesztői gépen.
+- **Kockázat:** Közepes. Invariáns globalizációs módban (vagy ICU nélkül) a `hu-HU` kultúra kivételt dob vagy ordinális rendezésre esik vissza, és az „Ágyas” a „Bableves” mögé kerülne.
+- **Ellenőrzési módszer:** Mérés (Claude Code): `docker run --rm --entrypoint sh mcr.microsoft.com/dotnet/aspnet:10.0 -c 'ls /usr/lib/x86_64-linux-gnu | grep icu; env | grep GLOBALIZATION'` → `libicudata.so.74`, `libicui18n.so.74`, nincs `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT`. Teszt: `Equal_soon_expiring_counts_rank_by_the_earliest_expiry_then_by_Hungarian_name` ([RecommenderTests.cs](../../tests/KamraApp.Unit.Tests/RecommenderTests.cs)) Windowson és a Linuxos CI-runneren ([run 38138477380](https://github.com/toldor/kamra/actions/runs/38138477380)).
+- **Eredmény:** **PASS.**
+- **Következtetés:** A magyar névsor a konténerben is érvényes; ha a projekt valaha invariáns globalizációs módra váltana, ez a teszt jelezné.
+
+### V-30 – Egy szabályváltozás után az elkülönítő teszt elvesztette az erejét (Gemini-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az S4 Gemini-reviewja (Antigravity, Gemini 3.1 Pro) azt állította, hogy a `More_soon_expiring_items_used_rank_first_even_against_an_earlier_expiry_and_name` teszt zöld, de nem azt ellenőrzi, amit a neve állít: az E1 javítás (a lejárt tétel nem számít a rangsor 2. kulcsánál) után a versengő recept lejárt tétele már nem ad korábbi dátumot, így a teszt a 2. kulcs szerint is átmenne, az 1. kulcsot nem különíti el.
+- **Kockázat:** Közepes. Az 1. kulcs (a felhasznált hamarosan lejáró tételek száma) hibája észrevétlen maradna – ez a pazarlás csökkentésének fő rangsorszabálya.
+- **Ellenőrzési módszer:** Mutációs mérés (Claude Code): az 1. kulcsot ideiglenesen kivettük a `Recommender`-ből – a **régi** teszt zöld maradt (igazolva, hogy nem ellenőrizte); a tesztet átírtuk (a versengő recept tétele ma jár le, így a 2. kulcs és a név is őt favorizálja) – az 1. kulcs nélkül az **új** teszt elbukik, vele zöld; a kód visszaállítva.
+- **Eredmény:** **PASS.** A reviewer állítása igaz volt; sem az implementáló, sem az elő-review nem vette észre.
+- **Következtetés:** Egy szabály módosítása után a szomszédos, ugyanazt a rangsort érintő tesztek elkülönítő erejét is újra kell ellenőrizni; a rangsor-kulcsok tesztjei azóta mutációval igazoltak. A független, más modellel végzett review itt valódi hibát talált a tesztekben (ai_manifest, Munkamódszer).
+
+### V-31 – Az üres GUID kérésazonosító átment a validáción (Gemini-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az S5 Gemini-reviewja (Antigravity, Gemini 3.1 Pro) szerint a `ConfirmCookingRequest.RequestId` `[Required]` attribútuma a `Guid?` típuson csak a null-t szűri, az üres GUID-ot (`00000000-0000-0000-0000-000000000000`) nem.
+- **Kockázat:** Közepes. Egy hibás kliens, amely mindig üres azonosítót küld, az első főzés után minden azonos tartalmú főzést csendes ismétlésnek kapna (200 a régi eredménnyel), **levonás nélkül**; eltérő tartalomnál pedig `IDEMPOTENCY_CONFLICT`-ot.
+- **Ellenőrzési módszer:** Teszt (Claude Code): új eset az `Invalid_input_is_rejected_with_a_field_error_and_nothing_is_saved` theoryban (`requestId: Guid.Empty`, [CookingUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/CookingUseCaseTests.cs)) – a javítás előtt piros, az elutasítás (`RequestIdMessage`) után zöld; [CI run 38163897618](https://github.com/toldor/kamra/actions/runs/38163897618).
+- **Eredmény:** **PASS.**
+- **Következtetés:** A `[Required]` egy `Guid?` mezőn csak a hiányt szűri; ahol az azonosító tartalma számít (idempotencia), az üres értéket külön kell elutasítani. A többi végponton az üres azonosító nem létező erőforrásra mutat (404), ott nincs ilyen kockázat.
+
+### V-32 – A kg-os recept alapértelmezett mennyiségét a szerver elutasította (Claude spec-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az S5 `/code-review` spec-ügynöke (Claude Code subagent) szerint a `Units.FromBase` nem kerekít, így kg-os receptnél és 12,5 g készletnél az előnézet alapértelmezett felhasznált mennyisége 0,0125 kg; a megerősítés validációja viszont legfeljebb 3 tizedest fogadott el a recept egységében, ezért az alapértelmezett út is 400-zal bukott volna (a seedben a burgonya kg-ban van).
+- **Kockázat:** Közepes. A felhasználó a felkínált értékkel sem tudná rögzíteni a főzést; ha felfelé kerekít, `INSUFFICIENT_STOCK`-ot kap.
+- **Ellenőrzési módszer:** Mutációs mérés (Claude Code): a javítás (a pontosság ellenőrzése alapegységben, a recept betöltése után) mellé két új teszt került – [CookingUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/CookingUseCaseTests.cs) (`The_preview_default_in_kg_from_grams_in_stock_is_accepted_as_it_is`) és [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs) (`The_preview_default_from_finer_stock_than_the_recipe_unit_can_be_confirmed`); a régi validációt ideiglenesen visszaállítva mindkettő piros, a javítással zöld.
+- **Eredmény:** **PASS.**
+- **Következtetés:** A pontossági szabályt a tárolás egységében (alapegység, `numeric(12,3)`, ADR-0002, V-24) kell megfogalmazni, nem a megjelenítés egységében. A kódolás közben ezt sem az implementáló, sem a tesztek nem vették észre; a spec szerinti review a valós adatkombinációt (kg-os recept, grammos készlet) végigkövetve találta meg.
+
+### V-33 – Az adatbázis névsora nem a magyar ábécé (Gemini PR-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** A PR-review (Antigravity, Gemini 3.1 Pro) szerint a hozzávaló- és a készletlista az adatbázisban (`OrderBy(Name)`) a PostgreSQL alapértelmezett kollációjával rendeződik, amelyben „az ékezetes karakterek a Z után” állnak, míg a memóriabeli listák a magyar `Collation.Hungarian` szerint.
+- **Kockázat:** Alacsony. A felhasználó ugyanazokat a neveket különböző képernyőkön eltérő sorrendben látná.
+- **Ellenőrzési módszer:** Mérés (Claude Code) egy friss `postgres:18` konténerben: `SELECT datcollate, datlocprovider FROM pg_database` → `en_US.utf8`, `c` (libc). Ugyanaz a névlista `ORDER BY n`-nel: *„ágy, Alma, ananász, …, olaj, őrölt pirospaprika, ostya, uborka, üdítő, …”*; `COLLATE "hu-x-icu"`-val: *„…, olaj, ostya, őrölt pirospaprika, uborka, üdítő, …”*.
+- **Eredmény:** **Részben PASS.** Az eltérés valós: a magyarban az ö/ő és az ü/ű külön betű, az `en_US` az o és az u változatának tekinti őket. Az indoklás viszont téves: az `en_US.utf8` az ékezetes betűket nem a Z után, hanem az alapbetű mellé rendezi (az „ágy” az „Alma” előtt van).
+- **Következtetés:** A felhasználónak szóló névsort egy helyen, az Application rétegben, a Domain kollációjával rendezzük (`ListIngredients`, `ListPantryItems`); a repositoryk nem rendeznek. Tesztek: [PantryUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/PantryUseCaseTests.cs) (*olaj, ostya, őrölt pirospaprika*), a javítás előtt pirosak; [CI run 38174181800](https://github.com/toldor/kamra/actions/runs/38174181800).
+
+### V-34 – A kis- és nagybetű nem változtat a magyar betűrendi helyen (Gemini PR-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** A PR-review szerint a `Collation.Hungarian` `ignoreCase: false` beállítása miatt a nagy kezdőbetű megváltoztatná a nevek természetes betűrendi helyét, ezért `ignoreCase: true` kellene.
+- **Kockázat:** Alacsony. Ha igaz lenne, a nagybetűs receptnevek a kisbetűsek elé vagy mögé csoportosulnának.
+- **Ellenőrzési módszer:** Mérés (Claude Code, F#-szkript a `StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), false)` összehasonlítóval): a „Paprikás krumpli, lecsó, Bableves, almás pite, Ágyas, Túrós csusza, ostya, őrölt pirospaprika” lista rendezve *„Ágyas, almás pite, Bableves, lecsó, ostya, őrölt pirospaprika, Paprikás krumpli, Túrós csusza”*; `Compare("alma", "Banán")` = −1.
+- **Eredmény:** **FAIL.** A nyelvi összehasonlítás a kis- és nagybetűt csak harmadlagos különbségként, holtversenynél veszi figyelembe; a betűrendi helyet nem változtatja meg.
+- **Következtetés:** Nincs változtatás. A reviewer nyelvi rendezésről szóló állítását is mérni kell, mert a kultúra-alapú összehasonlítás nem bájtsorrend.

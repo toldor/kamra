@@ -14,6 +14,9 @@ public sealed class ValidationException(IReadOnlyDictionary<string, string[]> er
 public sealed class UnauthorizedException(string code, string message)
     : AppException(ErrorCategory.Unauthorized, code, message);
 
+public sealed class NotFoundException(string code, string message)
+    : AppException(ErrorCategory.NotFound, code, message);
+
 public sealed class ConflictException(string code, string message)
     : AppException(ErrorCategory.Conflict, code, message);
 

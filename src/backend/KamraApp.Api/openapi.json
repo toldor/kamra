@@ -5,6 +5,387 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/v1/recommendations": {
+      "get": {
+        "tags": [
+          "Recommendations"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ingredients": {
+      "get": {
+        "tags": [
+          "Ingredients"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IngredientResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pantry-items": {
+      "get": {
+        "tags": [
+          "PantryItems"
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expiringSoon",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PantryItemResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PantryItems"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddPantryItemRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddPantryItemRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddPantryItemRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/pantry-items/{id}": {
+      "put": {
+        "tags": [
+          "PantryItems"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UpdatePantryItemRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UpdatePantryItemRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UpdatePantryItemRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recipes/{id}/cooking-preview": {
+      "get": {
+        "tags": [
+          "Cookings"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "servings",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookingPreviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cookings": {
+      "post": {
+        "tags": [
+          "Cookings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ConfirmCookingRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ConfirmCookingRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ConfirmCookingRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookingResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookingResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookingResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookingResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookingResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/register": {
       "post": {
         "tags": [
@@ -162,6 +543,49 @@
   },
   "components": {
     "schemas": {
+      "AddPantryItemRequest": {
+        "required": [
+          "ingredientId",
+          "amount",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expiryDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
       "AntiforgeryTokenResponse": {
         "required": [
           "requestToken"
@@ -170,6 +594,304 @@
         "properties": {
           "requestToken": {
             "type": "string"
+          }
+        }
+      },
+      "Category": {
+        "enum": [
+          "dairy",
+          "cheese",
+          "eggs",
+          "freshMeatFish",
+          "processedMeat",
+          "vegetables",
+          "fruit",
+          "bakery",
+          "dryGoods",
+          "cannedAndSauces",
+          "frozen",
+          "beverages",
+          "preparedFood",
+          "other"
+        ]
+      },
+      "CategoryResponse": {
+        "required": [
+          "category",
+          "shelfLifeDays"
+        ],
+        "type": "object",
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "shelfLifeDays": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ConfirmCookingRequest": {
+        "required": [
+          "requestId",
+          "recipeId",
+          "servings",
+          "used"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "recipeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "servings": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "used": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/UsedAmount"
+            }
+          }
+        }
+      },
+      "CookingAllocation": {
+        "required": [
+          "expiryDate",
+          "amount",
+          "expired"
+        ],
+        "type": "object",
+        "properties": {
+          "expiryDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "expired": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CookingPreviewLine": {
+        "required": [
+          "ingredientId",
+          "ingredientName",
+          "unit",
+          "required",
+          "available",
+          "defaultUsed",
+          "shortage",
+          "allocations"
+        ],
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ingredientName": {
+            "type": "string"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
+          },
+          "required": {
+            "type": "number",
+            "format": "double"
+          },
+          "available": {
+            "type": "number",
+            "format": "double"
+          },
+          "defaultUsed": {
+            "type": "number",
+            "format": "double"
+          },
+          "shortage": {
+            "type": "number",
+            "format": "double"
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CookingAllocation"
+            }
+          }
+        }
+      },
+      "CookingPreviewResponse": {
+        "required": [
+          "recipeId",
+          "name",
+          "servings",
+          "recipeServings",
+          "instructions",
+          "staples",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "recipeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "servings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recipeServings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "staples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CookingPreviewLine"
+            }
+          }
+        }
+      },
+      "CookingResponse": {
+        "required": [
+          "cookingId",
+          "recipeId",
+          "recipeName",
+          "servings",
+          "cookedAt",
+          "lines",
+          "depletedIngredients"
+        ],
+        "type": "object",
+        "properties": {
+          "cookingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recipeName": {
+            "type": "string"
+          },
+          "servings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cookedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CookingResponseLine"
+            }
+          },
+          "depletedIngredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CookingResponseLine": {
+        "required": [
+          "ingredientName",
+          "unit",
+          "required",
+          "used",
+          "shortage"
+        ],
+        "type": "object",
+        "properties": {
+          "ingredientName": {
+            "type": "string"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
+          },
+          "required": {
+            "type": "number",
+            "format": "double"
+          },
+          "used": {
+            "type": "number",
+            "format": "double"
+          },
+          "shortage": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "Dimension": {
+        "enum": [
+          "mass",
+          "volume",
+          "count"
+        ]
+      },
+      "IngredientResponse": {
+        "required": [
+          "id",
+          "name",
+          "dimension",
+          "defaultCategory"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "dimension": {
+            "$ref": "#/components/schemas/Dimension"
+          },
+          "defaultCategory": {
+            "$ref": "#/components/schemas/Category"
           }
         }
       },
@@ -210,6 +932,134 @@
           }
         }
       },
+      "PantryItemResponse": {
+        "required": [
+          "id",
+          "ingredientId",
+          "ingredientName",
+          "amount",
+          "unit",
+          "quantity",
+          "category",
+          "expiryDate",
+          "expiryEstimated",
+          "expired",
+          "soonExpiring",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ingredientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ingredientName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "expiryEstimated": {
+            "type": "boolean"
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "soonExpiring": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "RecommendationResponse": {
+        "required": [
+          "recipeId",
+          "name",
+          "servings",
+          "soonExpiringIngredients",
+          "expiredIngredients",
+          "shortages"
+        ],
+        "type": "object",
+        "properties": {
+          "recipeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "servings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "soonExpiringIngredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expiredIngredients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shortages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShortageResponse"
+            }
+          }
+        }
+      },
+      "RecommendationsResponse": {
+        "required": [
+          "pantryIsEmpty",
+          "makeable",
+          "almostMakeable"
+        ],
+        "type": "object",
+        "properties": {
+          "pantryIsEmpty": {
+            "type": "boolean"
+          },
+          "makeable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationResponse"
+            }
+          },
+          "almostMakeable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendationResponse"
+            }
+          }
+        }
+      },
       "RegisterRequest": {
         "required": [
           "email",
@@ -234,10 +1084,135 @@
             ]
           }
         }
+      },
+      "ShortageResponse": {
+        "required": [
+          "ingredientName",
+          "missing",
+          "available",
+          "required",
+          "unit"
+        ],
+        "type": "object",
+        "properties": {
+          "ingredientName": {
+            "type": "string"
+          },
+          "missing": {
+            "type": "number",
+            "format": "double"
+          },
+          "available": {
+            "type": "number",
+            "format": "double"
+          },
+          "required": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/Unit"
+          }
+        }
+      },
+      "Unit": {
+        "enum": [
+          "g",
+          "dkg",
+          "kg",
+          "ml",
+          "dl",
+          "l",
+          "db"
+        ]
+      },
+      "UpdatePantryItemRequest": {
+        "required": [
+          "amount",
+          "unit",
+          "category",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expiryDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
+      "UsedAmount": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
       }
     }
   },
   "tags": [
+    {
+      "name": "Recommendations"
+    },
+    {
+      "name": "Categories"
+    },
+    {
+      "name": "Ingredients"
+    },
+    {
+      "name": "PantryItems"
+    },
+    {
+      "name": "Cookings"
+    },
     {
       "name": "Auth"
     }

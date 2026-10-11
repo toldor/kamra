@@ -4,6 +4,315 @@
  */
 
 export interface paths {
+    "/api/v1/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecommendationsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CategoryResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ingredients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["IngredientResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pantry-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    category?: string;
+                    expiringSoon?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PantryItemResponse"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["AddPantryItemRequest"];
+                    "text/json": null | components["schemas"]["AddPantryItemRequest"];
+                    "application/*+json": null | components["schemas"]["AddPantryItemRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PantryItemResponse"];
+                        "application/json": components["schemas"]["PantryItemResponse"];
+                        "text/json": components["schemas"]["PantryItemResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pantry-items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["UpdatePantryItemRequest"];
+                    "text/json": null | components["schemas"]["UpdatePantryItemRequest"];
+                    "application/*+json": null | components["schemas"]["UpdatePantryItemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PantryItemResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recipes/{id}/cooking-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    servings?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CookingPreviewResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["ConfirmCookingRequest"];
+                    "text/json": null | components["schemas"]["ConfirmCookingRequest"];
+                    "application/*+json": null | components["schemas"]["ConfirmCookingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CookingResponse"];
+                        "application/json": components["schemas"]["CookingResponse"];
+                        "text/json": components["schemas"]["CookingResponse"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CookingResponse"];
+                        "application/json": components["schemas"]["CookingResponse"];
+                        "text/json": components["schemas"]["CookingResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -189,8 +498,100 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AddPantryItemRequest: {
+            /** Format: uuid */
+            ingredientId: null | string;
+            /** Format: double */
+            amount: null | number;
+            unit: null | string;
+            category?: null | string;
+            /** Format: date */
+            expiryDate?: null | string;
+        };
         AntiforgeryTokenResponse: {
             requestToken: string;
+        };
+        /** @enum {unknown} */
+        Category: "dairy" | "cheese" | "eggs" | "freshMeatFish" | "processedMeat" | "vegetables" | "fruit" | "bakery" | "dryGoods" | "cannedAndSauces" | "frozen" | "beverages" | "preparedFood" | "other";
+        CategoryResponse: {
+            category: components["schemas"]["Category"];
+            /** Format: int32 */
+            shelfLifeDays: null | number;
+        };
+        ConfirmCookingRequest: {
+            /** Format: uuid */
+            requestId: null | string;
+            /** Format: uuid */
+            recipeId: null | string;
+            /** Format: int32 */
+            servings: null | number;
+            used: null | components["schemas"]["UsedAmount"][];
+        };
+        CookingAllocation: {
+            /** Format: date */
+            expiryDate: string;
+            /** Format: double */
+            amount: number;
+            expired: boolean;
+        };
+        CookingPreviewLine: {
+            /** Format: uuid */
+            ingredientId: string;
+            ingredientName: string;
+            unit: components["schemas"]["Unit"];
+            /** Format: double */
+            required: number;
+            /** Format: double */
+            available: number;
+            /** Format: double */
+            defaultUsed: number;
+            /** Format: double */
+            shortage: number;
+            allocations: components["schemas"]["CookingAllocation"][];
+        };
+        CookingPreviewResponse: {
+            /** Format: uuid */
+            recipeId: string;
+            name: string;
+            /** Format: int32 */
+            servings: number;
+            /** Format: int32 */
+            recipeServings: number;
+            instructions: string;
+            staples: string[];
+            lines: components["schemas"]["CookingPreviewLine"][];
+        };
+        CookingResponse: {
+            /** Format: uuid */
+            cookingId: string;
+            /** Format: uuid */
+            recipeId: string;
+            recipeName: string;
+            /** Format: int32 */
+            servings: number;
+            /** Format: date-time */
+            cookedAt: string;
+            lines: components["schemas"]["CookingResponseLine"][];
+            depletedIngredients: string[];
+        };
+        CookingResponseLine: {
+            ingredientName: string;
+            unit: components["schemas"]["Unit"];
+            /** Format: double */
+            required: number;
+            /** Format: double */
+            used: number;
+            /** Format: double */
+            shortage: number;
+        };
+        /** @enum {unknown} */
+        Dimension: "mass" | "volume" | "count";
+        IngredientResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            dimension: components["schemas"]["Dimension"];
+            defaultCategory: components["schemas"]["Category"];
         };
         LoginRequest: {
             email: null | string;
@@ -201,9 +602,73 @@ export interface components {
             /** Format: uuid */
             householdId: string;
         };
+        PantryItemResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            ingredientId: string;
+            ingredientName: string;
+            /** Format: double */
+            amount: number;
+            unit: components["schemas"]["Unit"];
+            /** Format: double */
+            quantity: number;
+            category: components["schemas"]["Category"];
+            /** Format: date */
+            expiryDate: string;
+            expiryEstimated: boolean;
+            expired: boolean;
+            soonExpiring: boolean;
+            /** Format: uint32 */
+            version: number;
+        };
+        RecommendationResponse: {
+            /** Format: uuid */
+            recipeId: string;
+            name: string;
+            /** Format: int32 */
+            servings: number;
+            soonExpiringIngredients: string[];
+            expiredIngredients: string[];
+            shortages: components["schemas"]["ShortageResponse"][];
+        };
+        RecommendationsResponse: {
+            pantryIsEmpty: boolean;
+            makeable: components["schemas"]["RecommendationResponse"][];
+            almostMakeable: components["schemas"]["RecommendationResponse"][];
+        };
         RegisterRequest: {
             email: null | string;
             password: null | string;
+        };
+        ShortageResponse: {
+            ingredientName: string;
+            /** Format: double */
+            missing: number;
+            /** Format: double */
+            available: number;
+            /** Format: double */
+            required: number;
+            unit: components["schemas"]["Unit"];
+        };
+        /** @enum {unknown} */
+        Unit: "g" | "dkg" | "kg" | "ml" | "dl" | "l" | "db";
+        UpdatePantryItemRequest: {
+            /** Format: double */
+            amount: null | number;
+            unit: null | string;
+            category: null | string;
+            /** Format: date */
+            expiryDate?: null | string;
+            reason?: null | string;
+            /** Format: uint32 */
+            version: null | number;
+        };
+        UsedAmount: {
+            /** Format: uuid */
+            ingredientId?: null | string;
+            /** Format: double */
+            amount?: null | number;
         };
     };
     responses: never;

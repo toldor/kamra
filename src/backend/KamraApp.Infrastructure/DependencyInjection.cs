@@ -1,4 +1,8 @@
 using KamraApp.Application.Auth;
+using KamraApp.Application.Cookings;
+using KamraApp.Application.Ingredients;
+using KamraApp.Application.Pantry;
+using KamraApp.Application.Recommendations;
 using KamraApp.Infrastructure.Identity;
 using KamraApp.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection;
@@ -26,6 +30,10 @@ public static class DependencyInjection
             options.UseNpgsql(provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString));
 
         services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
+        services.AddScoped<IIngredientRepository, IngredientRepository>();
+        services.AddScoped<IPantryRepository, PantryRepository>();
+        services.AddScoped<IRecipeRepository, RecipeRepository>();
+        services.AddScoped<ICookingRepository, CookingRepository>();
 
         // ADR-0006: NIST SP 800-63B-4 password length without composition rules; lockout after 5
         // failures for 5 minutes; one account per e-mail (the e-mail is also the user name).

@@ -9,8 +9,10 @@ const text = {
   register: { title: 'Regisztráció', submit: 'Fiók létrehozása', switchLabel: 'Már van fiókod? Jelentkezz be' },
 }
 
-export function AuthForm({ mode, onSignedIn, onSwitchMode }: {
+export function AuthForm({ mode, notice, onSignedIn, onSwitchMode }: {
   mode: Mode
+  // ux_flows: why the user is here, e.g. after an expired session.
+  notice?: string
   onSignedIn: (me: Me) => void
   onSwitchMode: () => void
 }) {
@@ -53,6 +55,7 @@ export function AuthForm({ mode, onSignedIn, onSwitchMode }: {
   return (
     <main>
       <h1>{text[mode].title}</h1>
+      {notice && <p role="status" className="notice">{notice}</p>}
       <form onSubmit={submit} noValidate>
         <label htmlFor="email">E-mail-cím</label>
         <input

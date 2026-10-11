@@ -11,6 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ADR-0005: seed files are embedded, so the migration bundle and the tests read the same data. -->
+    <EmbeddedResource Include="Persistence\Seed\*.json" LogicalName="Kamra.Seed.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\KamraApp.Application\KamraApp.Application.csproj" />
     <ProjectReference Include="..\KamraApp.Domain\KamraApp.Domain.csproj" />
   </ItemGroup>
