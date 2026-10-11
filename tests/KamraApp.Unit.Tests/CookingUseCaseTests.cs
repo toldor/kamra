@@ -103,7 +103,10 @@ public class CookingUseCaseTests
         var request = Request();
         return new ConfirmCookingRequest
         {
-            RequestId = request.RequestId, RecipeId = request.RecipeId, Servings = request.Servings, Used = [.. request.Used!, extra],
+            RequestId = request.RequestId,
+            RecipeId = request.RecipeId,
+            Servings = request.Servings,
+            Used = [.. request.Used!, extra],
         };
     }
 
@@ -148,7 +151,10 @@ public class CookingUseCaseTests
 
         var error = await FluentActions.Awaiting(() => ConfirmAsync(new ConfirmCookingRequest
         {
-            RequestId = Guid.CreateVersion7(), RecipeId = Palacsinta.RecipeId, Servings = 6, Used = used,
+            RequestId = Guid.CreateVersion7(),
+            RecipeId = Palacsinta.RecipeId,
+            Servings = 6,
+            Used = used,
         })).Should().ThrowAsync<ValidationException>();
 
         error.Which.Errors["used"].Should().Equal(CookingInput.UsedMessage);
