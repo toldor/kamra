@@ -92,7 +92,14 @@ public sealed class PantryItem
 
     // US-4: a cooking takes this amount from the item with a Consumed movement that names the cooking;
     // never more than the item holds.
-    public StockMovement Consume(decimal amount, Guid cookingId, DateTimeOffset now) => throw new NotImplementedException();
+    public StockMovement Consume(decimal amount, Guid cookingId, DateTimeOffset now)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(amount, Quantity);
+        Quantity -= amount;
+        UpdatedAt = now;
+        return StockMovement.Record(this, -amount, MovementReason.Consumed, now, cookingId);
+    }
 
     // A missing expiry date is estimated from the entry day (the Budapest date of CreatedAt), not from
     // the day of the edit: data_model.md, "a bevitel napja + a kategória napértéke".

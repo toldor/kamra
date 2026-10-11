@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import { api, failWith, type Recommendation, type RecommendationsResponse } from './api/client'
 import { formatShortage } from './format'
-import { routes } from './useHashRoute'
+import { cookingRoute, routes } from './useHashRoute'
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; data: RecommendationsResponse }
 
@@ -21,6 +21,7 @@ function RecipeCard({ recipe }: { recipe: Recommendation }) {
       {recipe.expiredIngredients.length > 0 && (
         <p className="warning">Lejárt tételt is felhasznál: {recipe.expiredIngredients.join(', ')}.</p>
       )}
+      <a href={cookingRoute(recipe.recipeId)} className="button-link">Megfőztem</a>
     </article>
   )
 }

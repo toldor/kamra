@@ -269,3 +269,35 @@ dialog::backdrop {
 .changes {
   font-weight: 600;
 }
+
+/* US-4 confirmation screen: one box per ingredient; the recipe text keeps its line breaks. */
+.cooking-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  border: 1px solid #c4c4c4;
+  border-radius: 8px;
+}
+
+.cooking-line legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.recipe .button-link {
+  margin-top: 0.5rem;
+}
+
+.instructions {
+  white-space: pre-line;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}

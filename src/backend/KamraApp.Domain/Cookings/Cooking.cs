@@ -37,11 +37,45 @@ public sealed class Cooking
     // Deducts the used amounts FEFO from the given pantry items (expired ones first, Q5). The caller has
     // already checked that the stock covers them; staples never become lines.
     public static (Cooking Cooking, IReadOnlyList<StockMovement> Movements) Create(Guid householdId, RecipeCandidate recipe,
-        int servings, Guid requestId, IReadOnlyDictionary<Guid, decimal> used, IReadOnlyList<PantryItem> items, DateTimeOffset now) =>
-        throw new NotImplementedException();
+        int servings, Guid requestId, IReadOnlyDictionary<Guid, decimal> used, IReadOnlyList<PantryItem> items, DateTimeOffset now)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(servings);
+        var needs = recipe.Needs.Where(n => !n.IsStaple).ToList();
+        if (needs.Count != used.Count || needs.Any(n => !used.ContainsKey(n.IngredientId)))
+        {
+            throw new ArgumentException("A used amount is needed for every non-staple ingredient, and only for those.", nameof(used));
+        }
+
+        var stock = items.Where(i => i.HouseholdId == householdId).ToLookup(i => i.IngredientId);
+        // P10: every line is checked before anything is deducted.
+        if (needs.Any(n => used[n.IngredientId] < 0 || used[n.IngredientId] > stock[n.IngredientId].Sum(i => i.Quantity)))
+        {
+            throw new InvalidOperationException("The stock does not cover the used amounts.");
+        }
+
+        var cooking = new Cooking(Guid.CreateVersion7(), householdId, recipe.RecipeId, servings, requestId, now);
+        var movements = new List<StockMovement>();
+        foreach (var need in needs)
+        {
+            var amount = used[need.IngredientId];
+            var ingredientItems = stock[need.IngredientId].ToList();
+            foreach (var (item, taken) in Fefo.Allocate(ingredientItems.Select(StockItem.From), amount).Where(a => a.Amount > 0))
+            {
+                movements.Add(ingredientItems.Single(i => i.Id == item.PantryItemId).Consume(taken, cooking.Id, now));
+            }
+
+            var depleted = amount > 0 && ingredientItems.Sum(i => i.Quantity) == 0;
+            cooking._lines.Add(CookingLine.Create(cooking.Id, need.IngredientId,
+                CookingCalculator.ScaleRequired(need.Quantity, need.Unit, recipe.Servings, servings), amount, depleted));
+        }
+
+        return (cooking, movements);
+    }
 
     // ADR-0008: a repeated request is the same cooking only with the same recipe, servings and every used amount.
-    public bool Matches(Guid recipeId, int servings, IReadOnlyDictionary<Guid, decimal> used) => throw new NotImplementedException();
+    public bool Matches(Guid recipeId, int servings, IReadOnlyDictionary<Guid, decimal> used) =>
+        RecipeId == recipeId && Servings == servings && used.Count == _lines.Count
+        && _lines.All(l => used.TryGetValue(l.IngredientId, out var amount) && amount == l.UsedQuantity);
 }
 
 public sealed class CookingLine

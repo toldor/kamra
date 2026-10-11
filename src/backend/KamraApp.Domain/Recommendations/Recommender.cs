@@ -30,7 +30,8 @@ public static class Recommender
     public const int MaxShortagesForAlmostMakeable = 2;
 
     // Names are ordered the Hungarian way ("Ágyas" before "Bableves"); the id settles exact ties.
-    private static readonly StringComparer HungarianOrder = StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), ignoreCase: false);
+    // Hungarian alphabetical order ("á" right after "a"), also used by the cooking screens.
+    public static readonly StringComparer HungarianOrder = StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), ignoreCase: false);
 
     public static Recommendations Recommend(IEnumerable<RecipeCandidate> recipes, IEnumerable<StockItem> stock, DateOnly today)
     {

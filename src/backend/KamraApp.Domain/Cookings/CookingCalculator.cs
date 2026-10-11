@@ -13,11 +13,25 @@ public sealed record PreviewLine(RecipeNeed Need, decimal Required, decimal Avai
 // even), pieces always up.
 public static class CookingCalculator
 {
-    public const int MaxServings = 100;
+    public static decimal ScaleRequired(decimal baseQuantity, Unit unit, int recipeServings, int servings)
+    {
+        var scaled = baseQuantity * servings / recipeServings;
+        return Units.DimensionOf(unit) == Dimension.Count
+            ? Math.Ceiling(scaled)
+            : Math.Round(scaled, 0, MidpointRounding.AwayFromZero);
+    }
 
-    public static decimal ScaleRequired(decimal baseQuantity, Unit unit, int recipeServings, int servings) =>
-        throw new NotImplementedException();
-
-    public static IReadOnlyList<PreviewLine> Preview(RecipeCandidate recipe, int servings, IEnumerable<StockItem> stock) =>
-        throw new NotImplementedException();
+    // The recipe's non-staple ingredients in recipe order.
+    public static IReadOnlyList<PreviewLine> Preview(RecipeCandidate recipe, int servings, IEnumerable<StockItem> stock)
+    {
+        var byIngredient = stock.ToLookup(s => s.IngredientId);
+        return [.. recipe.Needs.Where(n => !n.IsStaple).Select(need =>
+        {
+            var required = ScaleRequired(need.Quantity, need.Unit, recipe.Servings, servings);
+            var items = byIngredient[need.IngredientId].ToList();
+            var available = items.Sum(i => i.Quantity);
+            var defaultUsed = Math.Min(required, available);
+            return new PreviewLine(need, required, available, defaultUsed, Fefo.Allocate(items, defaultUsed));
+        })];
+    }
 }

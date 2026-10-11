@@ -20,7 +20,18 @@ public sealed class ConfirmCookingRequest : IValidatableObject
     [Required(ErrorMessage = CookingInput.UsedMessage)]
     public IReadOnlyList<UsedAmount>? Used { get; init; }
 
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) => throw new NotImplementedException();
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Used!.Any(u => u.IngredientId is null) || Used!.GroupBy(u => u.IngredientId).Any(g => g.Count() > 1))
+        {
+            yield return new ValidationResult(CookingInput.UsedMessage, [nameof(Used)]);
+        }
+
+        if (Used!.Any(u => u.Amount is not { } amount || !CookingInput.IsValidUsedAmount(amount)))
+        {
+            yield return new ValidationResult(CookingInput.AmountMessage, [nameof(Used)]);
+        }
+    }
 }
 
 public sealed class UsedAmount
