@@ -107,15 +107,9 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik. Domain-entitás: [Sto
 - A metrikák a `Reason` szerint számolnak ([metrics.md](../01_product/metrics.md)): a `Corrected` kimarad, a `Discarded` pazarlás.
 - **Megvalósítás:** a tételre `NO ACTION`-nel hivatkozik: mozgással rendelkező tétel nem törölhető (a napló csak hozzáfűzhető, [StockMovementLogTests.cs](../../tests/KamraApp.Integration.Tests/StockMovementLogTests.cs)); a háztartás törlése mindkettőt törli.
 
-## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
+### Recipes (Recept)
 
-- Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
-- A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
-- Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
-
-## Tervezett entitások
-
-### Recipe (Recept)
+Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs).
 
 | Mező | Típus | Leírás |
 |---|---|---|
@@ -130,8 +124,9 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik. Domain-entitás: [Sto
 | RetiredAt | timestamptz, null | Archivált (saját) vagy visszavont (induló) recept: nem jelenik meg az ajánlásban, a főzések hivatkozása megmarad |
 
 - A saját recept az MVP-ben létrehozható és archiválható; szerkesztés nincs (Ismert korlátok).
+- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 5 recept: [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept okt. 23-ig készül.
 
-### RecipeIngredient (Recept hozzávalója)
+### RecipeIngredients (Recept hozzávalója)
 
 | Mező | Típus | Leírás |
 |---|---|---|
@@ -142,6 +137,15 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik. Domain-entitás: [Sto
 
 - Az alaphozzávalók (víz, só, bors) szerepelhetnek a receptben, de az illesztés, a hiányszámítás és a levonás figyelmen kívül hagyja őket.
 - Az induló receptkészlet minden hozzávalója az induló hozzávaló-listán van (ADR-0003, integrációs teszt).
+- **Megvalósítás:** az `EnteredUnit` az enum nevével tárolódik; kényszer: `CK_RecipeIngredients_Quantity_Positive`; a recept törlése a sorait is törli, a hozzávaló-hivatkozás `NO ACTION`. Az egység–dimenzió invariánst az entitás maga ellenőrzi ([RecipeTests.cs](../../tests/KamraApp.Unit.Tests/RecipeTests.cs)).
+
+## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
+
+- Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
+- A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
+- Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
+
+## Tervezett entitások
 
 ### Cooking (Főzés)
 
@@ -208,6 +212,7 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik. Domain-entitás: [Sto
 |---|---|---|
 | `InitialIdentityAndHousehold` | Identity-táblák és `Households` | Megvalósítva |
 | `AddIngredientsAndPantryItems` | `Ingredients` (36 rendszer-hozzávaló), `PantryItems`, `StockMovements` | Megvalósítva |
+| `AddRecipes` | `Recipes` (5 induló recept), `RecipeIngredients` | Megvalósítva |
 
 ## Ismert hiányosságok
 

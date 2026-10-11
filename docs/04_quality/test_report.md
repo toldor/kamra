@@ -22,18 +22,18 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
-| Unit | ≥ 18 | 119 | 119 |
-| Integrációs | ≥ 6 | 83 | 83 |
-| Frontend (Vitest) | – | 28 | 28 |
+| Unit | ≥ 18 | 146 | 146 |
+| Integrációs | ≥ 6 | 88 | 88 |
+| Frontend (Vitest) | – | 37 | 37 |
 | E2E | ≥ 6 | 5 (×2 nézet) | 5 |
-| Negatív esetek | ≥ 5 | 128 | 128 |
-| **Összesen** | **≥ 30** | **235** | **235** |
+| Negatív esetek | ≥ 5 | 138 | 138 |
+| **Összesen** | **≥ 30** | **276** | **276** |
 
 ## Legutolsó futás eredménye
 
 - Dátum: 2026-10-11
-- Eredmény: PASS – .NET 202/202 helyben (az S2 tesztjei háromszor egymás után); Domain + Application sorlefedettség 90,0% (kapu: 80%); Vitest 28/28 tízszer egymás után; Playwright 10/10 futás (5 teszt × asztali Chrome és 360 px) háromszor egymás után, elkülönített Docker Compose stack ellen (flaky-ellenőrzés)
-- CI link: [GitHub Actions – run 38127353373](https://github.com/toldor/kamra/actions/runs/38127353373) (2026-10-11, `feature/us-1-pantry`, `93cf7dd`): `secrets`, `backend`, `frontend` és `e2e` job zöld
+- Eredmény: PASS – .NET 234/234 helyben háromszor egymás után; Domain + Application sorlefedettség 92,5% (kapu: 80%); Vitest 37/37 háromszor; Playwright 10/10 futás (5 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen
+- CI link: [GitHub Actions – run 38138477380](https://github.com/toldor/kamra/actions/runs/38138477380) (2026-10-11, `feature/us-1-pantry`, `608a04d`): `secrets`, `backend`, `frontend` és `e2e` job zöld
 
 ## Tesztelt modulok
 
@@ -54,16 +54,38 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Mértékegységek ([QuantityTests.cs](../../tests/KamraApp.Unit.Tests/QuantityTests.cs)) | Unit | Átváltás alapegységre (dkg → g, kg → g, dl → ml, l → ml), minden egység pontosan egy dimenzióhoz tartozik, visszaváltás a bevitt egységre a válaszhoz ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md)) | ✅ 18/18 |
 | Lejárat ([ExpiryTests.cs](../../tests/KamraApp.Unit.Tests/ExpiryTests.cs)) | Unit | Becsült lejárat mind a 13 kategóriára a [data_model.md](../03_design/data_model.md) napértékeivel; „Egyéb” kategóriánál nincs becslés (negatív); a „hamarosan lejáró” ablak határai (tegnap: lejárt; ma, holnap, holnapután: igen; +3 nap: nem); a „ma” a budapesti naptári nap nyári és téli időben, évváltáskor is, egy tetszőleges időpont (a bevitel napja) is ([V-23](../07_ai/verification_log.md)) | ✅ 24/24 |
 | Készlettétel ([PantryItemTests.cs](../../tests/KamraApp.Unit.Tests/PantryItemTests.cs)) | Unit | Létrehozás alapegységben `Added` mozgással; megadott és becsült lejárat, szerkesztéskor a bevitel napjától; elutasítva (negatív): „Egyéb” lejárat nélkül (létrehozáskor és szerkesztéskor), idegen dimenziójú egység, 0 és negatív mennyiség, 3-nál több tizedes és a `numeric(12,3)` fölötti mennyiség ([V-24](../07_ai/verification_log.md)), ok nélküli csökkentés, csökkenési ok növelésnél, 0 alá csökkentés; a növelés `Corrected`; változatlan mennyiségnél nincs mozgás; a mennyiség = a mozgások összege (CAP-08) | ✅ 20/20 |
-| Seed-adat ([SeedDataTests.cs](../../tests/KamraApp.Unit.Tests/SeedDataTests.cs)) | Unit | Az induló hozzávaló-lista egyedi azonosítókkal (GUID v7), kulcsokkal és nevekkel, a három alaphozzávalóval; duplikált `SeedKey`, üres kulcs vagy név és ismeretlen kategória leállítja a betöltést (negatív); névnormalizálás ([ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)) | ✅ 6/6 |
+| Seed-adat ([SeedDataTests.cs](../../tests/KamraApp.Unit.Tests/SeedDataTests.cs)) | Unit | Az induló hozzávaló-lista egyedi azonosítókkal (GUID v7), kulcsokkal és nevekkel, a három alaphozzávalóval; duplikált `SeedKey`, üres kulcs vagy név és ismeretlen kategória leállítja a betöltést (negatív); névnormalizálás; az 5 induló recept ismert hozzávalókon, **ismeretlen hozzávaló-`SeedKey`** és idegen dimenziójú egység leállítja a recept-betöltést (negatív) ([ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)) | ✅ 9/9 |
+| Ajánlás ([RecommenderTests.cs](../../tests/KamraApp.Unit.Tests/RecommenderTests.cs)) | Unit | US-3: elkészíthető alaphozzávalók nélkül és csak alaphozzávalós recept; 1–2 hiány → majdnem, 3 → kimarad (negatív); **P5** és **P7** (kézzel számolt); hiány a recept egységében; több tétel összeadódik; lejárt tétel jelölve, a rangsoron nem javít (E1); csak a FEFO szerint felhasznált tétel számít (D2); a rangsor mindhárom kulcsa elkülönítve (mutációval ellenőrizve, [V-30](../07_ai/verification_log.md)); D1; magyar névsor; determinizmus 20 keveréssel; a „trappista sajt” nem „sajt” (ADR-0003, negatív); FEFO-felosztás (P2) | ✅ 20/20 |
+| Recept-entitás ([RecipeTests.cs](../../tests/KamraApp.Unit.Tests/RecipeTests.cs)) | Unit | Alapegységű tárolás; idegen dimenziójú egység elutasítva (negatív, ADR-0004: az invariáns az entitásban) | ✅ 2/2 |
+| Ajánlás-használati eset ([RecommendationUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/RecommendationUseCaseTests.cs)) | Unit | Üres készletnél nincs ajánlás (E2); a háztartás saját készlete illesztődik | ✅ 2/2 |
+| Ajánlás-API ([RecommendationsApiTests.cs](../../tests/KamraApp.Integration.Tests/RecommendationsApiTests.cs)) | Integrációs | Az 5 induló recept a migrációból, minden soruk rendszer-hozzávalóra mutat; **P7** és **P5** az API-n át; más háztartás készlete sosem számít (negatív); 401 (negatív) | ✅ 5/5 |
+| „Mit főzzek?” felület ([RecommendationsPage.test.tsx](../../src/frontend/src/RecommendationsPage.test.tsx)) | Unit (Vitest) | Navigáció és `aria-current`; ismeretlen útvonal → Készlet (negatív); fókusz az új oldal címére; lejárt munkamenet után ugyanarra az oldalra vissza; indoklások és hiánysorok; lejárt jelölés; a három üres állapot; hiba + „Újra” (negatív) | ✅ 9/9 |
 | Seed-migráció ([SeedMigrationTests.cs](../../tests/KamraApp.Integration.Tests/SeedMigrationTests.cs)) | Integrációs | A migráció után az adatbázisban pontosan a seed-fájl rendszer-hozzávalói vannak ([ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)) | ✅ 1/1 |
 | Készletmozgás-napló ([StockMovementLogTests.cs](../../tests/KamraApp.Integration.Tests/StockMovementLogTests.cs)) | Integrációs | Mozgással rendelkező készlettétel nem törölhető: a napló csak hozzáfűzhető, az adatbázis kényszere védi (negatív) | ✅ 1/1 |
 | Készlet-használati esetek ([PantryUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/PantryUseCaseTests.cs)) | Unit | Rögzítés és szerkesztés kézi fake portokkal: minden Domain-szabály előbb 400 `VALIDATION_FAILED` mezőkulccsal (0, negatív, 4 tizedes, 100 000 fölött, ismeretlen vagy számként küldött egység, ismeretlen kategória, idegen dimenzió, „egyéb” lejárat nélkül, ok nélküli csökkentés, csökkenési ok növelésnél, ismeretlen vagy `added` ok, túl hosszú keresés; negatív); nem látható hozzávaló és hiányzó tétel 404 (negatív); **elavult verzió 409 minden más ellenőrzés előtt** (a konkurenciateszt által talált hiba regressziós tesztje, negatív); alapértelmezett kategória és budapesti nap; csökkentés és növelés mozgással; újrabecslés a bevitel napjától ([V-25](../07_ai/verification_log.md)) | ✅ 27/27 |
 | Készlet-API ([PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs)) | Integrációs | Kategóriák, normalizált keresés, rögzítés becsült lejárattal és bevitt egységgel, a három szűrő és a rendezés, lejárt jelölés, csökkentés naplóval (mennyiség = a mozgások összege), 0-ra csökkentés; negatív: **elavult verzió 409, a tétel változatlan**; **két egyidejű szerkesztésből egy nyer**; **más háztartás tétele megkülönböztethetetlen a nem létezőtől** (S-2); 401 minden új végponton; antiforgery nélkül elutasítva; érvénytelen bemenet 400 és nem 500 (`POST` és `PUT`); `%` és `_` szó szerint; túl hosszú keresés; CSP szigorú az API-n, nonce-os a Scalaron; Scalar és OpenAPI csak fejlesztésben ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md), [V-26](../07_ai/verification_log.md), [V-27](../07_ai/verification_log.md)) | ✅ 31/31 |
 | Ellenséges készlet-tesztek ([AdversarialPantryApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialPantryApiTests.cs)) | Integrációs | Az Antigravity (Gemini 3.1 Pro) által írt támadások: IDOR, verzió-manipuláció és replay (409), mennyiség-határértékek és szöveges szám, enum számként vagy ismeretlenként, a csökkentési ok kijátszása és dimenzióváltás, törölt tétel, hibás JSON szivárgás nélkül, `Production`-ben rejtett fejlesztői eszközök és szigorú CSP (mind negatív). Hibát nem találtak. | ✅ 22/22 |
 
+## Kézzel számolt ellenőrző példák
+
+A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt példák igazolják: az elvárt értéket a fejlesztő és az AI is kiszámolta az implementáció előtt, és mindegyik példához automatizált teszt tartozik (Q3).
+
+| # | Helyzet (a „ma” = T) | Elvárt (kézzel) | Az alkalmazás eredménye | Teszt | Egyezik |
+|---|---|---|---|---|---|
+| P1 | 30 dkg finomliszt; palacsinta 4 adag | 300 g tárolva; főzés után 100 g | Tárolva 300 g (az átváltás); a főzés az S5-ben | [QuantityTests.cs](../../tests/KamraApp.Unit.Tests/QuantityTests.cs) | ✅ részben (S5) |
+| P2 | Paradicsom 200 g (T+1) és 400 g (T+5); lecsó 4 adag (300 g) | 0 g és 300 g marad; mozgások −200 g, −100 g | A FEFO-felosztás 200 g + 100 g; a levonás az S5-ben | [RecommenderTests.cs](../../tests/KamraApp.Unit.Tests/RecommenderTests.cs) (`Fefo_takes_the_earliest_expiring_item_first`) | ✅ részben (S5) |
+| P3 | Rántotta 2 → 3 adag | tojás 5 db, vaj 30 g | Az S5-ben | – | – |
+| P4 | Palacsinta 4 → 6 adag | liszt 300 g, tej 750 ml, tojás 3 db, étolaj 45 ml | Az S5-ben | – | – |
+| P5 | Száraztészta 400 g, túró 500 g, szalonna 150 g, tejföl 150 g | Túrós csusza majdnem elkészíthető: „tejföl: 50 g hiányzik (150 g van, 200 g kell)” | Ugyanez | [RecommenderTests.cs](../../tests/KamraApp.Unit.Tests/RecommenderTests.cs), [RecommendationsApiTests.cs](../../tests/KamraApp.Integration.Tests/RecommendationsApiTests.cs) | ✅ |
+| P6 | Ugyanez, főzés | felhasznált 150 g, hiány 50 g, maradék 0; napló −150 g | Az S5-ben | – | – |
+| P7 | Paprika 500 g (T+2), paradicsom 300 g (T+1), vöröshagyma 300 g (T+10), étolaj 1 l (T+90), burgonya 1 kg (T+30), kolbász 150 g (T+7), őrölt pirospaprika 100 g (T+90) | 1. Lecsó („2 hamarosan lejáró hozzávalót használ fel: paradicsom, paprika”), 2. Paprikás krumpli („Minden hozzávaló megvan.”); majdnem: Rántotta (tojás 3 db, vaj 20 g hiányzik); a palacsinta és a csusza nem jelenik meg | Ugyanez a unit tesztben, az API-n át és a böngészőben, a felületen rögzített készlettel ([recommendations-360.png](../assets/recommendations-360.png)) | [RecommenderTests.cs](../../tests/KamraApp.Unit.Tests/RecommenderTests.cs), [RecommendationsApiTests.cs](../../tests/KamraApp.Integration.Tests/RecommendationsApiTests.cs) | ✅ |
+| P8 | Ismételt főzés ugyanazzal a kérésazonosítóval | egy levonás, azonos válasz | Az S5-ben | – | – |
+| P9 | Két egyidejű főzés 2 × 300 g, készlet 400 g | egy sikeres, 100 g marad | Az S5-ben | – | – |
+| P10 | Felhasznált > készlet | elutasítva, a készlet változatlan | Az S5-ben | – | – |
+
 ## Lefedetlen területek
 
-- A recept-, főzés- és bevásárlólista-végpontok és a teljes felület; a készlet API-ja kész, a felülete az S3-ban készül.
+- A főzés (US-4) és a bevásárlólista (US-5) végpontjai és felülete; a készlet (US-1) és az ajánlás (US-3) kész.
 
 ## Ismert hiányosságok
 

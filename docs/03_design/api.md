@@ -34,11 +34,11 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | GET | `/pantry-items?search=&category=&expiringSoon=` | Készlet (csak `Quantity > 0`), tételenként `version`, becsült és lejárt jelöléssel | US-1 | `VALIDATION_FAILED` | Megvalósítva |
 | POST | `/pantry-items` | Készlettétel rögzítése (`Added` mozgás) → 201 | US-1 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
 | PUT | `/pantry-items/{id}` | Szerkesztés, csökkentés és törlés (0-ra csökkentés); kötelező `version`, csökkenésnél kötelező ok | US-1 | `VALIDATION_FAILED`, `PANTRY_ITEM_NOT_FOUND`, `PANTRY_ITEM_MODIFIED` | Megvalósítva |
-| GET | `/recipes` | Receptek (induló és saját, archivált nélkül) | US-3 | – | Tervezett |
-| GET | `/recipes/{id}` | Recept részletei | US-3 | `RECIPE_NOT_FOUND` | Tervezett |
+| GET | `/recipes` | Receptek (induló és saját, archivált nélkül) | US-3 | – | Tervezett – okt. 23. (a felület most nem használja) |
+| GET | `/recipes/{id}` | Recept részletei | US-3 | `RECIPE_NOT_FOUND` | Tervezett – okt. 23. (a recept szövegét a főzés előnézete adja) |
 | POST | `/recipes` | Saját recept → 201 | US-3 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
 | POST | `/recipes/{id}/archive` | Saját recept archiválása → 204 | US-3 | `RECIPE_NOT_FOUND`, `FORBIDDEN` (induló recept) | Tervezett |
-| GET | `/recommendations` | Elkészíthető és majdnem elkészíthető receptek indoklással és hiánnyal | US-3 | – | Tervezett |
+| GET | `/recommendations` | Elkészíthető és majdnem elkészíthető receptek indoklással és hiánnyal | US-3 | – | Megvalósítva |
 | GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED` | Tervezett |
 | POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT` | Tervezett |
 | GET | `/shopping-list` | Bevásárlólista-tételek | US-5 | – | Tervezett |
@@ -51,6 +51,13 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | PUT | `/ingredients/{id}/minimum` | Minimumszint beállítása vagy törlése (null) | US-5 | `INGREDIENT_NOT_FOUND`, `VALIDATION_FAILED` | Tervezett |
 
 A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. és a 3. lépcső előtt kerülnek be.
+
+### Ajánlás (US-3) – a megvalósított szerződés
+
+- **Válasz:** `{ pantryIsEmpty, makeable: [...], almostMakeable: [...] }`; receptenként `{ recipeId, name, servings, soonExpiringIngredients, expiredIngredients, shortages: [{ ingredientName, missing, available, required, unit }] }`. A hiány mennyiségei a recept egységében vannak („tejföl: 50 g hiányzik (150 g van, 200 g kell)”), az alapértelmezett adagszámra.
+- **Szabályok:** az alaphozzávalók (víz, só, bors) nem számítanak; elkészíthető, ha nincs hiány, majdnem elkészíthető 1–2 hiányzó vagy kevés hozzávalóval. A „felhasznált” tételek az alapértelmezett adagszám FEFO-felosztása (a lejártak elsőként); a lejárt tétel készletnek számít és jelölt, de a rangsoron nem javít.
+- **Rangsor:** elkészíthetők – a felhasznált hamarosan lejáró tételek száma (csökkenő), a nem lejárt felhasznált tételek legkorábbi lejárata, magyar névsor; majdnem elkészíthetők – kevesebb hiány, a felhasznált hamarosan lejárók száma, név.
+- **Üres készletnél** nincs ajánlás (`pantryIsEmpty: true`, üres listák), a ux_flows üres-állapot szövegéhez.
 
 ### Készlet (US-1) – a megvalósított szerződés
 
@@ -70,6 +77,7 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 
 ## Ismert hiányosságok
 
+- Az ajánlás az összes illeszkedő receptet visszaadja, lapozás nélkül; háztartási méretnél (20–40 recept) erre nincs szükség.
 - Egy készlettétel friss adatát (például verzióütközés után) a felület a teljes készletlistából veszi; tételenkénti `GET /pantry-items/{id}` végpont nincs, háztartási méretnél erre nincs szükség.
 
 - A rate limit a kapcsolat IP-címét használja. Proxy vagy Docker Desktop porttovábbítás mögött minden kérés ugyanarról a (gateway-) címről érkezhet, ilyenkor a limit közös az összes kliensre. Megbízható reverse proxy jelenleg nincs, ezért a továbbított IP-fejléceket (`X-Forwarded-For`) szándékosan nem fogadjuk el, mert azt a kliens hamisíthatná.

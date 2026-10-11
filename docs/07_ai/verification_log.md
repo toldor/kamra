@@ -239,3 +239,19 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Mérés valódi böngészőben (Claude Code): Playwright, Chromium, asztali és 360 px-es nézet, Docker Compose stack ellen. A teszt (`returns the focus to the edit button after saving`, [pantry.spec.ts](../../tests/e2e/pantry.spec.ts)) a javítás előtt elbukott (`toBeFocused` – „Received: inactive”); a javítás után (`close()` a dialog eltávolítása előtt, [PantryItemEditor.tsx](../../src/frontend/src/PantryItemEditor.tsx)) három egymás utáni futásban zöld. A jsdom ezt nem tudja ellenőrizni, ezért e2e teszt készült.
 - **Eredmény:** **PASS.** Az állítás igaz volt; a súlyosság túlzó (nem akadályozza a használatot).
 - **Következtetés:** A szerkesztőablak mentésnél, „Mégse”-nél és közben törölt tételnél is előbb bezárul; törléskor a megnyitó gomb megszűnik, ezért ott a fókusz a lap elejére kerül (ux_flows, Ismert hiányosságok). Megjegyzés: a Spec-elő-review korábban a lecsatoláskori `close()` eltávolítását javasolta; az a hívás amúgy is későn, a dialog eltávolítása után futott volna.
+
+### V-29 – A magyar névsorrend a futtató konténerben is működik (ICU)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az AI az S4-ben a receptek névsorát magyar kollációval (`StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"))`) rendezi, és azt állította, hogy ez a futtató `mcr.microsoft.com/dotnet/aspnet:10.0` konténerben is működik, nem csak a fejlesztői gépen.
+- **Kockázat:** Közepes. Invariáns globalizációs módban (vagy ICU nélkül) a `hu-HU` kultúra kivételt dob vagy ordinális rendezésre esik vissza, és az „Ágyas” a „Bableves” mögé kerülne.
+- **Ellenőrzési módszer:** Mérés (Claude Code): `docker run --rm --entrypoint sh mcr.microsoft.com/dotnet/aspnet:10.0 -c 'ls /usr/lib/x86_64-linux-gnu | grep icu; env | grep GLOBALIZATION'` → `libicudata.so.74`, `libicui18n.so.74`, nincs `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT`. Teszt: `Equal_soon_expiring_counts_rank_by_the_earliest_expiry_then_by_Hungarian_name` ([RecommenderTests.cs](../../tests/KamraApp.Unit.Tests/RecommenderTests.cs)) Windowson és a Linuxos CI-runneren ([run 38138477380](https://github.com/toldor/kamra/actions/runs/38138477380)).
+- **Eredmény:** **PASS.**
+- **Következtetés:** A magyar névsor a konténerben is érvényes; ha a projekt valaha invariáns globalizációs módra váltana, ez a teszt jelezné.
+
+### V-30 – Egy szabályváltozás után az elkülönítő teszt elvesztette az erejét (Gemini-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az S4 Gemini-reviewja (Antigravity, Gemini 3.1 Pro) azt állította, hogy a `More_soon_expiring_items_used_rank_first_even_against_an_earlier_expiry_and_name` teszt zöld, de nem azt ellenőrzi, amit a neve állít: az E1 javítás (a lejárt tétel nem számít a rangsor 2. kulcsánál) után a versengő recept lejárt tétele már nem ad korábbi dátumot, így a teszt a 2. kulcs szerint is átmenne, az 1. kulcsot nem különíti el.
+- **Kockázat:** Közepes. Az 1. kulcs (a felhasznált hamarosan lejáró tételek száma) hibája észrevétlen maradna – ez a pazarlás csökkentésének fő rangsorszabálya.
+- **Ellenőrzési módszer:** Mutációs mérés (Claude Code): az 1. kulcsot ideiglenesen kivettük a `Recommender`-ből – a **régi** teszt zöld maradt (igazolva, hogy nem ellenőrizte); a tesztet átírtuk (a versengő recept tétele ma jár le, így a 2. kulcs és a név is őt favorizálja) – az 1. kulcs nélkül az **új** teszt elbukik, vele zöld; a kód visszaállítva.
+- **Eredmény:** **PASS.** A reviewer állítása igaz volt; sem az implementáló, sem az elő-review nem vette észre.
+- **Következtetés:** Egy szabály módosítása után a szomszédos, ugyanazt a rangsort érintő tesztek elkülönítő erejét is újra kell ellenőrizni; a rangsor-kulcsok tesztjei azóta mutációval igazoltak. A független, más modellel végzett review itt valódi hibát talált a tesztekben (ai_manifest, Munkamódszer).

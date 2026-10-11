@@ -20,7 +20,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Cél:** Tomi este gyorsan kiválaszt egy receptet abból, ami otthon van, elsősorban a hamarosan lejáró alapanyagokból.
 - **Előfeltétel:** van készlet.
 - **Lépések:**
-  1. Tomi megnyitja a „Mit főzzek?” oldalt. Elöl az elkészíthető receptek állnak, mindegyik egy mondatos indoklással (*„2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”*), alattuk a majdnem elkészíthetők a hiányzó mennyiségekkel (*„tejföl: 50 g hiányzik (150 g van, 200 g kell)”*).
+  1. Tomi megnyitja a „Mit főzzek?” oldalt. Elöl az elkészíthető receptek állnak, mindegyik egy mondatos indoklással (*„2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”*), alattuk a majdnem elkészíthetők a hiányzó mennyiségekkel (*„tejföl: 50 g hiányzik (150 g van, 200 g kell)”*). *Megvalósítva* ([recommendations-360.png](../assets/recommendations-360.png)); a lejárt tételt felhasználó receptnél: *„Lejárt tételt is felhasznál: …”*.
   2. Kiválaszt egy receptet, és a „Megfőztem” gombbal megadja az adagszámot (Betti négyfős családnál nagyobb adagot ad meg).
   3. A megerősítő képernyő hozzávalónként mutatja a szükséges és a felhasznált mennyiséget, és azt, hogy melyik készlettételből vonódik le (a legkorábban lejárótól). A felhasznált mennyiség itt módosítható; ha valamiből kevesebb van, a hiány külön látszik, és egy kattintással a bevásárlólistára tehető.
   4. A megerősítés után a készlet frissül. Ha közben valami elfogyott, egy összegző sor jelzi: *„Elfogyott: tej, tojás. Felvettem őket a bevásárlójavaslatok közé.”*, „Megnézem” linkkel.
@@ -47,7 +47,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 | Készlet | Üres készlet | *„Még üres a kamrád. Írd le egy mondatban, mit vettél – …”* | Mondatos bevitel vagy „Inkább tételenként rögzítem” |
 | „Mit főzzek?” | Üres készlet | *„Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.”* | „Készlet rögzítése” |
 | „Mit főzzek?” | Csak majdnem elkészíthető recept van | *„Most egyik receptedhez sincs meg minden hozzávaló.”* – alatta a majdnem elkészíthetők | „Bevásárlólistára” |
-| „Mit főzzek?” | Semmi nem illeszkedik | *„A kamrád alapján most nem találtam receptet. Vegyél fel saját receptet, vagy rögzíts további hozzávalókat.”* | „Új recept”, „Bevásárlás rögzítése” |
+| „Mit főzzek?” | Semmi nem illeszkedik | *„A kamrád alapján most nem találtam receptet. Vegyél fel saját receptet, vagy rögzíts további hozzávalókat.”* (okt. 23-ig átmenetileg: *„…Rögzíts további hozzávalókat, és újra megnézem.”*) | „Új recept”, „Bevásárlás rögzítése” (okt. 23-ig: „Készlet rögzítése”) |
 
 ## Hibakezelés
 
@@ -82,12 +82,12 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 | Flow | Screenshot / GIF | E2E teszt |
 |---|---|---|
 | 1. Első indulás és bevásárlás rögzítése | Kézi ág: [pantry-360.png](../assets/pantry-360.png) (360 px); a mondatos ág a US-2-vel | Kézi ág: [pantry.spec.ts](../../tests/e2e/pantry.spec.ts) (rögzítés becsült lejárattal, csökkentés okkal, törlés, fókusz-visszaadás); a mondatos ág a 2. lépcsőben |
-| 2. „Mit főzzek?” – főzés | `docs/assets/` alá, az implementációval | Playwright, az 1. lépcsőben |
+| 2. „Mit főzzek?” – főzés | Ajánlás: [recommendations-360.png](../assets/recommendations-360.png) (a P7 kézzel számolt példa); a főzés az S5-tel | Ajánlás: [RecommendationsPage.test.tsx](../../src/frontend/src/RecommendationsPage.test.tsx), [RecommendationsApiTests.cs](../../tests/KamraApp.Integration.Tests/RecommendationsApiTests.cs); a fő flow e2e tesztje az S5-tel |
 | 3. Bevásárlójavaslattól a listáig | `docs/assets/` alá, az implementációval | Playwright, az 1. lépcsőben |
 | Hibakezelés (H1, H3) | Screenshot a hibaüzenettel és a helyreállítással | Playwright: AI-kiesés mockkal, hálózati hiba |
 
 ## Ismert hiányosságok
 
-- A 2. és a 3. flow felülete még nincs implementálva, ezért screenshot és e2e teszt sincs hozzájuk; ezek a scope_contract story-jain alapuló tervek. Az 1. flow kézi ága kész ([pantry.spec.ts](../../tests/e2e/pantry.spec.ts)), a mondatos bevitel a US-2-vel jön; addig az üres készlet szövege: *„Még üres a kamrád. Rögzítsd az első tételt az »Új tétel« űrlappal.”* A bejelentkezés, a regisztráció és a H4 hibaüzenet a walking skeleton óta él ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).
-- Lejárt munkamenet után a felhasználó a bejelentkezésre kerül az üzenettel, de a visszatérés ugyanarra az oldalra a több képernyővel (útválasztás, S4) készül.
+- A 2. flow ajánlás-része kész; a főzés (US-4) és a 3. flow (US-5) felülete még nincs implementálva, ezekhez screenshot és e2e teszt sincs. Lejárt munkamenet után a bejelentkezés ugyanarra az oldalra visz vissza (az útvonal az URL-ben marad), navigáláskor a fókusz az új oldal címére kerül. Az 1. flow kézi ága kész ([pantry.spec.ts](../../tests/e2e/pantry.spec.ts)), a mondatos bevitel a US-2-vel jön; addig az üres készlet szövege: *„Még üres a kamrád. Rögzítsd az első tételt az »Új tétel« űrlappal.”* A bejelentkezés, a regisztráció és a H4 hibaüzenet a walking skeleton óta él ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).
+- A „Mit főzzek?” oldal „Bevásárlólistára” gombja és a saját recept („Új recept”) okt. 23-ig készül.
 - A szerkesztőablak bezárásakor a fókusz visszakerül a megnyitó „Módosítás” gombra ([V-28](../07_ai/verification_log.md)); törléskor a gomb megszűnik, ilyenkor a fókusz a lap elejére kerül.

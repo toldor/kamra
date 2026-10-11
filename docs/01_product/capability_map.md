@@ -10,7 +10,7 @@ A termék képességei és megvalósítottsági állapotuk: mennyi a felhasznál
 |---|---|---|---|---|
 | CAP-01 Készlet rögzítése és áttekintése (US-1) | Value | [pantry-360.png](../assets/pantry-360.png); [api.md](../03_design/api.md) (Készlet, US-1); [CI](https://github.com/toldor/kamra/actions/runs/38127353373) | [PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs), [PantryUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/PantryUseCaseTests.cs), [PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx), [pantry.spec.ts](../../tests/e2e/pantry.spec.ts) | Done |
 | CAP-02 Bevásárlás rögzítése egy mondattal (US-2) | Value | – | – | Planned |
-| CAP-03 „Mit főzzek?” – ajánlás a készletből (US-3) | Value | – | – | Planned |
+| CAP-03 „Mit főzzek?” – ajánlás a készletből (US-3) | Value | [recommendations-360.png](../assets/recommendations-360.png) (P7 a böngészőben); [CI](https://github.com/toldor/kamra/actions/runs/38138477380) | [RecommenderTests.cs](../../tests/KamraApp.Unit.Tests/RecommenderTests.cs), [RecommendationsApiTests.cs](../../tests/KamraApp.Integration.Tests/RecommendationsApiTests.cs), [RecommendationsPage.test.tsx](../../src/frontend/src/RecommendationsPage.test.tsx) | Partial – az ajánlás kész; a saját recept, az archiválás és a „Bevásárlólistára” gomb okt. 23-ig |
 | CAP-04 Főzés és a készlet automatikus frissítése (US-4) | Value | – | – | Planned |
 | CAP-05 Bevásárlólista javaslatokkal (US-5) | Value | – | – | Planned |
 | CAP-06 Kérdezés a kamráról élő nyelven (US-6) | Value | – | – | Planned |
