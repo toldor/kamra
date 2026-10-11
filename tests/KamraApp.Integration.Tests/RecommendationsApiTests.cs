@@ -25,11 +25,19 @@ public class RecommendationsApiTests(KamraApiFactory factory)
             .SqlQuery<string>($"""SELECT "SeedKey" AS "Value" FROM "Recipes" WHERE "HouseholdId" IS NULL""")
             .ToListAsync(TestContext.Current.CancellationToken);
         var lines = await db.Database
-            .SqlQuery<int>($"""SELECT COUNT(*)::int AS "Value" FROM "RecipeIngredients" ri JOIN "Ingredients" i ON i."Id" = ri."IngredientId" WHERE i."HouseholdId" IS NULL""")
+            .SqlQuery<int>($"""SELECT COUNT(*)::int AS "Value" FROM "RecipeIngredients" ri JOIN "Recipes" r ON r."Id" = ri."RecipeId" WHERE r."HouseholdId" IS NULL""")
+            .SingleAsync(TestContext.Current.CancellationToken);
+        var linesOnOwnIngredients = await db.Database
+            .SqlQuery<int>($"""
+                SELECT COUNT(*)::int AS "Value" FROM "RecipeIngredients" ri
+                JOIN "Recipes" r ON r."Id" = ri."RecipeId" JOIN "Ingredients" i ON i."Id" = ri."IngredientId"
+                WHERE r."HouseholdId" IS NULL AND i."HouseholdId" IS NOT NULL
+                """)
             .SingleAsync(TestContext.Current.CancellationToken);
 
         recipeKeys.Should().BeEquivalentTo(SeedData.Recipes.Recipes.Select(r => r.SeedKey));
-        lines.Should().Be(SeedData.Recipes.Ingredients.Count, "every recipe ingredient is on the system ingredient list (ADR-0003)");
+        lines.Should().Be(SeedData.Recipes.Ingredients.Count);
+        linesOnOwnIngredients.Should().Be(0, "every system recipe ingredient is on the system ingredient list (ADR-0003)");
     }
 
     [Fact]

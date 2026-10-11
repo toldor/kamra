@@ -72,6 +72,20 @@ public class RecommenderTests
         result.Makeable[0].Shortages.Should().BeEmpty();
     }
 
+    [Fact]
+    public void A_recipe_of_staples_only_is_makeable_from_any_non_empty_pantry()
+    {
+        // CONTEXT.md, Elkészíthető: every ingredient except the staples is in stock - vacuously true here.
+        var saltWater = new RecipeCandidate(Guid.CreateVersion7(), "Sós víz", 1, [Need("víz", 2, Unit.Dl, staple: true), Need("só", 1, Unit.G, staple: true)]);
+
+        var result = Recommender.Recommend([saltWater], [Stock("rizs", 500, 90)], T);
+
+        var water = result.Makeable.Single();
+        water.Shortages.Should().BeEmpty();
+        water.SoonExpiringIngredients.Should().BeEmpty();
+        water.ExpiredIngredients.Should().BeEmpty();
+    }
+
     [Theory]
     [InlineData(1, true)]
     [InlineData(2, true)]
@@ -195,11 +209,13 @@ public class RecommenderTests
     [Fact]
     public void More_soon_expiring_items_used_rank_first_even_against_an_earlier_expiry_and_name()
     {
-        // Rank key 1 alone: "Ágyas" uses an expired item (the earliest expiry) and comes first by name, but
-        // "Zöldséges" uses two soon-expiring items, so it must be first.
+        // Rank key 1 alone: "Ágyas" uses butter expiring today (1 soon-expiring item, the earliest
+        // not-expired date) and comes first by name; "Zöldséges" uses two soon-expiring items (T+1, T+2).
+        // Keys 2 and 3 both favour "Ágyas", so only key 1 (2 > 1) can put "Zöldséges" first. (The first
+        // version used an expired butter, which after E1 no longer counts for key 2 - V-30.)
         var agyas = new RecipeCandidate(Guid.CreateVersion7(), "Ágyas", 2, [Need("vaj", 10, Unit.G)]);
         var zoldseges = new RecipeCandidate(Guid.CreateVersion7(), "Zöldséges", 2, [Need("paprika", 100, Unit.G), Need("paradicsom", 100, Unit.G)]);
-        var stock = new[] { Stock("vaj", 100, -3), Stock("paprika", 100, 1), Stock("paradicsom", 100, 2) };
+        var stock = new[] { Stock("vaj", 100, 0), Stock("paprika", 100, 1), Stock("paradicsom", 100, 2) };
 
         var result = Recommender.Recommend([agyas, zoldseges], stock, T);
 

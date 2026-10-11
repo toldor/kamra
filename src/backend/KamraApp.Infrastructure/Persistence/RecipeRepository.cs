@@ -18,6 +18,7 @@ public sealed class RecipeRepository(KamraDbContext db) : IRecipeRepository
         var lines = await (from line in db.RecipeIngredients
                            join ingredient in db.Ingredients on line.IngredientId equals ingredient.Id
                            where recipeIds.Contains(line.RecipeId)
+                                 && (ingredient.HouseholdId == null || ingredient.HouseholdId == householdId)
                            select new { line.RecipeId, line.IngredientId, line.Quantity, line.EnteredUnit, ingredient.Name, ingredient.SeedKey })
             .ToListAsync(cancellationToken);
         var linesByRecipe = lines.ToLookup(l => l.RecipeId);

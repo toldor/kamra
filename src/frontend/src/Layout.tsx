@@ -11,14 +11,14 @@ export function Layout({ me, route, onSignedOut, children }: {
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const firstRoute = useRef(route)
+  const previousRoute = useRef(route)
 
   // After navigating, the focus goes to the new page's heading, so a screen reader announces it
   // (ux_flows a11y). Not on the first page load, where the browser keeps its own focus.
   useEffect(() => {
-    if (route !== firstRoute.current) {
+    if (route !== previousRoute.current) {
       document.querySelector<HTMLElement>('main h1')?.focus()
-      firstRoute.current = route
+      previousRoute.current = route
     }
   }, [route])
 
