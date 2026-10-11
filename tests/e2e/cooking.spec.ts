@@ -28,7 +28,8 @@ async function addItem(page: Page, ingredient: string, amount: string, unit: str
   await form.getByLabel('Mértékegység').selectOption(unit)
   await form.getByLabel('Lejárat (nem kötelező)').fill(inDays(daysToExpiry))
   await form.getByRole('button', { name: 'Hozzáadás' }).click()
-  await expect(page.getByRole('listitem', { name: new RegExp(ingredient) }).first()).toBeVisible()
+  // The form is emptied once the item is saved; a visible row is not enough (two tomato items).
+  await expect(form.getByLabel('Hozzávaló')).toHaveValue('')
 }
 
 // P2: tomatoes in two items, the earlier expiring one is used first.

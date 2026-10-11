@@ -173,7 +173,7 @@ describe('cooking', () => {
     render(<App />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
-    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect((await screen.findByText(/Nem sikerült kapcsolódni a szerverhez/)).getAttribute('role')).toBe('alert')
     fireEvent.click(screen.getByRole('button', { name: 'Főzés megerősítése' }))
 
     expect(await screen.findByText('Elkészült: Lecsó, 4 adag.')).toBeTruthy()
@@ -199,7 +199,8 @@ describe('cooking', () => {
     render(<App />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
-    expect((await screen.findByRole('alert')).textContent).toBe(message)
+    // The layout's own (empty) alert region is always there, so the message is looked up by its text.
+    expect((await screen.findByText(message)).getAttribute('role')).toBe('alert')
     fireEvent.click(screen.getByRole('button', { name: 'Újraszámolás' }))
 
     await waitFor(() => expect(calls.filter((c) => c.key === preview)).toHaveLength(2))
@@ -209,6 +210,6 @@ describe('cooking', () => {
     backend({ [preview]: [{ status: 404, body: { code: 'RECIPE_NOT_FOUND', title: 'Ez a recept nem található.' } }] })
     render(<App />)
 
-    expect((await screen.findByRole('alert')).textContent).toBe('Ez a recept nem található.')
+    expect((await screen.findByText('Ez a recept nem található.')).getAttribute('role')).toBe('alert')
   })
 })
