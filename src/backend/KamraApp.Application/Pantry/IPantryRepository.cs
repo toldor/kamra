@@ -20,6 +20,10 @@ public interface IPantryRepository
     // ADR-0008: the expected version becomes the concurrency check of the next save.
     Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken);
 
+    // US-4: the household's items (Quantity > 0) of these ingredients, tracked, so the cooking's deductions
+    // are saved with the xmin check (ADR-0008).
+    Task<IReadOnlyList<PantryItem>> ListForCookingAsync(Guid householdId, IReadOnlyCollection<Guid> ingredientIds, CancellationToken cancellationToken);
+
     void Add(PantryItem item, StockMovement movement);
 
     void AddMovement(StockMovement movement);

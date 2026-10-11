@@ -1,3 +1,4 @@
+using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Households;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
@@ -23,6 +24,8 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
     public DbSet<Recipe> Recipes => Set<Recipe>();
 
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+
+    public DbSet<Cooking> Cookings => Set<Cooking>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -78,6 +81,7 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             // Append-only log (data_model.md): a pantry item with movements cannot be deleted; a household
             // deletion still removes both through their own household cascades.
             movement.HasOne<PantryItem>().WithMany().HasForeignKey(m => m.PantryItemId).OnDelete(DeleteBehavior.NoAction);
+            movement.HasOne<Cooking>().WithMany().HasForeignKey(m => m.CookingId).OnDelete(DeleteBehavior.NoAction);
         });
 
         // data_model.md, Recipe and RecipeIngredient; the system recipes come from recipes.json (ADR-0005).
@@ -101,6 +105,28 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             line.HasOne<Recipe>().WithMany().HasForeignKey(l => l.RecipeId).OnDelete(DeleteBehavior.Cascade);
             line.HasOne<Ingredient>().WithMany().HasForeignKey(l => l.IngredientId).OnDelete(DeleteBehavior.NoAction);
             line.HasData(SeedData.Recipes.Ingredients);
+        });
+
+        // data_model.md, Cooking and CookingLine; ADR-0008: (HouseholdId, RequestId) is unique, so a repeated
+        // confirmation cannot deduct twice.
+        builder.Entity<Cooking>(cooking =>
+        {
+            cooking.HasKey(c => c.Id);
+            cooking.Property(c => c.Id).ValueGeneratedNever();
+            cooking.ToTable(t => t.HasCheckConstraint("CK_Cookings_Servings_Positive", "\"Servings\" > 0"));
+            cooking.HasOne<Household>().WithMany().HasForeignKey(c => c.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            cooking.HasOne<Recipe>().WithMany().HasForeignKey(c => c.RecipeId).OnDelete(DeleteBehavior.NoAction);
+            cooking.HasIndex(c => new { c.HouseholdId, c.RequestId }).IsUnique();
+            cooking.HasMany(c => c.Lines).WithOne().HasForeignKey(l => l.CookingId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CookingLine>(line =>
+        {
+            line.HasKey(l => new { l.CookingId, l.IngredientId });
+            line.Property(l => l.RequiredQuantity).HasPrecision(12, 3);
+            line.Property(l => l.UsedQuantity).HasPrecision(12, 3);
+            line.ToTable("CookingLines", t => t.HasCheckConstraint("CK_CookingLines_UsedQuantity_NonNegative", "\"UsedQuantity\" >= 0"));
+            line.HasOne<Ingredient>().WithMany().HasForeignKey(l => l.IngredientId).OnDelete(DeleteBehavior.NoAction);
         });
     }
 }

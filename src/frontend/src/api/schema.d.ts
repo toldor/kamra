@@ -220,6 +220,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/recipes/{id}/cooking-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    servings?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CookingPreviewResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["ConfirmCookingRequest"];
+                    "text/json": null | components["schemas"]["ConfirmCookingRequest"];
+                    "application/*+json": null | components["schemas"]["ConfirmCookingRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CookingResponse"];
+                        "application/json": components["schemas"]["CookingResponse"];
+                        "text/json": components["schemas"]["CookingResponse"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CookingResponse"];
+                        "application/json": components["schemas"]["CookingResponse"];
+                        "text/json": components["schemas"]["CookingResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -425,6 +518,72 @@ export interface components {
             /** Format: int32 */
             shelfLifeDays: null | number;
         };
+        ConfirmCookingRequest: {
+            /** Format: uuid */
+            requestId: null | string;
+            /** Format: uuid */
+            recipeId: null | string;
+            /** Format: int32 */
+            servings: null | number;
+            used: null | components["schemas"]["UsedAmount"][];
+        };
+        CookingAllocation: {
+            /** Format: date */
+            expiryDate: string;
+            /** Format: double */
+            amount: number;
+            expired: boolean;
+        };
+        CookingPreviewLine: {
+            /** Format: uuid */
+            ingredientId: string;
+            ingredientName: string;
+            unit: components["schemas"]["Unit"];
+            /** Format: double */
+            required: number;
+            /** Format: double */
+            available: number;
+            /** Format: double */
+            defaultUsed: number;
+            /** Format: double */
+            shortage: number;
+            allocations: components["schemas"]["CookingAllocation"][];
+        };
+        CookingPreviewResponse: {
+            /** Format: uuid */
+            recipeId: string;
+            name: string;
+            /** Format: int32 */
+            servings: number;
+            /** Format: int32 */
+            recipeServings: number;
+            instructions: string;
+            staples: string[];
+            lines: components["schemas"]["CookingPreviewLine"][];
+        };
+        CookingResponse: {
+            /** Format: uuid */
+            cookingId: string;
+            /** Format: uuid */
+            recipeId: string;
+            recipeName: string;
+            /** Format: int32 */
+            servings: number;
+            /** Format: date-time */
+            cookedAt: string;
+            lines: components["schemas"]["CookingResponseLine"][];
+            depletedIngredients: string[];
+        };
+        CookingResponseLine: {
+            ingredientName: string;
+            unit: components["schemas"]["Unit"];
+            /** Format: double */
+            required: number;
+            /** Format: double */
+            used: number;
+            /** Format: double */
+            shortage: number;
+        };
         /** @enum {unknown} */
         Dimension: "mass" | "volume" | "count";
         IngredientResponse: {
@@ -504,6 +663,12 @@ export interface components {
             reason?: null | string;
             /** Format: uint32 */
             version: null | number;
+        };
+        UsedAmount: {
+            /** Format: uuid */
+            ingredientId?: null | string;
+            /** Format: double */
+            amount?: null | number;
         };
     };
     responses: never;

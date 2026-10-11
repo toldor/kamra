@@ -55,6 +55,9 @@ public class RecommendationUseCaseTests
     {
         public Task<IReadOnlyList<RecipeCandidate>> ListCandidatesAsync(Guid householdId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<RecipeCandidate>>(householdId == HouseholdId ? [Rantotta] : []);
+
+        public Task<RecipeDetails?> FindAsync(Guid householdId, Guid recipeId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakePantry(PantryEntry[] stock) : IPantryRepository
@@ -64,6 +67,9 @@ public class RecommendationUseCaseTests
 
         public Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+
+        public Task<IReadOnlyList<PantryItem>> ListForCookingAsync(Guid householdId, IReadOnlyCollection<Guid> ingredientIds,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public void Add(PantryItem item, StockMovement movement) => throw new NotSupportedException();
 

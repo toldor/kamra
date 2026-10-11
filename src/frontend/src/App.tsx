@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, errorMessage, type Me } from './api/client'
 import { AuthForm } from './AuthForm'
+import { CookingPage } from './CookingPage'
 import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
 import { RecommendationsPage } from './RecommendationsPage'
-import { routes, useHashRoute } from './useHashRoute'
+import { cookingRecipeId, routes, useHashRoute, type Route } from './useHashRoute'
 
 // Signed out: the auth screens; signed in: the pages chosen by the hash route (useHashRoute).
 type State =
@@ -20,6 +21,13 @@ async function loadSession(): Promise<State> {
   } catch (caught) {
     return { screen: 'error', message: errorMessage(caught) }
   }
+}
+
+function Page({ route, onSignedOut }: { route: Route; onSignedOut: (notice: string) => void }) {
+  const recipeId = cookingRecipeId(route)
+  // key: another recipe is a new cooking screen with its own state.
+  if (recipeId) return <CookingPage key={recipeId} recipeId={recipeId} onSignedOut={onSignedOut} />
+  return route === routes.recommendations ? <RecommendationsPage onSignedOut={onSignedOut} /> : <PantryPage onSignedOut={onSignedOut} />
 }
 
 export default function App() {
@@ -60,7 +68,7 @@ export default function App() {
     case 'pantry':
       return (
         <Layout me={state.me} route={route} onSignedOut={signOut}>
-          {route === routes.recommendations ? <RecommendationsPage onSignedOut={signOut} /> : <PantryPage onSignedOut={signOut} />}
+          <Page route={route} onSignedOut={signOut} />
         </Layout>
       )
     default:

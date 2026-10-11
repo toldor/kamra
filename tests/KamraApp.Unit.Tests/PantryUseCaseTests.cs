@@ -300,6 +300,9 @@ public class PantryUseCaseTests
                 ? new PantryEntry(item, SourCream.Name)
                 : null);
 
+        public Task<IReadOnlyList<PantryItem>> ListForCookingAsync(Guid householdId, IReadOnlyCollection<Guid> ingredientIds,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public void Add(PantryItem item, StockMovement movement)
         {
             Items.Add(item);

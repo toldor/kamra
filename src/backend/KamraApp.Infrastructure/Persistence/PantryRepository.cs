@@ -51,6 +51,9 @@ public sealed class PantryRepository(KamraDbContext db) : IPantryRepository
         return new PantryEntry(row.Item, row.Name);
     }
 
+    public Task<IReadOnlyList<PantryItem>> ListForCookingAsync(Guid householdId, IReadOnlyCollection<Guid> ingredientIds,
+        CancellationToken cancellationToken) => throw new NotImplementedException("red phase");
+
     public void Add(PantryItem item, StockMovement movement)
     {
         db.PantryItems.Add(item);

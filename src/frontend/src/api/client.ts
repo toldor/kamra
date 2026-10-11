@@ -19,6 +19,10 @@ export type Unit = components['schemas']['Unit']
 export type Recommendation = components['schemas']['RecommendationResponse']
 export type RecommendationsResponse = components['schemas']['RecommendationsResponse']
 export type Shortage = components['schemas']['ShortageResponse']
+export type CookingPreview = components['schemas']['CookingPreviewResponse']
+export type CookingPreviewLine = components['schemas']['CookingPreviewLine']
+export type ConfirmCookingRequest = components['schemas']['ConfirmCookingRequest']
+export type Cooking = components['schemas']['CookingResponse']
 export type PantryFilter = { search: string; category: Category | ''; expiringSoon: boolean }
 
 export const noFilter: PantryFilter = { search: '', category: '', expiringSoon: false }
@@ -149,6 +153,13 @@ export const api = {
     json<PantryItem>(write('PUT', `/pantry-items/${id}`, request)),
 
   recommendations: () => json<RecommendationsResponse>(send('GET', '/recommendations')),
+
+  // Without servings: the recipe's own number of servings.
+  cookingPreview: (recipeId: string, servings?: number) =>
+    json<CookingPreview>(send('GET', `/recipes/${recipeId}/cooking-preview${servings === undefined ? '' : `?servings=${servings}`}`)),
+
+  // US-4 / ADR-0008: the same requestId may be sent again; the backend deducts only once.
+  confirmCooking: (request: ConfirmCookingRequest) => json<Cooking>(write('POST', '/cookings', request)),
 }
 
 // Tests start every case without a cached token.

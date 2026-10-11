@@ -1,4 +1,5 @@
 using KamraApp.Application.Auth;
+using KamraApp.Application.Cookings;
 using KamraApp.Application.Ingredients;
 using KamraApp.Application.Pantry;
 using KamraApp.Application.Recommendations;
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IIngredientRepository, IngredientRepository>();
         services.AddScoped<IPantryRepository, PantryRepository>();
         services.AddScoped<IRecipeRepository, RecipeRepository>();
+        services.AddScoped<ICookingRepository, CookingRepository>();
 
         // ADR-0006: NIST SP 800-63B-4 password length without composition rules; lockout after 5
         // failures for 5 minutes; one account per e-mail (the e-mail is also the user name).

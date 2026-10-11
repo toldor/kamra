@@ -22,6 +22,68 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("KamraApp.Domain.Cookings.Cooking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CookedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Servings")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.HasIndex("HouseholdId", "RequestId")
+                        .IsUnique();
+
+                    b.ToTable("Cookings", t =>
+                        {
+                            t.HasCheckConstraint("CK_Cookings_Servings_Positive", "\"Servings\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Cookings.CookingLine", b =>
+                {
+                    b.Property<Guid>("CookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Depleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("RequiredQuantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<decimal>("UsedQuantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("CookingId", "IngredientId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("CookingLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CookingLines_UsedQuantity_NonNegative", "\"UsedQuantity\" >= 0");
+                        });
+                });
+
             modelBuilder.Entity("KamraApp.Domain.Households.Household", b =>
                 {
                     b.Property<Guid>("Id")
@@ -472,6 +534,9 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CookingId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("Delta")
                         .HasPrecision(12, 3)
                         .HasColumnType("numeric(12,3)");
@@ -493,6 +558,8 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CookingId");
 
                     b.HasIndex("HouseholdId");
 
@@ -945,6 +1012,36 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.Cookings.Cooking", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Recipes.Recipe", null)
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Cookings.CookingLine", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Cookings.Cooking", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("CookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("KamraApp.Domain.Households.Household", b =>
                 {
                     b.HasOne("KamraApp.Infrastructure.Persistence.AppUser", null)
@@ -979,6 +1076,11 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("KamraApp.Domain.Pantry.StockMovement", b =>
                 {
+                    b.HasOne("KamraApp.Domain.Cookings.Cooking", null)
+                        .WithMany()
+                        .HasForeignKey("CookingId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("KamraApp.Domain.Households.Household", null)
                         .WithMany()
                         .HasForeignKey("HouseholdId")
@@ -1040,6 +1142,11 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Cookings.Cooking", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

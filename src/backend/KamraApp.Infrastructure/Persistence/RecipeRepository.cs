@@ -26,4 +26,7 @@ public sealed class RecipeRepository(KamraDbContext db) : IRecipeRepository
         return [.. recipes.Select(r => new RecipeCandidate(r.Id, r.Name, r.Servings,
             [.. linesByRecipe[r.Id].Select(l => new RecipeNeed(l.IngredientId, l.Name, l.Quantity, l.EnteredUnit, Ingredient.IsStapleKey(l.SeedKey)))]))];
     }
+
+    public Task<RecipeDetails?> FindAsync(Guid householdId, Guid recipeId, CancellationToken cancellationToken) =>
+        throw new NotImplementedException("red phase");
 }

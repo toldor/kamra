@@ -4,8 +4,9 @@ namespace KamraApp.Domain.Pantry;
 public sealed class StockMovement
 {
     private StockMovement(Guid id, Guid householdId, Guid pantryItemId, decimal delta, MovementReason reason,
-        DateOnly expiryDateAtMovement, DateTimeOffset occurredAt)
+        DateOnly expiryDateAtMovement, DateTimeOffset occurredAt, Guid? cookingId)
     {
+        CookingId = cookingId;
         Id = id;
         HouseholdId = householdId;
         PantryItemId = pantryItemId;
@@ -31,8 +32,11 @@ public sealed class StockMovement
 
     public DateTimeOffset OccurredAt { get; private set; }
 
-    internal static StockMovement Record(PantryItem item, decimal delta, MovementReason reason, DateTimeOffset now) =>
-        new(Guid.CreateVersion7(), item.HouseholdId, item.Id, delta, reason, item.ExpiryDate, now);
+    // Set when a cooking caused the movement (always Consumed, US-4).
+    public Guid? CookingId { get; private set; }
+
+    internal static StockMovement Record(PantryItem item, decimal delta, MovementReason reason, DateTimeOffset now, Guid? cookingId = null) =>
+        new(Guid.CreateVersion7(), item.HouseholdId, item.Id, delta, reason, item.ExpiryDate, now, cookingId);
 }
 
 // CONTEXT.md, Csökkenési ok: Consumed (elfogyott), Discarded (kidobtam), Corrected (hibás rögzítés).
