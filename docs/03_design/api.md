@@ -39,8 +39,8 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | POST | `/recipes` | Saját recept → 201 | US-3 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
 | POST | `/recipes/{id}/archive` | Saját recept archiválása → 204 | US-3 | `RECIPE_NOT_FOUND`, `FORBIDDEN` (induló recept) | Tervezett |
 | GET | `/recommendations` | Elkészíthető és majdnem elkészíthető receptek indoklással és hiánnyal | US-3 | – | Megvalósítva |
-| GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED` | Tervezett |
-| POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT` | Tervezett |
+| GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED` | Megvalósítva |
+| POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT` | Megvalósítva |
 | GET | `/shopping-list` | Bevásárlólista-tételek | US-5 | – | Tervezett |
 | POST | `/shopping-list/items` | Felvétel; azonos hozzávalónál a mennyiség összeadódik (upsert) | US-3, US-4, US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
 | PUT | `/shopping-list/items/{id}` | Kipipálás, mennyiség módosítása | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Tervezett |
@@ -58,6 +58,13 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 - **Szabályok:** az alaphozzávalók (víz, só, bors) nem számítanak; elkészíthető, ha nincs hiány, majdnem elkészíthető 1–2 hiányzó vagy kevés hozzávalóval. A „felhasznált” tételek az alapértelmezett adagszám FEFO-felosztása (a lejártak elsőként); a lejárt tétel készletnek számít és jelölt, de a rangsoron nem javít.
 - **Rangsor:** elkészíthetők – a felhasznált hamarosan lejáró tételek száma (csökkenő), a nem lejárt felhasznált tételek legkorábbi lejárata, magyar névsor; majdnem elkészíthetők – kevesebb hiány, a felhasznált hamarosan lejárók száma, név.
 - **Üres készletnél** nincs ajánlás (`pantryIsEmpty: true`, üres listák), a ux_flows üres-állapot szövegéhez.
+
+### Főzés (US-4) – a megvalósított szerződés
+
+- **Előnézet** (`GET /recipes/{id}/cooking-preview?servings=`): `servings` 1–100, hiányzó érték esetén a recept adagszáma. Válasz: `{ recipeId, name, servings, recipeServings, instructions, staples, lines: [{ ingredientId, ingredientName, unit, required, available, defaultUsed, shortage, allocations: [{ expiryDate, amount, expired }] }] }`. Minden mennyiség a recept egységében van; `defaultUsed` = min(szükséges, van), az `allocations` ennek FEFO-felosztása (a lejártak elsőként).
+- **Megerősítés** (`POST /cookings`): `{ requestId, recipeId, servings, used: [{ ingredientId, amount }] }` → 201, ismételt kérésre 200 ugyanazzal a törzzsel: `{ cookingId, recipeId, recipeName, servings, cookedAt, lines: [{ ingredientName, unit, required, used, shortage }], depletedIngredients }`. A `used` pontosan a recept nem alaphozzávalóit sorolja fel, a recept egységében; alapegységre váltva legfeljebb 3 tizedes.
+- **Szabályok:** a szükséges mennyiség g-ban és ml-ben egészre kerekedik (a fél felfelé), db-ban mindig felfelé; a levonás FEFO szerint, tételenként `Consumed` mozgással a főzés azonosítójával; 0 felhasználásnál nincs mozgás; a hiány nem könyvelődik; a felhasznált mennyiség a készlet erejéig több lehet a szükségesnél.
+- **Hibák:** `INSUFFICIENT_STOCK` – a friss mennyiségek az `available` kiterjesztésben, levonás nélkül; `IDEMPOTENCY_CONFLICT` – a `requestId`-t eltérő tartalmú főzés használta; `PANTRY_ITEM_MODIFIED` – egy tétel közben megváltozott. Bármely ütközés után a szerver előbb a `requestId`-t keresi: ha közben ugyanez a kérés mentődött, 200-at ad ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)).
 
 ### Készlet (US-1) – a megvalósított szerződés
 
@@ -77,6 +84,8 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 
 ## Ismert hiányosságok
 
+- A 409-es `available` mennyiségeket a felület még nem emeli ki, és az „Újraszámolás” visszaállítja az alapértelmezett értékeket; a teljes eltérés-kiemelés okt. 23-ig készül.
+- Az archivált recept előnézetének és első főzésének tiltása az archiválással együtt készül.
 - Az ajánlás az összes illeszkedő receptet visszaadja, lapozás nélkül; háztartási méretnél (20–40 recept) erre nincs szükség.
 - Egy készlettétel friss adatát (például verzióütközés után) a felület a teljes készletlistából veszi; tételenkénti `GET /pantry-items/{id}` végpont nincs, háztartási méretnél erre nincs szükség.
 

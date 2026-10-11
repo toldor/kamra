@@ -255,3 +255,19 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Mutációs mérés (Claude Code): az 1. kulcsot ideiglenesen kivettük a `Recommender`-ből – a **régi** teszt zöld maradt (igazolva, hogy nem ellenőrizte); a tesztet átírtuk (a versengő recept tétele ma jár le, így a 2. kulcs és a név is őt favorizálja) – az 1. kulcs nélkül az **új** teszt elbukik, vele zöld; a kód visszaállítva.
 - **Eredmény:** **PASS.** A reviewer állítása igaz volt; sem az implementáló, sem az elő-review nem vette észre.
 - **Következtetés:** Egy szabály módosítása után a szomszédos, ugyanazt a rangsort érintő tesztek elkülönítő erejét is újra kell ellenőrizni; a rangsor-kulcsok tesztjei azóta mutációval igazoltak. A független, más modellel végzett review itt valódi hibát talált a tesztekben (ai_manifest, Munkamódszer).
+
+### V-31 – Az üres GUID kérésazonosító átment a validáción (Gemini-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az S5 Gemini-reviewja (Antigravity, Gemini 3.1 Pro) szerint a `ConfirmCookingRequest.RequestId` `[Required]` attribútuma a `Guid?` típuson csak a null-t szűri, az üres GUID-ot (`00000000-0000-0000-0000-000000000000`) nem.
+- **Kockázat:** Közepes. Egy hibás kliens, amely mindig üres azonosítót küld, az első főzés után minden azonos tartalmú főzést csendes ismétlésnek kapna (200 a régi eredménnyel), **levonás nélkül**; eltérő tartalomnál pedig `IDEMPOTENCY_CONFLICT`-ot.
+- **Ellenőrzési módszer:** Teszt (Claude Code): új eset az `Invalid_input_is_rejected_with_a_field_error_and_nothing_is_saved` theoryban (`requestId: Guid.Empty`, [CookingUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/CookingUseCaseTests.cs)) – a javítás előtt piros, az elutasítás (`RequestIdMessage`) után zöld; [CI run 38163897618](https://github.com/toldor/kamra/actions/runs/38163897618).
+- **Eredmény:** **PASS.**
+- **Következtetés:** A `[Required]` egy `Guid?` mezőn csak a hiányt szűri; ahol az azonosító tartalma számít (idempotencia), az üres értéket külön kell elutasítani. A többi végponton az üres azonosító nem létező erőforrásra mutat (404), ott nincs ilyen kockázat.
+
+### V-32 – A kg-os recept alapértelmezett mennyiségét a szerver elutasította (Claude spec-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** Az S5 `/code-review` spec-ügynöke (Claude Code subagent) szerint a `Units.FromBase` nem kerekít, így kg-os receptnél és 12,5 g készletnél az előnézet alapértelmezett felhasznált mennyisége 0,0125 kg; a megerősítés validációja viszont legfeljebb 3 tizedest fogadott el a recept egységében, ezért az alapértelmezett út is 400-zal bukott volna (a seedben a burgonya kg-ban van).
+- **Kockázat:** Közepes. A felhasználó a felkínált értékkel sem tudná rögzíteni a főzést; ha felfelé kerekít, `INSUFFICIENT_STOCK`-ot kap.
+- **Ellenőrzési módszer:** Mutációs mérés (Claude Code): a javítás (a pontosság ellenőrzése alapegységben, a recept betöltése után) mellé két új teszt került – [CookingUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/CookingUseCaseTests.cs) (`The_preview_default_in_kg_from_grams_in_stock_is_accepted_as_it_is`) és [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs) (`The_preview_default_from_finer_stock_than_the_recipe_unit_can_be_confirmed`); a régi validációt ideiglenesen visszaállítva mindkettő piros, a javítással zöld.
+- **Eredmény:** **PASS.**
+- **Következtetés:** A pontossági szabályt a tárolás egységében (alapegység, `numeric(12,3)`, ADR-0002, V-24) kell megfogalmazni, nem a megjelenítés egységében. A kódolás közben ezt sem az implementáló, sem a tesztek nem vették észre; a spec szerinti review a valós adatkombinációt (kg-os recept, grammos készlet) végigkövetve találta meg.

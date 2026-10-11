@@ -98,7 +98,7 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik. Domain-entitás: [Sto
 | PantryItemId | uuid (FK → PantryItem.Id) | Az érintett készlettétel |
 | Delta | numeric(12,3) | Előjeles változás alapegységben (+ bevitel, − csökkenés) |
 | Reason | text | `Added` (bevitel), `Consumed` (*elfogyott*), `Discarded` (*kidobtam*), `Corrected` (*hibás rögzítés*) |
-| CookingId | uuid (FK → Cooking.Id), null | Kitöltve, ha a mozgást főzés okozta (mindig `Consumed`); az oszlop a főzéssel (`AddCookings` migráció) kerül be |
+| CookingId | uuid (FK → Cooking.Id), null | Kitöltve, ha a mozgást főzés okozta (mindig `Consumed`); `NO ACTION`; az `AddCookings` migráció adta hozzá |
 | ExpiryDateAtMovement | date | A készlettétel lejárata a mozgás pillanatában; a metrikák (megmentett főzés, G1) ezzel számolnak, így a lejárat utólagos szerkesztése nem írja át a múltat |
 | OccurredAt | timestamptz | Időpont (UTC) |
 
@@ -139,15 +139,9 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 - Az induló receptkészlet minden hozzávalója az induló hozzávaló-listán van (ADR-0003, integrációs teszt).
 - **Megvalósítás:** az `EnteredUnit` az enum nevével tárolódik; kényszer: `CK_RecipeIngredients_Quantity_Positive`; a recept törlése a sorait is törli, a hozzávaló-hivatkozás `NO ACTION`. Az egység–dimenzió invariánst az entitás maga ellenőrzi ([RecipeTests.cs](../../tests/KamraApp.Unit.Tests/RecipeTests.cs)).
 
-## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
+### Cookings (Főzés)
 
-- Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
-- A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
-- Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
-
-## Tervezett entitások
-
-### Cooking (Főzés)
+Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking.cs).
 
 | Mező | Típus | Leírás |
 |---|---|---|
@@ -158,7 +152,9 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 | RequestId | uuid | A megerősítő képernyő kérésazonosítója; (`HouseholdId`, `RequestId`) egyedi – ez biztosítja, hogy az ismételt kérés ne vonjon le újra ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) |
 | CookedAt | timestamptz | A megerősítés időpontja (UTC) |
 
-### CookingLine (Főzés sora)
+- **Megvalósítás:** kényszer: `CK_Cookings_Servings_Positive`; egyedi index (`HouseholdId`, `RequestId`); a recept-hivatkozás `NO ACTION`, a háztartás törlése a főzéseit is törli. Az adagszám 1–100: a Domain is őrzi, így a skálázott mennyiség a `numeric(12,3)` határain belül marad.
+
+### CookingLines (Főzés sora)
 
 | Mező | Típus | Leírás |
 |---|---|---|
@@ -166,10 +162,20 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 | IngredientId | uuid (PK, FK → Ingredient.Id) | A hozzávaló (alaphozzávaló nem kerül ide) |
 | RequiredQuantity | numeric(12,3) | Szükséges mennyiség: a recept mennyisége az adagszámmal skálázva és kerekítve (US-4) |
 | UsedQuantity | numeric(12,3) | A felhasználó által megerősített, ténylegesen felhasznált mennyiség; 0 ≤ `UsedQuantity` |
+| Depleted | boolean | A főzés fogyasztotta el a hozzávaló utolsó készletét („Elfogyott”); tárolva, hogy az ismételt kérés válasza azonos legyen ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) |
 
 - A hiány = max(0, `RequiredQuantity` − `UsedQuantity`); nem könyvelődik, csak megjelenik, és a bevásárlólistára tehető. A felhasznált mennyiség a szükségesnél több is lehet (a készlet erejéig): ilyenkor nincs hiány.
 - A készlettételenkénti (FEFO) levonás a `StockMovement` `CookingId`-s soraiban van; hozzávalónként ezek összege = `UsedQuantity` (teszt ellenőrzi).
 - A „megmentett főzés” (North Star) a főzés mozgásaiból, a mozgáskori lejárat (`ExpiryDateAtMovement`) alapján számolódik: van-e köztük olyan készlettétel, amely a főzés napján hamarosan lejáró volt ([metrics.md](../01_product/metrics.md)).
+- **Megvalósítás:** kényszer: `CK_CookingLines_UsedQuantity_NonNegative`; a főzés törlése a sorait is törli, a hozzávaló-hivatkozás `NO ACTION`. A hiány nincs tárolva, a két mennyiségből számolódik.
+
+## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
+
+- Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
+- A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
+- Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
+
+## Tervezett entitások
 
 ### Bevásárlólista (vázlat – a US-5 előtt véglegesítve)
 
@@ -213,6 +219,7 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 | `InitialIdentityAndHousehold` | Identity-táblák és `Households` | Megvalósítva |
 | `AddIngredientsAndPantryItems` | `Ingredients` (36 rendszer-hozzávaló), `PantryItems`, `StockMovements` | Megvalósítva |
 | `AddRecipes` | `Recipes` (5 induló recept), `RecipeIngredients` | Megvalósítva |
+| `AddCookings` | `Cookings`, `CookingLines`, `StockMovements.CookingId` | Megvalósítva |
 
 ## Ismert hiányosságok
 

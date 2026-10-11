@@ -18,6 +18,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 
 - A `type` az ASP.NET Core alapértelmezése (a státuszkódhoz tartozó RFC 9110 szakasz); saját hiba-URI nincs.
 - A `correlationId` a szerver által generált kérésazonosító; ugyanez az érték jön az `X-Correlation-Id` válaszfejlécben, és ezzel kereshető a naplóban ([ADR-0011](../02_architecture/adr/0011-serilog-strukturalt-naplozas.md)).
+- Kiterjesztések: `errors` (validáció), `available` (`INSUFFICIENT_STOCK`).
 - A leképezés egy helyen történik: [AppExceptionHandler.cs](../../src/backend/KamraApp.Api/ErrorHandling/AppExceptionHandler.cs). A használati esetek az `AppException` ([AppException.cs](../../src/backend/KamraApp.Application/Common/AppException.cs)) leszármazottait dobják; a kategória határozza meg a státuszt.
 
 ## HTTP státusz kategóriák
@@ -54,9 +55,9 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `INGREDIENT_NAME_TAKEN` | 409 | Saját hozzávaló neve foglalt a háztartásban vagy a rendszerlistán | Tervezett |
 | `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik, 0-ra csökkent, vagy más háztartásé (a válasz a három esetben azonos) | Megvalósítva |
 | `PANTRY_ITEM_MODIFIED` | 409 | A készlettétel a kliens által látott verzió óta megváltozott ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)); a kliens újratölti; elavult verziónál minden más ellenőrzés előtt | Megvalósítva |
-| `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Tervezett |
-| `INSUFFICIENT_STOCK` | 409 | A megerősített felhasznált mennyiség több a jelenlegi készletnél; a válasz a friss mennyiségeket tartalmazza (US-4) | Tervezett |
-| `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú (recept, adagszám vagy mennyiség) főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
+| `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Megvalósítva |
+| `INSUFFICIENT_STOCK` | 409 | A megerősített felhasznált mennyiség több a jelenlegi készletnél; a friss mennyiségek az `available` kiterjesztésben (`[{ ingredientId, ingredientName, amount, unit }]`, US-4) | Megvalósítva |
+| `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú (recept, adagszám vagy mennyiség) főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Megvalósítva |
 | `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik | Tervezett |
 | `SHOPPING_SUGGESTION_NOT_FOUND` | 404 | Bevásárlójavaslat nem létezik | Tervezett |
 | `SHOPPING_SUGGESTION_STATE_CONFLICT` | 409 | Elutasított bevásárlójavaslat elfogadása vagy elfogadott elutasítása ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
