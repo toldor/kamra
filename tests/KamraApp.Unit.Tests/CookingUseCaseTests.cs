@@ -233,6 +233,20 @@ public class CookingUseCaseTests
     }
 
     [Fact]
+    public async Task P1_thirty_dkg_of_flour_is_stored_as_300_g_and_four_servings_of_pancakes_leave_100_g()
+    {
+        var flour = Stock(Liszt, 30, Unit.Dkg, 90);
+        Stock(Tej, 1, Unit.L, 5);
+        Stock(Tojas, 10, Unit.Db, 14);
+        Stock(Etolaj, 1, Unit.L, 90);
+        flour.Quantity.Should().Be(300);
+
+        await ConfirmAsync(Request(servings: 4, liszt: 200, tej: 5, tojas: 2, etolaj: 30));
+
+        flour.Quantity.Should().Be(100);
+    }
+
+    [Fact]
     public async Task The_answer_names_the_ingredients_this_cooking_used_up()
     {
         Stock(Liszt, 300, Unit.G, 90);
