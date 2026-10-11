@@ -271,3 +271,19 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Mutációs mérés (Claude Code): a javítás (a pontosság ellenőrzése alapegységben, a recept betöltése után) mellé két új teszt került – [CookingUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/CookingUseCaseTests.cs) (`The_preview_default_in_kg_from_grams_in_stock_is_accepted_as_it_is`) és [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs) (`The_preview_default_from_finer_stock_than_the_recipe_unit_can_be_confirmed`); a régi validációt ideiglenesen visszaállítva mindkettő piros, a javítással zöld.
 - **Eredmény:** **PASS.**
 - **Következtetés:** A pontossági szabályt a tárolás egységében (alapegység, `numeric(12,3)`, ADR-0002, V-24) kell megfogalmazni, nem a megjelenítés egységében. A kódolás közben ezt sem az implementáló, sem a tesztek nem vették észre; a spec szerinti review a valós adatkombinációt (kg-os recept, grammos készlet) végigkövetve találta meg.
+
+### V-33 – Az adatbázis névsora nem a magyar ábécé (Gemini PR-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** A PR-review (Antigravity, Gemini 3.1 Pro) szerint a hozzávaló- és a készletlista az adatbázisban (`OrderBy(Name)`) a PostgreSQL alapértelmezett kollációjával rendeződik, amelyben „az ékezetes karakterek a Z után” állnak, míg a memóriabeli listák a magyar `Collation.Hungarian` szerint.
+- **Kockázat:** Alacsony. A felhasználó ugyanazokat a neveket különböző képernyőkön eltérő sorrendben látná.
+- **Ellenőrzési módszer:** Mérés (Claude Code) egy friss `postgres:18` konténerben: `SELECT datcollate, datlocprovider FROM pg_database` → `en_US.utf8`, `c` (libc). Ugyanaz a névlista `ORDER BY n`-nel: *„ágy, Alma, ananász, …, olaj, őrölt pirospaprika, ostya, uborka, üdítő, …”*; `COLLATE "hu-x-icu"`-val: *„…, olaj, ostya, őrölt pirospaprika, uborka, üdítő, …”*.
+- **Eredmény:** **Részben PASS.** Az eltérés valós: a magyarban az ö/ő és az ü/ű külön betű, az `en_US` az o és az u változatának tekinti őket. Az indoklás viszont téves: az `en_US.utf8` az ékezetes betűket nem a Z után, hanem az alapbetű mellé rendezi (az „ágy” az „Alma” előtt van).
+- **Következtetés:** A felhasználónak szóló névsort egy helyen, az Application rétegben, a Domain kollációjával rendezzük (`ListIngredients`, `ListPantryItems`); a repositoryk nem rendeznek. Tesztek: [PantryUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/PantryUseCaseTests.cs) (*olaj, ostya, őrölt pirospaprika*), a javítás előtt pirosak; [CI run 38174181800](https://github.com/toldor/kamra/actions/runs/38174181800).
+
+### V-34 – A kis- és nagybetű nem változtat a magyar betűrendi helyen (Gemini PR-review)
+- **Dátum:** 2026-10-11
+- **Állítás:** A PR-review szerint a `Collation.Hungarian` `ignoreCase: false` beállítása miatt a nagy kezdőbetű megváltoztatná a nevek természetes betűrendi helyét, ezért `ignoreCase: true` kellene.
+- **Kockázat:** Alacsony. Ha igaz lenne, a nagybetűs receptnevek a kisbetűsek elé vagy mögé csoportosulnának.
+- **Ellenőrzési módszer:** Mérés (Claude Code, F#-szkript a `StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), false)` összehasonlítóval): a „Paprikás krumpli, lecsó, Bableves, almás pite, Ágyas, Túrós csusza, ostya, őrölt pirospaprika” lista rendezve *„Ágyas, almás pite, Bableves, lecsó, ostya, őrölt pirospaprika, Paprikás krumpli, Túrós csusza”*; `Compare("alma", "Banán")` = −1.
+- **Eredmény:** **FAIL.** A nyelvi összehasonlítás a kis- és nagybetűt csak harmadlagos különbségként, holtversenynél veszi figyelembe; a betűrendi helyet nem változtatja meg.
+- **Következtetés:** Nincs változtatás. A reviewer nyelvi rendezésről szóló állítását is mérni kell, mert a kultúra-alapú összehasonlítás nem bájtsorrend.
