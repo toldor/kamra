@@ -37,19 +37,19 @@ A projekt célja egy olyan mérnökileg ellenőrizhető rendszer megtervezése �
 4. főzés után következetesen frissíti a készletet;
 5. az AI-t csak ellenőrzött, validált és felhasználói jóváhagyással működő folyamatokban használja.
 
-## Jelenlegi állapot – 2026. október 8.
+## Jelenlegi állapot – 2026. október 11.
 
-Elkészült a **walking skeleton**: a teljes rendszer végponttól végpontig fut egy vékony szeleten, üzleti funkció nélkül.
+Elkészült az 1. lépcső első mérföldköve (**v0.2.0**): készletkezelés, „Mit főzzek?” ajánlás és főzés öt saját recepttel.
 
-- regisztráció, bejelentkezés, kijelentkezés (cookie-alapú session ASP.NET Core Identity-vel, antiforgery, fiókzárolás, rate limit);
-- üres készlet-képernyő a React SPA-ban (asztali és 360 px-es mobil nézet);
-- PostgreSQL EF Core migrációkkal, külön migrator-szolgáltatással;
-- egységes hibamodell (RFC 7807 ProblemDetails, magyar üzenetek), strukturált JSON-napló `correlationId`-vel, `/health`;
-- Docker Compose stack, GitHub Actions CI (build, formázás, lint, unit-, integrációs és e2e tesztek, OpenAPI-szerződés, sérülékenység- és secret-szkennelés).
+- készlettételek rögzítése, szerkesztése, csökkentése okkal és törlése; becsült, jelölt lejárat; keresés és szűrők; alapegységű tárolás és készletmozgás-napló;
+- ajánlás: elkészíthető és majdnem elkészíthető receptek, indoklás a hamarosan lejáró hozzávalókkal, hiány „van / kell” bontásban;
+- főzés: adagszám, szükséges és felhasznált mennyiség hozzávalónként, FEFO-levonás (a legkorábban lejárótól), az ismételt vagy egyidejű főzés nem von le kétszer;
+- tíz előre, kézzel kiszámolt ellenőrző példa, mind egyezik ([test report](docs/04_quality/test_report.md));
+- az alapok a walking skeletonból: regisztráció és bejelentkezés, egységes hibamodell, strukturált napló, Docker Compose stack, GitHub Actions CI.
 
-Még **nincs kész**: készletkezelés, receptek és ajánlás, főzés, bevásárlólista, AI-alapú bevitel, chatasszisztens. Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md); a tesztek állapota: [test report](docs/04_quality/test_report.md).
+Még **nincs kész**: bevásárlólista és bevásárlójavaslatok, saját recept, a főzés hibás eseteinek teljes felülete (okt. 23.), AI-alapú bevitel, chatasszisztens. Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-Következő mérföldkő: **okt. 16.** – készletkezelés, valamint ajánlás és főzés 3–5 recepttel. A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+Következő mérföldkő: **okt. 23.** – a készlet–recept–főzés–bevásárlás teljes útja. A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 
@@ -95,7 +95,7 @@ A chat nem módosíthat közvetlenül adatot.
 
 ## Architektúra
 
-Megvalósult (v0.1.0): React-frontend, Web API, Application, Domain, Infrastructure, PostgreSQL. Tervezett: LLM-adapter (2. lépcső) és MCP-szerver (3. lépcső).
+Megvalósult (v0.2.0): React-frontend, Web API, Application, Domain, Infrastructure, PostgreSQL. Tervezett: LLM-adapter (2. lépcső) és MCP-szerver (3. lépcső).
 
 ```text
 React + TypeScript frontend
@@ -207,7 +207,7 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 | Szakasz | Tervezett tartalom | Állapot |
 |---|---|---|
 | Alapok | Repository, CI, architektúra, walking skeleton (autentikáció, Docker Compose) | Kész (2026-10-04) |
-| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Folyamatban (cél: okt. 23.) |
+| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Folyamatban – okt. 16-i mérföldkő kész (v0.2.0), cél: okt. 23. |
 | 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett (cél: nov. 6.) |
 | 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett (cél: nov. 20.) |
 | Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett (cél: dec. 4.) |
