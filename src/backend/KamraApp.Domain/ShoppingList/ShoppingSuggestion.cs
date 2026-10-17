@@ -47,14 +47,39 @@ public sealed class ShoppingSuggestion
     public DateTimeOffset? ClearedAt { get; private set; }
 
     // data_model.md: an open one, or a rejected one not cleared yet, stops a new suggestion for the ingredient.
-    public bool Blocks => throw new NotImplementedException();
+    public bool Blocks => State == SuggestionState.Open || (State == SuggestionState.Rejected && ClearedAt is null);
 
     public static ShoppingSuggestion Create(Guid householdId, Guid ingredientId, SuggestionTrigger trigger, DateTimeOffset now) =>
-        throw new NotImplementedException();
+        new(Guid.CreateVersion7(), householdId, ingredientId, trigger, now);
 
-    public SuggestionTransition Accept(DateTimeOffset now) => throw new NotImplementedException();
+    public SuggestionTransition Accept(DateTimeOffset now) => Resolve(SuggestionState.Accepted, now);
 
-    public SuggestionTransition Reject(DateTimeOffset now) => throw new NotImplementedException();
+    public SuggestionTransition Reject(DateTimeOffset now) => Resolve(SuggestionState.Rejected, now);
 
-    public void Clear(DateTimeOffset now) => throw new NotImplementedException();
+    public void Clear(DateTimeOffset now)
+    {
+        if (State != SuggestionState.Rejected || ClearedAt is not null)
+        {
+            throw new InvalidOperationException("Only a rejected, not yet cleared suggestion can be cleared.");
+        }
+
+        ClearedAt = now;
+    }
+
+    private SuggestionTransition Resolve(SuggestionState target, DateTimeOffset now)
+    {
+        if (State == target)
+        {
+            return SuggestionTransition.Repeated;
+        }
+
+        if (State != SuggestionState.Open)
+        {
+            return SuggestionTransition.Conflict;
+        }
+
+        State = target;
+        ResolvedAt = now;
+        return SuggestionTransition.Changed;
+    }
 }

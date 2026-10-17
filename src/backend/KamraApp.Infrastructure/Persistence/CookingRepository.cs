@@ -29,7 +29,7 @@ public sealed class CookingRepository(KamraDbContext db) : ICookingRepository
     {
         try
         {
-            await db.SaveChangesAsync(cancellationToken);
+            await db.SaveAndCommitAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {

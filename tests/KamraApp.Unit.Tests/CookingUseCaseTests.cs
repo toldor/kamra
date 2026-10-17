@@ -2,6 +2,7 @@ using KamraApp.Application.Common;
 using KamraApp.Application.Cookings;
 using KamraApp.Application.Pantry;
 using KamraApp.Application.Recommendations;
+using KamraApp.Application.ShoppingList;
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
@@ -79,7 +80,8 @@ public class CookingUseCaseTests
         };
 
     private Task<ConfirmCookingResult> ConfirmAsync(ConfirmCookingRequest? request) =>
-        new ConfirmCooking(new FakeRecipes(), _pantry, _cookings, new FixedHousehold(), new FixedTime(Now))
+        new ConfirmCooking(new FakeRecipes(), _pantry, _cookings, new NoIngredientLocks(), new SuggestionEvaluator(new FakeShopping()),
+            new FixedHousehold(), new FixedTime(Now))
             .ExecuteAsync(request, CancellationToken.None);
 
     private Task<CookingPreviewResponse> PreviewAsync(Guid recipeId, int? servings) =>
@@ -424,6 +426,9 @@ public class CookingUseCaseTests
                 && ingredientIds.Contains(i.IngredientId))]);
 
         public Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<decimal> TotalAsync(Guid householdId, Guid ingredientId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public void Add(PantryItem item, StockMovement movement) => throw new NotSupportedException();

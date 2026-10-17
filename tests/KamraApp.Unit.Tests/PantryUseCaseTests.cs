@@ -2,6 +2,7 @@ using System.Globalization;
 using KamraApp.Application.Common;
 using KamraApp.Application.Ingredients;
 using KamraApp.Application.Pantry;
+using KamraApp.Application.ShoppingList;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
@@ -244,7 +245,7 @@ public class PantryUseCaseTests
     {
         var ingredients = new FakeIngredients(Mass("őrölt pirospaprika"), Mass("ostya"), Mass("olaj"));
 
-        var list = await new ListIngredients(ingredients, new FixedHousehold(HouseholdId))
+        var list = await new ListIngredients(ingredients, new FakeShopping(), new FixedHousehold(HouseholdId))
             .ExecuteAsync(new ListIngredientsQuery(), CancellationToken.None);
 
         list.Select(i => i.Name).Should().Equal("olaj", "ostya", "őrölt pirospaprika");
@@ -277,11 +278,13 @@ public class PantryUseCaseTests
     }
 
     private Task<PantryItemResponse> AddAsync(AddPantryItemRequest request, DateTimeOffset? now = null) =>
-        new AddPantryItem(_pantry, new FakeIngredients(SourCream), new FixedHousehold(HouseholdId), new FixedTime(now ?? Now))
+        new AddPantryItem(_pantry, new FakeIngredients(SourCream), new NoIngredientLocks(), new SuggestionEvaluator(new FakeShopping()),
+            new FixedHousehold(HouseholdId), new FixedTime(now ?? Now))
             .ExecuteAsync(request, CancellationToken.None);
 
     private Task<PantryItemResponse> UpdateAsync(Guid id, UpdatePantryItemRequest request, DateTimeOffset? now = null) =>
-        new UpdatePantryItem(_pantry, new FixedHousehold(HouseholdId), new FixedTime(now ?? Now))
+        new UpdatePantryItem(_pantry, new NoIngredientLocks(), new SuggestionEvaluator(new FakeShopping()), new FixedHousehold(HouseholdId),
+            new FixedTime(now ?? Now))
             .ExecuteAsync(id, request, CancellationToken.None);
 
     // 200 g sour cream entered on 2026-10-10 with an estimated expiry.
@@ -341,6 +344,9 @@ public class PantryUseCaseTests
 
         public Task<IReadOnlyList<PantryItem>> ListForCookingAsync(Guid householdId, IReadOnlyCollection<Guid> ingredientIds,
             CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<decimal> TotalAsync(Guid householdId, Guid ingredientId, CancellationToken cancellationToken) =>
+            Task.FromResult(Items.Where(i => i.HouseholdId == householdId && i.IngredientId == ingredientId).Sum(i => i.Quantity));
 
         public void Add(PantryItem item, StockMovement movement)
         {

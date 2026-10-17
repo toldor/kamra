@@ -24,7 +24,18 @@ public sealed class IngredientMinimum
     public Unit EnteredUnit { get; private set; }
 
     public static IngredientMinimum Create(Guid householdId, Ingredient ingredient, decimal amount, Unit unit) =>
-        throw new NotImplementedException();
+        new(householdId, ingredient.Id, ToBase(amount, unit, ingredient.Dimension), unit);
 
-    public void Change(decimal amount, Unit unit) => throw new NotImplementedException();
+    public void Change(decimal amount, Unit unit)
+    {
+        MinimumQuantity = ToBase(amount, unit, Units.DimensionOf(EnteredUnit));
+        EnteredUnit = unit;
+    }
+
+    private static decimal ToBase(decimal amount, Unit unit, Dimension dimension)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(amount);
+        Units.EnsureDimension(unit, dimension);
+        return Units.ToBase(amount, unit);
+    }
 }

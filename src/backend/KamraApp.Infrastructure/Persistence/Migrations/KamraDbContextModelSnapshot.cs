@@ -70,6 +70,9 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .HasPrecision(12, 3)
                         .HasColumnType("numeric(12,3)");
 
+                    b.Property<bool>("Suggested")
+                        .HasColumnType("boolean");
+
                     b.Property<decimal>("UsedQuantity")
                         .HasPrecision(12, 3)
                         .HasColumnType("numeric(12,3)");
@@ -473,6 +476,32 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                             Name = "narancslé",
                             NormalizedName = "narancslé",
                             SeedKey = "narancsle"
+                        });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Ingredients.IngredientMinimum", b =>
+                {
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EnteredUnit")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("MinimumQuantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("HouseholdId", "IngredientId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("IngredientMinimums", t =>
+                        {
+                            t.HasCheckConstraint("CK_IngredientMinimums_MinimumQuantity_Positive", "\"MinimumQuantity\" > 0");
                         });
                 });
 
@@ -883,6 +912,84 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Checked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("EnteredUnit")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("HouseholdId", "IngredientId")
+                        .IsUnique();
+
+                    b.ToTable("ShoppingListItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_ShoppingListItems_Quantity_Positive", "\"Quantity\" IS NULL OR \"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_ShoppingListItems_Quantity_WithUnit", "(\"Quantity\" IS NULL) = (\"EnteredUnit\" IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ClearedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Trigger")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("HouseholdId", "IngredientId")
+                        .IsUnique()
+                        .HasFilter("\"State\" = 'Open' OR (\"State\" = 'Rejected' AND \"ClearedAt\" IS NULL)");
+
+                    b.ToTable("ShoppingSuggestions");
+                });
+
             modelBuilder.Entity("KamraApp.Infrastructure.Persistence.AppUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1059,6 +1166,21 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.Ingredients.IngredientMinimum", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("KamraApp.Domain.Pantry.PantryItem", b =>
                 {
                     b.HasOne("KamraApp.Domain.Households.Household", null)
@@ -1114,6 +1236,36 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("RecipeId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingListItem", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingSuggestion", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 

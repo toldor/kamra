@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using KamraApp.Application.Pantry;
+using QuantityUnit = KamraApp.Domain.Quantities.Unit;
 
 namespace KamraApp.Application.ShoppingList;
 
@@ -57,5 +58,32 @@ public static class ShoppingListInput
     public const string LimitMessage = "Összeadva legfeljebb 100 000 lehet egy tétel mennyisége. Írd át a tétel mennyiségét a listán.";
 
     // Amount 0,001–100 000 with at most 3 decimals and a known unit, or neither.
-    public static IEnumerable<ValidationResult> ValidateAmount(decimal? amount, string? unit) => throw new NotImplementedException();
+    public static IEnumerable<ValidationResult> ValidateAmount(decimal? amount, string? unit)
+    {
+        if (amount is null && unit is null)
+        {
+            yield break;
+        }
+
+        if (amount is not { } value)
+        {
+            yield return new ValidationResult(AmountWithUnitMessage, ["Amount"]);
+        }
+        else if (!PantryInput.IsValidAmount(value, minimum: 0.001m))
+        {
+            yield return new ValidationResult(PantryInput.AmountMessage, ["Amount"]);
+        }
+
+        if (unit is null)
+        {
+            yield return new ValidationResult(AmountWithUnitMessage, ["Unit"]);
+        }
+        else if (!PantryInput.TryParse<QuantityUnit>(unit, out _))
+        {
+            yield return new ValidationResult(PantryInput.UnitMessage, ["Unit"]);
+        }
+    }
+
+    // A validated unit, or null when the request has no amount.
+    public static QuantityUnit? ParseUnit(string? unit) => unit is null ? null : PantryInput.Parse<QuantityUnit>(unit);
 }

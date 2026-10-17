@@ -24,6 +24,9 @@ public interface IPantryRepository
     // are saved with the xmin check (ADR-0008).
     Task<IReadOnlyList<PantryItem>> ListForCookingAsync(Guid householdId, IReadOnlyCollection<Guid> ingredientIds, CancellationToken cancellationToken);
 
+    // US-5: the household's total of the ingredient (every item, base units), as saved.
+    Task<decimal> TotalAsync(Guid householdId, Guid ingredientId, CancellationToken cancellationToken);
+
     void Add(PantryItem item, StockMovement movement);
 
     void AddMovement(StockMovement movement);

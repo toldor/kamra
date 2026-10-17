@@ -315,11 +315,13 @@ public class ShoppingListApiTests(KamraApiFactory factory)
         var foreignReject = await other.PostAsync(RejectPath(suggestion), null);
         var missingAccept = await other.PostAsync($"/api/v1/shopping-suggestions/{missing}/accept", new { });
 
-        WithoutRequestIds(await ApiClient.ProblemAsync(foreignEdit)).Should().Be(WithoutRequestIds(await ApiClient.ProblemAsync(missingEdit)));
-        (await ApiClient.ProblemAsync(foreignEdit)).GetProperty("code").GetString().Should().Be("SHOPPING_LIST_ITEM_NOT_FOUND");
+        var foreignEditProblem = await ApiClient.ProblemAsync(foreignEdit);
+        var foreignAcceptProblem = await ApiClient.ProblemAsync(foreignAccept);
+        WithoutRequestIds(foreignEditProblem).Should().Be(WithoutRequestIds(await ApiClient.ProblemAsync(missingEdit)));
+        foreignEditProblem.GetProperty("code").GetString().Should().Be("SHOPPING_LIST_ITEM_NOT_FOUND");
         foreignDelete.StatusCode.Should().Be(HttpStatusCode.NotFound);
-        WithoutRequestIds(await ApiClient.ProblemAsync(foreignAccept)).Should().Be(WithoutRequestIds(await ApiClient.ProblemAsync(missingAccept)));
-        (await ApiClient.ProblemAsync(foreignAccept)).GetProperty("code").GetString().Should().Be("SHOPPING_SUGGESTION_NOT_FOUND");
+        WithoutRequestIds(foreignAcceptProblem).Should().Be(WithoutRequestIds(await ApiClient.ProblemAsync(missingAccept)));
+        foreignAcceptProblem.GetProperty("code").GetString().Should().Be("SHOPPING_SUGGESTION_NOT_FOUND");
         foreignReject.StatusCode.Should().Be(HttpStatusCode.NotFound);
         (await ListAsync(other)).Should().BeEmpty();
         (await SuggestionsAsync(other)).Should().BeEmpty();

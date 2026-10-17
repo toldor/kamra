@@ -1,6 +1,7 @@
 using KamraApp.Application.Common;
 using KamraApp.Application.Pantry;
 using KamraApp.Application.Recommendations;
+using KamraApp.Application.ShoppingList;
 using KamraApp.Domain;
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Pantry;
@@ -14,7 +15,7 @@ namespace KamraApp.Application.Cookings;
 // FEFO and save in one transaction. After any conflict the request id is looked up first: a concurrent
 // request with the same id may have won, and then this one is a repeat (F3).
 public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository pantry, ICookingRepository cookings,
-    ICurrentHousehold household, TimeProvider time)
+    IIngredientLocks locks, SuggestionEvaluator suggestions, ICurrentHousehold household, TimeProvider time)
 {
     public async Task<ConfirmCookingResult> ExecuteAsync(ConfirmCookingRequest? request, CancellationToken cancellationToken)
     {
@@ -35,9 +36,23 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
 
         try
         {
+            // ADR-0008 6.: the stock is read inside the ingredient lock, so the suggestions see every other change.
+            await locks.LockAsync(householdId, [.. used.Keys], cancellationToken);
             var items = await pantry.ListForCookingAsync(householdId, [.. used.Keys], cancellationToken);
             EnsureStockCovers(recipe, used, items);
-            var (cooking, movements) = Cooking.Create(householdId, recipe, valid.Servings!.Value, requestId, used, items, time.GetUtcNow());
+            var before = items.GroupBy(i => i.IngredientId).ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+            var now = time.GetUtcNow();
+            var (cooking, movements) = Cooking.Create(householdId, recipe, valid.Servings!.Value, requestId, used, items, now);
+            foreach (var (ingredientId, amount) in used.Where(u => u.Value > 0))
+            {
+                var total = before.GetValueOrDefault(ingredientId);
+                if (await suggestions.AfterQuantityChangeAsync(householdId, ingredientId, total, total - amount, MovementReason.Consumed, now,
+                    cancellationToken))
+                {
+                    cooking.MarkSuggested(ingredientId);
+                }
+            }
+
             cookings.Add(cooking, movements);
             await cookings.SaveChangesAsync(cancellationToken);
         }

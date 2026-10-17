@@ -1,4 +1,5 @@
 using KamraApp.Domain.Pantry;
+using KamraApp.Domain.ShoppingList;
 
 namespace KamraApp.Application.ShoppingList;
 
@@ -9,10 +10,50 @@ namespace KamraApp.Application.ShoppingList;
 public sealed class SuggestionEvaluator(IShoppingListRepository shopping)
 {
     // True when a new suggestion was made (M5: the cooking's summary names it).
-    public Task<bool> AfterQuantityChangeAsync(Guid householdId, Guid ingredientId, decimal before, decimal after, MovementReason reason,
-        DateTimeOffset now, CancellationToken cancellationToken) => throw new NotImplementedException($"red phase {shopping}");
+    public async Task<bool> AfterQuantityChangeAsync(Guid householdId, Guid ingredientId, decimal before, decimal after, MovementReason reason,
+        DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var minimum = (await shopping.FindMinimumAsync(householdId, ingredientId, cancellationToken))?.MinimumQuantity;
+        var blocking = await ClearAsync(householdId, ingredientId, after, minimum, now, cancellationToken);
+        return SuggestionRules.OnDecrease(before, after, minimum, reason) is { } trigger
+            && await SuggestAsync(householdId, ingredientId, trigger, blocking, now, cancellationToken);
+    }
 
     // M1, M3: after a minimum was set (or removed, null).
-    public Task AfterMinimumChangeAsync(Guid householdId, Guid ingredientId, decimal total, decimal? minimum, DateTimeOffset now,
-        CancellationToken cancellationToken) => throw new NotImplementedException($"red phase {shopping}");
+    public async Task AfterMinimumChangeAsync(Guid householdId, Guid ingredientId, decimal total, decimal? minimum, DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var blocking = await ClearAsync(householdId, ingredientId, total, minimum, now, cancellationToken);
+        if (minimum is { } limit && SuggestionRules.OnMinimumSet(total, limit) is { } trigger)
+        {
+            await SuggestAsync(householdId, ingredientId, trigger, blocking, now, cancellationToken);
+        }
+    }
+
+    // The blocking suggestion that is left after clearing a rejected one back above its condition.
+    private async Task<ShoppingSuggestion?> ClearAsync(Guid householdId, Guid ingredientId, decimal total, decimal? minimum, DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var blocking = await shopping.FindBlockingSuggestionAsync(householdId, ingredientId, cancellationToken);
+        if (blocking is { State: SuggestionState.Rejected } && SuggestionRules.Clears(blocking.Trigger, total, minimum))
+        {
+            blocking.Clear(now);
+            return null;
+        }
+
+        return blocking;
+    }
+
+    private async Task<bool> SuggestAsync(Guid householdId, Guid ingredientId, SuggestionTrigger trigger, ShoppingSuggestion? blocking,
+        DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        if (blocking is not null
+            || await shopping.FindItemByIngredientAsync(householdId, ingredientId, cancellationToken) is { Checked: false })
+        {
+            return false;
+        }
+
+        shopping.AddSuggestion(ShoppingSuggestion.Create(householdId, ingredientId, trigger, now));
+        return true;
+    }
 }
