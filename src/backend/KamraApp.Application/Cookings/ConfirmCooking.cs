@@ -108,6 +108,7 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
         return new CookingResponse(cooking.Id, cooking.RecipeId, recipe.Name, cooking.Servings, cooking.CookedAt,
             [.. lines.Select(x => new CookingResponseLine(x.Need.IngredientName, x.Need.Unit, Units.FromBase(x.Line.RequiredQuantity, x.Need.Unit),
                 Units.FromBase(x.Line.UsedQuantity, x.Need.Unit), Units.FromBase(x.Line.Shortage, x.Need.Unit)))],
-            [.. lines.Where(x => x.Line.Depleted).Select(x => x.Need.IngredientName)]);
+            [.. lines.Where(x => x.Line.Depleted).Select(x => x.Need.IngredientName)],
+            [.. lines.Where(x => x.Line.Suggested).Select(x => x.Need.IngredientName)]);
     }
 }

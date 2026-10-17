@@ -25,7 +25,8 @@ public sealed record CookingPreviewLine(
 
 public sealed record CookingAllocation(DateOnly ExpiryDate, decimal Amount, bool Expired);
 
-// Built from the stored cooking, so a repeated request gets the same body (ADR-0008).
+// Built from the stored cooking, so a repeated request gets the same body (ADR-0008). SuggestedIngredients: the
+// depleted ones that became shopping suggestions (M5, M15).
 public sealed record CookingResponse(
     Guid CookingId,
     Guid RecipeId,
@@ -33,7 +34,8 @@ public sealed record CookingResponse(
     int Servings,
     DateTimeOffset CookedAt,
     IReadOnlyList<CookingResponseLine> Lines,
-    IReadOnlyList<string> DepletedIngredients);
+    IReadOnlyList<string> DepletedIngredients,
+    IReadOnlyList<string> SuggestedIngredients);
 
 public sealed record CookingResponseLine(string IngredientName, Unit Unit, decimal Required, decimal Used, decimal Shortage);
 

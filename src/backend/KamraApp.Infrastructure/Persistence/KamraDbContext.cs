@@ -127,6 +127,8 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             line.Property(l => l.UsedQuantity).HasPrecision(12, 3);
             line.ToTable("CookingLines", t => t.HasCheckConstraint("CK_CookingLines_UsedQuantity_NonNegative", "\"UsedQuantity\" >= 0"));
             line.HasOne<Ingredient>().WithMany().HasForeignKey(l => l.IngredientId).OnDelete(DeleteBehavior.NoAction);
+            // T1 red phase (D7): mapped together with the AddShoppingList migration.
+            line.Ignore(l => l.Suggested);
         });
     }
 }
