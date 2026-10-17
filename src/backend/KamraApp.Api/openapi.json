@@ -256,15 +256,8 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShoppingListItemResponse"
-                }
-              }
-            }
+          "204": {
+            "description": "No Content"
           }
         }
       }
@@ -1577,6 +1570,7 @@
           "dimension",
           "trigger",
           "createdAt",
+          "recipeName",
           "currentAmount",
           "minimumAmount",
           "suggestedAmount"
@@ -1603,6 +1597,12 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "recipeName": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "currentAmount": {
             "oneOf": [

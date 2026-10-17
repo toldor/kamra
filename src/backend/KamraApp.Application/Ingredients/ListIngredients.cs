@@ -7,7 +7,7 @@ using KamraApp.Domain.Quantities;
 
 namespace KamraApp.Application.Ingredients;
 
-// D4: Minimum is the household's minimum for the ingredient (CONTEXT.md, Minimumszint), or null.
+// Minimum is the household's minimum for the ingredient (CONTEXT.md, Minimumszint), or null.
 public sealed record IngredientResponse(Guid Id, string Name, Dimension Dimension, Category DefaultCategory, AmountResponse? Minimum);
 
 public sealed class ListIngredients(IIngredientRepository ingredients, IShoppingListRepository shopping, ICurrentHousehold household)

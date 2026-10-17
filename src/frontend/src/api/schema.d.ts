@@ -203,14 +203,12 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description OK */
-                200: {
+                /** @description No Content */
+                204: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": components["schemas"]["ShoppingListItemResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -976,6 +974,7 @@ export interface components {
             trigger: components["schemas"]["SuggestionTrigger"];
             /** Format: date-time */
             createdAt: string;
+            recipeName: null | string;
             currentAmount: null | components["schemas"]["AmountResponse"];
             minimumAmount: null | components["schemas"]["AmountResponse"];
             suggestedAmount: null | components["schemas"]["AmountResponse"];

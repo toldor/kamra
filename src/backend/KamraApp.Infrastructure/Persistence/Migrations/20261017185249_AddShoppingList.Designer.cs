@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KamraApp.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(KamraDbContext))]
-    [Migration("20261017182026_AddShoppingList")]
+    [Migration("20261017185249_AddShoppingList")]
     partial class AddShoppingList
     {
         /// <inheritdoc />
@@ -962,6 +962,9 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ClearedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("CookingId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -983,6 +986,8 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CookingId");
 
                     b.HasIndex("IngredientId");
 
@@ -1259,6 +1264,11 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingSuggestion", b =>
                 {
+                    b.HasOne("KamraApp.Domain.Cookings.Cooking", null)
+                        .WithMany()
+                        .HasForeignKey("CookingId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("KamraApp.Domain.Households.Household", null)
                         .WithMany()
                         .HasForeignKey("HouseholdId")

@@ -47,7 +47,7 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
             {
                 var total = before.GetValueOrDefault(ingredientId);
                 if (await suggestions.AfterQuantityChangeAsync(householdId, ingredientId, total, total - amount, MovementReason.Consumed, now,
-                    cancellationToken))
+                    cancellationToken, cooking.Id))
                 {
                     cooking.MarkSuggested(ingredientId);
                 }

@@ -84,13 +84,19 @@ public class ShoppingListApiTests(KamraApiFactory factory)
         Strings(cooking, "depletedIngredients").Should().Equal("paprika", "paradicsom");
         Strings(cooking, "suggestedIngredients").Should().Equal("paprika");     // M15: the tomato is already on the list
         (await PantryAsync(client)).Should().BeEquivalentTo([("vöröshagyma", 150m), ("étolaj", 970m)]);
+        (await QuantitiesMatchTheLogAsync(client)).Should().BeTrue();
+        // ADR-0008 6.: the suggestion was written by the cooking's own transaction (same xmin as the cooking row).
+        var transactionIds = await TransactionIdsAsync(cooking.GetProperty("cookingId").GetGuid());
+        transactionIds.Should().HaveCount(2);
+        transactionIds.Distinct().Should().ContainSingle();
         var suggestion = (await SuggestionsAsync(client)).Should().ContainSingle().Subject;
-        (suggestion.GetProperty("ingredientName").GetString(), suggestion.GetProperty("trigger").GetString()).Should().Be(("paprika", "depleted"));
+        (suggestion.GetProperty("ingredientName").GetString(), suggestion.GetProperty("trigger").GetString(),
+            suggestion.GetProperty("recipeName").GetString()).Should().Be(("paprika", "depleted", "Lecsó"));
 
-        (await client.PostAsync(AcceptPath(suggestion), new { amount = 500, unit = "g" })).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.PostAsync(AcceptPath(suggestion), new { amount = 500, unit = "g" })).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var tomatoRow = (await client.GetJsonAsync("/api/v1/shopping-list")).EnumerateArray()
             .Single(r => r.GetProperty("ingredientName").GetString() == "paradicsom");
-        (await client.PutAsync(RowPath(tomatoRow), new { @checked = true, amount = 100, unit = "g" })).EnsureSuccessStatusCode();
+        (await client.PutAsync(RowPath(tomatoRow), new { @checked = true })).EnsureSuccessStatusCode(); // the amount stays
 
         (await ListAsync(client)).Should().Equal(("paprika", 500m, "g", false), ("paradicsom", 100m, "g", true));
         (await SuggestionsAsync(client)).Should().BeEmpty();
@@ -141,7 +147,7 @@ public class ShoppingListApiTests(KamraApiFactory factory)
         var suggestion = (await SuggestionsAsync(client)).Should().ContainSingle().Subject;
 
         var accepted = await client.PostAsync(AcceptPath(suggestion), new { });
-        accepted.StatusCode.Should().Be(HttpStatusCode.OK);
+        accepted.StatusCode.Should().Be(HttpStatusCode.NoContent);
         (await ListAsync(client)).Should().Equal(("tejföl", (decimal?)null, (string?)null, false));
         (await AddToListAsync(client, "tejföl", 200, "g")).EnsureSuccessStatusCode();
 
@@ -235,6 +241,7 @@ public class ShoppingListApiTests(KamraApiFactory factory)
 
             responses.Select(r => r.StatusCode).Should().AllBeEquivalentTo(HttpStatusCode.OK);
             (await PantryAsync(client)).Should().BeEmpty();
+            (await QuantitiesMatchTheLogAsync(client)).Should().BeTrue();
             (await SuggestionsAsync(client)).Should().ContainSingle($"run {run}: one suggestion, never none or two (ADR-0008 6.)");
         }
     }
@@ -251,18 +258,22 @@ public class ShoppingListApiTests(KamraApiFactory factory)
     }
 
     [Fact]
-    public async Task Accepting_twice_gives_the_same_row_and_rejecting_afterwards_is_a_conflict()
+    public async Task Accepting_twice_adds_once_even_after_the_row_is_gone_and_rejecting_afterwards_is_a_conflict()
     {
         var client = await ApiClient.SignedInAsync(factory);
         var suggestion = await DepletedSuggestionAsync(client);
 
         var first = await client.PostAsync(AcceptPath(suggestion), new { amount = 200, unit = "g" });
         var second = await client.PostAsync(AcceptPath(suggestion), new { amount = 200, unit = "g" });
+        (await ListAsync(client)).Should().Equal(("tejföl", 200m, "g", false)); // the repeat did not add again
+        var row = (await client.GetJsonAsync("/api/v1/shopping-list")).EnumerateArray().Single();
+        (await client.Http.DeleteAsync(RowPath(row), TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var afterDelete = await client.PostAsync(AcceptPath(suggestion), new { amount = 200, unit = "g" });
         var reject = await client.PostAsync(RejectPath(suggestion), null);
 
-        (first.StatusCode, second.StatusCode).Should().Be((HttpStatusCode.OK, HttpStatusCode.OK));
-        (await RawAsync(second)).Should().Be(await RawAsync(first));
-        (await ListAsync(client)).Should().Equal(("tejföl", 200m, "g", false)); // the repeat did not add again
+        (first.StatusCode, second.StatusCode, afterDelete.StatusCode).Should()
+            .Be((HttpStatusCode.NoContent, HttpStatusCode.NoContent, HttpStatusCode.NoContent));
+        (await ListAsync(client)).Should().BeEmpty();
         reject.StatusCode.Should().Be(HttpStatusCode.Conflict);
         (await ApiClient.ProblemAsync(reject)).GetProperty("code").GetString().Should().Be("SHOPPING_SUGGESTION_STATE_CONFLICT");
     }
@@ -427,6 +438,26 @@ public class ShoppingListApiTests(KamraApiFactory factory)
         (await ListAsync(client)).Should().BeEmpty();
         (await SuggestionsAsync(client)).Should().ContainSingle();
         (await client.Http.DeleteAsync(RowPath(row), TestContext.Current.CancellationToken)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // CAP-08 invariant for the client's household: every item's quantity is the sum of its movements, never negative.
+    private async Task<bool> QuantitiesMatchTheLogAsync(ApiClient client)
+    {
+        var householdId = (await client.GetJsonAsync("/api/v1/auth/me")).GetProperty("householdId").GetGuid();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<KamraDbContext>();
+        return !await db.PantryItems.AnyAsync(i => i.HouseholdId == householdId && (i.Quantity < 0
+            || db.StockMovements.Where(m => m.PantryItemId == i.Id).Sum(m => m.Delta) != i.Quantity), TestContext.Current.CancellationToken);
+    }
+
+    // The PostgreSQL transaction ids (xmin) that wrote the cooking row and the suggestions the cooking made.
+    private async Task<List<string>> TransactionIdsAsync(Guid cookingId)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<KamraDbContext>();
+        return await db.Database.SqlQuery<string>(
+                $"""SELECT xmin::text AS "Value" FROM "Cookings" WHERE "Id" = {cookingId} UNION ALL SELECT xmin::text FROM "ShoppingSuggestions" WHERE "CookingId" = {cookingId}""")
+            .ToListAsync(TestContext.Current.CancellationToken);
     }
 
     private static string RowPath(JsonElement row) => $"/api/v1/shopping-list/items/{row.GetProperty("id").GetGuid()}";

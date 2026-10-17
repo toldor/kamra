@@ -146,14 +146,16 @@ public class ShoppingListCommandTests
     {
         _shopping.Minimum = IngredientMinimum.Create(HouseholdId, Tej, 5, Unit.Dl);
         _shopping.Totals[Tej.Id] = 400;
-        _shopping.Suggestions.Add(ShoppingSuggestion.Create(HouseholdId, Tejfol.Id, SuggestionTrigger.Depleted, Now.AddMinutes(1)));
+        var cookingId = Guid.CreateVersion7();
+        _shopping.CookingRecipes[cookingId] = "Túrós csusza";
+        _shopping.Suggestions.Add(ShoppingSuggestion.Create(HouseholdId, Tejfol.Id, SuggestionTrigger.Depleted, Now.AddMinutes(1), cookingId));
         _shopping.Suggestions.Add(ShoppingSuggestion.Create(HouseholdId, Tej.Id, SuggestionTrigger.BelowMinimum, Now));
 
         var suggestions = await new ListShoppingSuggestions(_shopping, new FixedHousehold(HouseholdId)).ExecuteAsync(CancellationToken.None);
 
-        suggestions.Select(s => (s.IngredientName, s.Trigger, s.CurrentAmount, s.MinimumAmount, s.SuggestedAmount)).Should().Equal(
-            ("tej", SuggestionTrigger.BelowMinimum, new AmountResponse(4, Unit.Dl), new AmountResponse(5, Unit.Dl), new AmountResponse(1, Unit.Dl)),
-            ("tejföl", SuggestionTrigger.Depleted, null, null, null));
+        suggestions.Select(s => (s.IngredientName, s.Trigger, s.RecipeName, s.CurrentAmount, s.MinimumAmount, s.SuggestedAmount)).Should().Equal(
+            ("tej", SuggestionTrigger.BelowMinimum, null, new AmountResponse(4, Unit.Dl), new AmountResponse(5, Unit.Dl), new AmountResponse(1, Unit.Dl)),
+            ("tejföl", SuggestionTrigger.Depleted, "Túrós csusza", null, null, null));
     }
 
     [Fact]
@@ -161,9 +163,9 @@ public class ShoppingListCommandTests
     {
         var suggestion = Suggest(Tej);
 
-        var row = await AcceptAsync(suggestion, 500, "ml");
+        await AcceptAsync(suggestion, 500, "ml");
 
-        (row.IngredientName, row.Amount).Should().Be(("tej", new AmountResponse(500, Unit.Ml)));
+        Row(Tej).Should().Be(new AmountResponse(500, Unit.Ml));
         suggestion.State.Should().Be(SuggestionState.Accepted);
         _locks.Locked.Should().Equal(Tej.Id);
         _shopping.Saves.Should().Be(1);
@@ -174,21 +176,21 @@ public class ShoppingListCommandTests
     {
         await AddAsync(Tej, 1, "l");
 
-        var row = await AcceptAsync(Suggest(Tej), 500, "ml");
+        await AcceptAsync(Suggest(Tej), 500, "ml");
 
-        row.Amount.Should().Be(new AmountResponse(1500, Unit.Ml));
+        Row(Tej).Should().Be(new AmountResponse(1500, Unit.Ml));
     }
 
     [Fact]
-    public async Task Accepting_again_returns_the_row_without_adding_or_saving()
+    public async Task Accepting_again_adds_nothing_and_only_ends_the_transaction()
     {
         var suggestion = Suggest(Tej);
-        var first = await AcceptAsync(suggestion, 500, "ml");
+        await AcceptAsync(suggestion, 500, "ml");
 
-        var second = await AcceptAsync(suggestion, 500, "ml");
+        await AcceptAsync(suggestion, 500, "ml");
 
-        second.Should().Be(first);
-        _shopping.Saves.Should().Be(1);
+        Row(Tej).Should().Be(new AmountResponse(500, Unit.Ml));
+        (suggestion.State, _shopping.Saves).Should().Be((SuggestionState.Accepted, 2));
     }
 
     [Fact]
@@ -219,7 +221,7 @@ public class ShoppingListCommandTests
     }
 
     [Fact]
-    public async Task Rejecting_saves_once_and_rejecting_an_accepted_one_is_a_conflict()
+    public async Task Rejecting_twice_keeps_it_rejected_and_rejecting_an_accepted_one_is_a_conflict()
     {
         var reject = new RejectShoppingSuggestion(_shopping, _locks, new FixedHousehold(HouseholdId), new FixedTime(Now));
         var rejected = Suggest(Tej);
@@ -229,7 +231,7 @@ public class ShoppingListCommandTests
         await reject.ExecuteAsync(rejected.Id, CancellationToken.None);
         await reject.ExecuteAsync(rejected.Id, CancellationToken.None);
 
-        (rejected.State, _shopping.Saves).Should().Be((SuggestionState.Rejected, 1));
+        (rejected.State, rejected.ResolvedAt, _shopping.Saves).Should().Be((SuggestionState.Rejected, (DateTimeOffset?)Now, 2));
         (await FluentActions.Awaiting(() => reject.ExecuteAsync(accepted.Id, CancellationToken.None)).Should().ThrowAsync<ConflictException>())
             .Which.Code.Should().Be("SHOPPING_SUGGESTION_STATE_CONFLICT");
         (await FluentActions.Awaiting(() => reject.ExecuteAsync(Guid.CreateVersion7(), CancellationToken.None)).Should().ThrowAsync<NotFoundException>())
@@ -305,7 +307,13 @@ public class ShoppingListCommandTests
     private Task<ShoppingListItemResponse> AddAsync(Ingredient ingredient, decimal? amount, string? unit) =>
         Add().ExecuteAsync(new AddShoppingListItemRequest { IngredientId = ingredient.Id, Amount = amount, Unit = unit }, CancellationToken.None);
 
-    private Task<ShoppingListItemResponse> AcceptAsync(ShoppingSuggestion suggestion, decimal? amount, string? unit) =>
+    private AmountResponse? Row(Ingredient ingredient)
+    {
+        var item = _shopping.Items.Should().ContainSingle(i => i.IngredientId == ingredient.Id).Which;
+        return AmountResponse.Of(item.Quantity, item.EnteredUnit);
+    }
+
+    private Task AcceptAsync(ShoppingSuggestion suggestion, decimal? amount, string? unit) =>
         Accept().ExecuteAsync(suggestion.Id, new AcceptShoppingSuggestionRequest { Amount = amount, Unit = unit }, CancellationToken.None);
 
     private Task SetMinimumAsync(Ingredient ingredient, decimal? amount, string? unit) =>

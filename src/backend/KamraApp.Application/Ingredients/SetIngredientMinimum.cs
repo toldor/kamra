@@ -6,7 +6,8 @@ using KamraApp.Domain.Ingredients;
 namespace KamraApp.Application.Ingredients;
 
 // US-5, CONTEXT.md Minimumszint: set (or remove, both fields empty) the household's minimum for an ingredient it
-// can see. Setting it above the current total suggests at once (M1); removing it clears a rejected one (M3).
+// can see. Setting it above the current total suggests at once; removing it clears a rejected suggestion
+// (scope_contract.md US-5, data_model.md ShoppingSuggestions).
 public sealed class SetIngredientMinimum(IIngredientRepository ingredients, IShoppingListRepository shopping, IPantryRepository pantry,
     IIngredientLocks locks, SuggestionEvaluator suggestions, ICurrentHousehold household, TimeProvider time)
 {
@@ -15,11 +16,7 @@ public sealed class SetIngredientMinimum(IIngredientRepository ingredients, ISho
         var valid = RequestValidator.Validate(request);
         var householdId = household.HouseholdId;
         var ingredient = await ingredients.FindVisibleAsync(householdId, ingredientId, cancellationToken) ?? throw PantryErrors.IngredientNotFound();
-        var unit = ShoppingListInput.ParseUnit(valid.Unit);
-        if (unit is { } given)
-        {
-            PantryInput.EnsureUnitFits(given, ingredient.Dimension, ingredient.Name);
-        }
+        var unit = ShoppingListInput.UnitFor(ingredient, valid.Unit);
 
         await locks.LockAsync(householdId, [ingredient.Id], cancellationToken);
         var minimum = await shopping.FindMinimumAsync(householdId, ingredient.Id, cancellationToken);

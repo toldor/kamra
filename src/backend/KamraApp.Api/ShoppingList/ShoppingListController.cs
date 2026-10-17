@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KamraApp.Api.ShoppingList;
 
-// US-5. Thin controller: validation, household scoping, merging and locking live in the use cases (D5).
+// US-5. Thin controller: validation, household scoping, merging and locking live in the use cases.
 [ApiController]
 [Route("api/v1/shopping-list")]
 public sealed class ShoppingListController : ControllerBase

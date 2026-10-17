@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KamraApp.Infrastructure.Persistence;
 
-// ADR-0008 6. / D6: opens the transaction of the shared DbContext and takes a transaction-scoped advisory lock
-// per (household, ingredient), in id order against deadlocks; the next save commits it (UnitOfWork). The key is
+// ADR-0008 6.: opens the transaction of the shared DbContext and takes a transaction-scoped advisory lock per
+// (household, ingredient), in id order against deadlocks; the next save commits it (TransactionalSave). The key is
 // a 64-bit hash of the pair: a collision only makes two ingredients wait for each other.
 public sealed class IngredientLocks(KamraDbContext db) : IIngredientLocks
 {

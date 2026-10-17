@@ -5,7 +5,7 @@ namespace KamraApp.Domain.ShoppingList;
 // CONTEXT.md, Bevásárlólista-tétel: one row per ingredient, the amount optional (data_model.md).
 public sealed class ShoppingListItem
 {
-    // M7: the merged amount, in the row's unit, stays within the input limit.
+    // The merged amount, in the row's unit, stays within the input limit (data_model.md).
     public const decimal MaxAmount = 100_000m;
 
     private ShoppingListItem(Guid id, Guid householdId, Guid ingredientId, decimal? quantity, Unit? enteredUnit, DateTimeOffset addedAt)
@@ -29,7 +29,7 @@ public sealed class ShoppingListItem
 
     public Unit? EnteredUnit { get; private set; }
 
-    // Bought (M2).
+    // Bought: a new amount starts the row again (data_model.md).
     public bool Checked { get; private set; }
 
     public DateTimeOffset AddedAt { get; private set; }
@@ -41,9 +41,9 @@ public sealed class ShoppingListItem
     public static ShoppingListItem Create(Guid householdId, Guid ingredientId, decimal? amount, Unit? unit, DateTimeOffset now) =>
         new(Guid.CreateVersion7(), householdId, ingredientId, ToBase(amount, unit), unit, now);
 
-    // M2, D3, V-22: an unchecked row adds up (null keeps the known amount, different units meet in the smaller
+    // data_model.md, V-22: an unchecked row adds up (null keeps the known amount, different units meet in the smaller
     // one); a checked row starts again with the new amount, unchecked. False, and nothing changes, when the
-    // result would exceed MaxAmount (M7).
+    // result would exceed MaxAmount.
     public bool TryAdd(decimal? amount, Unit? unit)
     {
         var added = ToBase(amount, unit);
@@ -74,10 +74,15 @@ public sealed class ShoppingListItem
         return true;
     }
 
+    // Without an amount only the check changes; the row keeps its amount (api.md).
     public void Update(bool isChecked, decimal? amount, Unit? unit)
     {
-        Quantity = ToBase(amount, unit);
-        EnteredUnit = unit;
+        if (amount is not null || unit is not null)
+        {
+            Quantity = ToBase(amount, unit);
+            EnteredUnit = unit;
+        }
+
         Checked = isChecked;
     }
 

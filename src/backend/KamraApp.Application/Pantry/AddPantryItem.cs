@@ -7,7 +7,7 @@ using KamraApp.Domain.Quantities;
 namespace KamraApp.Application.Pantry;
 
 // US-1: a new pantry item with an Added movement; a missing expiry date is estimated from the category. US-5: the
-// purchase may clear a rejected shopping suggestion (M3), inside the ingredient lock (ADR-0008 6.).
+// purchase may clear a rejected shopping suggestion (data_model.md, ShoppingSuggestions), inside the ingredient lock (ADR-0008 6.).
 public sealed class AddPantryItem(IPantryRepository pantry, IIngredientRepository ingredients, IIngredientLocks locks,
     SuggestionEvaluator suggestions, ICurrentHousehold household, TimeProvider time)
 {

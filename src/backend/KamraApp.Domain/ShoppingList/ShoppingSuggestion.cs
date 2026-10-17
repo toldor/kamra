@@ -18,8 +18,9 @@ public enum SuggestionTransition
 // CONTEXT.md, Bevásárlójavaslat: offered by the system, on the list only after the user accepts it.
 public sealed class ShoppingSuggestion
 {
-    private ShoppingSuggestion(Guid id, Guid householdId, Guid ingredientId, SuggestionTrigger trigger, DateTimeOffset createdAt)
+    private ShoppingSuggestion(Guid id, Guid householdId, Guid ingredientId, SuggestionTrigger trigger, DateTimeOffset createdAt, Guid? cookingId)
     {
+        CookingId = cookingId;
         Id = id;
         HouseholdId = householdId;
         IngredientId = ingredientId;
@@ -40,17 +41,21 @@ public sealed class ShoppingSuggestion
 
     public DateTimeOffset CreatedAt { get; private set; }
 
+    // The cooking that used the ingredient up, so the reason can name the recipe (scope_contract.md US-5).
+    public Guid? CookingId { get; private set; }
+
     // Accepted or rejected.
     public DateTimeOffset? ResolvedAt { get; private set; }
 
-    // A rejected suggestion whose ingredient got back above the condition (M3).
+    // A rejected suggestion whose ingredient got back above the condition (scope_contract.md US-5).
     public DateTimeOffset? ClearedAt { get; private set; }
 
     // data_model.md: an open one, or a rejected one not cleared yet, stops a new suggestion for the ingredient.
     public bool Blocks => State == SuggestionState.Open || (State == SuggestionState.Rejected && ClearedAt is null);
 
-    public static ShoppingSuggestion Create(Guid householdId, Guid ingredientId, SuggestionTrigger trigger, DateTimeOffset now) =>
-        new(Guid.CreateVersion7(), householdId, ingredientId, trigger, now);
+    public static ShoppingSuggestion Create(Guid householdId, Guid ingredientId, SuggestionTrigger trigger, DateTimeOffset now,
+        Guid? cookingId = null) =>
+        new(Guid.CreateVersion7(), householdId, ingredientId, trigger, now, cookingId);
 
     public SuggestionTransition Accept(DateTimeOffset now) => Resolve(SuggestionState.Accepted, now);
 

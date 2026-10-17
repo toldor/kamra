@@ -26,7 +26,7 @@ public sealed record CookingPreviewLine(
 public sealed record CookingAllocation(DateOnly ExpiryDate, decimal Amount, bool Expired);
 
 // Built from the stored cooking, so a repeated request gets the same body (ADR-0008). SuggestedIngredients: the
-// depleted ones that became shopping suggestions (M5, M15).
+// depleted ones that became shopping suggestions; one already on the list unchecked is not (scope_contract.md US-4).
 public sealed record CookingResponse(
     Guid CookingId,
     Guid RecipeId,

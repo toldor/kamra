@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using KamraApp.Application.Pantry;
+using KamraApp.Domain.Ingredients;
 using QuantityUnit = KamraApp.Domain.Quantities.Unit;
 
 namespace KamraApp.Application.ShoppingList;
@@ -18,7 +19,7 @@ public sealed class AddShoppingListItemRequest : IValidatableObject
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) => ShoppingListInput.ValidateAmount(Amount, Unit);
 }
 
-// D5: check or uncheck a row, and set its amount (both empty: no amount).
+// Check or uncheck a row; a given amount replaces the row's, a missing one keeps it (api.md).
 public sealed class UpdateShoppingListItemRequest : IValidatableObject
 {
     [Required(ErrorMessage = ShoppingListInput.CheckedMessage)]
@@ -31,18 +32,8 @@ public sealed class UpdateShoppingListItemRequest : IValidatableObject
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) => ShoppingListInput.ValidateAmount(Amount, Unit);
 }
 
-// M13: the amount to buy; empty puts the row on the list without an amount.
+// The amount to buy; empty puts the row on the list without an amount (scope_contract.md US-5).
 public sealed class AcceptShoppingSuggestionRequest : IValidatableObject
-{
-    public decimal? Amount { get; init; }
-
-    public string? Unit { get; init; }
-
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) => ShoppingListInput.ValidateAmount(Amount, Unit);
-}
-
-// Both empty: the minimum is removed.
-public sealed class SetIngredientMinimumRequest : IValidatableObject
 {
     public decimal? Amount { get; init; }
 
@@ -67,23 +58,33 @@ public static class ShoppingListInput
 
         if (amount is not { } value)
         {
-            yield return new ValidationResult(AmountWithUnitMessage, ["Amount"]);
+            yield return new ValidationResult(AmountWithUnitMessage, [nameof(AddShoppingListItemRequest.Amount)]);
         }
         else if (!PantryInput.IsValidAmount(value, minimum: 0.001m))
         {
-            yield return new ValidationResult(PantryInput.AmountMessage, ["Amount"]);
+            yield return new ValidationResult(PantryInput.AmountMessage, [nameof(AddShoppingListItemRequest.Amount)]);
         }
 
         if (unit is null)
         {
-            yield return new ValidationResult(AmountWithUnitMessage, ["Unit"]);
+            yield return new ValidationResult(AmountWithUnitMessage, [nameof(AddShoppingListItemRequest.Unit)]);
         }
         else if (!PantryInput.TryParse<QuantityUnit>(unit, out _))
         {
-            yield return new ValidationResult(PantryInput.UnitMessage, ["Unit"]);
+            yield return new ValidationResult(PantryInput.UnitMessage, [nameof(AddShoppingListItemRequest.Unit)]);
         }
     }
 
-    // A validated unit, or null when the request has no amount.
-    public static QuantityUnit? ParseUnit(string? unit) => unit is null ? null : PantryInput.Parse<QuantityUnit>(unit);
+    // The validated unit, checked against the ingredient's dimension (ADR-0002); null when the request has no amount.
+    public static QuantityUnit? UnitFor(Ingredient ingredient, string? unit)
+    {
+        if (unit is null)
+        {
+            return null;
+        }
+
+        var parsed = PantryInput.Parse<QuantityUnit>(unit);
+        PantryInput.EnsureUnitFits(parsed, ingredient.Dimension, ingredient.Name);
+        return parsed;
+    }
 }

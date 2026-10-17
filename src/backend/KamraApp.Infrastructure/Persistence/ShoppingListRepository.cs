@@ -39,13 +39,17 @@ public sealed class ShoppingListRepository(KamraDbContext db) : IShoppingListRep
                               Suggestion = suggestion,
                               ingredient.Name,
                               ingredient.Dimension,
+                              RecipeName = (from cooking in db.Cookings
+                                            join recipe in db.Recipes on cooking.RecipeId equals recipe.Id
+                                            where cooking.Id == suggestion.CookingId
+                                            select recipe.Name).FirstOrDefault(),
                               Minimum = db.IngredientMinimums.AsNoTracking()
                                   .SingleOrDefault(m => m.HouseholdId == householdId && m.IngredientId == suggestion.IngredientId),
                               Total = db.PantryItems.Where(i => i.HouseholdId == householdId && i.IngredientId == suggestion.IngredientId)
                                   .Sum(i => (decimal?)i.Quantity) ?? 0,
                           })
             .ToListAsync(cancellationToken);
-        return [.. rows.Select(r => new SuggestionEntry(r.Suggestion, r.Name, r.Dimension, r.Minimum, r.Total))];
+        return [.. rows.Select(r => new SuggestionEntry(r.Suggestion, r.Name, r.Dimension, r.RecipeName, r.Minimum, r.Total))];
     }
 
     public Task<ShoppingSuggestion?> FindSuggestionAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>

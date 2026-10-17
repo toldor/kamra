@@ -22,9 +22,9 @@ public sealed record ShoppingListItemResponse(Guid Id, Guid IngredientId, string
         new(item.Id, item.IngredientId, ingredientName, AmountResponse.Of(item.Quantity, item.EnteredUnit), item.Checked);
 }
 
-// M12, M13: why the suggestion was made and how much to buy. For BelowMinimum the amounts are in the
-// minimum's unit: the current total, the minimum and the part missing up to it; for Depleted all three are
-// null. The dimension lets the screen offer the units for an amount.
+// Why the suggestion was made and how much to buy (scope_contract.md US-5). RecipeName: the cooking that used the
+// ingredient up, if any. For BelowMinimum the amounts are in the minimum's unit: the current total, the minimum
+// and the part missing up to it; for Depleted all three are null. The dimension lets the screen offer the units.
 public sealed record ShoppingSuggestionResponse(
     Guid Id,
     Guid IngredientId,
@@ -32,6 +32,7 @@ public sealed record ShoppingSuggestionResponse(
     Dimension Dimension,
     SuggestionTrigger Trigger,
     DateTimeOffset CreatedAt,
+    string? RecipeName,
     AmountResponse? CurrentAmount,
     AmountResponse? MinimumAmount,
     AmountResponse? SuggestedAmount);

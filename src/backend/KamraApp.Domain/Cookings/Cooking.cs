@@ -76,7 +76,7 @@ public sealed class Cooking
         return (cooking, movements);
     }
 
-    // M5: the cooking created a shopping suggestion for this ingredient; stored, so a repeated request gets the
+    // US-4: the cooking created a shopping suggestion for this ingredient; stored, so a repeated request gets the
     // same answer (ADR-0008).
     public void MarkSuggested(Guid ingredientId) =>
         (_lines.SingleOrDefault(l => l.IngredientId == ingredientId)
@@ -116,7 +116,7 @@ public sealed class CookingLine
     // request gets the same answer even after a later purchase (ADR-0008).
     public bool Depleted { get; private set; }
 
-    // M5: the cooking made a shopping suggestion for the ingredient ("Felvettem a bevásárlójavaslatok közé: …").
+    // US-4: the cooking made a shopping suggestion for the ingredient ("Felvettem a bevásárlójavaslatok közé: …").
     public bool Suggested { get; private set; }
 
     internal void MarkSuggested() => Suggested = true;

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KamraApp.Api.ShoppingList;
 
-// US-5, D5: accepting returns the list row (200), rejecting 204; the same decision again gives the same answer.
+// US-5: accepting and rejecting answer 204, and the same decision again gets the same answer (ADR-0008 4.).
 [ApiController]
 [Route("api/v1/shopping-suggestions")]
 public sealed class ShoppingSuggestionsController : ControllerBase
@@ -15,10 +15,13 @@ public sealed class ShoppingSuggestionsController : ControllerBase
         listShoppingSuggestions.ExecuteAsync(cancellationToken);
 
     [HttpPost("{id:guid}/accept")]
-    [Produces("application/json")]
-    public Task<ShoppingListItemResponse> Accept(Guid id, AcceptShoppingSuggestionRequest? request,
-        [FromServices] AcceptShoppingSuggestion acceptShoppingSuggestion, CancellationToken cancellationToken) =>
-        acceptShoppingSuggestion.ExecuteAsync(id, request, cancellationToken);
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Accept(Guid id, AcceptShoppingSuggestionRequest? request,
+        [FromServices] AcceptShoppingSuggestion acceptShoppingSuggestion, CancellationToken cancellationToken)
+    {
+        await acceptShoppingSuggestion.ExecuteAsync(id, request, cancellationToken);
+        return NoContent();
+    }
 
     [HttpPost("{id:guid}/reject")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

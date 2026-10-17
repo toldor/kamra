@@ -180,13 +180,38 @@ public class ShoppingListTests
     }
 
     [Fact]
-    public void Updating_a_row_sets_the_check_and_the_amount()
+    public void Updating_a_row_without_an_amount_keeps_it_and_with_one_replaces_it()
     {
         var item = ShoppingListItem.Create(HouseholdId, Tejfol.Id, 50, Unit.G, Now);
 
         item.Update(isChecked: true, null, null);
+        (item.Checked, item.Amount, item.EnteredUnit).Should().Be((true, (decimal?)50m, (Unit?)Unit.G));
 
-        (item.Checked, item.Quantity, item.EnteredUnit).Should().Be((true, (decimal?)null, (Unit?)null));
+        item.Update(isChecked: false, 3, Unit.Dkg);
+        (item.Checked, item.Amount, item.EnteredUnit).Should().Be((false, (decimal?)3m, (Unit?)Unit.Dkg));
+    }
+
+    [Fact]
+    public void An_open_or_rejected_suggestion_and_an_unchecked_row_suppress_a_new_suggestion()
+    {
+        var open = ShoppingSuggestion.Create(HouseholdId, Tej.Id, SuggestionTrigger.Depleted, Now);
+        var onList = ShoppingListItem.Create(HouseholdId, Tej.Id, 1, Unit.L, Now);
+        var bought = ShoppingListItem.Create(HouseholdId, Tej.Id, 1, Unit.L, Now);
+        bought.Update(isChecked: true, null, null);
+
+        SuggestionRules.IsSuppressed(open, null).Should().BeTrue();
+        SuggestionRules.IsSuppressed(null, onList).Should().BeTrue();
+        SuggestionRules.IsSuppressed(null, bought).Should().BeFalse(); // bought: it may run out again
+        SuggestionRules.IsSuppressed(null, null).Should().BeFalse();
+    }
+
+    [Fact]
+    public void A_suggestion_made_by_a_cooking_remembers_it()
+    {
+        var cookingId = Guid.CreateVersion7();
+
+        ShoppingSuggestion.Create(HouseholdId, Tej.Id, SuggestionTrigger.Depleted, Now, cookingId).CookingId.Should().Be(cookingId);
+        ShoppingSuggestion.Create(HouseholdId, Tej.Id, SuggestionTrigger.Depleted, Now).CookingId.Should().BeNull();
     }
 
     [Fact]
@@ -209,7 +234,7 @@ public class ShoppingListTests
     }
 
     [Fact]
-    public void M5_a_cooking_line_remembers_that_it_made_a_suggestion()
+    public void A_cooking_line_remembers_that_it_made_a_suggestion()
     {
         var recipe = new RecipeCandidate(Guid.CreateVersion7(), "Tejes", 1,
             [new RecipeNeed(Tej.Id, Tej.Name, 200, Unit.Ml, false), new RecipeNeed(Tejfol.Id, Tejfol.Name, 100, Unit.G, false)]);

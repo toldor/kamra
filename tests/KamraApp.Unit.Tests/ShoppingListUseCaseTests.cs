@@ -1,5 +1,6 @@
 using System.Globalization;
 using KamraApp.Application.Common;
+using KamraApp.Application.Ingredients;
 using KamraApp.Application.ShoppingList;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;

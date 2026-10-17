@@ -3,7 +3,8 @@ using KamraApp.Domain.ShoppingList;
 
 namespace KamraApp.Application.ShoppingList;
 
-// US-5, ADR-0008 4. (D1, D5): not suggested again until the ingredient is back above its condition (M3).
+// US-5: not suggested again until the ingredient is back above its condition (scope_contract.md US-5). The same
+// decision again changes nothing; the opposite one is SHOPPING_SUGGESTION_STATE_CONFLICT (ADR-0008 4.).
 public sealed class RejectShoppingSuggestion(IShoppingListRepository shopping, IIngredientLocks locks, ICurrentHousehold household,
     TimeProvider time)
 {
@@ -14,13 +15,12 @@ public sealed class RejectShoppingSuggestion(IShoppingListRepository shopping, I
         await locks.LockAsync(householdId, [found.IngredientId], cancellationToken);
         var suggestion = await shopping.FindSuggestionForUpdateAsync(householdId, id, cancellationToken)
             ?? throw ShoppingListErrors.SuggestionNotFound();
-        switch (suggestion.Reject(time.GetUtcNow()))
+        if (suggestion.Reject(time.GetUtcNow()) == SuggestionTransition.Conflict)
         {
-            case SuggestionTransition.Conflict:
-                throw ShoppingListErrors.SuggestionStateConflict();
-            case SuggestionTransition.Changed:
-                await shopping.SaveChangesAsync(cancellationToken);
-                break;
+            throw ShoppingListErrors.SuggestionStateConflict();
         }
+
+        // Also on a repeat: the save ends the lock's transaction.
+        await shopping.SaveChangesAsync(cancellationToken);
     }
 }

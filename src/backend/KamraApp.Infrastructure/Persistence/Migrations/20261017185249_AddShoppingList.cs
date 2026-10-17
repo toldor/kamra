@@ -84,12 +84,18 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                     Trigger = table.Column<string>(type: "text", nullable: false),
                     State = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    CookingId = table.Column<Guid>(type: "uuid", nullable: true),
                     ResolvedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     ClearedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ShoppingSuggestions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShoppingSuggestions_Cookings_CookingId",
+                        column: x => x.CookingId,
+                        principalTable: "Cookings",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ShoppingSuggestions_Households_HouseholdId",
                         column: x => x.HouseholdId,
@@ -118,6 +124,11 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                 name: "IX_ShoppingListItems_IngredientId",
                 table: "ShoppingListItems",
                 column: "IngredientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShoppingSuggestions_CookingId",
+                table: "ShoppingSuggestions",
+                column: "CookingId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ShoppingSuggestions_HouseholdId_IngredientId",

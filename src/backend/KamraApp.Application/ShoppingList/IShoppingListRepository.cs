@@ -6,8 +6,9 @@ namespace KamraApp.Application.ShoppingList;
 
 public sealed record ShoppingListEntry(ShoppingListItem Item, string IngredientName);
 
-// An open suggestion with what its reason needs (M12): the ingredient, its minimum and current total (base units).
-public sealed record SuggestionEntry(ShoppingSuggestion Suggestion, string IngredientName, Dimension Dimension,
+// An open suggestion with what its reason needs: the ingredient, the recipe of the cooking that used it up, the
+// minimum and the current total (base units).
+public sealed record SuggestionEntry(ShoppingSuggestion Suggestion, string IngredientName, Dimension Dimension, string? RecipeName,
     IngredientMinimum? Minimum, decimal Total);
 
 // Aggregate-level port for the household's shopping list, suggestions and minimums (AGENTS.md): every read
@@ -31,7 +32,7 @@ public interface IShoppingListRepository
     // Not tracked: the writer locks its ingredient first, then reads it again for update.
     Task<ShoppingSuggestion?> FindSuggestionAsync(Guid householdId, Guid id, CancellationToken cancellationToken);
 
-    // Tracked and read after the lock, so a decision made meanwhile is seen (ADR-0008 4., D1).
+    // Tracked and read after the lock, so a decision made meanwhile is seen (ADR-0008 4. and 6.).
     Task<ShoppingSuggestion?> FindSuggestionForUpdateAsync(Guid householdId, Guid id, CancellationToken cancellationToken);
 
     // data_model.md: at most one per household and ingredient (Open, or Rejected and not cleared).

@@ -32,6 +32,9 @@ internal sealed class FakeShopping : IShoppingListRepository
 
     public Dictionary<Guid, decimal> Totals { get; } = [];
 
+    // Recipe names by cooking id, for a suggestion made by a cooking.
+    public Dictionary<Guid, string> CookingRecipes { get; } = [];
+
     public int Saves { get; private set; }
 
     // The single minimum of the evaluator tests.
@@ -68,6 +71,7 @@ internal sealed class FakeShopping : IShoppingListRepository
         Task.FromResult<IReadOnlyList<SuggestionEntry>>([.. Suggestions
             .Where(s => s.HouseholdId == householdId && s.State == SuggestionState.Open)
             .Select(s => new SuggestionEntry(s, Ingredients[s.IngredientId].Name, Ingredients[s.IngredientId].Dimension,
+                s.CookingId is { } cookingId ? CookingRecipes[cookingId] : null,
                 Minimums.SingleOrDefault(m => m.HouseholdId == householdId && m.IngredientId == s.IngredientId),
                 Totals.GetValueOrDefault(s.IngredientId)))]);
 

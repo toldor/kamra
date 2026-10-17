@@ -156,6 +156,7 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             suggestion.Property(s => s.State).HasConversion<string>();
             suggestion.HasOne<Household>().WithMany().HasForeignKey(s => s.HouseholdId).OnDelete(DeleteBehavior.Cascade);
             suggestion.HasOne<Ingredient>().WithMany().HasForeignKey(s => s.IngredientId).OnDelete(DeleteBehavior.NoAction);
+            suggestion.HasOne<Cooking>().WithMany().HasForeignKey(s => s.CookingId).OnDelete(DeleteBehavior.NoAction);
             // At most one blocking suggestion per household and ingredient (data_model.md).
             suggestion.HasIndex(s => new { s.HouseholdId, s.IngredientId }).IsUnique()
                 .HasFilter("\"State\" = 'Open' OR (\"State\" = 'Rejected' AND \"ClearedAt\" IS NULL)");
