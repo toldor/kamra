@@ -37,7 +37,7 @@ Domain-entitás: [Ingredient.cs](../../src/backend/KamraApp.Domain/Ingredients/I
 - Egyediség: rendszer-hozzávalónál a `NormalizedName`, saját hozzávalónál a (`HouseholdId`, `NormalizedName`) pár egyedi (részleges egyedi indexek). Saját hozzávaló neve nem egyezhet aktív rendszer-hozzávaló nevével (a use case ellenőrzi).
 - Visszavonás törlés helyett: rendszer-hozzávaló nem törölhető a seedből; a visszavont hozzávaló új készlettételhez és recepthez nem választható, a meglévő hivatkozások változatlanul működnek.
 - A saját hozzávaló az MVP-ben csak létrehozható; átnevezés és törlés nincs (Ismert korlátok).
-- **Megvalósítás:** a `Dimension` és a `DefaultCategory` az enum nevével tárolódik (`Mass`, `Dairy`). Az induló lista 36 rendszer-hozzávaló: [ingredients.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/ingredients.json) (beágyazott erőforrás, a `HasData` ebből olvas; üres, duplikált vagy ismeretlen értéknél a betöltés leáll).
+- **Megvalósítás:** a `Dimension` és a `DefaultCategory` az enum nevével tárolódik (`Mass`, `Dairy`). Az induló lista 157 rendszer-hozzávaló (az okt. 16-i 36 és 121 új): [ingredients.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/ingredients.json) (beágyazott erőforrás, a `HasData` ebből olvas; üres, duplikált vagy ismeretlen értéknél a betöltés leáll).
 
 ### Kategória
 
@@ -124,7 +124,7 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 | RetiredAt | timestamptz, null | Visszavont induló recept: egyik háztartásban sem jelenik meg az ajánlásban, a főzések hivatkozása megmarad. A háztartásonkénti archiválás a `RecipeArchives` táblában van |
 
 - A saját recept létrehozható, szerkesztés nincs (Ismert korlátok); bármely recept archiválható a saját háztartásban (`RecipeArchives`).
-- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 5 recept: [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept okt. 23-ig készül.
+- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 20 recept (az okt. 16-i 5 változatlan, 15 új; saját szöveg, a fejlesztő ellenőrizte, [V-43](../07_ai/verification_log.md)): [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept okt. 23-ig készül.
 
 ### RecipeIngredients (Recept hozzávalója)
 
@@ -234,6 +234,7 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | `AddRecipes` | `Recipes` (5 induló recept), `RecipeIngredients` | Megvalósítva |
 | `AddCookings` | `Cookings`, `CookingLines`, `StockMovements.CookingId` | Megvalósítva |
 | `AddShoppingList` | `IngredientMinimums`, `ShoppingSuggestions` (részleges egyedi index, `CookingId`), `ShoppingListItems`, `CookingLines.Suggested` | Megvalósítva |
+| `ExpandSeedData` | 121 hozzávaló, 15 recept és hozzávalóik (csak beszúrás) | Megvalósítva |
 
 ## Ismert hiányosságok
 

@@ -351,3 +351,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Kód és teszt (a P13 csak azért volt zöld, mert a teszt újraküldte a mennyiséget).
 - **Eredmény:** **PASS** (mindkettő valós). Javítva: az elfogadás 204, az ismétlés is (D-R1); a mennyiség nélküli PUT megtartja a mennyiséget (D-R3); mindkettő teszttel, mutációval ellenőrizve.
 - **Következtetés:** A spec-review a teszt-hiányt is megfogta: a teszt az implementáció hibáját kerülte meg.
+
+### V-43 – Az induló receptek saját szövegűek, a mennyiségek reálisak (az MI írta)
+- **Dátum:** 2026-10-17
+- **Állítás:** A 15 új induló recept elkészítési szövege saját, nem másolt; a mennyiségek 4 adagra reálisak; a 121 új hozzávaló neve, dimenziója és kategóriája helyes; az új receptek nem változtatják meg a kézzel számolt példák eredményét.
+- **Kockázat:** Közepes. Másolt szöveg licenckérdést, hibás mennyiség rossz ajánlást és levonást okozna.
+- **Ellenőrzési módszer:** A fejlesztő a tervezetet soronként átnézte, és változtatás nélkül jóváhagyta (`kamra_seed_atnezes.md`, 2026-10-17); a beépítés szkripttel, közvetlenül ebből a táblázatból történt, és a spec-review szkripttel karakterre egyezőnek találta. Automatizált teszt: minden receptben van nem alap hozzávaló, az adagszám 1 és 100 közé esik, a név egyedi, a lista mérete a vállalás szerinti ([SeedDataTests.cs](../../tests/KamraApp.Unit.Tests/SeedDataTests.cs)); a P5 és a P7 integrációs tesztje a bővített seeden is pontosan ugyanazt a „majdnem elkészíthető” listát adja.
+- **Eredmény:** **PASS**, egy javítással: a tervezet „Tervezési szempontok” pontja azt állította, hogy egyik új recept sem „majdnem elkészíthető” a P1–P10 egyik készletéhez képest sem; a T4 spec-reviewja megmutatta, hogy a **Rizibizi** a rántotta-készlethez (tojás, vaj) képest az (2 hozzávaló hiányzik). Ez a készlet csak főzési példa (P3), ajánlási teszt nem használja, így eredmény nem változik. A fejlesztő döntése: a recept marad, az állítás a P5/P7 készletekre szűkült.
+- **Következtetés:** Az AI által írt adatnál a saját tervezési állítást is ellenőrizni kell (itt a spec-review szkriptje tette meg); a védőháló a P5 és a P7 pontos listájú tesztje.

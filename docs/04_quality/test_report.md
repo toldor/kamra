@@ -8,7 +8,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 - OS: Windows 11 (fejlesztői gép)
 - Runtime/SDK: .NET SDK 10.0.201 (`global.json`), xUnit v3 Microsoft Testing Platform módban
 - DB: PostgreSQL 18 (`postgres:18` image Testcontainersszel; a Docker Compose ugyanezt az image-et használja, [ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)); a teszteknél futó Docker szükséges
-- Teszt adat: a migrációval betöltött induló hozzávaló-lista (36 elem, [ingredients.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/ingredients.json)); minden más adat szintetikus, tesztenként egyedi felhasználóval és háztartással
+- Teszt adat: a migrációval betöltött induló hozzávaló-lista (157 elem, [ingredients.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/ingredients.json)); minden más adat szintetikus, tesztenként egyedi felhasználóval és háztartással
 
 ## Teszt suite-ek és futtatás
 
@@ -22,18 +22,18 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
-| Unit | ≥ 18 | 299 | 299 |
+| Unit | ≥ 18 | 301 | 301 |
 | Integrációs | ≥ 6 | 172 | 172 |
 | Frontend (Vitest) | – | 49 | 49 |
 | E2E | ≥ 6 | 7 (×2 nézet) | 7 |
 | Negatív esetek | ≥ 5 | 273 | 273 |
-| **Összesen** | **≥ 30** | **527** | **527** |
+| **Összesen** | **≥ 30** | **529** | **529** |
 
 ## Legutolsó futás eredménye
 
 - Dátum: 2026-10-17
-- Eredmény: PASS – .NET 471/471 helyben (az integrációs csomag háromszor egymás után; a P20 és a párhuzamos elfogadás/elutasítás ötszörös ciklussal); Domain + Application sorlefedettség 97,1% (kapu: 80%); Vitest 49/49; Playwright 14/14 futás (7 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen. Az új teszteket mutációval ellenőriztük (a zár, az M15, a kipipált sor, a csökkenési ok, a főzés javaslatjelölése, a PUT mennyiségmegtartása és az ismétlés tranzakciózárása elrontva: mind elbukott).
-- CI link: [GitHub Actions – run 39065092329](https://github.com/toldor/kamra/actions/runs/39065092329) (2026-10-17, `feature/us-5-shopping-list`, `c5151be`): `secrets`, `backend`, `frontend` és `e2e` job zöld
+- Eredmény: PASS – .NET 473/473 helyben, a bővített induló listával (20 recept, 157 hozzávaló) (az integrációs csomag háromszor egymás után; a P20 és a párhuzamos elfogadás/elutasítás ötszörös ciklussal); Domain + Application sorlefedettség 97,1% (kapu: 80%); Vitest 49/49; Playwright 14/14 futás (7 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen. Az új teszteket mutációval ellenőriztük (a zár, az M15, a kipipált sor, a csökkenési ok, a főzés javaslatjelölése, a PUT mennyiségmegtartása és az ismétlés tranzakciózárása elrontva: mind elbukott).
+- CI link: [GitHub Actions – run 39067168986](https://github.com/toldor/kamra/actions/runs/39067168986) (2026-10-17, `feature/us-5-shopping-list`, `94b354d`): `secrets`, `backend`, `frontend` és `e2e` job zöld
 
 ## Tesztelt modulok
 
