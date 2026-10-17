@@ -159,6 +159,18 @@ public class ShoppingListCommandTests
     }
 
     [Fact]
+    public async Task A_below_minimum_suggestion_whose_minimum_was_removed_still_shows_the_current_amount()
+    {
+        _shopping.Totals[Tej.Id] = 300;
+        _shopping.Suggestions.Add(ShoppingSuggestion.Create(HouseholdId, Tej.Id, SuggestionTrigger.BelowMinimum, Now));
+
+        var suggestion = (await new ListShoppingSuggestions(_shopping, new FixedHousehold(HouseholdId)).ExecuteAsync(CancellationToken.None)).Single();
+
+        (suggestion.CurrentAmount, suggestion.MinimumAmount, suggestion.SuggestedAmount)
+            .Should().Be((new AmountResponse(300, Unit.Ml), (AmountResponse?)null, (AmountResponse?)null));
+    }
+
+    [Fact]
     public async Task Accepting_puts_the_suggestion_on_the_list_with_the_given_amount()
     {
         var suggestion = Suggest(Tej);

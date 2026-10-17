@@ -40,6 +40,7 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
             await locks.LockAsync(householdId, [.. used.Keys], cancellationToken);
             var items = await pantry.ListForCookingAsync(householdId, [.. used.Keys], cancellationToken);
             EnsureStockCovers(recipe, used, items);
+            // Taken before Cooking.Create deducts from these tracked items (ToDictionary evaluates at once).
             var before = items.GroupBy(i => i.IngredientId).ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
             var now = time.GetUtcNow();
             var (cooking, movements) = Cooking.Create(householdId, recipe, valid.Servings!.Value, requestId, used, items, now);

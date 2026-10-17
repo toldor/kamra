@@ -33,6 +33,15 @@ public static class Units
 
     public static decimal ToBase(decimal amount, Unit unit) => amount * Factor(unit);
 
+    // The unit quantities of the dimension are stored in (g, ml, db).
+    public static Unit BaseUnit(Dimension dimension) => dimension switch
+    {
+        Dimension.Mass => Unit.G,
+        Dimension.Volume => Unit.Ml,
+        Dimension.Count => Unit.Db,
+        _ => throw new ArgumentOutOfRangeException(nameof(dimension), dimension, "Unknown dimension."),
+    };
+
     // ADR-0002: an ingredient is measured only in the units of its dimension.
     public static void EnsureDimension(Unit unit, Dimension dimension)
     {
