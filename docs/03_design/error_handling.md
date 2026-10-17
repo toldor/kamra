@@ -59,9 +59,9 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `RECIPE_ARCHIVED` | 409 | A recept ebben a háztartásban archivált, ezért az előnézete és az új főzése nem engedett; az ismételt főzéskérés a tárolt eredményt adja | Tervezett |
 | `INSUFFICIENT_STOCK` | 409 | A megerősített felhasznált mennyiség több a jelenlegi készletnél; a friss mennyiségek az `available` kiterjesztésben (`[{ ingredientId, ingredientName, amount, unit }]`, US-4) | Megvalósítva |
 | `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú (recept, adagszám vagy mennyiség) főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Megvalósítva |
-| `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik | Tervezett |
-| `SHOPPING_SUGGESTION_NOT_FOUND` | 404 | Bevásárlójavaslat nem létezik | Tervezett |
-| `SHOPPING_SUGGESTION_STATE_CONFLICT` | 409 | Elutasított bevásárlójavaslat elfogadása vagy elfogadott elutasítása ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Tervezett |
+| `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik vagy más háztartásé (a válasz azonos) | Megvalósítva |
+| `SHOPPING_SUGGESTION_NOT_FOUND` | 404 | Bevásárlójavaslat nem létezik vagy más háztartásé (a válasz azonos) | Megvalósítva |
+| `SHOPPING_SUGGESTION_STATE_CONFLICT` | 409 | Elutasított bevásárlójavaslat elfogadása vagy elfogadott elutasítása ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 4. pont); az azonos döntés ismétlése nem hiba | Megvalósítva |
 | `ITEM_PROPOSAL_STATE_CONFLICT` | 409 | Elvetett tételjavaslat jóváhagyása vagy jóváhagyott elvetése (ADR-0007, ADR-0008) | Tervezett |
 | `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el (időtúllépés vagy kiesés újrapróbálás után) | Tervezett |
 | `LLM_INVALID_RESPONSE` | 502 | Az LLM válasza nem felel meg a sémának | Tervezett |

@@ -287,3 +287,67 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Mérés (Claude Code, F#-szkript a `StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), false)` összehasonlítóval): a „Paprikás krumpli, lecsó, Bableves, almás pite, Ágyas, Túrós csusza, ostya, őrölt pirospaprika” lista rendezve *„Ágyas, almás pite, Bableves, lecsó, ostya, őrölt pirospaprika, Paprikás krumpli, Túrós csusza”*; `Compare("alma", "Banán")` = −1.
 - **Eredmény:** **FAIL.** A nyelvi összehasonlítás a kis- és nagybetűt csak harmadlagos különbségként, holtversenynél veszi figyelembe; a betűrendi helyet nem változtatja meg.
 - **Következtetés:** Nincs változtatás. A reviewer nyelvi rendezésről szóló állítását is mérni kell, mert a kultúra-alapú összehasonlítás nem bájtsorrend.
+
+### V-35 – Az egyidejű fogyás elnyelheti a bevásárlójavaslatot (saját tervezés)
+- **Dátum:** 2026-10-17
+- **Állítás:** READ COMMITTED mellett ha ugyanannak a hozzávalónak két utolsó tételét két kérés egyszerre fogyasztja el, mindkettő a másik tételt még meglévőnek látja, és egyik sem hoz létre bevásárlójavaslatot (write skew); a hozzávalónkénti tranzakciós zár ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 6. pont) ezt kizárja.
+- **Kockázat:** Közepes. A javaslat csendben elmaradna, a lista nem tükrözné a valós hiányt.
+- **Ellenőrzési módszer:** Teszt és mutáció: a P20 (két tétel egyidejű 0-ra csökkentése, ötször, [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs)) a zárral zöld, a zár SQL-jének eltávolításával piros.
+- **Eredmény:** **PASS.**
+- **Következtetés:** A zár marad; a P20 a regressziós teszt.
+
+### V-36 – Az ismételt elfogadás nem bájtra azonos választ adott (saját teszt)
+- **Dátum:** 2026-10-17
+- **Állítás:** Az ismételt elfogadás a [ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) szerint az első válasszal azonos törzset ad.
+- **Kockázat:** Alacsony. Eltérő ismételt válasz megtörné az idempotencia ígéretét.
+- **Ellenőrzési módszer:** Integrációs teszt: az első válasz a memóriából (`200`), az ismétlés az adatbázisból (`200.000`, `numeric(12,3)`) épült.
+- **Eredmény:** **FAIL.** Javítva: a válasz mennyisége normalizált (záró nullák nélkül); a spec-review után az elfogadás 204 lett, így törzs sincs.
+- **Következtetés:** Az ismételt kérés válaszát mindig ugyanabból a forrásból vagy normalizálva kell építeni.
+
+### V-37 – A nullázható enum a közös OpenAPI-sémát is nullázhatóvá tette (mérés)
+- **Dátum:** 2026-10-17
+- **Állítás:** A bevásárlólista-válasz nullázható `Unit?` mezője csak a saját mezőjét teszi nullázhatóvá.
+- **Kockázat:** Közepes. A generált frontend-típusokban minden egységmező nullázható lenne.
+- **Ellenőrzési módszer:** Mérés: a generált `openapi.json` közös `Unit` sémája `null`-t kapott az enum értékei közé; a `npm run lint` (`tsc`) a `PantryItemForm.tsx`-ben hibát jelzett.
+- **Eredmény:** **FAIL.** Javítva: a nem kötelező mennyiség a válaszban `{ value, unit }` objektum (`AmountResponse`), így a `Unit` séma változatlan.
+- **Következtetés:** Nullázható enumot a válaszban kerülünk; a frontend-típusok újragenerálása minden API-változás után kapu.
+
+### V-38 – „SQL-injekció az advisory lockban” (Claude Sonnet 4.6, Antigravity-review)
+- **Dátum:** 2026-10-17
+- **Állítás:** A reviewer szerint az `IngredientLocks` kulcsa „előre összerakott stringként szó szerint bekerül az SQL-be”, ezért kritikus SQL-injekció.
+- **Kockázat:** Ha igaz lenne, magas (AGENTS.md 7. pont).
+- **Ellenőrzési módszer:** Forrás és kód: az EF Core [SQL Queries – Passing parameters](https://learn.microsoft.com/en-us/ef/core/querying/sql-queries#passing-parameters) szerint a `FormattableString` minden lyuka `DbParameter`-ré alakul; az `IngredientLocks.cs`-ben a kulcs C#-változó, amely lyukként (`{key}`) kerül a lekérdezésbe, és két Guidból áll.
+- **Eredmény:** **FAIL** (téves állítás).
+- **Következtetés:** Nincs változtatás. A „Kritikus” címke nem bizonyíték.
+
+### V-39 – A T1-review további téves állításai (Claude Sonnet 4.6)
+- **Dátum:** 2026-10-17
+- **Állítás:** A főzés „before” összege a levonás után számolódik; hiányzik a párhuzamos elfogadás/elutasítás, a kettős felvétel és a háztartásközi teszt; a javasolt mennyiség alapegységben jelenik meg.
+- **Kockázat:** Közepes, ha igazak lennének.
+- **Ellenőrzési módszer:** Kód (`ConfirmCooking.cs`: a `ToDictionary` a `Cooking.Create` előtt fut) és a meglévő tesztek (P13; `ShoppingListApiTests` párhuzamos és háztartásközi tesztjei; unit teszt dl-re).
+- **Eredmény:** **FAIL** mind. A review egyetlen valós pontja (nyitott „minimumszint alatti” javaslat törölt minimum mellett mennyiség nélkül) javítva, teszttel.
+- **Következtetés:** A reviewer állításait a kódon kell ellenőrizni, nem a diff összefoglalóján.
+
+### V-40 – Ellenséges bevásárlólista-tesztek (Claude Sonnet 4.6, Antigravity)
+- **Dátum:** 2026-10-17
+- **Állítás:** A US-5 ellenáll az ismétlésnek, a versenynek, a határértékeknek, a kiváltás kijátszásának és a hibaválasz-szivárgásnak.
+- **Kockázat:** Magas, ha nem állna ellen (adatkonzisztencia, információszivárgás).
+- **Ellenőrzési módszer:** Teszt: 8 ellenséges integrációs teszt; 7 érvényes és zöld ([AdversarialShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialShoppingListApiTests.cs)), 1 érvénytelen (a közös rendszer-hozzávaló minimumának „törlésére” 404-et várt; háztartásonkénti minimumnál a 204 a helyes), nem felvéve.
+- **Eredmény:** **PASS** a kódra.
+- **Következtetés:** Új határeset (pontosan 100 000) és szivárgás-ellenőrzés került a tesztek közé.
+
+### V-41 – A formázó teszteket törölt (saját folyamathiba)
+- **Dátum:** 2026-10-17
+- **Állítás:** A `dotnet format` csak formáz.
+- **Kockázat:** Magas. Tesztek csendben eltűnhetnek.
+- **Ellenőrzési módszer:** Tesztszám-összevetés: két új teszt mellett a unit tesztek száma 293-ról 291-re csökkent; a diff szerint egy szintaktikailag hibás fájlon (az `unchecked` kulcsszó változónévként) négy tesztmetódus tűnt el.
+- **Eredmény:** **FAIL.** A fájl a HEAD-ből helyreállítva, a módosítás újra alkalmazva; minden eltávolított metódus ellenőrizve.
+- **Következtetés:** Formázás csak forduló kódon; a tesztszámot minden futás után összevetjük az előzővel.
+
+### V-42 – A spec-review két valós eltérése (Claude Code, spec-review)
+- **Dátum:** 2026-10-17
+- **Állítás:** Az ismételt elfogadás törölt sor után 404-et ad; a listatétel `{ checked }` PUT-ja törli a mennyiséget.
+- **Kockázat:** Közepes. Az idempotencia ígérete sérül; kipipáláskor elveszne a mennyiség.
+- **Ellenőrzési módszer:** Kód és teszt (a P13 csak azért volt zöld, mert a teszt újraküldte a mennyiséget).
+- **Eredmény:** **PASS** (mindkettő valós). Javítva: az elfogadás 204, az ismétlés is (D-R1); a mennyiség nélküli PUT megtartja a mennyiséget (D-R3); mindkettő teszttel, mutációval ellenőrizve.
+- **Következtetés:** A spec-review a teszt-hiányt is megfogta: a teszt az implementáció hibáját kerülte meg.

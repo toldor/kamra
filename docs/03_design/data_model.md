@@ -163,25 +163,21 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | RequiredQuantity | numeric(12,3) | Szükséges mennyiség: a recept mennyisége az adagszámmal skálázva és kerekítve (US-4) |
 | UsedQuantity | numeric(12,3) | A felhasználó által megerősített, ténylegesen felhasznált mennyiség; 0 ≤ `UsedQuantity` |
 | Depleted | boolean | A főzés fogyasztotta el a hozzávaló utolsó készletét („Elfogyott”); tárolva, hogy az ismételt kérés válasza azonos legyen ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) |
+| Suggested | boolean | A főzés ennél a hozzávalónál bevásárlójavaslatot hozott létre; tárolva, hogy az ismételt kérés válasza azonos legyen ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) |
 
 - A hiány = max(0, `RequiredQuantity` − `UsedQuantity`); nem könyvelődik, csak megjelenik, és a bevásárlólistára tehető. A felhasznált mennyiség a szükségesnél több is lehet (a készlet erejéig): ilyenkor nincs hiány.
 - A készlettételenkénti (FEFO) levonás a `StockMovement` `CookingId`-s soraiban van; hozzávalónként ezek összege = `UsedQuantity` (teszt ellenőrzi).
 - A „megmentett főzés” (North Star) a főzés mozgásaiból, a mozgáskori lejárat (`ExpiryDateAtMovement`) alapján számolódik: van-e köztük olyan készlettétel, amely a főzés napján hamarosan lejáró volt ([metrics.md](../01_product/metrics.md)).
 - **Megvalósítás:** kényszer: `CK_CookingLines_UsedQuantity_NonNegative`; a főzés törlése a sorait is törli, a hozzávaló-hivatkozás `NO ACTION`. A hiány nincs tárolva, a két mennyiségből számolódik.
 
-## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
+### IngredientMinimums (Minimumszint)
 
-- Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
-- A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
-- Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
+(`HouseholdId`, `IngredientId`) PK; `MinimumQuantity` numeric(12,3) alapegységben, > 0; `EnteredUnit` a megjelenítéshez. Ha nincs sor, nincs minimumszint-figyelés. Csak a háztartás által látható hozzávalóra állítható be.
 
-## Tervezett entitások
+- **Megvalósítás:** domain-entitás: [IngredientMinimum.cs](../../src/backend/KamraApp.Domain/Ingredients/IngredientMinimum.cs); kényszer: `CK_IngredientMinimums_MinimumQuantity_Positive`; a hozzávaló-hivatkozás `NO ACTION`, a háztartás törlése a sorait is törli.
 
-### Bevásárlólista (US-5) – végleges terv, a T1-ben valósul meg
+### ShoppingSuggestions (Bevásárlójavaslat)
 
-**IngredientMinimums (Minimumszint):** (`HouseholdId`, `IngredientId`) PK; `MinimumQuantity` numeric(12,3) alapegységben, > 0; `EnteredUnit` a megjelenítéshez. Ha nincs sor, nincs minimumszint-figyelés. Csak a háztartás által látható hozzávalóra állítható be.
-
-**ShoppingSuggestions (Bevásárlójavaslat):**
 
 | Mező | Típus | Leírás |
 |---|---|---|
@@ -192,13 +188,16 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | State | text | `Open` / `Accepted` / `Rejected` |
 | CreatedAt, ResolvedAt | timestamptz | Keletkezés; elfogadás vagy elutasítás |
 | ClearedAt | timestamptz, null | Elutasított javaslatnál: a hozzávaló újra a feltétel fölé került |
+| CookingId | uuid (FK → Cooking.Id), null | A főzés, amely a hozzávalót elfogyasztotta; a javaslat indoka ebből nevezi meg a receptet (`NO ACTION`) |
 
 - A javaslat a kiváltó csökkenéssel egy tranzakcióban keletkezik. Kiváltó csak az *elfogyott* ok (a főzés is); a *kidobtam* és a *hibás rögzítés* nem. A minimumszint beállítása is kivált, ha a készlet már alatta van.
 - Nem keletkezik javaslat, ha van blokkoló javaslat (`Open`, vagy `Rejected` és `ClearedAt` null – részleges egyedi index, háztartásonként és hozzávalónként legfeljebb egy), vagy ha a hozzávaló pipa nélkül a bevásárlólistán van.
 - Feloldás (`ClearedAt`): az összmennyiséget növelő művelet (rögzítés, *hibás rögzítés* okú növelés, a minimumszint törlése vagy csökkentése) tranzakciójában, ha `Depleted`-nél az összmennyiség > 0, `BelowMinimum`-nál ≥ a minimumszint.
 - Egyidejű csökkentéseknél a kiértékelést hozzávalónkénti tranzakciós zár sorosítja ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 6. pont).
+- **Megvalósítás:** domain-entitás: [ShoppingSuggestion.cs](../../src/backend/KamraApp.Domain/ShoppingList/ShoppingSuggestion.cs), szabályok: [SuggestionRules.cs](../../src/backend/KamraApp.Domain/ShoppingList/SuggestionRules.cs); részleges egyedi index `IX_ShoppingSuggestions_HouseholdId_IngredientId`. A minimumszint törlésekor a nyitott „minimumszint alatti” javaslat megmarad (a felhasználó dönt róla), csak az elutasított oldódik fel.
 
-**ShoppingListItems (Bevásárlólista-tétel):**
+### ShoppingListItems (Bevásárlólista-tétel)
+
 
 | Mező | Típus | Leírás |
 |---|---|---|
@@ -211,9 +210,18 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | AddedAt | timestamptz | Felvétel (UTC) |
 
 - Forrás: elfogadott javaslat (opcionális mennyiséggel), kézi felvétel, majdnem elkészíthető recept hiánya (US-3) vagy a főzés hiánya (US-4).
-- Összevonás azonos hozzávalónál, pipa nélküli tételnél: két ismert mennyiség összeadódik; ismeretlen (null) és ismert találkozásakor az ismert marad (és az egysége); két ismeretlenből ismeretlen lesz. Kipipált tételnél a pipa törlődik, és a mennyiség az új mennyiség lesz. Az összeg sem lehet több 100 000-nél (a bemeneti korlát). Az upsert ezt kifejezetten kezeli (`CASE`/`COALESCE`), mert a PostgreSQL-ben a null-lal végzett összeadás null; mindkét beszúrási sorrend tesztelve.
+- Összevonás azonos hozzávalónál, pipa nélküli tételnél: két ismert mennyiség összeadódik; ismeretlen (null) és ismert találkozásakor az ismert marad (és az egysége); két ismeretlenből ismeretlen lesz. Kipipált tételnél a pipa törlődik, és a mennyiség az új mennyiség lesz. Az összeg sem lehet több 100 000-nél (a bemeneti korlát). Az összevonást a Domain végzi a hozzávalónkénti zár alatt ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 5–6. pont); mindkét beszúrási sorrend tesztelve (P16). A módosítás (kipipálás) mennyiség nélkül a meglévő mennyiséget megtartja.
+- **Megvalósítás:** domain-entitás: [ShoppingListItem.cs](../../src/backend/KamraApp.Domain/ShoppingList/ShoppingListItem.cs); kényszerek: `CK_ShoppingListItems_Quantity_Positive`, `CK_ShoppingListItems_Quantity_WithUnit` (mennyiség és egység együtt vagy egyik sem); egyedi index (`HouseholdId`, `IngredientId`).
 
-**CookingLines – új oszlop:** `Suggested` boolean – a főzés ennél a hozzávalónál bevásárlójavaslatot hozott létre; tárolva, hogy az ismételt kérés válasza azonos legyen ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)).
+## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
+
+- Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
+- A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
+- Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
+
+## Tervezett entitások
+
+### Archivált recept (US-3) – a T3-ban valósul meg
 
 **RecipeArchives (Archivált recept):** (`HouseholdId`, `RecipeId`) PK, `ArchivedAt` timestamptz. A recept ebben a háztartásban nem jelenik meg az ajánlásban, és nem főzhető újra (az ismételt főzéskérés továbbra is a tárolt eredményt adja); a háztartás törlése a sorait is törli.
 
@@ -225,6 +233,7 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | `AddIngredientsAndPantryItems` | `Ingredients` (36 rendszer-hozzávaló), `PantryItems`, `StockMovements` | Megvalósítva |
 | `AddRecipes` | `Recipes` (5 induló recept), `RecipeIngredients` | Megvalósítva |
 | `AddCookings` | `Cookings`, `CookingLines`, `StockMovements.CookingId` | Megvalósítva |
+| `AddShoppingList` | `IngredientMinimums`, `ShoppingSuggestions` (részleges egyedi index, `CookingId`), `ShoppingListItems`, `CookingLines.Suggested` | Megvalósítva |
 
 ## Ismert hiányosságok
 

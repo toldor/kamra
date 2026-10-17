@@ -29,7 +29,7 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | Metódus | Útvonal | Leírás | Story | Fő hibakódok | Állapot |
 |---|---|---|---|---|---|
 | GET | `/categories` | Kategórialista az alapértelmezett eltarthatósággal | US-1 | – | Megvalósítva |
-| GET | `/ingredients?search=` | Választható hozzávalók: rendszer (nem visszavont) és saját | US-1, US-3 | `VALIDATION_FAILED` | Megvalósítva |
+| GET | `/ingredients?search=` | Választható hozzávalók: rendszer (nem visszavont) és saját; hozzávalónként a háztartás minimumszintje (`minimum`) vagy null | US-1, US-3 | `VALIDATION_FAILED` | Megvalósítva |
 | POST | `/ingredients` | Saját hozzávaló (név, dimenzió, alapértelmezett kategória) → 201 | US-1 | `VALIDATION_FAILED`, `INGREDIENT_NAME_TAKEN` | Tervezett |
 | GET | `/pantry-items?search=&category=&expiringSoon=` | Készlet (csak `Quantity > 0`), tételenként `version`, becsült és lejárt jelöléssel | US-1 | `VALIDATION_FAILED` | Megvalósítva |
 | POST | `/pantry-items` | Készlettétel rögzítése (`Added` mozgás) → 201 | US-1 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
@@ -41,14 +41,14 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | GET | `/recommendations` | Elkészíthető és majdnem elkészíthető receptek indoklással és hiánnyal | US-3 | – | Megvalósítva |
 | GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED`, `RECIPE_ARCHIVED` (tervezett) | Megvalósítva |
 | POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT`, `RECIPE_ARCHIVED` (tervezett; az ismételt kérés nem) | Megvalósítva |
-| GET | `/shopping-list` | Bevásárlólista-tételek | US-5 | – | Tervezett |
-| POST | `/shopping-list/items` | Felvétel; azonos hozzávalónál összeadódik, kipipált tételnél az új mennyiséggel indul újra (upsert) | US-3, US-4, US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
-| PUT | `/shopping-list/items/{id}` | Kipipálás, mennyiség módosítása | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Tervezett |
-| DELETE | `/shopping-list/items/{id}` | Tétel törlése → 204 | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Tervezett |
-| GET | `/shopping-suggestions` | Nyitott bevásárlójavaslatok az indokkal (kiváltó, keletkezés; minimumnál a jelenlegi mennyiség és a minimumszint) és a javasolt mennyiséggel | US-5 | – | Tervezett |
-| POST | `/shopping-suggestions/{id}/accept` | Elfogadás, opcionális `{ amount, unit }`: a tétel a listára kerül | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT`, `VALIDATION_FAILED` | Tervezett |
-| POST | `/shopping-suggestions/{id}/reject` | Elutasítás | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Tervezett |
-| PUT | `/ingredients/{id}/minimum` | Minimumszint beállítása vagy törlése (null) | US-5 | `INGREDIENT_NOT_FOUND`, `VALIDATION_FAILED` | Tervezett |
+| GET | `/shopping-list` | Bevásárlólista-tételek magyar betűrendben | US-5 | – | Megvalósítva |
+| POST | `/shopping-list/items` | Felvétel → 200 a sorral; azonos hozzávalónál összeadódik, kipipált tételnél az új mennyiséggel indul újra | US-3, US-4, US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
+| PUT | `/shopping-list/items/{id}` | Kipipálás → 200 a sorral; megadott mennyiség lecseréli, hiányzó megtartja | US-5 | `VALIDATION_FAILED`, `SHOPPING_LIST_ITEM_NOT_FOUND` | Megvalósítva |
+| DELETE | `/shopping-list/items/{id}` | Tétel törlése → 204 | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Megvalósítva |
+| GET | `/shopping-suggestions` | Nyitott javaslatok, legrégebbi elöl, indokkal és javasolt mennyiséggel | US-5 | – | Megvalósítva |
+| POST | `/shopping-suggestions/{id}/accept` | Elfogadás `{ amount?, unit? }` → 204; ismétlés → 204 | US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND`, `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Megvalósítva |
+| POST | `/shopping-suggestions/{id}/reject` | Elutasítás → 204; ismétlés → 204 | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Megvalósítva |
+| PUT | `/ingredients/{id}/minimum` | Minimumszint beállítása `{ amount, unit }` vagy törlése `{}` → 204 | US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
 
 A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. és a 3. lépcső előtt kerülnek be.
 
@@ -62,9 +62,18 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 ### Főzés (US-4) – a megvalósított szerződés
 
 - **Előnézet** (`GET /recipes/{id}/cooking-preview?servings=`): `servings` 1–100, hiányzó érték esetén a recept adagszáma. Válasz: `{ recipeId, name, servings, recipeServings, instructions, staples, lines: [{ ingredientId, ingredientName, unit, required, available, defaultUsed, shortage, allocations: [{ expiryDate, amount, expired }] }] }`. Minden mennyiség a recept egységében van; `defaultUsed` = min(szükséges, van), az `allocations` ennek FEFO-felosztása (a lejártak elsőként).
-- **Megerősítés** (`POST /cookings`): `{ requestId, recipeId, servings, used: [{ ingredientId, amount }] }` → 201, ismételt kérésre 200 ugyanazzal a törzzsel: `{ cookingId, recipeId, recipeName, servings, cookedAt, lines: [{ ingredientName, unit, required, used, shortage }], depletedIngredients }`. A `used` pontosan a recept nem alaphozzávalóit sorolja fel, a recept egységében; alapegységre váltva legfeljebb 3 tizedes.
+- **Megerősítés** (`POST /cookings`): `{ requestId, recipeId, servings, used: [{ ingredientId, amount }] }` → 201, ismételt kérésre 200 ugyanazzal a törzzsel: `{ cookingId, recipeId, recipeName, servings, cookedAt, lines: [{ ingredientName, unit, required, used, shortage }], depletedIngredients, suggestedIngredients }`. A `used` pontosan a recept nem alaphozzávalóit sorolja fel, a recept egységében; alapegységre váltva legfeljebb 3 tizedes.
 - **Szabályok:** a szükséges mennyiség g-ban és ml-ben egészre kerekedik (a fél felfelé), db-ban mindig felfelé; a levonás FEFO szerint, tételenként `Consumed` mozgással a főzés azonosítójával; 0 felhasználásnál nincs mozgás; a hiány nem könyvelődik; a felhasznált mennyiség a készlet erejéig több lehet a szükségesnél.
 - **Hibák:** `INSUFFICIENT_STOCK` – a friss mennyiségek az `available` kiterjesztésben, levonás nélkül; `IDEMPOTENCY_CONFLICT` – a `requestId`-t eltérő tartalmú főzés használta; `PANTRY_ITEM_MODIFIED` – egy tétel közben megváltozott. Bármely ütközés után a szerver előbb a `requestId`-t keresi: ha közben ugyanez a kérés mentődött, 200-at ad ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)).
+
+### Bevásárlólista (US-5) – a megvalósított szerződés
+
+- **Mennyiség a válaszban:** `{ value, unit }` objektum, vagy null, ha nincs mennyiség; a `value` a megjelenített egységben, záró nullák nélkül. (A nullázható `unit` mező a generált OpenAPI-ban a közös `Unit` sémát is nullázhatóvá tenné: [V-37](../07_ai/verification_log.md).)
+- **Tétel:** `{ id, ingredientId, ingredientName, amount, checked }`.
+- **Javaslat:** `{ id, ingredientId, ingredientName, dimension, trigger, createdAt, recipeName, currentAmount, minimumAmount, suggestedAmount }`. `trigger`: `depleted` (elfogyott) vagy `belowMinimum`. `recipeName`: a főzés receptje, ha az fogyasztotta el. Minimumszintnél a három mennyiség a minimum egységében: a jelenlegi összmennyiség, a minimum és a hozzá hiányzó rész; ha a minimumot közben törölték, csak a jelenlegi mennyiség, alapegységben; elfogyott-javaslatnál mind null.
+- **Kérések:** a mennyiség és az egység együtt vagy egyik sem; a mennyiség 0,001 és 100 000 között, legfeljebb 3 tizedessel, JSON-számként; az egység a hozzávaló dimenziójából. Az összeadott mennyiség a sor egységében legfeljebb 100 000 (`VALIDATION_FAILED`, `amount`); eltérő egységek a kisebbikben adódnak össze.
+- **Szabályok:** javaslatot csak az *elfogyott* ok vált ki (a főzés is); a *kidobtam* és a *hibás rögzítés* nem; nincs új javaslat, amíg egy nyitott vagy fel nem oldott elutasított létezik, vagy a hozzávaló pipa nélkül a listán van. A főzés válaszában a `suggestedIngredients` sorolja fel, mi lett javaslat.
+- **Konkurencia:** minden írás hozzávalónkénti zár alatt, egy tranzakcióban ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 4–6. pont). Más háztartás tétele és javaslata 404, a nem létezővel azonos válasszal.
 
 ### Készlet (US-1) – a megvalósított szerződés
 

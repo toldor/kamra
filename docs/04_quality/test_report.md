@@ -22,18 +22,18 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
-| Unit | ≥ 18 | 210 | 210 |
-| Integrációs | ≥ 6 | 122 | 122 |
+| Unit | ≥ 18 | 299 | 299 |
+| Integrációs | ≥ 6 | 172 | 172 |
 | Frontend (Vitest) | – | 49 | 49 |
 | E2E | ≥ 6 | 7 (×2 nézet) | 7 |
-| Negatív esetek | ≥ 5 | 206 | 206 |
-| **Összesen** | **≥ 30** | **388** | **388** |
+| Negatív esetek | ≥ 5 | 273 | 273 |
+| **Összesen** | **≥ 30** | **527** | **527** |
 
 ## Legutolsó futás eredménye
 
-- Dátum: 2026-10-11
-- Eredmény: PASS – .NET 332/332 helyben kétszer egymás után (a konkurenciatesztek többszöri futtatással, az ellenséges főzés-tesztek ötször); Domain + Application sorlefedettség 97,2% (kapu: 80%); Vitest 49/49; Playwright 14/14 futás (7 teszt × asztali Chrome és 360 px) kétszer egymás után, elkülönített Docker Compose stack ellen
-- CI link: [GitHub Actions – run 38174181800](https://github.com/toldor/kamra/actions/runs/38174181800) (2026-10-11, PR a `develop`-ba, `3b60baa`): `secrets`, `backend`, `frontend` és `e2e` job zöld
+- Dátum: 2026-10-17
+- Eredmény: PASS – .NET 471/471 helyben (az integrációs csomag háromszor egymás után; a P20 és a párhuzamos elfogadás/elutasítás ötszörös ciklussal); Domain + Application sorlefedettség 97,1% (kapu: 80%); Vitest 49/49; Playwright 14/14 futás (7 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen. Az új teszteket mutációval ellenőriztük (a zár, az M15, a kipipált sor, a csökkenési ok, a főzés javaslatjelölése, a PUT mennyiségmegtartása és az ismétlés tranzakciózárása elrontva: mind elbukott).
+- CI link: [GitHub Actions – run 39065092329](https://github.com/toldor/kamra/actions/runs/39065092329) (2026-10-17, `feature/us-5-shopping-list`, `c5151be`): `secrets`, `backend`, `frontend` és `e2e` job zöld
 
 ## Tesztelt modulok
 
@@ -71,10 +71,14 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Készlet-használati esetek ([PantryUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/PantryUseCaseTests.cs)) | Unit | Rögzítés és szerkesztés kézi fake portokkal: minden Domain-szabály előbb 400 `VALIDATION_FAILED` mezőkulccsal (0, negatív, 4 tizedes, 100 000 fölött, ismeretlen vagy számként küldött egység, ismeretlen kategória, idegen dimenzió, „egyéb” lejárat nélkül, ok nélküli csökkentés, csökkenési ok növelésnél, ismeretlen vagy `added` ok, túl hosszú keresés; negatív); nem látható hozzávaló és hiányzó tétel 404 (negatív); **elavult verzió 409 minden más ellenőrzés előtt** (a konkurenciateszt által talált hiba regressziós tesztje, negatív); alapértelmezett kategória és budapesti nap; a hozzávaló- és a készletlista magyar betűrendben ([V-33](../07_ai/verification_log.md)); csökkentés és növelés mozgással; újrabecslés a bevitel napjától ([V-25](../07_ai/verification_log.md)) | ✅ 29/29 |
 | Készlet-API ([PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs)) | Integrációs | Kategóriák, normalizált keresés, rögzítés becsült lejárattal és bevitt egységgel, a három szűrő és a rendezés, lejárt jelölés, csökkentés naplóval (mennyiség = a mozgások összege), 0-ra csökkentés; negatív: **elavult verzió 409, a tétel változatlan**; **két egyidejű szerkesztésből egy nyer**; **más háztartás tétele megkülönböztethetetlen a nem létezőtől** (S-2); 401 minden új végponton; antiforgery nélkül elutasítva; érvénytelen bemenet 400 és nem 500 (`POST` és `PUT`); `%` és `_` szó szerint; túl hosszú keresés; CSP szigorú az API-n, nonce-os a Scalaron; Scalar és OpenAPI csak fejlesztésben ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md), [V-26](../07_ai/verification_log.md), [V-27](../07_ai/verification_log.md)) | ✅ 31/31 |
 | Ellenséges készlet-tesztek ([AdversarialPantryApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialPantryApiTests.cs)) | Integrációs | Az Antigravity (Gemini 3.1 Pro) által írt támadások: IDOR, verzió-manipuláció és replay (409), mennyiség-határértékek és szöveges szám, enum számként vagy ismeretlenként, a csökkentési ok kijátszása és dimenzióváltás, törölt tétel, hibás JSON szivárgás nélkül, `Production`-ben rejtett fejlesztői eszközök és szigorú CSP (mind negatív). Hibát nem találtak. | ✅ 22/22 |
+| Bevásárlólista – Domain ([ShoppingListTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListTests.cs)) | Unit | Javaslatszabályok (csak *elfogyott*, minimumszint átlépése, 0-ra fogyásnál egy „Elfogyott” javaslat, feloldás, javasolt mennyiség), javaslat-állapotgép (ismétlés, ütközés), listatétel-összevonás (null, kipipált sor, eltérő egységek, 100 000), minimumszint, főzés-jelölés | Megvalósítva |
+| Bevásárlólista – Application ([ShoppingListUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListUseCaseTests.cs), [ShoppingListCommandTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListCommandTests.cs)) | Unit | Kérésvalidáció; a javaslat-kiértékelő (blokkolás, M15, feloldás); a use case-ek mentése, zárolása, válasza és hibaútjai (ezeket az implementáció után írtuk, mutációval ellenőrizve) | Megvalósítva |
+| Bevásárlólista – API ([ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs)) | Integrációs | P11–P16, P19, P20; azonos hiány az ajánlásban, az előnézetben és a listán; a javaslat a főzéssel egy tranzakcióban (`xmin`); ΣDelta-invariáns; egyidejű elfogadás/elutasítás és felvétel; részleges egyedi index SQL-lel; elkülönítés két háztartással; 401, antiforgery, validáció | Megvalósítva |
+| Ellenséges bevásárlólista-tesztek ([AdversarialShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialShoppingListApiTests.cs)) | Integrációs | Az Antigravity (Claude Sonnet 4.6) 8 tesztjéből 7 felvéve (ismétlés törölt sor után, 100 000-es határ, dimenzió, csökkenési ok, minimum törlése, verseny ötször, szivárgás a hibaválaszban), 1 érvénytelen kihagyva ([V-40](../07_ai/verification_log.md)) | Megvalósítva |
 
 ## Kézzel számolt ellenőrző példák
 
-A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt példák igazolják: az elvárt értéket a fejlesztő és az AI is kiszámolta az implementáció előtt, és mindegyik példához automatizált teszt tartozik (Q3).
+A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt példák igazolják: az elvárt értéket a fejlesztő és az AI is kiszámolta az implementáció előtt, és mindegyik példához automatizált teszt tartozik (Q3). A P11–P20-at a fejlesztő a T1 előtt kézzel átszámolta (2026-10-17).
 
 | # | Helyzet (a „ma” = T) | Elvárt (kézzel) | Az alkalmazás eredménye | Teszt | Egyezik |
 |---|---|---|---|---|---|
@@ -88,10 +92,18 @@ A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt
 | P8 | Ismételt főzés ugyanazzal a kérésazonosítóval | egy levonás, azonos válasz | 201, majd 200 bájtra azonos törzzsel; egymás után, 2 és 5 egyidejű kéréssel és dupla kattintással is egy levonás | [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs), [AdversarialCookingApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialCookingApiTests.cs), [cooking.spec.ts](../../tests/e2e/cooking.spec.ts) | ✅ |
 | P9 | Két egyidejű főzés 2 × 300 g, készlet 400 g | egy sikeres, 100 g marad | 201 + 409, 100 g marad, a napló-invariáns teljesül | [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs) | ✅ |
 | P10 | Felhasznált > készlet | elutasítva, a készlet változatlan | 409 `INSUFFICIENT_STOCK` a friss mennyiséggel, nincs levonás | [CookingTests.cs](../../tests/KamraApp.Unit.Tests/CookingTests.cs), [CookingUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/CookingUseCaseTests.cs), [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs) | ✅ |
+| P11 | Száraztészta 400 g, túró 500 g, szalonna 150 g, tejföl 150 g; túrós csusza „Bevásárlólistára” | Lista: tejföl 50 g | Ugyanez (a hiány az ajánlás válaszából) | [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs) | ✅ |
+| P12 | a) P11 után kézzel még tejföl 100 g; b) a P11 sora kipipálva, majd újra 50 g | a) 150 g, egy sor; b) 50 g, pipa nélkül | Ugyanez | [ShoppingListTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListTests.cs), [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs) | ✅ |
+| P13 | Paprika 500 g (T+2), paradicsom 200 g (T+1), vöröshagyma 300 g, étolaj 1 l; ajánlás → lecsó előnézete → hiány a listára → főzés → a paprika-javaslat elfogadása 500 g-mal → a paradicsom kipipálása | Hiány mindenhol 100 g; maradék vöröshagyma 150 g, étolaj 970 ml; javaslat csak a paprikára („Lecsó”); lista: paprika 500 g, paradicsom 100 g ✓ | Ugyanez; a javaslat a főzés tranzakciójában (azonos `xmin`), az ismételt főzés válasza bájtra azonos | [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs) | ✅ |
+| P14 | Tejföl 200 g → 0 a) *elfogyott*, b) *kidobtam*, c) *hibás rögzítés* okkal | a) 1 javaslat; b), c) nincs | Ugyanez | [ShoppingListTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListTests.cs), [ShoppingListUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListUseCaseTests.cs), [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs), [AdversarialShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialShoppingListApiTests.cs) | ✅ |
+| P15 | Tej 1 l → 0 *elfogyott* → „Nem kell” → új tej 1 l → 0 *elfogyott* | elutasítás után nincs; az új tétel feloldja; újabb fogyás → 1 új javaslat | Ugyanez | [ShoppingListUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListUseCaseTests.cs), [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs) | ✅ |
+| P16 | Mennyiség nélküli és 200 g-os felvétel mindkét sorrendben; kétszer mennyiség nélkül | 200 g, egy sor; mennyiség nélkül, egy sor | Ugyanez | [ShoppingListTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListTests.cs), [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs) | ✅ |
+| P19 | Tej minimum 500 ml, készlet 600 ml → 400 ml → „Nem kell” → +1 l → 0 és 300 ml; c) tej 300 ml, minimum 500 ml | 400 ml-nél javaslat, javasolt 100 ml; feloldva 1400 ml-nél; 1000 ml-nél nincs; 300 ml-nél új, javasolt 200 ml; c) azonnal, 200 ml | Ugyanez | [ShoppingListTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListTests.cs), [ShoppingListUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListUseCaseTests.cs), [ShoppingListCommandTests.cs](../../tests/KamraApp.Unit.Tests/ShoppingListCommandTests.cs), [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs) | ✅ |
+| P20 | Tej két tétele (500 + 500 ml) egyszerre 0-ra | készlet 0, pontosan 1 javaslat | Ugyanez ötször; a zár nélkül piros ([V-35](../07_ai/verification_log.md)) | [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs) | ✅ |
 
 ## Lefedetlen területek
 
-- A bevásárlólista (US-5) és a főzés hibás eseteinek teljes felülete (eltérés-kiemelés) okt. 23-ig; a készlet (US-1), az ajánlás (US-3) és a főzés alapútja (US-4) kész.
+- A bevásárlólista felülete, a hiány listára tétele és a főzés eltérés-kiemelése (T2), a saját recept és hozzávaló (T3; a P17 és a P18 ott kerül a táblázatba) okt. 22-ig.
 
 ## Ismert hiányosságok
 
