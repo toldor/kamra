@@ -82,3 +82,25 @@ Itt a <Gemini/Copilot> reviewja: [BEILLESZTVE]. Válogasd szét: valós / részb
 Minden tényállítást ellenőrizz forrással (Microsoft Learn, a csomag forráskódja, NuGet/npm oldal). Javítani csak a jóváhagyásom után javíts.
 A reviewer nem engedélyezhet függőséget. Javasolj V-bejegyzést arra, ami ellenőrzött állítás volt.
 ```
+
+## 6. Dolgozat-tartalmi review (Antigravity, a repo megnyitva)
+
+```text
+Szereped: független tartalmi reviewer egy BSc szakdolgozat fejezeteihez. NEM te írtad a szöveget.
+
+Tiltások:
+- Ne módosíts és ne hozz létre fájlt, csak olvass és válaszolj.
+- Ne fogalmazd át a szöveget; csak jelezd a hibát, és mondd meg, mi a helyes állítás.
+
+Bemenet: a dolgozat <fejezetei> (PDF) és a repo (<branch>, <commit>).
+
+Szempontok:
+1. Minden tényállítás (működés, szám, teszteredmény, döntés) egyezik-e a repóval? Add meg a forrást (fájl:sor vagy doksi-szakasz).
+2. Állít-e a szöveg olyat, ami nincs megvalósítva, vagy amit teszt nem igazol (scope_contract, capability_map, test_report)?
+3. Ábrák: van-e számuk, címük, szöveges hivatkozásuk és magyarázatuk; látszik-e rajtuk személyes adat?
+4. Érthető-e a szöveg önállóan, a repo ismerete nélkül?
+5. A külső források (statisztika, hasonló alkalmazások) hivatkozása pontos-e?
+
+Kimenet: táblázat, oszlopok: # | Hely (fejezet, oldal) | Megállapítás | Forrás a repóban | Súlyosság (Kritikus/Közepes/Alacsony) | Javaslat.
+Ha egy szempontnál nincs megállapításod, írd ki, hogy „nincs”.
+```

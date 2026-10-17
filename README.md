@@ -207,9 +207,9 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 | Szakasz | Tervezett tartalom | Állapot |
 |---|---|---|
 | Alapok | Repository, CI, architektúra, walking skeleton (autentikáció, Docker Compose) | Kész (2026-10-04) |
-| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Folyamatban – okt. 16-i mérföldkő kész (v0.2.0), cél: okt. 23. |
-| 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett (cél: nov. 6.) |
-| 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett (cél: nov. 20.) |
+| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Folyamatban – okt. 16-i mérföldkő kész (v0.2.0), cél: okt. 22. (témavezetői: okt. 23.) |
+| 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett (cél: nov. 3.; témavezetői: nov. 6.) |
+| 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett (cél: nov. 10.; témavezetői: nov. 20.) |
 | Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett (cél: dec. 4.) |
 
 ## Biztonsági és minőségi alapelvek

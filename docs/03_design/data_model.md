@@ -121,9 +121,9 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 | Source | text | `Seed` (induló receptkészlet) vagy `User` (kézi felvitel); az AI-receptötlet (stretch) új értékkel bővítené |
 | SeedKey | text, null | Induló receptnél egyedi, nem változtatható kulcs |
 | CreatedAt | timestamptz | Létrehozás (UTC) |
-| RetiredAt | timestamptz, null | Archivált (saját) vagy visszavont (induló) recept: nem jelenik meg az ajánlásban, a főzések hivatkozása megmarad |
+| RetiredAt | timestamptz, null | Visszavont induló recept: egyik háztartásban sem jelenik meg az ajánlásban, a főzések hivatkozása megmarad. A háztartásonkénti archiválás a `RecipeArchives` táblában van |
 
-- A saját recept az MVP-ben létrehozható és archiválható; szerkesztés nincs (Ismert korlátok).
+- A saját recept létrehozható, szerkesztés nincs (Ismert korlátok); bármely recept archiválható a saját háztartásban (`RecipeArchives`).
 - **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 5 recept: [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept okt. 23-ig készül.
 
 ### RecipeIngredients (Recept hozzávalója)
@@ -177,11 +177,11 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 
 ## Tervezett entitások
 
-### Bevásárlólista (vázlat – a US-5 előtt véglegesítve)
+### Bevásárlólista (US-5) – végleges terv, a T1-ben valósul meg
 
-**IngredientMinimum (Minimumszint):** (`HouseholdId`, `IngredientId`) PK, `MinimumQuantity` numeric(12,3) alapegységben, > 0. Opcionális; ha nincs sor, nincs minimumszint-figyelés.
+**IngredientMinimums (Minimumszint):** (`HouseholdId`, `IngredientId`) PK; `MinimumQuantity` numeric(12,3) alapegységben, > 0; `EnteredUnit` a megjelenítéshez. Ha nincs sor, nincs minimumszint-figyelés. Csak a háztartás által látható hozzávalóra állítható be.
 
-**ShoppingSuggestion (Bevásárlójavaslat):**
+**ShoppingSuggestions (Bevásárlójavaslat):**
 
 | Mező | Típus | Leírás |
 |---|---|---|
@@ -193,24 +193,29 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | CreatedAt, ResolvedAt | timestamptz | Keletkezés; elfogadás vagy elutasítás |
 | ClearedAt | timestamptz, null | Elutasított javaslatnál: a hozzávaló újra a feltétel fölé került |
 
-- A javaslat a kiváltó csökkenéssel egy tranzakcióban keletkezik; *kidobtam* ok nem vált ki javaslatot.
-- Háztartásonként és hozzávalónként legfeljebb egy „blokkoló” javaslat lehet (`Open`, vagy `Rejected` és `ClearedAt` null) – részleges egyedi index. Amíg az elfogadott tétel a listán van, nem keletkezik új javaslat.
+- A javaslat a kiváltó csökkenéssel egy tranzakcióban keletkezik. Kiváltó csak az *elfogyott* ok (a főzés is); a *kidobtam* és a *hibás rögzítés* nem. A minimumszint beállítása is kivált, ha a készlet már alatta van.
+- Nem keletkezik javaslat, ha van blokkoló javaslat (`Open`, vagy `Rejected` és `ClearedAt` null – részleges egyedi index, háztartásonként és hozzávalónként legfeljebb egy), vagy ha a hozzávaló pipa nélkül a bevásárlólistán van.
+- Feloldás (`ClearedAt`): az összmennyiséget növelő művelet (rögzítés, *hibás rögzítés* okú növelés, a minimumszint törlése vagy csökkentése) tranzakciójában, ha `Depleted`-nél az összmennyiség > 0, `BelowMinimum`-nál ≥ a minimumszint.
+- Egyidejű csökkentéseknél a kiértékelést hozzávalónkénti tranzakciós zár sorosítja ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 6. pont).
 
-**ShoppingListItem (Bevásárlólista-tétel):**
+**ShoppingListItems (Bevásárlólista-tétel):**
 
 | Mező | Típus | Leírás |
 |---|---|---|
 | Id | uuid (PK) | GUID v7 |
 | HouseholdId | uuid (FK) | A tulajdonos háztartás |
-| IngredientId | uuid (FK) | A hozzávaló; (`HouseholdId`, `IngredientId`) egyedi, így egy hozzávaló egyszer szerepel |
-| Quantity | numeric(12,3), null | Mennyiség alapegységben; újabb hozzáadásnál összeadódik; null, ha a forrás nem ad mennyiséget (például elfogyott-javaslat) |
+| IngredientId | uuid (FK) | A hozzávaló; (`HouseholdId`, `IngredientId`) egyedi |
+| Quantity | numeric(12,3), null | Mennyiség alapegységben; null, ha a forrás nem ad mennyiséget |
 | EnteredUnit | text, null | A megjelenítés egysége |
-| Checked | boolean | Kipipálva |
+| Checked | boolean | Kipipálva (megvett) |
 | AddedAt | timestamptz | Felvétel (UTC) |
 
-- Forrás: elfogadott javaslat, kézi felvétel, majdnem elkészíthető recept hiánya (US-3) vagy a főzés hiánya (US-4).
-- Mennyiség összevonása azonos hozzávalónál: két ismert mennyiség összeadódik; ismeretlen (null) és ismert találkozásakor az ismert marad (és az egysége); két ismeretlenből ismeretlen lesz. Az upsert ezt kifejezetten kezeli (`CASE`/`COALESCE`), mert a PostgreSQL-ben a null-lal végzett összeadás null; mindkét beszúrási sorrend tesztelve.
-- Nyitott a US-5 előtt: kipipált tételhez újra hozzáadott mennyiség kezelése; a „feltétel fölé kerül” pontos vizsgálata (a bevitel tranzakciójában).
+- Forrás: elfogadott javaslat (opcionális mennyiséggel), kézi felvétel, majdnem elkészíthető recept hiánya (US-3) vagy a főzés hiánya (US-4).
+- Összevonás azonos hozzávalónál, pipa nélküli tételnél: két ismert mennyiség összeadódik; ismeretlen (null) és ismert találkozásakor az ismert marad (és az egysége); két ismeretlenből ismeretlen lesz. Kipipált tételnél a pipa törlődik, és a mennyiség az új mennyiség lesz. Az összeg sem lehet több 100 000-nél (a bemeneti korlát). Az upsert ezt kifejezetten kezeli (`CASE`/`COALESCE`), mert a PostgreSQL-ben a null-lal végzett összeadás null; mindkét beszúrási sorrend tesztelve.
+
+**CookingLines – új oszlop:** `Suggested` boolean – a főzés ennél a hozzávalónál bevásárlójavaslatot hozott létre; tárolva, hogy az ismételt kérés válasza azonos legyen ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)).
+
+**RecipeArchives (Archivált recept):** (`HouseholdId`, `RecipeId`) PK, `ArchivedAt` timestamptz. A recept ebben a háztartásban nem jelenik meg az ajánlásban, és nem főzhető újra (az ismételt főzéskérés továbbra is a tárolt eredményt adja); a háztartás törlése a sorait is törli.
 
 ## Migrációk
 
@@ -224,7 +229,8 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 ## Ismert hiányosságok
 
 - Csak az 1. lépcső táblái szerepelnek; a tételjavaslat (US-2) a 2. lépcső előtt kerül be.
-- A bevásárlólista szerkezete vázlat, a US-5 előtt véglegesedik.
+- Két recept hiánya egymástól függetlenül, ugyanabból a készletből számolódik, és a listán összeadódik; ha mindkettőt megfőznék, a valódi hiány ennél nagyobb is lehet (például 1 tojás mellett a rántotta 2, a palacsinta 1 hiányát adja, összesen 3, holott a kettőhöz 4 kellene).
+- Az archivált recept nem állítható vissza.
 - A saját hozzávaló nem nevezhető át és nem törölhető; a saját recept nem szerkeszthető, csak archiválható.
 - A kategória-napértékek amerikai (USDA FoodKeeper) adatokon alapulnak, a magyar termékekre közelítések ([V-18](../07_ai/verification_log.md)).
 - A „ma” (hamarosan lejáró, becsült lejárat) a Europe/Budapest naptári napja ([V-23](../07_ai/verification_log.md)); több időzónához háztartásonkénti beállítás kellene.

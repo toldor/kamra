@@ -45,7 +45,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 
 *Felhasználóként látni akarom, mit főzhetek abból, ami otthon van, elöl azzal, ami hamarosan lejáró alapanyagot használ fel.*
 
-- Induló receptkészlet: 20–40 magyar hétköznapi recept, strukturált hozzávalókkal. Saját recept kézzel is felvihető (név, adagszám, hozzávalók mennyiséggel és egységgel, elkészítés). A saját recept archiválható: az archivált recept nem jelenik meg az ajánlásban, a korábbi főzések megmaradnak.
+- Induló receptkészlet: 20–40 magyar hétköznapi recept, strukturált hozzávalókkal. Saját recept kézzel is felvihető (név, adagszám, hozzávalók mennyiséggel és egységgel, elkészítés). Bármely recept, az induló is, archiválható a saját háztartásban: az archivált recept nem jelenik meg az ajánlásban, és nem főzhető újra; a korábbi főzések megmaradnak, más háztartásban az induló recept változatlanul elérhető.
 - **Elkészíthető** a recept, ha minden hozzávaló megvan a szükséges mennyiségben. Rangsor: (1) a felhasznált hamarosan lejáró készlettételek száma szerint csökkenő, (2) a legkorábbi lejárat szerint, (3) név szerint.
 - **Majdnem elkészíthető** a recept, ha legfeljebb 2 hozzávaló hiányzik vagy kevés. Hozzávalónként látszik a hiányzó mennyiség, valamint az, hogy mennyi van és mennyi kell (például „tejföl: 50 g hiányzik (150 g van, 200 g kell)”); a hiány a recept alapértelmezett adagszámára számolódik. A „Bevásárlólistára” gomb egy kattintással a hiányzó mennyiségeket teszi a listára.
 - Minden ajánlás mellett indoklás áll: elkészíthető receptnél a felhasznált hamarosan lejáró hozzávalók (például „2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”), ennek hiányában „Minden hozzávaló megvan.”; majdnem elkészíthető receptnél a hiányzó mennyiségek.
@@ -62,17 +62,17 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 - Levonás és készletmozgás-napló csak a ténylegesen felhasznált mennyiségre készül; a hiány nem könyvelődik. A levonás a legkorábban lejáró készlettételből indul (FEFO), a lejárt tételt is beleértve; a megerősítő képernyő a lejárt tételt jelöli, így a felhasználó módosíthatja a felhasznált mennyiséget, vagy előbb *kidobtam* okkal rögzítheti. Például 200 g korábban és 400 g később lejáró paradicsomnál egy 300 g-os felhasználás után 0 g és 300 g marad.
 - Ha a megerősítéskor a készlet már kevesebb, mint a megadott felhasznált mennyiség (például egy másik fülön közben változott), a főzés nem mentődik: a képernyő a friss készlettel újraszámol, kiemeli az eltérést, és újra megerősítést kér. A rendszer soha nem vonja le csendben a megerősítettnél kevesebbet vagy többet.
 - A főzés megerősítése egyszer fut le (idempotens): a kérésazonosító a megerősítő képernyő megnyitásakor jön létre, és az oldal frissítése, az újraküldés és a dupla kattintás során megmarad (a böngésző munkamenet-tárolójában), amíg a főzés sikeresen le nem zárul; az ugyanazzal az azonosítóval ismételten elküldött kérés nem von le újra, hanem az eredeti főzés eredményét adja vissza. Sikeres főzés után a felület az összegzésre lép, így a frissítés nem küld új kérést. Új azonosító csak új, szándékos főzésnél keletkezik.
-- A megerősítés után egy összegző sor jelzi, mely hozzávalók fogytak el, és kerültek a bevásárlójavaslatok közé (US-5).
+- A megerősítés után egy összegző sor jelzi, mely hozzávalók fogytak el, és közülük melyek kerültek a bevásárlójavaslatok közé (US-5). Az a hozzávaló, amely pipa nélkül már a bevásárlólistán van, nem lesz javaslat.
 - Minden levonás *elfogyott* okkal kerül a készletmozgás-naplóba, a főzés-esemény pedig tárolódik (időpont, recept, adagszám, hozzávalónként a szükséges és a felhasznált mennyiség; North Star metrika).
 
 ### US-5 – Bevásárlólista
 
 *Felhasználóként olyan bevásárlólistát akarok, amely abból áll, ami tényleg hiányzik, és amiről én döntök.*
 
-- Bevásárlójavaslat keletkezik, ha (a) egy hozzávaló összes készlettétele *elfogyott* okkal 0-ra csökken, vagy (b) a hozzávaló összmennyisége az opcionálisan megadott **minimumszint** alá esik. *Kidobtam* ok nem vált ki javaslatot.
-- A bevásárlójavaslatok a bevásárlólista felületén jelennek meg, és ott elfogadhatók (felkerülnek a listára) vagy elutasíthatók.
-- Elutasított javaslat addig nem jelenik meg újra, amíg a hozzávaló a feltétel fölé nem kerül, majd újra alá nem esik. Amíg egy elfogadott tétel a listán van, nem keletkezik új javaslat.
-- A lista kézzel is bővíthető, és a „majdnem elkészíthető” receptből is (US-3). A tételek kipipálhatók és törölhetők. Ugyanaz a hozzávaló nem szerepel kétszer, a mennyiségek összeadódnak.
+- Bevásárlójavaslat keletkezik, ha (a) egy hozzávaló összes készlettétele *elfogyott* okkal 0-ra csökken, vagy (b) a hozzávaló összmennyisége *elfogyott* okkal az opcionálisan megadott **minimumszint** alá esik, vagy a minimumszintet a már alacsonyabb készlet fölé állítják be. *Kidobtam* és *hibás rögzítés* ok nem vált ki javaslatot. Nem keletkezik javaslat, ha a hozzávaló pipa nélkül már a bevásárlólistán van.
+- A bevásárlójavaslatok a bevásárlólista felületén jelennek meg, és ott elfogadhatók (felkerülnek a listára) vagy elutasíthatók. Minden javaslat megmutatja, miért keletkezett („Elfogyott”, illetve „A minimumszint (500 ml) alá csökkent: 400 ml van”), és a gombok megmondják, mi történik. Elfogadáskor a mennyiség megadható; minimumszintnél előre kitöltve azzal, ami a minimumig hiányzik, elfogyott hozzávalónál üresen, ilyenkor a tétel mennyiség nélkül kerül a listára.
+- Elutasított javaslat addig nem jelenik meg újra, amíg a hozzávaló a feltétel fölé nem kerül, majd újra alá nem esik.
+- A lista kézzel is bővíthető, és a „majdnem elkészíthető” receptből (US-3) és a főzés hiányából (US-4) is. A tételek kipipálhatók és törölhetők. Ugyanaz a hozzávaló nem szerepel kétszer: a mennyiségek összeadódnak, de a már kipipált (megvett) tétel újbóli felvételekor a pipa törlődik, és a mennyiség az új mennyiség lesz.
 
 ### US-6 – Chat asszisztens
 
@@ -88,31 +88,30 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 Sorrendben, az MVP Definition of Done teljesülése után:
 
 1. **AI-receptötlet mentése:** az AI által generált recept szerkeszthető űrlapon jelenik meg, és jóváhagyás után „AI-javasolt” forrásjelöléssel a receptek közé menthető. Mentés után az ajánlásban ugyanúgy szerepel, mint bármely más recept.
-2. **AI-os helyettesítés és adagjavaslat:** egy receptnél az AI magyarázattal javasol helyettesítő hozzávalót („nincs tejföl → görög joghurt”) és adagarányt. A javaslat az ajánlás rangsorát nem befolyásolja, és a készletet nem módosítja.
-3. **Kipipált tételből készletbevitel:** a bevásárlólistán kipipált tétel előre kitöltött készletbeviteli formot nyit (hozzávaló, mennyiség, egység), amit a felhasználó lejárattal kiegészítve ment.
+2. **Kipipált tételből készletbevitel:** a bevásárlólistán kipipált tétel előre kitöltött készletbeviteli formot nyit (hozzávaló, mennyiség, egység), amit a felhasználó lejárattal kiegészítve ment.
 
 ## 3. Korlátok
 
 ### Idő
 
-Kapacitás: kb. 20 óra/hét, összesen kb. 200 óra. Az ütemezés a témavezetővel egyeztetett (2026. okt.) mérföldkövekhez igazodik.
+Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; összesen kb. 200 óra. Az ütemezés a témavezetővel egyeztetett mérföldkövekhez igazodik, belső céldátumként a kurzus-kiírás korábbi dátumaival, így minden témavezetői mérföldkő előtt marad tartalék.
 
 | Időszak | Tartalom | Mérföldkő |
 |---|---|---|
 | szept. 28 – okt. 4. | Alapok: repo, Docker Compose, CI, regisztráció és bejelentkezés, tervezési dokumentumok | Kész: v0.1.0 |
 | okt. 5 – okt. 16. | Az 1. lépcső tervezési dokumentumai; US-1; ajánlás és főzés 3–5 recepttel (US-3, US-4 alapútja) | okt. 16.: működő készletkezelés és bemutatható ajánlás–főzés folyamat, kézzel ellenőrzött mennyiségekkel |
-| okt. 17 – okt. 23. | US-5; US-3 és US-4 hibás esetei; az induló recept- és hozzávalólista bővítése | okt. 23.: a készlet–recept–főzés–bevásárlás teljes útja (1. lépcső kész) |
-| okt. 24 – nov. 6. | 2. lépcső: LLM-mérés (PoC), US-2 | nov. 6.: stabil szakmai mag és kipróbálható MI-bevitel |
-| nov. 7 – nov. 20. | 3. lépcső: US-6; mérések | nov. 20.: feature freeze és a dolgozat teljes első változata |
-| nov. 21 – dec. 4. | Hibajavítás, telepítés kipróbálása, felhasználói próbák, a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás (saját befejezési cél) |
+| okt. 17 – okt. 22. | US-5; US-3 és US-4 hibás esetei; saját recept és hozzávaló; az induló lista bővítése; az első dokumentált telepítés; a dolgozat 1–4. fejezete és az 5. fejezet első része | okt. 22. (témavezetői: okt. 23.): a készlet–recept–főzés–bevásárlás teljes útja (1. lépcső kész) |
+| okt. 23 – nov. 3. | 2. lépcső: LLM-mérés (PoC), US-2; felhasználói kipróbálás 1. köre (okt. 26. – nov. 1., 4 fő) és javítások | nov. 3. (témavezetői: nov. 6.): stabil szakmai mag és kipróbálható MI-bevitel |
+| nov. 4 – nov. 13. | 3. lépcső: US-6 (nov. 10-ig); mérések; a dolgozat teljes első változata | nov. 13. (témavezetői: nov. 20.): a vállalt funkciók lezárása, a teljes dolgozat és projektcsomag |
+| nov. 14 – dec. 4. | Hibajavítás; felhasználói kipróbálás 2. köre (nov. 16–27., 3–4 fő); javítás utáni újratesztelés; ellenőrzött telepítés másik gépen; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás |
 | dec. 5 – dec. 11. | Végső ellenőrzés | dec. 11.: végső belső ellenőrzési csomag |
 
-- **Feature freeze: nov. 20.** Utána csak javítás és dokumentáció kerül be.
+- **Feature freeze: nov. 10.** (a témavezetői határidő nov. 20.; a különbség tartalék). Utána csak javítás és dokumentáció kerül be.
 - **Hivatalos határidők** (a témavezető tájékoztatása szerint a TTIK kari naptára alapján, egyedileg ellenőrizendő): jelentkezés a januári záróvizsgára okt. 31., dolgozatbeadás dec. 19.
-- **Döntési pont – okt. 23.:** az 1. lépcső eredménye alapján a témavezetővel döntünk a januári záróvizsga tarthatóságáról; csúszás esetén későbbi záróvizsga.
+- **Döntési pont – okt. 22–23.:** az 1. lépcső eredménye alapján a témavezetővel döntünk a januári záróvizsga tarthatóságáról; csúszás esetén későbbi záróvizsga.
 - A dolgozat a fejlesztéssel párhuzamosan készül: minden lépcső végén a hozzá tartozó fejezet.
 - Stretch csak akkor, ha a 3. lépcső a freeze előtt kész és zöld. A jelenlegi ütemezés alapján valószínűleg nem fér bele.
-- Csúszás esetén először a US-6 szűkül, **előzetesen egyeztetve a témavezetővel**. Az 1. és a 2. lépcső védett.
+- **Vágási szabály:** ha a US-2 nov. 3-ig nem kész, a US-6 szűkül (például kevesebb MCP-toollal), **előzetesen egyeztetve a témavezetővel**. Az 1. és a 2. lépcső védett.
 
 ### Adat
 
@@ -194,6 +193,7 @@ A projekt akkor leadható, ha az alábbiak **mind** teljesülnek:
 
 Tudatosan kihagyott, de a jelenlegi tervezéssel összeegyeztethető bővítések (nem stretch, ebben a scope-ban nem készülnek el):
 
+- **AI-os helyettesítés és adagjavaslat:** egy receptnél az AI magyarázattal javasolna helyettesítő hozzávalót („nincs tejföl → görög joghurt”) és adagarányt. A témavezetővel egyeztetett szűkítés (2026. okt.) szerint továbbfejlesztési lehetőség; a szabályalapú adagszámítás (US-4), a jóváhagyott mondatos bevitel (US-2) és a csak olvasó chat (US-6) a vállalás része.
 - **Saját „mindig otthon van” lista:** az alaphozzávalók (víz, só, bors) felhasználói bővítése.
 - **Kategóriafüggő „hamarosan lejáró” küszöb:** a fix 2 nap helyett kategóriánként eltérő küszöb.
 - **A kategória-eltarthatóság felhasználói felülírása** a háztartás saját szokásaihoz.

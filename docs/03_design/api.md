@@ -37,16 +37,16 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | GET | `/recipes` | Receptek (induló és saját, archivált nélkül) | US-3 | – | Tervezett – okt. 23. (a felület most nem használja) |
 | GET | `/recipes/{id}` | Recept részletei | US-3 | `RECIPE_NOT_FOUND` | Tervezett – okt. 23. (a recept szövegét a főzés előnézete adja) |
 | POST | `/recipes` | Saját recept → 201 | US-3 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
-| POST | `/recipes/{id}/archive` | Saját recept archiválása → 204 | US-3 | `RECIPE_NOT_FOUND`, `FORBIDDEN` (induló recept) | Tervezett |
+| POST | `/recipes/{id}/archive` | Recept archiválása a saját háztartásban (az induló is) → 204; ismételt → 204 | US-3 | `RECIPE_NOT_FOUND` | Tervezett |
 | GET | `/recommendations` | Elkészíthető és majdnem elkészíthető receptek indoklással és hiánnyal | US-3 | – | Megvalósítva |
-| GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED` | Megvalósítva |
-| POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT` | Megvalósítva |
+| GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED`, `RECIPE_ARCHIVED` (tervezett) | Megvalósítva |
+| POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT`, `RECIPE_ARCHIVED` (tervezett; az ismételt kérés nem) | Megvalósítva |
 | GET | `/shopping-list` | Bevásárlólista-tételek | US-5 | – | Tervezett |
-| POST | `/shopping-list/items` | Felvétel; azonos hozzávalónál a mennyiség összeadódik (upsert) | US-3, US-4, US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
+| POST | `/shopping-list/items` | Felvétel; azonos hozzávalónál összeadódik, kipipált tételnél az új mennyiséggel indul újra (upsert) | US-3, US-4, US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
 | PUT | `/shopping-list/items/{id}` | Kipipálás, mennyiség módosítása | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Tervezett |
 | DELETE | `/shopping-list/items/{id}` | Tétel törlése → 204 | US-5 | `SHOPPING_LIST_ITEM_NOT_FOUND` | Tervezett |
-| GET | `/shopping-suggestions` | Nyitott bevásárlójavaslatok | US-5 | – | Tervezett |
-| POST | `/shopping-suggestions/{id}/accept` | Elfogadás: a tétel a listára kerül | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Tervezett |
+| GET | `/shopping-suggestions` | Nyitott bevásárlójavaslatok az indokkal (kiváltó, keletkezés; minimumnál a jelenlegi mennyiség és a minimumszint) és a javasolt mennyiséggel | US-5 | – | Tervezett |
+| POST | `/shopping-suggestions/{id}/accept` | Elfogadás, opcionális `{ amount, unit }`: a tétel a listára kerül | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT`, `VALIDATION_FAILED` | Tervezett |
 | POST | `/shopping-suggestions/{id}/reject` | Elutasítás | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Tervezett |
 | PUT | `/ingredients/{id}/minimum` | Minimumszint beállítása vagy törlése (null) | US-5 | `INGREDIENT_NOT_FOUND`, `VALIDATION_FAILED` | Tervezett |
 

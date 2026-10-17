@@ -56,6 +56,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `PANTRY_ITEM_NOT_FOUND` | 404 | Készlettétel nem létezik, 0-ra csökkent, vagy más háztartásé (a válasz a három esetben azonos) | Megvalósítva |
 | `PANTRY_ITEM_MODIFIED` | 409 | A készlettétel a kliens által látott verzió óta megváltozott ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)); a kliens újratölti; elavult verziónál minden más ellenőrzés előtt | Megvalósítva |
 | `RECIPE_NOT_FOUND` | 404 | Recept nem létezik | Megvalósítva |
+| `RECIPE_ARCHIVED` | 409 | A recept ebben a háztartásban archivált, ezért az előnézete és az új főzése nem engedett; az ismételt főzéskérés a tárolt eredményt adja | Tervezett |
 | `INSUFFICIENT_STOCK` | 409 | A megerősített felhasznált mennyiség több a jelenlegi készletnél; a friss mennyiségek az `available` kiterjesztésben (`[{ ingredientId, ingredientName, amount, unit }]`, US-4) | Megvalósítva |
 | `IDEMPOTENCY_CONFLICT` | 409 | A kérésazonosítót már egy eltérő tartalmú (recept, adagszám vagy mennyiség) főzés használta ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | Megvalósítva |
 | `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik | Tervezett |

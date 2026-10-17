@@ -9,7 +9,7 @@ A web-based pantry and recipe management app with AI-assisted inventory tracking
 
 - Add inventory items via a form **or** via natural-language quick entry (the LLM extracts name, quantity, expiry date).
 - Expiry estimation based on product category when the date is missing.
-- Recipe recommendations from current stock, prioritising items that expire soon (deterministic ranking); AI-driven serving adjustment and ingredient substitution are stretch goals.
+- Recipe recommendations from current stock, prioritising items that expire soon (deterministic ranking); AI-driven serving adjustment and ingredient substitution are future work, outside the current scope (agreed with the supervisor, 2026-10).
 - Automatic stock deduction after cooking; depleted or low-stock ingredients become shopping list suggestions that the user accepts or rejects.
 - Chat assistant that queries data through **MCP** tools.
 
