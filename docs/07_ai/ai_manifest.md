@@ -3,7 +3,7 @@
 A Kamra projekt AI-first módon készül. Ez a dokumentum leírja, **milyen AI eszközöket, mire és milyen korlátokkal** használok.
 Élő dokumentum: a fejlesztés során folyamatosan bővül. Részletek: [prompt_log.md](prompt_log.md), [verification_log.md](verification_log.md).
 
-Utolsó frissítés: 2026-10-11
+Utolsó frissítés: 2026-10-18
 
 ---
 
@@ -38,8 +38,13 @@ Utolsó frissítés: 2026-10-11
 - **Trianguláció:** fontos architekturális döntésnél két modell véleménye; az ellentmondás az ADR része lesz.
 - **Commitonkénti átnézés:** minden commit előtt átnézem a diffet; a Claude Code minden commitnál kipipált AI-review checklistet mutat (lent).
 - **Szakaszonkénti review-kapu (walking skeleton):** elő-review (Claude Code `/code-review`, az auth-szakaszban `/security-review`) → független review (Antigravity) → **a review után `git status`: a reviewer nem hozhat létre fájlt** → kritikus modulnál (auth, készlet, főzés) ellenséges teszt → szétválogatás forrással (valós / részben / már benne van / téves / döntést igényel) → javítás csak jóváhagyás után → commit → push. A promptsablonok verziózva: [review_prompts.md](review_prompts.md).
-- **Spec-first szakaszonként (1. lépcső):** mini-spec → jóváhagyás → piros tesztek `NotImplementedException`-vázakkal (`test:`) → implementáció (`feat:`) → a „zöld” jelentés előtt minden CI-kapu helyben, a `dotnet format` is → reviewk → `docs:`.
+- **Spec-first szakaszonként (az 1. lépcsőtől):** mini-spec → jóváhagyás → piros tesztek `NotImplementedException`-vázakkal (`test:`) → implementáció (`feat:`) → a „zöld” jelentés előtt minden CI-kapu helyben, a `dotnet format` is → reviewk → `docs:`.
 - **Kikérdezés:** a megértés-ellenőrző kérdéseket (MI-eszköztár 27.) a walking skeletonban saját döntésem alapján kihagytam; helyette minden szakasz összefoglalóját és a diffet néztem át.
+- **Jóváhagyás:** egyszerre egy kérdés, opciókkal és indokolt ajánlással. Terv, mini-spec, felhasználói és dokumentációs szöveg csak a jóváhagyásom után kerül be; az MI a módosított szöveget írja be, nem kérdez újra.
+- **Commit és CI:** az MI nem commitol és nem pushol, a Conventional Commits parancsot adja meg (Co-Authored-By nélkül; az MI-használatot ez a manifest és a prompt log bizonyítja). Push után a CI eredményét az MI kérdezi le, a zöld futás linkje kerül a dokumentációba.
+- **Tesztek ellenőrzése:** új tesztnél mutációs ellenőrzés – a szabályt szándékosan elrontva a tesztnek el kell buknia; a `dotnet format` csak forduló kódon fut ([V-41](verification_log.md)).
+- **Naplózás:** P-bejegyzés a terv minden szakaszának (például T2) végén, és minden más érdemi munkát hozó chat végén; V-bejegyzés minden ellenőrzött MI-állításhoz, a PASS és a FAIL is; a külső reviewer modellje a naplóban szerepel.
+- **Tervek és dolgozat a repón kívül:** a mérföldkő-tervek, a jóváhagyásra írt munkaanyagok és az aktuális állapot a saját szakdolgozat-mappámban élnek; a megvalósított viselkedésre a repó dokumentumai az irányadók. A dolgozat Wordben készül: az MI követett változtatásként szerkeszt, én elfogadom vagy átírom, a változatok külön, privát git-repóban vannak.
 
 ### AI-review checklist (generált kódnál, commitonként)
 
