@@ -1,7 +1,8 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { api, ApiError, failWith, type Cooking, type CookingPreview, type CookingPreviewLine } from './api/client'
-import { useFieldErrors } from './fieldErrors'
+import { api, ApiError, failWith, type AvailableAmount, type Cooking, type CookingPreview, type CookingPreviewLine } from './api/client'
+import { useFieldErrors, type FieldProps } from './fieldErrors'
 import { formatAmount, formatDate } from './format'
+import { ShortageToList } from './ShortageToList'
 import { routes } from './useHashRoute'
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; preview: CookingPreview }
@@ -43,7 +44,11 @@ const usedMessage = 'A felhasznált mennyiség 0 és 100 000 között legyen.'
 // D-b: on this screen a changed item means the stock changed, not that an edit must be saved again.
 const stockChangedMessage = 'Közben megváltozott a készlet. Számold újra, és erősítsd meg újra.'
 
-type FieldProps = ReturnType<ReturnType<typeof useFieldErrors>['props']>
+// The live shortage of a line: what the recipe needs beyond the entered used amount.
+function shortageOf(line: CookingPreviewLine, value: string): number {
+  const used = value.trim() === '' ? 0 : Number(value)
+  return Number.isFinite(used) ? roundToThousandths(Math.max(0, line.required - Math.max(0, used))) : 0
+}
 
 function Line({ line, value, onChange, field, error }: {
   line: CookingPreviewLine
@@ -53,7 +58,7 @@ function Line({ line, value, onChange, field, error }: {
   error: ReactNode
 }) {
   const used = value.trim() === '' ? 0 : Number(value)
-  const shortage = Number.isFinite(used) ? roundToThousandths(Math.max(0, line.required - used)) : 0
+  const shortage = shortageOf(line, value)
   // F5: the split of the default amount; an edited amount is split by the backend the same way.
   const deduction = value === String(line.defaultUsed)
     ? line.allocations.map((a) => `${formatDate(a.expiryDate)} – ${formatAmount(a.amount, line.unit)}${a.expired ? ' (lejárt)' : ''}`).join(', ')
@@ -66,6 +71,8 @@ function Line({ line, value, onChange, field, error }: {
       <label htmlFor={field.id}>Felhasznált ({line.unit})</label>
       <input {...field} type="number" inputMode="decimal" min="0" step="any" value={value} onChange={(e) => onChange(e.target.value)} />
       {error}
+      {/* R1: an entered amount the stock no longer covers; a field error already says it. */}
+      {!error && used > line.available && <p className="warning">Több, mint ami van ({formatAmount(line.available, line.unit)}).</p>}
       {shortage > 0 && <p className="warning">Hiány: {formatAmount(shortage, line.unit)}</p>}
       {deduction && <p className="hint">Levonás: {deduction}</p>}
     </fieldset>
@@ -82,12 +89,28 @@ function Summary({ cooking }: { cooking: Cooking }) {
       <h2 id="cooking-done" ref={heading} tabIndex={-1}>Elkészült: {cooking.recipeName}, {cooking.servings} adag.</h2>
       {deducted.length > 0 && <p>Levonva: {deducted.map((l) => `${l.ingredientName} ${formatAmount(l.used, l.unit)}`).join(', ')}.</p>}
       {cooking.depletedIngredients.length > 0 && <p>Elfogyott: {cooking.depletedIngredients.join(', ')}.</p>}
+      {/* M5, M15: only what really became a suggestion is named. */}
+      {cooking.suggestedIngredients.length > 0 && <p>Felvettem a bevásárlójavaslatok közé: {cooking.suggestedIngredients.join(', ')}.</p>}
       <p className="actions">
+        {cooking.suggestedIngredients.length > 0 && <a href={routes.shopping} className="button-link">Megnézem</a>}
         <a href={routes.pantry} className="button-link">Vissza a készlethez</a>
         <a href={routes.recommendations} className="button-link">Mit főzzek?</a>
       </p>
     </section>
   )
+}
+
+// US-4 2. / P13: the live shortages go on the shopping list before the confirmation.
+function CookingShortages({ preview, used, onSignedOut }: {
+  preview: CookingPreview
+  used: Record<string, string>
+  onSignedOut: (notice: string) => void
+}) {
+  const lines = preview.lines
+    .map((l) => ({ ingredientId: l.ingredientId, ingredientName: l.ingredientName, amount: shortageOf(l, used[l.ingredientId] ?? ''), unit: l.unit }))
+    .filter((l) => l.amount > 0)
+  // Always mounted: once added, the button stays gone for this screen (K10).
+  return <ShortageToList label="Hiány a bevásárlólistára" lines={lines} showLink={false} onSignedOut={onSignedOut} />
 }
 
 // US-4 confirmation screen: servings, what each ingredient needs and has, the editable used amount, the
@@ -103,6 +126,8 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<{ message: string; recalculate: boolean } | null>(null)
   const [cooked, setCooked] = useState<Cooking | null>(null)
+  // R1: "Újraszámolás" reloads the preview but keeps what the user entered.
+  const keepUsed = useRef(false)
   const hintId = useId()
   const preview = load.status === 'ready' ? load.preview : null
   // The first invalid line gets the focus; the order follows the screen.
@@ -117,7 +142,8 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
         if (!active) return
         setLoad({ status: 'ready', preview })
         if (servings === undefined) setServingsText(String(preview.servings))
-        setUsed(Object.fromEntries(preview.lines.map((l) => [l.ingredientId, String(l.defaultUsed)])))
+        if (!keepUsed.current) setUsed(Object.fromEntries(preview.lines.map((l) => [l.ingredientId, String(l.defaultUsed)])))
+        keepUsed.current = false
       })
       .catch((caught: unknown) => active && fail(caught))
     return () => {
@@ -126,8 +152,21 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
   }, [recipeId, servings, tries, onSignedOut])
 
   function changeServings(text: string) {
+    // New servings mean new required amounts, so the defaults come back (K11).
+    keepUsed.current = false
     setServingsText(text)
     if (validServings(text)) setServings(Number(text))
+  }
+
+  // R1 (US-4 4.): the fresh amounts of an INSUFFICIENT_STOCK answer replace the old ones, and every line
+  // whose entered amount is now too much is marked at its field.
+  function showAvailable(preview: CookingPreview, available: AvailableAmount[]) {
+    const fresh = new Map(available.map((a) => [a.ingredientId, a.amount]))
+    const lines = preview.lines.map((l) => ({ ...l, available: fresh.get(l.ingredientId) ?? l.available }))
+    setLoad({ status: 'ready', preview: { ...preview, lines } })
+    const tooMuch = lines.filter((l) => fresh.has(l.ingredientId) && Number(used[l.ingredientId]) > l.available)
+    fields.setErrors(Object.fromEntries(tooMuch.map((l) => [l.ingredientId,
+      [`Már csak ${formatAmount(l.available, l.unit)} van, ${formatAmount(Number(used[l.ingredientId]), l.unit)} helyett.`]])))
   }
 
   async function confirm(preview: CookingPreview) {
@@ -158,6 +197,7 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
       const show = (message: string) =>
         setError({ message: code === 'PANTRY_ITEM_MODIFIED' ? stockChangedMessage : fieldErrors.length > 0 ? fieldErrors.join(' ') : message, recalculate })
       failWith(onSignedOut, show)(caught)
+      if (caught instanceof ApiError && caught.available.length > 0) showAvailable(preview, caught.available)
       setBusy(false)
     }
   }
@@ -207,6 +247,7 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
             />
           ))}
           {preview.staples.length > 0 && <p className="hint">Alaphozzávalók, ezek nem vonódnak le: {preview.staples.join(', ')}.</p>}
+          <CookingShortages preview={preview} used={used} onSignedOut={onSignedOut} />
           <h2>Elkészítés</h2>
           <p className="instructions">{preview.instructions}</p>
           {error && (
@@ -218,6 +259,8 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
                   className="link"
                   onClick={() => {
                     setError(null)
+                    fields.setErrors({})
+                    keepUsed.current = true
                     setTries((n) => n + 1)
                   }}
                 >

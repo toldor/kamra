@@ -980,6 +980,8 @@ export interface components {
             suggestedAmount: null | components["schemas"]["AmountResponse"];
         };
         ShortageResponse: {
+            /** Format: uuid */
+            ingredientId: string;
             ingredientName: string;
             /** Format: double */
             missing: number;

@@ -1,4 +1,4 @@
-import type { Category, Dimension, Shortage, Unit } from './api/client'
+import type { Amount, Category, Dimension, Ingredient, Shortage, Unit } from './api/client'
 
 // Display helpers for the pantry; the names follow data_model.md (Kategórialista).
 const categoryNames: Record<Category, string> = {
@@ -36,6 +36,22 @@ const dateFormat = new Intl.DateTimeFormat('hu-HU', { month: 'short', day: 'nume
 
 export const formatDate = (isoDate: string) => dateFormat.format(new Date(`${isoDate}T00:00:00Z`))
 
+// A moment (e.g. when a suggestion was made) as its Budapest calendar day, like the backend's "today".
+const dayFormat = new Intl.DateTimeFormat('hu-HU', { month: 'short', day: 'numeric', timeZone: 'Europe/Budapest' })
+
+export const formatDay = (isoDateTime: string) => dayFormat.format(new Date(isoDateTime))
+
+// A shopping list line: "tejföl 50 g", or just the name without an amount.
+export const formatListLine = (name: string, amount: Amount | null) =>
+  amount ? `${name} ${formatAmount(amount.value, amount.unit)}` : name
+
 // US-3: "tejföl: 50 g hiányzik (150 g van, 200 g kell)", in the recipe's unit.
 export const formatShortage = ({ ingredientName, missing, available, required, unit }: Shortage) =>
   `${ingredientName}: ${formatAmount(missing, unit)} hiányzik (${formatAmount(available, unit)} van, ${formatAmount(required, unit)} kell)`
+
+// Like the backend's Ingredient.Normalize: case and extra spaces do not matter.
+const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase()
+
+// ADR-0003: only an ingredient from the list can be chosen; undefined while the text matches none.
+export const findIngredient = (ingredients: Ingredient[], name: string) =>
+  ingredients.find((i) => normalize(i.name) === normalize(name))

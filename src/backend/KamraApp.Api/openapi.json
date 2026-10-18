@@ -1638,6 +1638,7 @@
       },
       "ShortageResponse": {
         "required": [
+          "ingredientId",
           "ingredientName",
           "missing",
           "available",
@@ -1646,6 +1647,10 @@
         ],
         "type": "object",
         "properties": {
+          "ingredientId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "ingredientName": {
             "type": "string"
           },

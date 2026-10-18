@@ -13,7 +13,7 @@ public sealed record RecipeCandidate(Guid RecipeId, string Name, int Servings, I
 public sealed record RecipeNeed(Guid IngredientId, string IngredientName, decimal Quantity, Unit Unit, bool IsStaple);
 
 // Amounts in the recipe's unit, e.g. "tejföl: 50 g hiányzik (150 g van, 200 g kell)".
-public sealed record Shortage(string IngredientName, decimal Missing, decimal Available, decimal Required, Unit Unit);
+public sealed record Shortage(Guid IngredientId, string IngredientName, decimal Missing, decimal Available, decimal Required, Unit Unit);
 
 public sealed record Recommendation(
     Guid RecipeId,
@@ -69,7 +69,7 @@ public static class Recommender
             var available = items.Sum(i => i.Quantity);
             if (available < need.Quantity)
             {
-                shortages.Add(new Shortage(need.IngredientName, Units.FromBase(need.Quantity - available, need.Unit),
+                shortages.Add(new Shortage(need.IngredientId, need.IngredientName, Units.FromBase(need.Quantity - available, need.Unit),
                     Units.FromBase(available, need.Unit), Units.FromBase(need.Quantity, need.Unit), need.Unit));
             }
         }

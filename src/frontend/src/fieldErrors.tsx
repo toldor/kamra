@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 type Field = HTMLInputElement | HTMLSelectElement
 
+export type FieldProps = ReturnType<ReturnType<typeof useFieldErrors>['props']>
+
 // ux_flows a11y, shared by the pantry form and editor (the AuthForm pattern): each field gets its
 // label id, aria-invalid and aria-describedby, its error text under it, and the first invalid
 // field receives the focus so a screen reader reads its label and error.

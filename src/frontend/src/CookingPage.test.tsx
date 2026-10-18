@@ -4,7 +4,8 @@ import App from './App'
 import { resetClientForTests } from './api/client'
 
 // status 0 = the request never reached the server (network error).
-type Reply = { status: number; body?: unknown }
+// wait: the answer is held back until the promise settles.
+type Reply = { status: number; body?: unknown; wait?: Promise<unknown> }
 
 // A fake backend: each route answers from a queue (the last reply repeats), and every request is recorded.
 function fakeBackend(routes: Record<string, Reply[]>) {
@@ -15,6 +16,7 @@ function fakeBackend(routes: Record<string, Reply[]>) {
     const queue = routes[key]
     if (!queue) throw new Error(`Unexpected request: ${key}`)
     const reply = queue.length > 1 ? queue.shift()! : queue[0]
+    if (reply.wait) await reply.wait
     if (reply.status === 0) throw new TypeError('Failed to fetch')
     return new Response(reply.body === undefined ? null : JSON.stringify(reply.body), { status: reply.status })
   }))
@@ -265,6 +267,13 @@ describe('cooking and the shopping list', () => {
     ])
     expect(screen.queryByRole('button', { name: 'Hiány a bevásárlólistára' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Főzés megerősítése' })).toBeTruthy()
+
+    // K10: no shortage for a moment, then one again - the button does not come back, so nothing is added twice.
+    fireEvent.change(tomatoes(), { target: { value: '300' } })
+    fireEvent.change(within(group('vöröshagyma')).getByLabelText('Felhasznált (g)'), { target: { value: '150' } })
+    fireEvent.change(tomatoes(), { target: { value: '250' } })
+    expect(screen.queryByRole('button', { name: 'Hiány a bevásárlólistára' })).toBeNull()
+    expect(screen.getByText('Felvettem a listára: paradicsom 50 g, vöröshagyma 150 g.')).toBeTruthy()
   })
 
   it('names the new shopping suggestions in the summary, and only when there are some (M5)', async () => {
@@ -306,6 +315,23 @@ describe('cooking and the shopping list', () => {
     expect(document.getElementById(tomatoes().getAttribute('aria-describedby')!)?.textContent).toBe('Már csak 150 g van, 300 g helyett.')
     expect(group('paradicsom').textContent).toContain('Van: 150 g')
     expect(within(group('paprika')).getByLabelText('Felhasznált (g)').getAttribute('aria-invalid')).toBeNull()
+  })
+
+  it('brings the default amounts for new servings even while a recalculation is under way (R1)', async () => {
+    backend({
+      [preview]: [{ status: 200, body: lecso() }, { status: 200, body: lecso(), wait: new Promise(() => {}) }],
+      [`${preview}?servings=6`]: [{ status: 200, body: lecso(6, 450) }],
+      [confirm]: [{ status: 409, body: { code: 'INSUFFICIENT_STOCK', title: 'Közben kevesebb lett a készlet.' } }],
+    })
+    render(<App />)
+
+    fireEvent.change(within(await screen.findByRole('group', { name: 'paradicsom' })).getByLabelText('Felhasznált (g)'), { target: { value: '250' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Főzés megerősítése' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Újraszámolás' }))
+    fireEvent.change(screen.getByLabelText('Adagszám'), { target: { value: '6' } })
+
+    await waitFor(() => expect(group('paradicsom').textContent).toContain('Kell: 450 g'))
+    expect(tomatoes().value).toBe('450')
   })
 
   it('keeps the entered amounts when recalculating, and warns where they are too much (R1)', async () => {

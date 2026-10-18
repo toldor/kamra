@@ -30,7 +30,8 @@ main {
 
 .nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0 1rem;
   margin: 0.75rem 0 0;
 }
 
@@ -300,4 +301,10 @@ dialog::backdrop {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+/* US-5: a checked shopping list row stays on the list, crossed out. */
+.item.done .check {
+  text-decoration: line-through;
+  color: #4a4a4a;
 }

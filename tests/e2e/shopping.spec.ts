@@ -67,7 +67,10 @@ test('the shortage goes from the recipe to the list and the depleted item become
   await expect(page.getByText('Felvettem a listára: paprika 500 g.')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Javaslatok/ })).toHaveCount(0)
 
+  // The tick shows at once, before the save is done: wait for the save, or the reload below would cancel it.
+  const saved = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/shopping-list/items/'))
   await page.getByRole('checkbox', { name: 'paradicsom – 100 g' }).check()
+  expect((await saved).ok()).toBe(true)
   await expect(page.getByRole('checkbox', { name: 'paradicsom – 100 g' })).toBeChecked()
   await expect(page.getByRole('checkbox', { name: 'paprika – 500 g' })).not.toBeChecked()
   await expectNoHorizontalScroll(page)

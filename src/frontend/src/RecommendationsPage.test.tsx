@@ -189,9 +189,14 @@ describe('shortage to the shopping list', () => {
     render(<App />)
 
     const card = await screen.findByRole('article', { name: 'Rántotta' })
+    // The live region is in place before it speaks, so a screen reader announces the result.
+    const status = within(card).getByRole('status')
+    expect(status.textContent).toBe('')
     fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
 
-    expect(await within(card).findByText('Felvettem a listára: tojás 3 db, tejföl 50 g.')).toBeTruthy()
+    await waitFor(() => expect(status.textContent).toBe('Felvettem a listára: tojás 3 db, tejföl 50 g.'))
+    // The pressed button is gone, so the focus moves to the result.
+    expect(document.activeElement).toBe(status)
     expect(within(card).getByRole('link', { name: 'Megnézem' }).getAttribute('href')).toBe('#/bevasarlolista')
     expect(within(card).queryByRole('button', { name: 'Bevásárlólistára' })).toBeNull()
     expect(sent(calls)).toEqual([

@@ -4,7 +4,8 @@ import App from './App'
 import { resetClientForTests } from './api/client'
 
 // status 0 = the request never reached the server (network error).
-type Reply = { status: number; body?: unknown }
+// wait: the answer is held back until the promise settles.
+type Reply = { status: number; body?: unknown; wait?: Promise<unknown> }
 
 // A fake backend: each route answers from a queue (the last reply repeats), and every request is recorded.
 function fakeBackend(routes: Record<string, Reply[]>) {
@@ -15,6 +16,7 @@ function fakeBackend(routes: Record<string, Reply[]>) {
     const queue = routes[key]
     if (!queue) throw new Error(`Unexpected request: ${key}`)
     const reply = queue.length > 1 ? queue.shift()! : queue[0]
+    if (reply.wait) await reply.wait
     if (reply.status === 0) throw new TypeError('Failed to fetch')
     return new Response(reply.body === undefined ? null : JSON.stringify(reply.body), { status: reply.status })
   }))
@@ -150,6 +152,27 @@ describe('shopping suggestions', () => {
     expect(count(calls, suggestions)).toBe(2)
   })
 
+  it('keeps the buttons disabled until the reload after a decision has arrived', async () => {
+    let release = () => {}
+    const reloaded = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const calls = backend({
+      [suggestions]: [ok([depleted(), belowMinimum()]), { status: 200, body: [belowMinimum()], wait: reloaded }],
+      'POST /api/v1/shopping-suggestions/s-paprika/accept': [noContent],
+    })
+    render(<App />)
+
+    fireEvent.click(within(await article('paprika')).getByRole('button', { name: 'Hozzáadom' }))
+
+    await waitFor(() => expect(count(calls, suggestions)).toBe(2))
+    const other = () => within(screen.getByRole('article', { name: 'tej' })).getByRole('button', { name: 'Hozzáadom' }) as HTMLButtonElement
+    expect(other().disabled).toBe(true)
+    release()
+    await waitFor(() => expect(screen.queryByRole('article', { name: 'paprika' })).toBeNull())
+    expect(other().disabled).toBe(false)
+  })
+
   it('names the day only when the stock ran out by hand', async () => {
     backend({ [suggestions]: [ok([depleted({ recipeName: null })])] })
     render(<App />)
@@ -189,8 +212,12 @@ describe('shopping suggestions', () => {
 
     // The minimum was removed meanwhile: the reason still says how much there is.
     expect((await article('tej')).textContent).toContain('A minimumszint alá csökkent: 400 ml van.')
+    // No minimum, so nothing is prefilled: the hint is the one for an empty field.
+    expect((await article('tej')).textContent).toContain('Ha üresen hagyod, mennyiség nélkül kerül a listára.')
     fireEvent.click(within(await article('paprika')).getByRole('button', { name: 'Nem kell' }))
-    expect(await notice('Rendben. Amíg újra nem veszel belőle, nem ajánlom újra: paprika.')).toBeTruthy()
+    const rejected = await notice('Rendben. Amíg újra nem veszel belőle, nem ajánlom újra: paprika.')
+    // The pressed button is gone with its row, so the focus moves to the notice (ux_flows a11y).
+    await waitFor(() => expect(document.activeElement).toBe(rejected))
 
     fireEvent.click(within(await article('tej')).getByRole('button', { name: 'Nem kell' }))
     expect(await notice('Rendben. Amíg a készlet a minimumszint fölé nem kerül, nem ajánlom újra: tej.')).toBeTruthy()
@@ -246,14 +273,14 @@ describe('list items', () => {
     fireEvent.change(within(add).getByLabelText('Mennyiség (nem kötelező)'), { target: { value: '200' } })
     fireEvent.click(within(add).getByRole('button', { name: 'Felveszem' }))
 
-    await waitFor(() => expect(count(calls, addItem)).toBe(1))
+    expect(await notice('Felvettem a listára: tejföl 200 g.')).toBeTruthy()
     expect(bodyOf(calls, addItem)).toEqual({ ingredientId: 'i-tejföl', amount: 200, unit: 'g' })
 
     await waitFor(() => expect((within(add).getByLabelText('Hozzávaló') as HTMLInputElement).value).toBe(''))
     fireEvent.change(within(add).getByLabelText('Hozzávaló'), { target: { value: 'Paprika ' } })
     fireEvent.click(within(add).getByRole('button', { name: 'Felveszem' }))
 
-    await waitFor(() => expect(count(calls, addItem)).toBe(2))
+    expect(await notice('Felvettem a listára: paprika.')).toBeTruthy()
     expect(calls.filter((c) => c.key === addItem)[1].body).toEqual({ ingredientId: 'i-paprika' })
   })
 
@@ -279,14 +306,31 @@ describe('list items', () => {
     render(<App />)
 
     fireEvent.click(await screen.findByRole('checkbox', { name: 'paprika – 500 g' }))
-    await waitFor(() => expect((screen.getByRole('checkbox', { name: 'paprika – 500 g' }) as HTMLInputElement).checked).toBe(true))
+    // The tick shows at once, before the answer arrives (found by the e2e test).
+    expect((screen.getByRole('checkbox', { name: 'paprika – 500 g' }) as HTMLInputElement).checked).toBe(true)
+    await waitFor(() => expect(count(calls, list)).toBe(2))
     expect(bodyOf(calls, 'PUT /api/v1/shopping-list/items/l-paprika')).toEqual({ checked: true })
 
     fireEvent.click(screen.getByRole('button', { name: 'Törlés: paprika' }))
 
+    const deleted = await notice('Töröltem a listáról: paprika.')
+    await waitFor(() => expect(document.activeElement).toBe(deleted))
     expect(await screen.findByText('A listád üres. Vegyél fel tételt alább.')).toBeTruthy()
     expect(count(calls, 'DELETE /api/v1/shopping-list/items/l-paprika')).toBe(1)
     expect(bodyOf(calls, 'DELETE /api/v1/shopping-list/items/l-paprika')).toBeUndefined()
+  })
+
+  it('takes the tick back when it could not be saved', async () => {
+    backend({
+      [list]: [ok([item('paprika', null)])],
+      'PUT /api/v1/shopping-list/items/l-paprika': [{ status: 0 }],
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'paprika' }))
+
+    expect(await screen.findByText(/Nem sikerült kapcsolódni a szerverhez/)).toBeTruthy()
+    expect((screen.getByRole('checkbox', { name: 'paprika' }) as HTMLInputElement).checked).toBe(false)
   })
 
   it('refreshes by itself when the item is already gone', async () => {
@@ -333,6 +377,21 @@ describe('minimum levels', () => {
 
     expect(await notice('Töröltem a minimumszintet: tej.')).toBeTruthy()
     expect(bodyOf(calls, 'PUT /api/v1/ingredients/i-tej/minimum')).toEqual({})
+  })
+
+  it('asks for the amount of a minimum level and sends nothing without it', async () => {
+    const calls = backend()
+    render(<App />)
+
+    await screen.findByText('tej: 500 ml')
+    const set = form('Új minimumszint')
+    fireEvent.change(within(set).getByLabelText('Hozzávaló'), { target: { value: 'tejföl' } })
+    fireEvent.click(within(set).getByRole('button', { name: 'Beállítom' }))
+
+    const input = within(set).getByLabelText('Mennyiség')
+    await waitFor(() => expect(input.getAttribute('aria-invalid')).toBe('true'))
+    expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toBe('Add meg, mennyi legyen a minimumszint.')
+    expect(calls.filter((c) => c.key.startsWith('PUT /api/v1/ingredients/'))).toHaveLength(0)
   })
 
   it('says so when no minimum is set', async () => {

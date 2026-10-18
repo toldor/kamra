@@ -25,11 +25,12 @@ public sealed record RecommendationResponse(
             recommendation.ExpiredIngredients, [.. recommendation.Shortages.Select(ShortageResponse.From)]);
 }
 
-// In the recipe's unit: "tejföl: 50 g hiányzik (150 g van, 200 g kell)".
-public sealed record ShortageResponse(string IngredientName, decimal Missing, decimal Available, decimal Required, Unit Unit)
+// In the recipe's unit: "tejföl: 50 g hiányzik (150 g van, 200 g kell)". The id lets the page put the
+// shortage on the shopping list (K1).
+public sealed record ShortageResponse(Guid IngredientId, string IngredientName, decimal Missing, decimal Available, decimal Required, Unit Unit)
 {
     public static ShortageResponse From(Shortage shortage) =>
-        new(shortage.IngredientName, shortage.Missing, shortage.Available, shortage.Required, shortage.Unit);
+        new(shortage.IngredientId, shortage.IngredientName, shortage.Missing, shortage.Available, shortage.Required, shortage.Unit);
 }
 
 // US-3: "Mit főzzek?" from the household's current stock.

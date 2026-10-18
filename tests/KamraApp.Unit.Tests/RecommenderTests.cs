@@ -114,7 +114,7 @@ public class RecommenderTests
         var result = Recommender.Recommend([TurosCsusza], stock, T);
 
         result.AlmostMakeable.Should().ContainSingle();
-        result.AlmostMakeable[0].Shortages.Should().Equal(new Shortage("tejföl", 50m, 150m, 200m, Unit.G));
+        result.AlmostMakeable[0].Shortages.Should().Equal(new Shortage(Id("tejföl"), "tejföl", 50m, 150m, 200m, Unit.G));
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public class RecommenderTests
 
         var result = Recommender.Recommend([Palacsinta], stock, T);
 
-        result.AlmostMakeable[0].Shortages.Should().Equal(new Shortage("tej", 2m, 3m, 5m, Unit.Dl));
+        result.AlmostMakeable[0].Shortages.Should().Equal(new Shortage(Id("tej"), "tej", 2m, 3m, 5m, Unit.Dl));
     }
 
     [Fact]
@@ -202,8 +202,8 @@ public class RecommenderTests
         result.Makeable[1].SoonExpiringIngredients.Should().BeEmpty();
         result.AlmostMakeable.Select(r => r.Name).Should().Equal("Rántotta");
         result.AlmostMakeable[0].Shortages.Should().Equal(
-            new Shortage("tojás", 3m, 0m, 3m, Unit.Db),
-            new Shortage("vaj", 20m, 0m, 20m, Unit.G));
+            new Shortage(Id("tojás"), "tojás", 3m, 0m, 3m, Unit.Db),
+            new Shortage(Id("vaj"), "vaj", 20m, 0m, 20m, Unit.G));
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public class RecommenderTests
         var result = Recommender.Recommend([sajtos], [Stock("trappista sajt", 500, 20)], T);
 
         result.Makeable.Should().BeEmpty();
-        result.AlmostMakeable.Single().Shortages.Should().Equal(new Shortage("sajt", 100m, 0m, 100m, Unit.G));
+        result.AlmostMakeable.Single().Shortages.Should().Equal(new Shortage(Id("sajt"), "sajt", 100m, 0m, 100m, Unit.G));
     }
 
     [Fact]

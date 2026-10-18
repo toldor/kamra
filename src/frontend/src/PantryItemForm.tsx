@@ -1,12 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { api, ApiError, failWith, type Category, type CategoryInfo, type Ingredient, type Unit } from './api/client'
 import { useFieldErrors } from './fieldErrors'
-import { categoryName, unitsOf } from './format'
+import { categoryName, findIngredient, unitsOf } from './format'
+import { IngredientPicker } from './IngredientPicker'
 
 const allUnits = Object.values(unitsOf).flat()
 
-// Like the backend's Ingredient.Normalize: case and extra spaces do not matter.
-const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase()
 const fieldOrder = ['ingredientId', 'amount', 'unit', 'category', 'expiryDate'] as const
 
 // US-1: a new pantry item. The ingredient is chosen from the list (ADR-0003); the units follow its
@@ -26,7 +25,7 @@ export function PantryItemForm({ categories, ingredients, onAdded, onSignedOut }
   const [error, setError] = useState<string | null>(null)
   const fields = useFieldErrors('new', fieldOrder)
 
-  const ingredient = ingredients.find((i) => normalize(i.name) === normalize(ingredientName))
+  const ingredient = findIngredient(ingredients, ingredientName)
   const units = ingredient ? unitsOf[ingredient.dimension] : allUnits
   const chosenUnit = units.includes(unit) ? unit : units[0]
   const chosenCategory = category || ingredient?.defaultCategory || ''
@@ -67,18 +66,13 @@ export function PantryItemForm({ categories, ingredients, onAdded, onSignedOut }
     <form aria-labelledby="new-item-heading" onSubmit={submit} noValidate>
       <h2 id="new-item-heading">Új tétel</h2>
 
-      <label htmlFor="new-ingredientId">Hozzávaló</label>
-      <input
-        {...fields.props('ingredientId')}
-        list="ingredient-options"
-        autoComplete="off"
+      <IngredientPicker
+        ingredients={ingredients}
         value={ingredientName}
-        onChange={(e) => setIngredientName(e.target.value)}
+        onChange={setIngredientName}
+        field={fields.props('ingredientId')}
+        error={fields.error('ingredientId')}
       />
-      <datalist id="ingredient-options">
-        {ingredients.map((i) => <option key={i.id} value={i.name} />)}
-      </datalist>
-      {fields.error('ingredientId')}
 
       <div className="row">
         <div className="field">

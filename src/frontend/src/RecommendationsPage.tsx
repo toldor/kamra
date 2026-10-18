@@ -1,11 +1,12 @@
 import { useEffect, useId, useState } from 'react'
 import { api, failWith, type Recommendation, type RecommendationsResponse } from './api/client'
 import { formatShortage } from './format'
+import { ShortageToList } from './ShortageToList'
 import { cookingRoute, routes } from './useHashRoute'
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; data: RecommendationsResponse }
 
-function RecipeCard({ recipe }: { recipe: Recommendation }) {
+function RecipeCard({ recipe, onSignedOut }: { recipe: Recommendation; onSignedOut: (notice: string) => void }) {
   const soon = recipe.soonExpiringIngredients
   // The heading names the card; useId keeps the reference valid whatever the data's ids contain.
   const headingId = useId()
@@ -22,6 +23,15 @@ function RecipeCard({ recipe }: { recipe: Recommendation }) {
         <p className="warning">Lejárt tételt is felhasznál: {recipe.expiredIngredients.join(', ')}.</p>
       )}
       <a href={cookingRoute(recipe.recipeId)} className="button-link">Megfőztem</a>
+      {/* Only an almost makeable recipe has shortages. */}
+      {recipe.shortages.length > 0 && (
+        <ShortageToList
+          label="Bevásárlólistára"
+          lines={recipe.shortages.map((s) => ({ ingredientId: s.ingredientId, ingredientName: s.ingredientName, amount: s.missing, unit: s.unit }))}
+          showLink
+          onSignedOut={onSignedOut}
+        />
+      )}
     </article>
   )
 }
@@ -63,12 +73,12 @@ export function RecommendationsPage({ onSignedOut }: { onSignedOut: (notice: str
           </button>
         </div>
       )}
-      {load.status === 'ready' && <Suggestions data={load.data} />}
+      {load.status === 'ready' && <Suggestions data={load.data} onSignedOut={onSignedOut} />}
     </main>
   )
 }
 
-function Suggestions({ data }: { data: RecommendationsResponse }) {
+function Suggestions({ data, onSignedOut }: { data: RecommendationsResponse; onSignedOut: (notice: string) => void }) {
   // ux_flows, Üres állapotok.
   if (data.pantryIsEmpty) {
     return (
@@ -94,7 +104,7 @@ function Suggestions({ data }: { data: RecommendationsResponse }) {
       {data.makeable.length > 0 ? (
         <section aria-labelledby="makeable-heading">
           <h2 id="makeable-heading">Elkészíthető</h2>
-          {data.makeable.map((r) => <RecipeCard key={r.recipeId} recipe={r} />)}
+          {data.makeable.map((r) => <RecipeCard key={r.recipeId} recipe={r} onSignedOut={onSignedOut} />)}
         </section>
       ) : (
         <p className="empty">Most egyik receptedhez sincs meg minden hozzávaló.</p>
@@ -102,7 +112,7 @@ function Suggestions({ data }: { data: RecommendationsResponse }) {
       {data.almostMakeable.length > 0 && (
         <section aria-labelledby="almost-heading">
           <h2 id="almost-heading">Majdnem elkészíthető</h2>
-          {data.almostMakeable.map((r) => <RecipeCard key={r.recipeId} recipe={r} />)}
+          {data.almostMakeable.map((r) => <RecipeCard key={r.recipeId} recipe={r} onSignedOut={onSignedOut} />)}
         </section>
       )}
     </>

@@ -5,6 +5,7 @@ import { CookingPage } from './CookingPage'
 import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
 import { RecommendationsPage } from './RecommendationsPage'
+import { ShoppingListPage } from './ShoppingListPage'
 import { cookingRecipeId, routes, useHashRoute, type Route } from './useHashRoute'
 
 // Signed out: the auth screens; signed in: the pages chosen by the hash route (useHashRoute).
@@ -27,7 +28,9 @@ function Page({ route, onSignedOut }: { route: Route; onSignedOut: (notice: stri
   const recipeId = cookingRecipeId(route)
   // key: another recipe is a new cooking screen with its own state.
   if (recipeId) return <CookingPage key={recipeId} recipeId={recipeId} onSignedOut={onSignedOut} />
-  return route === routes.recommendations ? <RecommendationsPage onSignedOut={onSignedOut} /> : <PantryPage onSignedOut={onSignedOut} />
+  if (route === routes.recommendations) return <RecommendationsPage onSignedOut={onSignedOut} />
+  if (route === routes.shopping) return <ShoppingListPage onSignedOut={onSignedOut} />
+  return <PantryPage onSignedOut={onSignedOut} />
 }
 
 export default function App() {

@@ -53,6 +53,7 @@ export function Layout({ me, route, onSignedOut, children }: {
       <nav aria-label="Oldalak" className="nav">
         {link(routes.pantry, 'Készlet')}
         {link(routes.recommendations, 'Mit főzzek?')}
+        {link(routes.shopping, 'Bevásárlólista')}
       </nav>
       {children}
     </div>
