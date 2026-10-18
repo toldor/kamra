@@ -260,3 +260,25 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **A review után (D-R1–R3):** az ajánlásokat elfogadtam (204, a recept neve, a megtartó PUT).
   - **Seed:** a 15 receptet és a 121 hozzávalót átnéztem, és változtatás nélkül jóváhagytam.
   - **Folyamat:** a T2-t új chatben folytatom; kértem, hogy a CI eredményét push után az AI ellenőrizze. A külső reviewt az Antigravityben Claude Sonnet 4.6-tal futtattam (nem Geminivel), ezért a függetlenség gyengébb; ezt a review_prompts és az ai_manifest rögzíti.
+
+### P-17 – T2: a bevásárlólista felülete, összekötés a recepttel és a főzéssel, R1
+- **Dátum:** 2026-10-18
+- **Cél:** A US-5 felülete; a „Bevásárlólistára” a receptnél; a hiány a listára és az összegző mondat a főzésnél; a közben fogyott készlet kiemelése (R1).
+- **Eszköz:** Claude Code (claude-opus-5-5); review: Claude Code `/code-review` (két ügynök, Claude Opus 5.5).
+- **Prompt összefoglaló:** „Folytatjuk… az ALLAPOT.md Következő lépése szerint” → mini-spec jóváhagyásra → „A, a többi is jóváhagyva” → piros tesztek → „mehet az implementáció” → review → javítások jóváhagyással.
+- **AI javaslat (eredeti):**
+  - **Lelet:** a recept hiánysorában nincs `ingredientId`, tömeges felvétel nincs.
+  - **K1:** A) azonosító a hiánysorba és hiányonként egy kérés, részleges hibánál csak a maradék (ajánlott); B) tömeges végpont; C) névalapú kikeresés.
+  - **K2–K13:** felépítés, szövegek, R1.
+  - **Tesztek:** a spec 15 Vitest-tesztet írt; 23 lett, mert több esetet külön tesztre bontottam.
+  - **Implementáció:** vezérelt jelölőnégyzettel; a review után 7 javítás és 3 új szöveg.
+- **Érintett fájlok:**
+  - backend: `Domain/Recommendations/Recommender.cs`, `Application/Recommendations/GetRecommendations.cs`, `openapi.json`;
+  - frontend: `ShoppingListPage.tsx`, `ShortageToList.tsx`, `IngredientPicker.tsx`, `CookingPage.tsx`, `RecommendationsPage.tsx`, `PantryItemForm.tsx`, `App.tsx`, `Layout.tsx`, `useHashRoute.ts`, `format.ts`, `fieldErrors.tsx`, `api/client.ts`, `api/messages.ts`, `api/schema.d.ts`, `index.css`;
+  - tesztek: `ShoppingListPage.test.tsx`, `RecommendationsPage.test.tsx`, `CookingPage.test.tsx`, `RecommenderTests.cs`, `ShoppingListApiTests.cs`, `tests/e2e/shopping.spec.ts`;
+  - docs: ux_flows, api, capability_map, test_report, verification_log V-44–V-45, `docs/assets/shopping-360.png`;
+  - a repón kívül: `t2_minispec.md`, `t2_review.md`, `t2_docs.md`, a terv T2 szakasza.
+- **Mit változtattam / döntésem:**
+  - **K1:** rákérdeztem, hogy az A opcióval megmarad-e a terv szerinti működés; az AI kimutatta, hogy a scope_contract „egy kattintással”-t kér, a terv „egy kéréssel”-e pontatlan volt. Az A-t választottam.
+  - **K2–K13 és a szövegek:** változtatás nélkül jóváhagytam.
+  - **A review után:** a javasolt javításokat és a három új szöveget elfogadtam.

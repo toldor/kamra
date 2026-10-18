@@ -22,7 +22,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Lépések:**
   1. Tomi megnyitja a „Mit főzzek?” oldalt. Elöl az elkészíthető receptek állnak, mindegyik egy mondatos indoklással (*„2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”*), alattuk a majdnem elkészíthetők a hiányzó mennyiségekkel (*„tejföl: 50 g hiányzik (150 g van, 200 g kell)”*). *Megvalósítva* ([recommendations-360.png](../assets/recommendations-360.png)); a lejárt tételt felhasználó receptnél: *„Lejárt tételt is felhasznál: …”*.
   2. Kiválaszt egy receptet, és a „Megfőztem” gombbal megadja az adagszámot (Betti négyfős családnál nagyobb adagot ad meg). *Megvalósítva.*
-  3. A megerősítő képernyő hozzávalónként mutatja a szükséges és a felhasznált mennyiséget, és azt, hogy melyik készlettételből vonódik le (a legkorábban lejárótól). A felhasznált mennyiség itt módosítható; ha valamiből kevesebb van, a hiány külön látszik, és egy kattintással a bevásárlólistára tehető. *Megvalósítva* ([cooking-360.png](../assets/cooking-360.png)); a bevásárlólistára tétel okt. 23-tól.
+  3. A megerősítő képernyő hozzávalónként mutatja a szükséges és a felhasznált mennyiséget, és azt, hogy melyik készlettételből vonódik le (a legkorábban lejárótól). A felhasznált mennyiség itt módosítható; ha valamiből kevesebb van, a hiány külön látszik, és egy kattintással a bevásárlólistára tehető. *Megvalósítva* ([cooking-360.png](../assets/cooking-360.png)), a hiány listára tételével együtt ([shopping.spec.ts](../../tests/e2e/shopping.spec.ts)).
   4. A megerősítés után a készlet frissül. Ha közben valami elfogyott, egy összegző sor jelzi: *„Elfogyott: tej, tojás. Felvettem a bevásárlójavaslatok közé: tej, tojás.”*, „Megnézem” linkkel. *Megvalósítva* ([cooking-done-360.png](../assets/cooking-done-360.png)); a bevásárlójavaslat-mondat és a „Megnézem” link a US-5-tel (okt. 23.), addig: *„Elfogyott: tej, tojás.”*
 - **Sikerkritérium:** a felhasznált mennyiségek levonódtak, a főzés rögzült, és Tomi tudja, mi fogyott el.
 - **Edge case – közben változott készlet:** ha a megerősítéskor valamiből már kevesebb van, mint a megadott felhasznált mennyiség, a főzés nem mentődik; a képernyő a friss készlettel újraszámol, kiemeli az eltérést (*„tejföl: már csak 150 g van, 200 g helyett”*), és újra megerősítést kér. Most: üzenet és „Újraszámolás” gomb; a kiemelés okt. 23-ig.
@@ -39,6 +39,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
   4. A „Majdnem elkészíthető” receptnél a „Bevásárlólistára” gomb a hiányzó mennyiségeket közvetlenül a listára teszi.
   5. A boltban Tomi kipipálja a megvett tételeket.
 - **Sikerkritérium:** a lista csak a Tomi által elfogadott vagy kézzel felvett tételeket tartalmazza, és egy hozzávaló nem szerepel rajta kétszer.
+- **Megvalósítva** ([shopping-360.png](../assets/shopping-360.png), [shopping.spec.ts](../../tests/e2e/shopping.spec.ts), P13). A javaslat sora megmondja, miért és mennyit javasol (*„Elfogyott (okt. 18., főzés: Lecsó).”*, *„A minimumszint (500 ml) alá csökkent: 400 ml van.”*), és a gombok alatt azt is, mi lesz a döntés következménye. A lista fölött: *„Amíg egy hozzávaló pipa nélkül a listán van, nem javaslom újra.”* A minimumszinteket ugyanezen az oldalon lehet megadni és törölni.
 
 ## Üres állapotok
 
@@ -48,6 +49,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 | „Mit főzzek?” | Üres készlet | *„Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.”* | „Készlet rögzítése” |
 | „Mit főzzek?” | Csak majdnem elkészíthető recept van | *„Most egyik receptedhez sincs meg minden hozzávaló.”* – alatta a majdnem elkészíthetők | „Bevásárlólistára” |
 | „Mit főzzek?” | Semmi nem illeszkedik | *„A kamrád alapján most nem találtam receptet. Vegyél fel saját receptet, vagy rögzíts további hozzávalókat.”* (okt. 23-ig átmenetileg: *„…Rögzíts további hozzávalókat, és újra megnézem.”*) | „Új recept”, „Bevásárlás rögzítése” (okt. 23-ig: „Készlet rögzítése”) |
+| Bevásárlólista | Üres lista | *„A listád üres. Vegyél fel tételt alább.”* – ha van javaslat: *„A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.”* | Kézi felvétel vagy „Hozzáadom” |
 
 ## Hibakezelés
 
@@ -65,6 +67,8 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 
 - **Lejárt munkamenet:** *„Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.”* Bejelentkezés után ugyanarra az oldalra kerül vissza.
 - **Közben törölt tétel:** *„Ez a tétel már nincs a kamrádban. Frissítettem a listát.”* *Megvalósítva:* a szerkesztőablak bezárul, a lista frissül ([PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx)).
+- **Közben eldöntött vagy eltűnt javaslat, törölt listatétel:** *„Erről a javaslatról már másképp döntöttél, például egy másik ablakban. Frissítettem a listát.”* (illetve *„Ez a javaslat már nem érhető el. Frissítettem a listát.”*, *„Ez a tétel már nincs a bevásárlólistán. Frissítettem a listát.”*). *Megvalósítva:* a lista magától frissül ([ShoppingListPage.test.tsx](../../src/frontend/src/ShoppingListPage.test.tsx)).
+- **Közben fogyott készlet a főzésnél:** a sor a friss mennyiséget mutatja, a hibás mező alatt: *„Már csak 150 g van, 200 g helyett.”*; az „Újraszámolás” megtartja a beírt értékeket. *Megvalósítva* ([CookingPage.test.tsx](../../src/frontend/src/CookingPage.test.tsx)).
 
 ## Akadálymentesség (minimum)
 
@@ -83,11 +87,12 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 |---|---|---|
 | 1. Első indulás és bevásárlás rögzítése | Kézi ág: [pantry-360.png](../assets/pantry-360.png) (360 px); a mondatos ág a US-2-vel | Kézi ág: [pantry.spec.ts](../../tests/e2e/pantry.spec.ts) (rögzítés becsült lejárattal, csökkentés okkal, törlés, fókusz-visszaadás); a mondatos ág a 2. lépcsőben |
 | 2. „Mit főzzek?” – főzés | Ajánlás: [recommendations-360.png](../assets/recommendations-360.png) (P7); főzés: [cooking-360.png](../assets/cooking-360.png), [cooking-done-360.png](../assets/cooking-done-360.png) (P2) | [cooking.spec.ts](../../tests/e2e/cooking.spec.ts) (a fő flow a P2-vel, dupla kattintás); [RecommendationsPage.test.tsx](../../src/frontend/src/RecommendationsPage.test.tsx), [CookingPage.test.tsx](../../src/frontend/src/CookingPage.test.tsx) |
-| 3. Bevásárlójavaslattól a listáig | `docs/assets/` alá, az implementációval | Playwright, az 1. lépcsőben |
+| 3. Bevásárlójavaslattól a listáig | [shopping-360.png](../assets/shopping-360.png) (P13) | [shopping.spec.ts](../../tests/e2e/shopping.spec.ts) (P13 a teljes úton: ugyanaz a hiány az ajánlásban, az előnézeten és a listán); [ShoppingListPage.test.tsx](../../src/frontend/src/ShoppingListPage.test.tsx) |
 | Hibakezelés (H1, H3) | Screenshot a hibaüzenettel és a helyreállítással | Playwright: AI-kiesés mockkal, hálózati hiba |
 
 ## Ismert hiányosságok
 
-- A 2. flow kész; a 3. flow (US-5) felülete még nincs implementálva, ehhez screenshot és e2e teszt sincs. A főzésnél a bevásárlólistára tétel, a bevásárlójavaslat-mondat és a közben változott készlet kiemelése okt. 23-ig készül. Lejárt munkamenet után a bejelentkezés ugyanarra az oldalra visz vissza (az útvonal az URL-ben marad), navigáláskor a fókusz az új oldal címére kerül. Az 1. flow kézi ága kész ([pantry.spec.ts](../../tests/e2e/pantry.spec.ts)), a mondatos bevitel a US-2-vel jön; addig az üres készlet szövege: *„Még üres a kamrád. Rögzítsd az első tételt az »Új tétel« űrlappal.”* A bejelentkezés, a regisztráció és a H4 hibaüzenet a walking skeleton óta él ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).
-- A „Mit főzzek?” oldal „Bevásárlólistára” gombja és a saját recept („Új recept”) okt. 23-ig készül.
+- A 2. és a 3. flow kész. Lejárt munkamenet után a bejelentkezés ugyanarra az oldalra visz vissza (az útvonal az URL-ben marad), navigáláskor a fókusz az új oldal címére kerül. Az 1. flow kézi ága kész ([pantry.spec.ts](../../tests/e2e/pantry.spec.ts)), a mondatos bevitel a US-2-vel jön; addig az üres készlet szövege: *„Még üres a kamrád. Rögzítsd az első tételt az »Új tétel« űrlappal.”* A bejelentkezés, a regisztráció és a H4 hibaüzenet a walking skeleton óta él ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).
+- A saját recept („Új recept”) okt. 23-ig készül.
+- A „Bevásárlólistára” és a „Hiány a bevásárlólistára” gomb a sikeres felvétel után eltűnik az adott képernyőről. Ha az oldal újratöltése után újra megnyomod, a mennyiségek összeadódnak, a lista egy sor marad. Ha a főzés előnézetén a felvétel után módosítod a mennyiségeket, a különbséget kézzel veheted fel a listára.
 - A szerkesztőablak bezárásakor a fókusz visszakerül a megnyitó „Módosítás” gombra ([V-28](../07_ai/verification_log.md)); törléskor a gomb megszűnik, ilyenkor a fókusz a lap elejére kerül.

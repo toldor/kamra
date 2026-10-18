@@ -54,7 +54,7 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 
 ### Ajánlás (US-3) – a megvalósított szerződés
 
-- **Válasz:** `{ pantryIsEmpty, makeable: [...], almostMakeable: [...] }`; receptenként `{ recipeId, name, servings, soonExpiringIngredients, expiredIngredients, shortages: [{ ingredientName, missing, available, required, unit }] }`. A hiány mennyiségei a recept egységében vannak („tejföl: 50 g hiányzik (150 g van, 200 g kell)”), az alapértelmezett adagszámra.
+- **Válasz:** `{ pantryIsEmpty, makeable: [...], almostMakeable: [...] }`; receptenként `{ recipeId, name, servings, soonExpiringIngredients, expiredIngredients, shortages: [{ ingredientId, ingredientName, missing, available, required, unit }] }`. A hiány mennyiségei a recept egységében vannak („tejföl: 50 g hiányzik (150 g van, 200 g kell)”), az alapértelmezett adagszámra. Az `ingredientId`-val a hiány közvetlenül a bevásárlólistára tehető.
 - **Szabályok:** az alaphozzávalók (víz, só, bors) nem számítanak; elkészíthető, ha nincs hiány, majdnem elkészíthető 1–2 hiányzó vagy kevés hozzávalóval. A „felhasznált” tételek az alapértelmezett adagszám FEFO-felosztása (a lejártak elsőként); a lejárt tétel készletnek számít és jelölt, de a rangsoron nem javít.
 - **Rangsor:** elkészíthetők – a felhasznált hamarosan lejáró tételek száma (csökkenő), a nem lejárt felhasznált tételek legkorábbi lejárata, magyar névsor; majdnem elkészíthetők – kevesebb hiány, a felhasznált hamarosan lejárók száma, név.
 - **Üres készletnél** nincs ajánlás (`pantryIsEmpty: true`, üres listák), a ux_flows üres-állapot szövegéhez.
@@ -93,7 +93,6 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 
 ## Ismert hiányosságok
 
-- A 409-es `available` mennyiségeket a felület még nem emeli ki, és az „Újraszámolás” visszaállítja az alapértelmezett értékeket; a teljes eltérés-kiemelés okt. 23-ig készül.
 - Az archivált recept előnézetének és első főzésének tiltása az archiválással együtt készül.
 - Az ajánlás az összes illeszkedő receptet visszaadja, lapozás nélkül; háztartási méretnél (20–40 recept) erre nincs szükség.
 - Egy készlettétel friss adatát (például verzióütközés után) a felület a teljes készletlistából veszi; tételenkénti `GET /pantry-items/{id}` végpont nincs, háztartási méretnél erre nincs szükség.

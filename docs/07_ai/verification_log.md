@@ -359,3 +359,26 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** A fejlesztő a tervezetet soronként átnézte, és változtatás nélkül jóváhagyta (`kamra_seed_atnezes.md`, 2026-10-17); a beépítés szkripttel, közvetlenül ebből a táblázatból történt, és a spec-review szkripttel karakterre egyezőnek találta. Automatizált teszt: minden receptben van nem alap hozzávaló, az adagszám 1 és 100 közé esik, a név egyedi, a lista mérete a vállalás szerinti ([SeedDataTests.cs](../../tests/KamraApp.Unit.Tests/SeedDataTests.cs)); a P5 és a P7 integrációs tesztje a bővített seeden is pontosan ugyanazt a „majdnem elkészíthető” listát adja.
 - **Eredmény:** **PASS**, egy javítással: a tervezet „Tervezési szempontok” pontja azt állította, hogy egyik új recept sem „majdnem elkészíthető” a P1–P10 egyik készletéhez képest sem; a T4 spec-reviewja megmutatta, hogy a **Rizibizi** a rántotta-készlethez (tojás, vaj) képest az (2 hozzávaló hiányzik). Ez a készlet csak főzési példa (P3), ajánlási teszt nem használja, így eredmény nem változik. A fejlesztő döntése: a recept marad, az állítás a P5/P7 készletekre szűkült.
 - **Következtetés:** Az AI által írt adatnál a saját tervezési állítást is ellenőrizni kell (itt a spec-review szkriptje tette meg); a védőháló a P5 és a P7 pontos listájú tesztje.
+
+### V-44 – Az e2e két saját hibát talált a bevásárlólista felületén (Claude Code)
+- **Dátum:** 2026-10-18
+- **Állítás:** A bevásárlólista oldal kész: a Vitest-tesztek (72/72) zöldek.
+- **Kockázat:** Közepes. A boltban a felhasználó azt látja, hogy a pipa nem marad meg, ezért újra kattint.
+- **Ellenőrzési módszer:** E2E valódi böngészőben (`shopping.spec.ts`, P13), elkülönített stacken; utána regressziós Vitest-tesztek és mutáció.
+- **Eredmény:** **FAIL**, két hibával.
+  - (1) A jelölőnégyzet vezérelt volt, ezért a mentés válaszáig visszaugrott üresre („Clicking the checkbox did not change its state”). A Vitest nem vette észre, mert a végállapotra várt. Javítás: optimista pipa, sikertelen mentésnél visszaáll; két regressziós teszt (azonnal látszik; hálózati hibánál visszaáll), mutációval ellenőrizve.
+  - (2) A javítás után a saját e2e-tesztem nem várt a mentésre, és a `page.reload()` hideg szervernél megszakította a `PUT`-ot. Javítás: a teszt a `PUT` válaszát várja meg; az API hideg újraindítása után 3 × 16/16.
+- **Következtetés:** A komponensteszt az azonnali visszajelzést nem bizonyítja; ehhez az e2e és egy kattintás utáni, várakozás nélküli ellenőrzés kell. Optimista felületnél az e2e-nek a kérés végét kell megvárnia, nem a látható állapotot.
+
+### V-45 – A T2 kódreviewja (Claude Code `/code-review`, Claude Opus 5.5)
+- **Dátum:** 2026-10-18
+- **Állítás:** A reviewer szerint
+  - a fókusz elvész, amikor a megnyomott gomb eltűnik;
+  - a sikerüzenet nem olvasódik fel;
+  - a főzésnél a mennyiség duplán kerülhet a listára;
+  - a gombok a frissítés vége előtt újra aktívak;
+  - üzleti logika van a komponensekben.
+- **Kockázat:** Közepes. Akadálymentesség és duplikált listatétel; azonos modellcsaládú reviewer, ezért a függetlenség gyenge.
+- **Ellenőrzési módszer:** Minden állítás a kódon és forrással (ux_flows a11y, K10, AGENTS.md 3. pont); a valósaknál regressziós teszt a javítás előtt (piros), utána mutáció (14/14 elbukott).
+- **Eredmény:** **PASS** a valós megállapításokra (fókusz, élő régió, duplikálás, `busy`, `keepUsed`, minimum-súgó, üres minimummennyiség); az „üzleti logika a komponensben” **téves** (meglévő számítás kiemelése, illetve a K1-ben jóváhagyott kliensvezérlés). Két jóváhagyott eltérés a spectől maradt (az azonosító ellenőrzése a P11-ben; a picker interfésze a lint-szabály miatt). Három új felhasználói szöveg jóváhagyással.
+- **Következtetés:** A két tengely itt is mást talált: a Standards az akadálymentességet, a Spec a K10-et és a versenyhelyzetet. Az akadálymentességi állításokat (például hogy egy élő régió felolvasódik-e) a Vitest csak a DOM szintjén igazolja; a képernyőolvasós kézi próba a T5 kézi tesztjeibe kerül.
