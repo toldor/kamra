@@ -58,6 +58,7 @@ const cooked = {
     { ingredientName: 'vöröshagyma', unit: 'g', required: 150, used: 0, shortage: 150 },
   ],
   depletedIngredients: ['paprika'],
+  suggestedIngredients: [] as string[],
 }
 
 const preview = 'GET /api/v1/recipes/r-lecso/cooking-preview'
@@ -242,5 +243,95 @@ describe('cooking', () => {
     render(<App />)
 
     expect((await screen.findByText('Ez a recept nem található.')).getAttribute('role')).toBe('alert')
+  })
+})
+
+describe('cooking and the shopping list', () => {
+  const addItem = 'POST /api/v1/shopping-list/items'
+  const row = { id: 'l-1', ingredientId: 'i-paradicsom', ingredientName: 'paradicsom', amount: null, checked: false }
+  const tomatoes = () => within(group('paradicsom')).getByLabelText('Felhasznált (g)') as HTMLInputElement
+
+  it('puts the live shortage on the list before the confirmation (P13)', async () => {
+    const calls = backend({ [addItem]: [{ status: 200, body: row }] })
+    render(<App />)
+
+    fireEvent.change(within(await screen.findByRole('group', { name: 'paradicsom' })).getByLabelText('Felhasznált (g)'), { target: { value: '250' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Hiány a bevásárlólistára' }))
+
+    expect(await screen.findByText('Felvettem a listára: paradicsom 50 g, vöröshagyma 150 g.')).toBeTruthy()
+    expect(calls.filter((c) => c.key === addItem).map((c) => c.body)).toEqual([
+      { ingredientId: 'i-paradicsom', amount: 50, unit: 'g' },
+      { ingredientId: 'i-vöröshagyma', amount: 150, unit: 'g' },
+    ])
+    expect(screen.queryByRole('button', { name: 'Hiány a bevásárlólistára' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Főzés megerősítése' })).toBeTruthy()
+  })
+
+  it('names the new shopping suggestions in the summary, and only when there are some (M5)', async () => {
+    backend({ [confirm]: [{ status: 201, body: { ...cooked, suggestedIngredients: ['paprika'] } }] })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
+
+    expect(await screen.findByText('Felvettem a bevásárlójavaslatok közé: paprika.')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Megnézem' }).getAttribute('href')).toBe('#/bevasarlolista')
+    cleanup()
+
+    sessionStorage.clear()
+    backend()
+    render(<App />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
+
+    expect(await screen.findByText('Elkészült: Lecsó, 4 adag.')).toBeTruthy()
+    expect(screen.queryByText(/bevásárlójavaslatok közé/)).toBeNull()
+    expect(screen.queryByRole('link', { name: 'Megnézem' })).toBeNull()
+  })
+
+  it('marks the line whose stock dropped meanwhile with the fresh amount (R1)', async () => {
+    const available = [
+      { ingredientId: 'i-étolaj', ingredientName: 'étolaj', amount: 1000, unit: 'ml' },
+      { ingredientId: 'i-paprika', ingredientName: 'paprika', amount: 500, unit: 'g' },
+      { ingredientId: 'i-paradicsom', ingredientName: 'paradicsom', amount: 150, unit: 'g' },
+      { ingredientId: 'i-vöröshagyma', ingredientName: 'vöröshagyma', amount: 0, unit: 'g' },
+    ]
+    backend({
+      [confirm]: [{ status: 409, body: { code: 'INSUFFICIENT_STOCK', title: 'Közben kevesebb lett a készlet.', available } }],
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
+
+    await waitFor(() => expect(document.activeElement).toBe(tomatoes()))
+    expect(tomatoes().getAttribute('aria-invalid')).toBe('true')
+    expect(document.getElementById(tomatoes().getAttribute('aria-describedby')!)?.textContent).toBe('Már csak 150 g van, 300 g helyett.')
+    expect(group('paradicsom').textContent).toContain('Van: 150 g')
+    expect(within(group('paprika')).getByLabelText('Felhasznált (g)').getAttribute('aria-invalid')).toBeNull()
+  })
+
+  it('keeps the entered amounts when recalculating, and warns where they are too much (R1)', async () => {
+    const fewerTomatoes = {
+      ...lecso(),
+      lines: lecso().lines.map((l) => (l.ingredientName === 'paradicsom' ? { ...l, available: 200, defaultUsed: 200, shortage: 100 } : l)),
+    }
+    const calls = backend({
+      [preview]: [{ status: 200, body: lecso() }, { status: 200, body: fewerTomatoes }],
+      [confirm]: [{
+        status: 409,
+        body: { code: 'INSUFFICIENT_STOCK', title: 'Közben kevesebb lett a készlet.', available: [{ ingredientId: 'i-paradicsom', ingredientName: 'paradicsom', amount: 200, unit: 'g' }] },
+      }],
+    })
+    render(<App />)
+
+    fireEvent.change(within(await screen.findByRole('group', { name: 'paradicsom' })).getByLabelText('Felhasznált (g)'), { target: { value: '250' } })
+    fireEvent.change(within(group('paprika')).getByLabelText('Felhasznált (g)'), { target: { value: '400' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Főzés megerősítése' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Újraszámolás' }))
+
+    await waitFor(() => expect(calls.filter((c) => c.key === preview)).toHaveLength(2))
+    await waitFor(() => expect(group('paradicsom').textContent).toContain('Van: 200 g'))
+    expect(tomatoes().value).toBe('250')
+    expect((within(group('paprika')).getByLabelText('Felhasznált (g)') as HTMLInputElement).value).toBe('400')
+    expect(group('paradicsom').textContent).toContain('Több, mint ami van (200 g).')
+    expect(group('paprika').textContent).not.toContain('Több, mint ami van')
   })
 })

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { resetClientForTests } from './api/client'
@@ -14,6 +14,8 @@ function fakeBackend(routes: Record<string, Reply[]>) {
     const queue = routes[key]
     if (!queue) throw new Error(`Unexpected request: ${key}`)
     const reply = queue.length > 1 ? queue.shift()! : queue[0]
+    // status 0 = the request never reached the server (network error).
+    if (reply.status === 0) throw new TypeError('Failed to fetch')
     return new Response(reply.body === undefined ? null : JSON.stringify(reply.body), { status: reply.status })
   }))
   return calls
@@ -163,5 +165,65 @@ describe('recipe suggestions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Újra' }))
 
     await waitFor(() => expect(screen.getByRole('article', { name: 'Lecsó' })).toBeTruthy())
+  })
+})
+
+describe('shortage to the shopping list', () => {
+  const addItem = 'POST /api/v1/shopping-list/items'
+  const rantotta = recipe('Rántotta', {
+    servings: 2,
+    shortages: [
+      { ingredientId: 'i-tojás', ingredientName: 'tojás', missing: 3, available: 0, required: 3, unit: 'db' },
+      { ingredientId: 'i-tejföl', ingredientName: 'tejföl', missing: 50, available: 150, required: 200, unit: 'g' },
+    ],
+  })
+  const row = { id: 'l-1', ingredientId: 'i-tojás', ingredientName: 'tojás', amount: { value: 3, unit: 'db' }, checked: false }
+  const sent = (calls: { url: string; init: RequestInit }[]) =>
+    calls.filter((c) => `${c.init.method} ${c.url}` === addItem).map((c) => JSON.parse(c.init.body as string))
+
+  it('puts every missing amount on the list with one click (P11)', async () => {
+    const calls = backend([recommendations({ almostMakeable: [rantotta] })], {
+      'GET /api/v1/auth/antiforgery': [{ status: 200, body: { requestToken: 'token-1' } }],
+      [addItem]: [{ status: 200, body: row }],
+    })
+    render(<App />)
+
+    const card = await screen.findByRole('article', { name: 'Rántotta' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+
+    expect(await within(card).findByText('Felvettem a listára: tojás 3 db, tejföl 50 g.')).toBeTruthy()
+    expect(within(card).getByRole('link', { name: 'Megnézem' }).getAttribute('href')).toBe('#/bevasarlolista')
+    expect(within(card).queryByRole('button', { name: 'Bevásárlólistára' })).toBeNull()
+    expect(sent(calls)).toEqual([
+      { ingredientId: 'i-tojás', amount: 3, unit: 'db' },
+      { ingredientId: 'i-tejföl', amount: 50, unit: 'g' },
+    ])
+  })
+
+  it('sends only what is still missing after a failed attempt (K1)', async () => {
+    const calls = backend([recommendations({ almostMakeable: [rantotta] })], {
+      'GET /api/v1/auth/antiforgery': [{ status: 200, body: { requestToken: 'token-1' } }],
+      [addItem]: [{ status: 200, body: row }, { status: 0 }, { status: 200, body: row }],
+    })
+    render(<App />)
+
+    const card = await screen.findByRole('article', { name: 'Rántotta' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+    expect((await within(card).findByText(/Nem sikerült kapcsolódni a szerverhez/)).getAttribute('role')).toBe('alert')
+    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+
+    expect(await within(card).findByText('Felvettem a listára: tojás 3 db, tejföl 50 g.')).toBeTruthy()
+    expect(sent(calls)).toEqual([
+      { ingredientId: 'i-tojás', amount: 3, unit: 'db' },
+      { ingredientId: 'i-tejföl', amount: 50, unit: 'g' },
+      { ingredientId: 'i-tejföl', amount: 50, unit: 'g' },
+    ])
+  })
+
+  it('offers the button only for almost makeable recipes', async () => {
+    backend([recommendations({ makeable: [recipe('Lecsó')], almostMakeable: [rantotta] })])
+    render(<App />)
+
+    expect(within(await screen.findByRole('article', { name: 'Lecsó' })).queryByRole('button', { name: 'Bevásárlólistára' })).toBeNull()
   })
 })

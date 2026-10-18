@@ -29,7 +29,15 @@ public class ShoppingListApiTests(KamraApiFactory factory)
         var shortage = (await client.GetJsonAsync("/api/v1/recommendations")).GetProperty("almostMakeable").EnumerateArray()
             .Single(r => r.GetProperty("name").GetString() == "Túrós csusza").GetProperty("shortages").EnumerateArray().Single();
 
-        var response = await AddToListAsync(client, "tejföl", shortage.GetProperty("missing").GetDecimal(), shortage.GetProperty("unit").GetString());
+        // K1: the shortage carries the ingredient id, so the "Bevásárlólistára" button needs no name lookup.
+        shortage.GetProperty("ingredientId").GetGuid().Should().Be(await IngredientIdAsync(client, "tejföl"));
+
+        var response = await client.PostAsync("/api/v1/shopping-list/items", new
+        {
+            ingredientId = shortage.GetProperty("ingredientId").GetGuid(),
+            amount = shortage.GetProperty("missing").GetDecimal(),
+            unit = shortage.GetProperty("unit").GetString(),
+        });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         (await ListAsync(client)).Should().Equal(("tejföl", 50m, "g", false));
