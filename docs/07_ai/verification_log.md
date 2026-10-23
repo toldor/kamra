@@ -439,3 +439,19 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** `npm audit` és `npm audit --omit=dev` helyben; a GitHub-figyelmeztetések (GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw, GHSA-587h-7wmj-h5pm, GHSA-9jrq-w75r-8gcw, GHSA-rq7h-c2jc-7f22, GHSA-vfpm-58rq-9qcg).
 - **Eredmény:** **PASS a kapura:** a `vite 8.3.2` sérülékeny, a `8.3.5` javított (a `^8.3.0` tartományon belül, csak a lockfile változott, a fejlesztő jóváhagyásával); az éles csomagok tiszták (`--omit=dev`: 0). Utána a CI mind a négy jobja zöld.
 - **Következtetés:** A függőség-ellenőrző kapu a saját kódtól függetlenül is megállíthatja az ágat; a javítás külön commitba kerül, hogy a változás nyoma egyértelmű legyen.
+
+### V-52 – Az első telepítés tiszta környezetben 15 percen belül (mérés, MT-02)
+- **Dátum:** 2026-10-23
+- **Állítás:** A runbook szerint egy tiszta gépen a klóntól az első sikeres `/health`-ig legfeljebb 15 perc telik el (DoD; a V-16 előzménye: kb. 2 perc a fejlesztő gépén, cache nélküli builddel).
+- **Kockázat:** Magas, ha téves: a kurzus-kiírás okt. 22-i pontja (első dokumentált telepítés), és a témavezető kérése, hogy kiderüljön, mi hiányzik ahhoz, hogy más is használni tudja.
+- **Ellenőrzési módszer:** Mérés. Új WSL-disztró (Ubuntu 24.04.5), Docker Engine 29.9.2 a hivatalos apt-tárolóból, a Docker Desktop leállítva; a fejlesztő a runbookot szó szerint követte, az időpontokat `date -Is` rögzítette, a végén a P13 a böngészőben.
+- **Eredmény:** **PASS.** A klóntól a `Healthy`-ig 1 perc 26 másodperc (18:12:14 → 18:13:40); a Docker Engine telepítésével együtt 8 perc 33 másodperc. A P13 végállapota egyezik a kézzel számolttal ([mt02-shopping-360.png](../assets/mt02-shopping-360.png)). Két runbook-hiány derült ki, és javítva: a WSL a Windows-`PATH`-on át a Docker Desktop `docker`-ét is látta, és a disztró a Windows-lemezen indult.
+- **Következtetés:** A runbook egy tiszta Linuxon működik. A „tiszta” környezetet ellenőrizni kell (`command -v docker`), mert a WSL alapból átengedi a Windows programjait. A dec. 4-i próba másik gépen, lehetőleg más személlyel lesz (O6).
+
+### V-53 – A közvetlen függőségek licence
+- **Dátum:** 2026-10-23
+- **Állítás:** A projekt minden közvetlen függősége megengedő licencű, és kompatibilis az MIT-tel.
+- **Kockázat:** Közepes: egy kereskedelmi vagy copyleft licencű csomag korlátozná a kód felhasználását.
+- **Ellenőrzési módszer:** Forrás: a csomagok saját metaadata a gépen (a NuGet-gyorsítótár `nuspec` fájljai, a `node_modules/*/package.json`), egy szkripttel kiolvasva, nem emlékezetből.
+- **Eredmény:** **PASS.** MIT, Apache-2.0 és PostgreSQL License. A FluentAssertions 8-as verziója kereskedelmi licencű; a projekt a 7.2.2-n (Apache-2.0) marad, és a `Directory.Packages.props` `[7.2.2,8.0)` tartománya ezt rögzíti. Közben kiderült, hogy a helyi `node_modules` a Vite 8.3.2-t tartalmazta a lockfile 8.3.5-je helyett; `npm ci`-vel szinkronizálva (a CI a lockfile-ból telepít, ott helyes volt).
+- **Következtetés:** A licencet a csomag metaadatából kell venni, nem a csomag nevéből vagy emlékezetből; a FluentAssertions példája mutatja, hogy a főverzió váltása licencet is válthat.
