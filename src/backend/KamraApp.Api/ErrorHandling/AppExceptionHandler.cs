@@ -1,4 +1,5 @@
 using KamraApp.Application.Common;
+using KamraApp.Application.Cookings;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,12 @@ public sealed partial class AppExceptionHandler(IProblemDetailsService problemDe
         if (exception is ValidationException validation)
         {
             problem.Extensions["errors"] = validation.Errors;
+        }
+
+        // US-4: the fresh stock amounts, so the cooking screen can recalculate.
+        if (exception is InsufficientStockException insufficient)
+        {
+            problem.Extensions["available"] = insufficient.Available;
         }
 
         httpContext.Response.StatusCode = status;

@@ -11,7 +11,8 @@ Státusz: Accepted
 
 ## Decision
 
-- Az API REST + JSON stílusú, ASP.NET controllerekkel és globális antiforgery-szűrővel, fix `/api/v1` prefixszel; a használati esetek egy közös `AppException` hierarchiával jelzik a hibát, amelyet a beépített exception handler RFC 7807 ProblemDetails-re képez le stabil `code`-dal és biztonságos magyar `title`-lel, az OpenAPI-leírás pedig build közben generálódik, és a repóban verziózott.
+- Az API REST + JSON stílusú, ASP.NET controllerekkel és globális antiforgery-szűrővel, fix `/api/v1` prefixszel; a használati esetek egy közös `AppException` hierarchiával jelzik a hibát, amelyet a beépített exception handler RFC 9457 ProblemDetails-re képez le stabil `code`-dal és biztonságos magyar `title`-lel, az OpenAPI-leírás pedig build közben generálódik, és a repóban verziózott.
+- *Pontosítás (2026-10-23):* az eredeti szöveg az RFC 7807-et nevezte meg; ezt 2023-ban az RFC 9457 felváltotta, a formátum változatlan ([V-56](../../07_ai/verification_log.md)).
 
 ## Alternatives
 
@@ -53,7 +54,7 @@ Státusz: Accepted
 **OpenAPI**
 
 15) **Kézzel írt frontend-típusok** – előny: eggyel kevesebb függőség; hátrány: a frontend típusai csendben elavulhatnak.
-16) **Böngészős API-felület (pl. Scalar)** – előny: kényelmes kézi kipróbálás; hátrány: plusz függőség, a kipróbálást a frontend és az integrációs tesztek lefedik.
+16) **Böngészős API-felület (pl. Scalar)** – előny: kényelmes kézi kipróbálás; hátrány: plusz függőség, a kipróbálást a frontend és az integrációs tesztek lefedik. **Módosítás (2026-10-10, fejlesztői döntés):** bevezetve, csak `Development` környezetben (`/scalar`, `/openapi/v1.json`), a kézi API-kipróbáláshoz a felület elkészülte előtt; `Production`-ben (Docker Compose) nincs közzétéve, ezt integrációs teszt ellenőrzi. Fejlesztésben a két végpont bejelentkezés nélkül érhető el (minimal API, a globális MVC-szűrő nem vonatkozik rá). A Scalar-oldal CSP-je: script nonce-szal, inline stílus engedélyezve; minden más válasz `default-src 'self'` ([V-27](../../07_ai/verification_log.md)).
 17) **Típusos fetch-wrapper könyvtár (pl. openapi-fetch)** – előny: típusos hívások; hátrány: plusz függőség, a generált típusokat a saját `src/frontend/src/api/` kliens is használhatja.
 
 ## Consequences
@@ -69,6 +70,7 @@ Státusz: Accepted
   - Kivétel a várt esetekben is; a szignatúrából nem látszik, mit dobhat egy metódus, ezt a hibakód-lista és a kódonkénti negatív teszt ellensúlyozza.
   - Az üzenet két helyen élhet (backend `title`, frontend katalógus).
   - Három új függőség: `Microsoft.AspNetCore.OpenApi`, `Microsoft.Extensions.ApiDescription.Server` (NuGet, MIT) és `openapi-typescript` (npm dev, MIT).
+  - +1 függőség: `Scalar.AspNetCore` (NuGet, MIT), csak fejlesztésben aktív (16. alternatíva módosítása).
   - Valódi párhuzamos API-verzióra nem számítunk; a `v1` a szerződés láthatóságát szolgálja.
 - **Figyelni kell a megvalósítás során:**
   - A nem CRUD műveletek (főzés, tételjavaslat jóváhagyása/elvetése, bevásárlójavaslat elfogadása/elutasítása) `POST` műveleti végpontok; az útvonalnevek a glosszárium fogalmait követik, az [api.md](../../03_design/api.md) szerint.
@@ -88,4 +90,4 @@ Státusz: Accepted
   - Integrációs tesztek: minden hibakódhoz legalább egy negatív teszt, amely a státuszt és a `code`-ot ellenőrzi; váratlan hibánál 500, és a válasz nem tartalmaz stack trace-t vagy belső részletet; antiforgery token nélküli módosító kérés elutasítva; ismételt jóváhagyás 200 azonos eredménnyel, ellentmondó művelet 409; egy validációs teszt azt is ellenőrzi, hogy az `errors` a hibás mezőhöz nem üres, saját (nem keretrendszer-alapértelmezett) üzenetet ad.
   - S-1 teszt: LLM-kiesésnél 503 `LLM_UNAVAILABLE`, sémahibánál 502 `LLM_INVALID_RESPONSE`.
   - Tervezési validáció: [P-12](../../07_ai/prompt_log.md), vak trianguláció; az eltérések az Alternatives 3., 8. és 11. pontjában.
-- **Evidence link:** egyetlen hibaleképező hely: [AppExceptionHandler.cs](../../../src/backend/KamraApp.Api/ErrorHandling/AppExceptionHandler.cs); negatív tesztek kódonként: [ErrorHandlingTests.cs](../../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs), [AuthTests.cs](../../../tests/KamraApp.Integration.Tests/AuthTests.cs), [ErrorCategoryMappingTests.cs](../../../tests/KamraApp.Unit.Tests/ErrorCategoryMappingTests.cs); build közben generált [openapi.json](../../../src/backend/KamraApp.Api/openapi.json) és a frontend-típusok diffje a CI-ban (contract-ellenőrzés): [CI #37157528207](https://github.com/toldor/kamra/actions/runs/37157528207). Az ismételt jóváhagyás (200/409) és az LLM-hibakódok (502/503) tesztjei a US-2-vel készülnek.
+- **Evidence link:** egyetlen hibaleképező hely: [AppExceptionHandler.cs](../../../src/backend/KamraApp.Api/ErrorHandling/AppExceptionHandler.cs); negatív tesztek kódonként: [ErrorHandlingTests.cs](../../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs), [AuthTests.cs](../../../tests/KamraApp.Integration.Tests/AuthTests.cs), [ErrorCategoryMappingTests.cs](../../../tests/KamraApp.Unit.Tests/ErrorCategoryMappingTests.cs); build közben generált [openapi.json](../../../src/backend/KamraApp.Api/openapi.json) és a frontend-típusok diffje a CI-ban (contract-ellenőrzés): [CI #37157528207](https://github.com/toldor/kamra/actions/runs/37157528207). Az ismételt jóváhagyás (200/409) és az LLM-hibakódok (502/503) tesztjei a US-2-vel készülnek. A Scalar és az OpenAPI-dokumentum csak fejlesztésben, a CSP az API-n szigorú: [PantryApiTests.cs](../../../tests/KamraApp.Integration.Tests/PantryApiTests.cs), [AdversarialPantryApiTests.cs](../../../tests/KamraApp.Integration.Tests/AdversarialPantryApiTests.cs), [CI run 38076499766](https://github.com/toldor/kamra/actions/runs/38076499766).

@@ -91,9 +91,4 @@ public class AuthUseCaseTests
 
         public Task SignOutAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
-
-    private sealed class FixedTime(DateTimeOffset now) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => now;
-    }
 }

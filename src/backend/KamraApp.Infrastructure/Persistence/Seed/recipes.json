@@ -1,0 +1,937 @@
+[
+  {
+    "id": "01a12a66-c629-7eea-a91a-3998c61b506e",
+    "seedKey": "lecso",
+    "name": "Lecsó",
+    "servings": 4,
+    "instructions": "A hagymát megtisztítjuk, felaprítjuk, és az olajon üvegesre pároljuk. Hozzáadjuk a csíkokra vágott paprikát, és néhány percig pirítjuk. Belekerül a felkockázott paradicsom és a só, majd fedő alatt, közepes lángon addig főzzük, amíg a zöldségek megpuhulnak és a leve besűrűsödik.",
+    "ingredients": [
+      {
+        "seedKey": "paprika",
+        "amount": 500,
+        "unit": "g"
+      },
+      {
+        "seedKey": "paradicsom",
+        "amount": 300,
+        "unit": "g"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 5,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a12a66-c62a-78fc-8abb-f65daf385a30",
+    "seedKey": "turos-csusza",
+    "name": "Túrós csusza",
+    "servings": 4,
+    "instructions": "A tésztát sós vízben kifőzzük és leszűrjük. A szalonnát felkockázzuk, és a zsírját kisütjük; a pörcöt félretesszük. A tésztát a zsírral összeforgatjuk, a tetejére morzsolt túró, tejföl és a pörc kerül.",
+    "ingredients": [
+      {
+        "seedKey": "szarazteszta",
+        "amount": 400,
+        "unit": "g"
+      },
+      {
+        "seedKey": "turo",
+        "amount": 500,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "szalonna",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "so",
+        "amount": 10,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a12a66-c62b-736b-9d11-e73ca344ab68",
+    "seedKey": "palacsinta",
+    "name": "Palacsinta",
+    "servings": 4,
+    "instructions": "A tojást a tejjel, a vízzel és egy csipet sóval összekeverjük, majd csomómentesre dolgozzuk bele a lisztet és az olaj felét. Fél órát pihentetjük. Forró, kevés olajjal kikent serpenyőben vékony palacsintákat sütünk, mindkét oldalukat aranybarnára.",
+    "ingredients": [
+      {
+        "seedKey": "finomliszt",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tej",
+        "amount": 5,
+        "unit": "dl"
+      },
+      {
+        "seedKey": "tojas",
+        "amount": 2,
+        "unit": "db"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 1,
+        "unit": "dl"
+      },
+      {
+        "seedKey": "so",
+        "amount": 2,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a12a66-c62c-70f3-99c5-e37c3007d5fb",
+    "seedKey": "rantotta",
+    "name": "Rántotta",
+    "servings": 2,
+    "instructions": "A tojásokat egy tálban sóval, borssal felverjük. A vajat serpenyőben felolvasztjuk, ráöntjük a tojást, és alacsony lángon, folyamatosan kevergetve addig sütjük, amíg krémesre szilárdul.",
+    "ingredients": [
+      {
+        "seedKey": "tojas",
+        "amount": 3,
+        "unit": "db"
+      },
+      {
+        "seedKey": "vaj",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "so",
+        "amount": 2,
+        "unit": "g"
+      },
+      {
+        "seedKey": "bors",
+        "amount": 1,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a12a66-c62d-74a2-9140-cf77c5877302",
+    "seedKey": "paprikas-krumpli",
+    "name": "Paprikás krumpli",
+    "servings": 4,
+    "instructions": "A hagymát az olajon megdinszteljük, levesszük a tűzről, és elkeverjük benne a pirospaprikát. Hozzáadjuk a felkockázott burgonyát és a karikára vágott kolbászt, felöntjük annyi vízzel, hogy épp ellepje, megsózzuk, és fedő alatt puhára főzzük.",
+    "ingredients": [
+      {
+        "seedKey": "burgonya",
+        "amount": 1,
+        "unit": "kg"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "kolbasz",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "orolt-pirospaprika",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 5,
+        "unit": "dl"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a031-7595-9a6f-cde8f2db92f1",
+    "seedKey": "rakott-krumpli",
+    "name": "Rakott krumpli",
+    "servings": 4,
+    "instructions": "A burgonyát héjában, a tojást keményre főzzük, majd mindkettőt megtisztítjuk és felkarikázzuk. Kivajazott tálba rétegezzük a burgonyát, a tojást és a karikára vágott kolbászt, minden réteget megsózunk és tejföllel kenünk meg; a tetejére burgonya és tejföl kerül. Előmelegített sütőben kb. 30 percig sütjük, amíg a teteje megpirul.",
+    "ingredients": [
+      {
+        "seedKey": "burgonya",
+        "amount": 1,
+        "unit": "kg"
+      },
+      {
+        "seedKey": "tojas",
+        "amount": 4,
+        "unit": "db"
+      },
+      {
+        "seedKey": "kolbasz",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 400,
+        "unit": "g"
+      },
+      {
+        "seedKey": "vaj",
+        "amount": 30,
+        "unit": "g"
+      },
+      {
+        "seedKey": "so",
+        "amount": 10,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a032-7b7c-a567-4e863defc98a",
+    "seedKey": "gulyasleves",
+    "name": "Gulyásleves",
+    "servings": 4,
+    "instructions": "A hagymát az olajon megdinszteljük, a kockára vágott húst hozzáadva fehéredésig pirítjuk. Lehúzzuk a tűzről, megszórjuk pirospaprikával és köménymaggal, felöntjük vízzel, és fedő alatt kb. másfél órán át főzzük. Hozzáadjuk a kockára vágott zöldségeket, a paprikát és a paradicsomot, megsózzuk, és addig főzzük, amíg minden megpuhul.",
+    "ingredients": [
+      {
+        "seedKey": "marhalabszar",
+        "amount": 500,
+        "unit": "g"
+      },
+      {
+        "seedKey": "burgonya",
+        "amount": 500,
+        "unit": "g"
+      },
+      {
+        "seedKey": "sargarepa",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "petrezselyemgyoker",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "paradicsom",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "paprika",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "orolt-pirospaprika",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "komenymag",
+        "amount": 2,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 1.5,
+        "unit": "l"
+      },
+      {
+        "seedKey": "so",
+        "amount": 10,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a033-7f8d-ae8a-afbcfce714ee",
+    "seedKey": "csirkepaprikas",
+    "name": "Csirkepaprikás",
+    "servings": 4,
+    "instructions": "A hagymát az olajon üvegesre pároljuk, levesszük a tűzről, és elkeverjük benne a pirospaprikát. Beletesszük a csirkecombot, a felaprított paprikát és paradicsomot, megsózzuk, kevés vízzel felöntjük, és fedő alatt puhára pároljuk. A tejfölt a liszttel csomómentesre keverjük, a szaftba forgatjuk, és még néhány percig forraljuk.",
+    "ingredients": [
+      {
+        "seedKey": "csirkecomb",
+        "amount": 1,
+        "unit": "kg"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "paprika",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "paradicsom",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "orolt-pirospaprika",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 8,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a034-7d8f-a4f9-9755074455b3",
+    "seedKey": "bolognai-spagetti",
+    "name": "Bolognai spagetti",
+    "servings": 4,
+    "instructions": "A finomra vágott hagymát, fokhagymát és reszelt répát az olajon megfuttatjuk, hozzáadjuk a darált húst, és morzsásra pirítjuk. Belekeverjük a paradicsompürét és kevés vizet, sózzuk, borsozzuk, és lassú tűzön kb. 30 percig főzzük. A tésztát sós vízben kifőzzük, a szósszal tálaljuk, a tetejére reszelt sajtot szórunk.",
+    "ingredients": [
+      {
+        "seedKey": "szarazteszta",
+        "amount": 400,
+        "unit": "g"
+      },
+      {
+        "seedKey": "daralt-serteshus",
+        "amount": 500,
+        "unit": "g"
+      },
+      {
+        "seedKey": "paradicsompure",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "fokhagyma",
+        "amount": 2,
+        "unit": "db"
+      },
+      {
+        "seedKey": "sargarepa",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "trappista-sajt",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "so",
+        "amount": 8,
+        "unit": "g"
+      },
+      {
+        "seedKey": "bors",
+        "amount": 1,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a035-77e0-ae1d-8d93fb45ecc1",
+    "seedKey": "rantott-csirkemell-rizzsel",
+    "name": "Rántott csirkemell rizzsel",
+    "servings": 4,
+    "instructions": "A csirkemellet szeletekre vágjuk, kissé kiklopfoljuk és megsózzuk. Lisztbe, felvert tojásba, majd zsemlemorzsába forgatjuk, és forró olajban mindkét oldalát aranybarnára sütjük. A rizst kevés olajon átforgatjuk, kétszeres mennyiségű sós vízzel felöntjük, és fedő alatt puhára pároljuk.",
+    "ingredients": [
+      {
+        "seedKey": "csirkemell",
+        "amount": 600,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tojas",
+        "amount": 2,
+        "unit": "db"
+      },
+      {
+        "seedKey": "zsemlemorzsa",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 300,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "rizs",
+        "amount": 300,
+        "unit": "g"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 600,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 8,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a036-7313-af94-a38a4c73d060",
+    "seedKey": "zoldborsofozelek",
+    "name": "Zöldborsófőzelék",
+    "servings": 4,
+    "instructions": "A borsót a vajon néhány percig pároljuk, megszórjuk cukorral és sóval, majd kevés vízzel felöntve puhára főzzük. A lisztet a tejjel simára keverjük, a főzelékhez adjuk, és sűrűre forraljuk. Végül belekeverjük az apróra vágott petrezselymet.",
+    "ingredients": [
+      {
+        "seedKey": "fagyasztott-zoldborso",
+        "amount": 500,
+        "unit": "g"
+      },
+      {
+        "seedKey": "vaj",
+        "amount": 30,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 30,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tej",
+        "amount": 200,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "cukor",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "petrezselyemzold",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 300,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 5,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a037-7238-b442-81754ef8d587",
+    "seedKey": "krumplifozelek",
+    "name": "Krumplifőzelék",
+    "servings": 4,
+    "instructions": "A kockára vágott burgonyát a babérlevéllel sós vízben puhára főzzük. Az olajon a finomra vágott hagymát megdinszteljük, rászórjuk a lisztet és a pirospaprikát, majd hideg vízzel csomómentes rántást készítünk. A rántással besűrítjük a főzeléket, végül a tejföllel elkeverjük; a babérlevelet tálalás előtt kivesszük.",
+    "ingredients": [
+      {
+        "seedKey": "burgonya",
+        "amount": 800,
+        "unit": "g"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 30,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "orolt-pirospaprika",
+        "amount": 5,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "baberlevel",
+        "amount": 2,
+        "unit": "db"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 600,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 8,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a038-71ec-b471-4e969a7271fa",
+    "seedKey": "sajtos-sonkas-teszta",
+    "name": "Sajtos-sonkás tészta",
+    "servings": 4,
+    "instructions": "A tésztát sós vízben kifőzzük és leszűrjük. A vajon a felkockázott sonkát átforgatjuk, hozzáadjuk a tésztát és a tejfölt. A reszelt sajt felét belekeverjük, a többit a tetejére szórjuk, és tálalás előtt fedő alatt hagyjuk megolvadni.",
+    "ingredients": [
+      {
+        "seedKey": "szarazteszta",
+        "amount": 400,
+        "unit": "g"
+      },
+      {
+        "seedKey": "sonka",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "trappista-sajt",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "vaj",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "so",
+        "amount": 8,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a039-7c94-bd89-5668e36dc0d1",
+    "seedKey": "bableves",
+    "name": "Bableves",
+    "servings": 4,
+    "instructions": "A babot előző este beáztatjuk, majd friss vízben a babérlevéllel félpuhára főzzük. Hozzáadjuk a felkarikázott zöldségeket és kolbászt, és együtt puhára főzzük. Az olajon a hagymát és a fokhagymát megfuttatjuk, rászórjuk a pirospaprikát, a tejfölös-lisztes habarással együtt a leveshez adjuk, megsózzuk, és még néhány percig forraljuk.",
+    "ingredients": [
+      {
+        "seedKey": "szarazbab",
+        "amount": 300,
+        "unit": "g"
+      },
+      {
+        "seedKey": "sargarepa",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "petrezselyemgyoker",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "fokhagyma",
+        "amount": 2,
+        "unit": "db"
+      },
+      {
+        "seedKey": "kolbasz",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "orolt-pirospaprika",
+        "amount": 5,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 20,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "baberlevel",
+        "amount": 2,
+        "unit": "db"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 2,
+        "unit": "l"
+      },
+      {
+        "seedKey": "so",
+        "amount": 10,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a03a-70da-a649-24b7b3176829",
+    "seedKey": "rizibizi",
+    "name": "Rizibizi",
+    "servings": 4,
+    "instructions": "A rizst a vajon üvegesre pirítjuk, majd kétszeres mennyiségű sós vízzel felöntjük. Amikor felforrt, hozzáadjuk a zöldborsót, és fedő alatt, kis lángon puhára pároljuk. Tálalás előtt villával átlazítjuk.",
+    "ingredients": [
+      {
+        "seedKey": "rizs",
+        "amount": 300,
+        "unit": "g"
+      },
+      {
+        "seedKey": "fagyasztott-zoldborso",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "vaj",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 600,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 5,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a03b-7d4e-9200-9ef52d9aefcf",
+    "seedKey": "tejbegriz",
+    "name": "Tejbegríz",
+    "servings": 4,
+    "instructions": "A tejet a cukorral és a vajjal felforraljuk. Folyamatos keverés mellett beleszórjuk a búzadarát, és kis lángon addig főzzük, amíg besűrűsödik. Tálaláskor a tetejét kakaóporral szórjuk meg.",
+    "ingredients": [
+      {
+        "seedKey": "tej",
+        "amount": 1,
+        "unit": "l"
+      },
+      {
+        "seedKey": "buzadara",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "cukor",
+        "amount": 60,
+        "unit": "g"
+      },
+      {
+        "seedKey": "vaj",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "kakaopor",
+        "amount": 10,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a03c-7a15-8165-ad6d3575227b",
+    "seedKey": "gombapaprikas",
+    "name": "Gombapaprikás",
+    "servings": 4,
+    "instructions": "A hagymát az olajon megdinszteljük, levesszük a tűzről, és elkeverjük benne a pirospaprikát. Hozzáadjuk a felszeletelt gombát, megsózzuk, és saját levében puhára pároljuk. A tejfölt a liszttel elkeverjük, a gombához adjuk, és néhány perc alatt összeforraljuk.",
+    "ingredients": [
+      {
+        "seedKey": "csiperkegomba",
+        "amount": 600,
+        "unit": "g"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 150,
+        "unit": "g"
+      },
+      {
+        "seedKey": "orolt-pirospaprika",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 6,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a03d-7517-9607-4b88976269ba",
+    "seedKey": "paradicsomleves",
+    "name": "Paradicsomleves",
+    "servings": 4,
+    "instructions": "A vajon a lisztet világosra pirítjuk, hozzáadjuk a paradicsompürét, majd felöntjük vízzel, és csomómentesre keverjük. Cukorral és sóval ízesítjük, és kb. 10 percig főzzük. Közben a tésztát külön kifőzzük, és a tányérban a levesre szedjük.",
+    "ingredients": [
+      {
+        "seedKey": "paradicsompure",
+        "amount": 200,
+        "unit": "g"
+      },
+      {
+        "seedKey": "cukor",
+        "amount": 40,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "vaj",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "szarazteszta",
+        "amount": 80,
+        "unit": "g"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 1.2,
+        "unit": "l"
+      },
+      {
+        "seedKey": "so",
+        "amount": 6,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a03e-76e3-82dc-b015066f8b07",
+    "seedKey": "toltott-paprika",
+    "name": "Töltött paprika",
+    "servings": 4,
+    "instructions": "A darált húst összekeverjük a nyers rizzsel, a tojással, az apróra vágott hagymával, sóval és borssal. A paprikák magházát kivágjuk, és lazán megtöltjük a masszával. A paradicsompürét vízzel felhígítjuk, cukorral és sóval ízesítjük, beletesszük a paprikákat, és fedő alatt kb. egy órán át főzzük; végül a mártást lisztes habarással besűrítjük.",
+    "ingredients": [
+      {
+        "seedKey": "paprika",
+        "amount": 800,
+        "unit": "g"
+      },
+      {
+        "seedKey": "daralt-serteshus",
+        "amount": 500,
+        "unit": "g"
+      },
+      {
+        "seedKey": "rizs",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "tojas",
+        "amount": 1,
+        "unit": "db"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "paradicsompure",
+        "amount": 300,
+        "unit": "g"
+      },
+      {
+        "seedKey": "cukor",
+        "amount": 30,
+        "unit": "g"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 20,
+        "unit": "g"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 800,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "so",
+        "amount": 10,
+        "unit": "g"
+      },
+      {
+        "seedKey": "bors",
+        "amount": 1,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "id": "01a14b8b-a03f-7536-9668-c84e89ce0917",
+    "seedKey": "lencsefozelek",
+    "name": "Lencsefőzelék",
+    "servings": 4,
+    "instructions": "A lencsét átválogatjuk, és a babérlevéllel sós vízben puhára főzzük. Az olajon a hagymát megdinszteljük, a lisztet rászórva világos rántást készítünk, és a főzelékhez adjuk. Néhány perc forralás után a tejföllel elkeverjük; a babérlevelet tálalás előtt kivesszük.",
+    "ingredients": [
+      {
+        "seedKey": "lencse",
+        "amount": 300,
+        "unit": "g"
+      },
+      {
+        "seedKey": "voroshagyma",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "baberlevel",
+        "amount": 2,
+        "unit": "db"
+      },
+      {
+        "seedKey": "finomliszt",
+        "amount": 30,
+        "unit": "g"
+      },
+      {
+        "seedKey": "etolaj",
+        "amount": 30,
+        "unit": "ml"
+      },
+      {
+        "seedKey": "tejfol",
+        "amount": 100,
+        "unit": "g"
+      },
+      {
+        "seedKey": "viz",
+        "amount": 1,
+        "unit": "l"
+      },
+      {
+        "seedKey": "so",
+        "amount": 8,
+        "unit": "g"
+      }
+    ]
+  }
+]

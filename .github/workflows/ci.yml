@@ -18,15 +18,27 @@ jobs:
   # v1.2 2.3 secret hygiene: scan the whole git history on every push (gitleaks, MIT).
   secrets:
     runs-on: ubuntu-latest
+    env:
+      # Authenticated Docker Hub pulls: the anonymous limit is shared by GitHub runners.
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Log in to Docker Hub (gitleaks image; skipped without the secret)
+        if: env.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: gitleaks (full history)
         run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 git /repo --no-banner --redact --exit-code 1
 
   backend:
     runs-on: ubuntu-latest
+    env:
+      # Authenticated Docker Hub pulls: the anonymous limit is shared by GitHub runners.
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -42,8 +54,21 @@ jobs:
       - name: OpenAPI contract unchanged (generated on build, committed)
         run: git diff --exit-code -- src/backend/KamraApp.Api/openapi.json
 
-      - name: Tests (unit + integration with PostgreSQL in Testcontainers) with coverage
-        run: dotnet test --no-build --coverlet --coverlet-output-format cobertura
+      - name: Unit tests with coverage gate (Domain + Application line coverage >= 80%, test_strategy.md)
+        run: >-
+          dotnet test --no-build --project tests/KamraApp.Unit.Tests --coverlet --coverlet-output-format cobertura
+          --coverlet-include "[KamraApp.Domain]*" --coverlet-include "[KamraApp.Application]*"
+          --coverlet-threshold 80 --coverlet-threshold-type line
+
+      - name: Log in to Docker Hub (Testcontainers pulls postgres:18; skipped without the secret)
+        if: env.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Integration tests (PostgreSQL in Testcontainers) with coverage
+        run: dotnet test --no-build --project tests/KamraApp.Integration.Tests --coverlet --coverlet-output-format cobertura
 
       - name: Vulnerable NuGet packages
         run: |
@@ -83,8 +108,18 @@ jobs:
   e2e:
     needs: [backend, frontend]
     runs-on: ubuntu-latest
+    env:
+      # Authenticated Docker Hub pulls: the anonymous limit is shared by GitHub runners.
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Log in to Docker Hub (Compose pulls postgres:18 and node:24-alpine; skipped without the secret)
+        if: env.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Start the Docker Compose stack
         env:

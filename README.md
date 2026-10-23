@@ -6,7 +6,7 @@
 
 A **Kamra** egy webalapú háztartási készlet- és receptkezelő rendszer, amelynek egyik célja az otthoni élelmiszer-pazarlás csökkentése.
 
-A rendszer tervezett működése:
+A rendszer tervezett teljes működése (hogy ebből mi készült el, azt a „Jelenlegi állapot” szakasz mutatja):
 
 - a felhasználó nyilvántarthatja az otthoni készlettételeit;
 - kezelheti a mennyiségeket, mértékegységeket és lejárati dátumokat;
@@ -37,17 +37,21 @@ A projekt célja egy olyan mérnökileg ellenőrizhető rendszer megtervezése �
 4. főzés után következetesen frissíti a készletet;
 5. az AI-t csak ellenőrzött, validált és felhasználói jóváhagyással működő folyamatokban használja.
 
-## Jelenlegi állapot – 2026. október 4.
+## Jelenlegi állapot – 2026. október 23.
 
-Elkészült a **walking skeleton**: a teljes rendszer végponttól végpontig fut egy vékony szeleten, üzleti funkció nélkül.
+Elkészült az 1. lépcső, a determinisztikus mag: a teljes út a készlettől a bevásárlólistáig, 20 saját szövegű recepttel.
 
-- regisztráció, bejelentkezés, kijelentkezés (cookie-alapú session ASP.NET Core Identity-vel, antiforgery, fiókzárolás, rate limit);
-- üres készlet-képernyő a React SPA-ban (asztali és 360 px-es mobil nézet);
-- PostgreSQL EF Core migrációkkal, külön migrator-szolgáltatással;
-- egységes hibamodell (RFC 7807 ProblemDetails, magyar üzenetek), strukturált JSON-napló `correlationId`-vel, `/health`;
-- Docker Compose stack, GitHub Actions CI (build, formázás, lint, unit-, integrációs és e2e tesztek, OpenAPI-szerződés, sérülékenység- és secret-szkennelés).
+- készlettételek rögzítése, szerkesztése, csökkentése okkal és törlése; becsült, jelölt lejárat; keresés és szűrők; alapegységű tárolás és készletmozgás-napló;
+- ajánlás: elkészíthető és majdnem elkészíthető receptek, indoklás a hamarosan lejáró hozzávalókkal, hiány „van / kell” bontásban;
+- főzés: adagszám, szükséges és felhasznált mennyiség hozzávalónként, FEFO-levonás (a legkorábban lejárótól), az ismételt vagy egyidejű főzés nem von le kétszer;
+- bevásárlólista: bevásárlójavaslat elfogyáskor és a minimumszint alá csökkenéskor, indokkal és javasolt mennyiséggel; a hiány a receptből és a főzésből egy kattintással a listára;
+- saját recept saját hozzávalóval, bármely recept archiválása a saját háztartásban;
+- húsz előre, kézzel kiszámolt ellenőrző példa, mind egyezik ([test report](docs/04_quality/test_report.md)); az első telepítés tiszta környezetben 1,5 perc alatt elindult ([kézi tesztek](docs/04_quality/manual_tests.md));
+- az alapok a walking skeletonból: regisztráció és bejelentkezés, egységes hibamodell, strukturált napló, Docker Compose stack, GitHub Actions CI.
 
-Még **nincs kész**: készletkezelés, receptek és ajánlás, főzés, bevásárlólista, AI-alapú bevitel, chatasszisztens. Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md); a tesztek állapota: [test report](docs/04_quality/test_report.md).
+Még **nincs kész**: AI-alapú egy mondatos bevitel (nov. 6.), chatasszisztens (nov. 10.). Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
+
+Következő mérföldkő: **nov. 6.** – stabil mag és kipróbálható MI-bevitel; közben okt. 26. és nov. 1. között az első felhasználói kipróbálás ([UAT-terv](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 
@@ -86,12 +90,14 @@ A chat nem módosíthat közvetlenül adatot.
 | Adatbázis | PostgreSQL |
 | Adatkezelés | Entity Framework Core, migrációk |
 | Frontend | React, TypeScript, Vite |
-| AI | ChatCompletion API alkalmazási rétegben definiált interfész mögött |
-| Chat-integráció | Külön MCP-szerver, közös Application use case-ekkel |
+| AI (tervezett, 2. lépcső) | ChatCompletion API alkalmazási rétegben definiált interfész mögött |
+| Chat-integráció (tervezett, 3. lépcső) | MCP-eszközök közös Application use case-ekkel; a felépítésről az ADR-0010 dönt |
 | Tesztelés | xUnit v3, FluentAssertions 7, Testcontainers, Vitest, Playwright |
 | Környezet | Docker Compose, GitHub Actions |
 
-## Tervezett architektúra
+## Architektúra
+
+Megvalósult (v0.3.0): React-frontend, Web API, Application, Domain, Infrastructure, PostgreSQL. Tervezett: LLM-adapter (2. lépcső) és MCP-szerver (3. lépcső).
 
 ```text
 React + TypeScript frontend
@@ -134,6 +140,12 @@ A teljes dokumentáció a repository `docs` könyvtárában található.
 - [AI-manifeszt](https://github.com/toldor/kamra/blob/develop/docs/07_ai/ai_manifest.md)
 - [Promptnapló](https://github.com/toldor/kamra/blob/develop/docs/07_ai/prompt_log.md)
 - [Ellenőrzési napló](https://github.com/toldor/kamra/blob/develop/docs/07_ai/verification_log.md)
+- [Telepítési útmutató](https://github.com/toldor/kamra/blob/develop/docs/05_security_ops/deploy_runbook.md)
+- [Fenyegetésmodell](https://github.com/toldor/kamra/blob/develop/docs/05_security_ops/threat_model.md)
+- [Adatkezelés és licencek](https://github.com/toldor/kamra/blob/develop/docs/05_security_ops/privacy_licensing.md)
+- [Kézi tesztek](https://github.com/toldor/kamra/blob/develop/docs/04_quality/manual_tests.md)
+- [Megfeleltetési táblázat](https://github.com/toldor/kamra/blob/develop/docs/04_quality/traceability.md)
+- [UAT-terv](https://github.com/toldor/kamra/blob/develop/docs/04_quality/uat.md)
 
 ## Futtatás
 
@@ -180,6 +192,7 @@ Hiányzó kötelező beállítással az alkalmazás induláskor hibával leáll 
 | Csak az adatbázis indítása helyi fejlesztéshez | `docker compose up -d db` |
 | Migrációk alkalmazása helyben | `dotnet ef database update -p src/backend/KamraApp.Infrastructure -s src/backend/KamraApp.Api` |
 | Backend helyben | `dotnet run --project src/backend/KamraApp.Api` (http://localhost:5083) |
+| API-leírás fejlesztésben (Scalar, csak `Development`) | http://localhost:5083/scalar – módosító kéréshez előbb kérj tokent a `GET /api/v1/auth/antiforgery`-vel, és add meg `X-XSRF-TOKEN` fejlécként |
 | Frontend fejlesztői szerver (az `/api`-t a backendre proxyzza) | `cd src/frontend && npm ci && npm run dev` |
 | Frontend lint, teszt, build | `cd src/frontend && npm run lint && npm test && npm run build` |
 | Frontend API-típusok újragenerálása az `openapi.json`-ból | `cd src/frontend && npm run gen:api` |
@@ -202,10 +215,10 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 | Szakasz | Tervezett tartalom | Állapot |
 |---|---|---|
 | Alapok | Repository, CI, architektúra, walking skeleton (autentikáció, Docker Compose) | Kész (2026-10-04) |
-| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Tervezett |
-| 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett |
-| 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett |
-| Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett |
+| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Kész (v0.3.0, 2026-10-24); a felhasználói kipróbálás okt. 26-tól |
+| 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett (cél: nov. 3.; témavezetői: nov. 6.) |
+| 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett (cél: nov. 10.; témavezetői: nov. 20.) |
+| Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett (cél: dec. 4.) |
 
 ## Biztonsági és minőségi alapelvek
 
@@ -224,4 +237,4 @@ https://github.com/toldor/kamra
 
 ## Licenc
 
-A licenc a projekt jelenlegi állapotában még nincs véglegesítve.
+MIT, lásd [LICENSE](LICENSE).

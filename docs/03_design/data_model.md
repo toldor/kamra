@@ -19,58 +19,237 @@ Egy fiók = egy háztartás ([ADR-0006](../02_architecture/adr/0006-cookie-auth-
 
 `AspNetUsers`, `AspNetUserClaims`, `AspNetUserLogins`, `AspNetUserTokens` – a keretrendszer sémája (`IdentityUserContext<AppUser, Guid>`), szerepkör-táblák nélkül. A felhasználónév az e-mail-cím (egyedi index a normalizált alakon), a jelszó PBKDF2-hash. A háztartás azonosítója `household_id` claimként az `AspNetUserClaims`-ben van, és innen kerül a bejelentkezési cookie-ba.
 
-## Tervezett entitások
+### Ingredients (Hozzávaló) – [ADR-0003](../02_architecture/adr/0003-kanonikus-hozzavalo-lista.md)
 
-### PantryItem (Készlettétel)
-
-| Mező | Típus | Kötelező | Leírás |
-|---|---|---|---|
-| Id | Guid | igen | Elsődleges kulcs |
-| Name | string | igen | Hozzávaló neve |
-| Quantity | decimal | igen | Mennyiség |
-| Unit | string | igen | Mértékegység (pl. kg, db, l) |
-| Category | string | igen | Kategória (lejáratbecsléshez) |
-| ExpiryDate | DateOnly | igen | Lejárati dátum (megadott vagy becsült) |
-| ExpiryEstimated | bool | igen | Igaz, ha a lejárat a kategória alapértelmezett eltarthatóságából becsült (becsült lejárat) |
-| CreatedAt | DateTimeOffset | igen | Létrehozás időpontja |
-| UpdatedAt | DateTimeOffset | igen | Utolsó módosítás |
-
-### Recipe (Recept)
-
-| Mező | Típus | Kötelező | Leírás |
-|---|---|---|---|
-| Id | Guid | igen | Elsődleges kulcs |
-| Name | string | igen | Recept neve |
-| Servings | int | igen | Alapértelmezett adagszám |
-| Ingredients | RecipeIngredient[] | igen | Szükséges hozzávalók |
-
-### RecipeIngredient
+Domain-entitás: [Ingredient.cs](../../src/backend/KamraApp.Domain/Ingredients/Ingredient.cs).
 
 | Mező | Típus | Leírás |
 |---|---|---|
-| IngredientName | string | Hozzávaló neve |
-| Quantity | decimal | Szükséges mennyiség |
-| Unit | string | Mértékegység |
+| Id | uuid (PK) | GUID v7; rendszer-hozzávalónál a seed JSON-ban rögzített ([ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)) |
+| HouseholdId | uuid (FK → Households.Id), null | null: rendszer-hozzávaló; kitöltve: a háztartás saját hozzávalója, más háztartásban nem látszik |
+| Name | text | Megjelenített név |
+| NormalizedName | text | Kisbetűs, egységesített szóközű alak az egyediséghez |
+| Dimension | text | `Mass` / `Volume` / `Count` (lásd Mennyiségek) |
+| DefaultCategory | text | A készlettétel alapértelmezett kategóriája |
+| SeedKey | text, null | Rendszer-hozzávalónál egyedi, olvasható, nem változtatható kulcs; az alaphozzávalókat (víz, só, bors) a Domain ezzel azonosítja |
+| RetiredAt | timestamptz, null | Visszavont rendszer-hozzávaló |
 
-### ShoppingListItem (Bevásárlólista tétel)
+- Egyediség: rendszer-hozzávalónál a `NormalizedName`, saját hozzávalónál a (`HouseholdId`, `NormalizedName`) pár egyedi (részleges egyedi indexek). Saját hozzávaló neve nem egyezhet aktív rendszer-hozzávaló nevével (a use case ellenőrzi).
+- Visszavonás törlés helyett: rendszer-hozzávaló nem törölhető a seedből; a visszavont hozzávaló új készlettételhez és recepthez nem választható, a meglévő hivatkozások változatlanul működnek.
+- A saját hozzávaló az MVP-ben csak létrehozható; átnevezés és törlés nincs (Ismert korlátok).
+- **Megvalósítás:** a `Dimension` és a `DefaultCategory` az enum nevével tárolódik (`Mass`, `Dairy`). Az induló lista 157 rendszer-hozzávaló (az okt. 16-i 36 és 121 új): [ingredients.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/ingredients.json) (beágyazott erőforrás, a `HasData` ebből olvas; üres, duplikált vagy ismeretlen értéknél a betöltés leáll).
+- **Megvalósítás (saját hozzávaló):** a név levágott szélekkel és egyesített belső szóközökkel (bármely Unicode-szóköz) tárolódik, a `NormalizedName` ennek kisbetűs alakja. A rendszernévvel való ütközést a use case ellenőrzi, két egyidejű, azonos nevű saját hozzávalónál a részleges egyedi index (`IX_Ingredients_HouseholdId_NormalizedName`) dönt, és a második 409 `INGREDIENT_NAME_TAKEN` ([RecipesApiTests.cs](../../tests/KamraApp.Integration.Tests/RecipesApiTests.cs)).
+
+### Kategória
+
+Fix lista a Domainben ([Category.cs](../../src/backend/KamraApp.Domain/Pantry/Category.cs), enum), alapértelmezett eltarthatósági napértékkel; az adatbázisban szövegként tárolódik. A becsült lejárat = a bevitel napja + a kategória napértéke; ez szervezési segédadat, nem igazolt eltarthatóság, és a felületen becsültként jelölt. A lista és a napértékek forrással: lásd a Kategórialista szakaszt.
+
+#### Kategórialista
+
+Forrás: USDA FSIS [FoodKeeper](https://catalog.data.gov/dataset/fsis-foodkeeper-data) (CC0), adatverzió 108, a [FoodKeeperResearch](https://github.com/BrandonChenze/FoodKeeperResearch) GitHub-tükörből (a hivatalos JSON nem volt letölthető); szúrópróba a hivatalos [FSIS hűtési táblázattal](https://www.foodsafety.gov/food-safety-charts/cold-food-storage-charts), lásd [V-18](../07_ai/verification_log.md).
+Számítási szabály: a kategória napértéke a jellemző termékei FoodKeeper-minimumai közül a legkisebb, bontatlan termékre és a szokásos tárolási helyre; a becslés így inkább korábbra esik.
+
+| Kategória (enum) | Nap | Jellemző termékek (FoodKeeper-tartomány) |
+|---|---|---|
+| Tejtermék (`Dairy`) | 7 | joghurt 1–2 hét, túró (quark) 7–10 nap, író 1–2 hét; tej és tejföl: a FoodKeeper a csomagon lévő dátumot írja |
+| Sajt (`Cheese`) | 21 | szeletelt 3–4 hét, reszelt 1 hónap, kemény 6 hónap |
+| Tojás (`Eggs`) | 21 | héjas tojás 3–5 hét |
+| Friss hús, baromfi, hal (`FreshMeatFish`) | 1 | darált hús 1–2 nap, baromfi 1–2 nap, hal 1–2 nap, szelet és sült 3–5 nap |
+| Felvágott, húskészítmény (`ProcessedMeat`) | 7 | bacon 7 nap, virsli (bontatlan) 2 hét |
+| Zöldség (`Vegetables`) | 3 | gomba és levélsaláta 3–7 nap, uborka 4–6 nap, paprika 4–14 nap, káposzta 1–2 hét, burgonya 1–2 hónap |
+| Gyümölcs (`Fruit`) | 2 | eper 2–3 nap, banán 3 nap, őszibarack és körte 3–5 nap, citrus 10 nap, alma 3 hét |
+| Pékáru (`Bakery`) | 1 | friss bagel 1–2 nap (a kifli közelítése), házi/pékségi kenyér 3–5 nap, csomagolt kenyér 14–18 nap |
+| Száraz élelmiszer (`DryGoods`) | 90 | teljes kiőrlésű liszt 3–6 hónap, fehér liszt 6–12 hónap, száraz bab 1–2 év, rizs és tészta 2 év |
+| Konzerv, befőtt, szósz (`CannedAndSauces`) | 90 | majonéz 3–6 hónap, lekvár 6–18 hónap, savas konzerv 12–18 hónap, ketchup 1 év |
+| Fagyasztott (`Frozen`) | 90 | darált hús fagyasztva 3–4 hónap, szelet és sült 4–12 hónap |
+| Ital (`Beverages`) | 21 | dobozos gyümölcslé 3 hét |
+| Készétel, maradék (`PreparedFood`) | 3 | deli és készételek jellemzően 3–4 nap |
+| Egyéb (`Other`) | – | nincs becslés, a lejárat kötelező (US-1) |
+
+### PantryItems (Készlettétel)
+
+Domain-entitás: [PantryItem.cs](../../src/backend/KamraApp.Domain/Pantry/PantryItem.cs).
 
 | Mező | Típus | Leírás |
 |---|---|---|
-| Id | Guid | Elsődleges kulcs |
-| Name | string | Hozzávaló neve |
-| Quantity | decimal | Szükséges mennyiség |
-| Unit | string | Mértékegység |
-| AddedAt | DateTimeOffset | Hozzáadás időpontja |
+| Id | uuid (PK) | GUID v7 |
+| HouseholdId | uuid (FK → Households.Id) | A tulajdonos háztartás; minden lekérdezés szűri |
+| IngredientId | uuid (FK → Ingredient.Id) | A hozzávaló |
+| Quantity | numeric(12,3) | Aktuális mennyiség alapegységben; ≥ 0 (CHECK) |
+| EnteredUnit | text | A bevitt egység a megjelenítéshez (g, dkg, kg, ml, dl, l, db); a hozzávaló dimenziójából |
+| Category | text | Kategória; alapértéke a hozzávaló `DefaultCategory`-ja, tételenként felülírható |
+| ExpiryDate | date | Lejárat: megadott vagy becsült; mindig kitöltött |
+| ExpiryEstimated | boolean | Igaz, ha a lejárat a kategóriából becsült |
+| CreatedAt, UpdatedAt | timestamptz | Létrehozás és utolsó módosítás (UTC) |
+| Version (`xmin`) | xid (rendszeroszlop) | Konkurenciakezeléshez ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)); a PostgreSQL minden sorváltozáskor új értéket ad, a migráció nem hoz létre hozzá oszlopot |
+
+- A 0-ra csökkent tétel sora megmarad (a napló és a G1 hivatkozik rá), a készletlista csak a `Quantity > 0` tételeket mutatja.
+- Index: (`HouseholdId`, `IngredientId`, `ExpiryDate`) a FEFO-levonáshoz és az illesztéshez.
+- Mennyiséget csak a készletmozgás-naplóval együtt, egy tranzakcióban lehet módosítani. Invariáns: tételenként `Quantity` = a napló `Delta`-inak összege (teszt ellenőrzi, CAP-08).
+- **Megvalósítás:** az `EnteredUnit` az enum nevével tárolódik (`G`, `Dkg`, …). Kényszer: `CK_PantryItems_Quantity_NonNegative`; a hozzávaló-hivatkozás `NO ACTION`. A mennyiség alapegységben legfeljebb 3 tizedes és 999 999 999,999 lehet, mert a `numeric(12,3)` a finomabb értéket kerekítené, a nagyobbat elutasítaná ([V-24](../07_ai/verification_log.md)). A becsült lejárat szerkesztéskor is a bevitel napjától számolódik.
+
+### StockMovements (Készletmozgás-napló)
+
+Csak hozzáfűzhető: sor nem módosul és nem törlődik. Domain-entitás: [StockMovement.cs](../../src/backend/KamraApp.Domain/Pantry/StockMovement.cs).
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| Id | uuid (PK) | GUID v7 |
+| HouseholdId | uuid (FK → Households.Id) | A tulajdonos háztartás |
+| PantryItemId | uuid (FK → PantryItem.Id) | Az érintett készlettétel |
+| Delta | numeric(12,3) | Előjeles változás alapegységben (+ bevitel, − csökkenés) |
+| Reason | text | `Added` (bevitel), `Consumed` (*elfogyott*), `Discarded` (*kidobtam*), `Corrected` (*hibás rögzítés*) |
+| CookingId | uuid (FK → Cooking.Id), null | Kitöltve, ha a mozgást főzés okozta (mindig `Consumed`); `NO ACTION`; az `AddCookings` migráció adta hozzá |
+| ExpiryDateAtMovement | date | A készlettétel lejárata a mozgás pillanatában; a metrikák (megmentett főzés, G1) ezzel számolnak, így a lejárat utólagos szerkesztése nem írja át a múltat |
+| OccurredAt | timestamptz | Időpont (UTC) |
+
+- A kézi csökkentésnél a felhasználó választja az okot (US-1); a mennyiség szerkesztéssel történő növelése `Corrected`, mert az új vásárlás új készlettétel.
+- A nem mennyiségi mezők (lejárat, kategória) szerkesztése nem naplózódik.
+- A metrikák a `Reason` szerint számolnak ([metrics.md](../01_product/metrics.md)): a `Corrected` kimarad, a `Discarded` pazarlás.
+- **Megvalósítás:** a tételre `NO ACTION`-nel hivatkozik: mozgással rendelkező tétel nem törölhető (a napló csak hozzáfűzhető, [StockMovementLogTests.cs](../../tests/KamraApp.Integration.Tests/StockMovementLogTests.cs)); a háztartás törlése mindkettőt törli.
+
+### Recipes (Recept)
+
+Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs).
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| Id | uuid (PK) | GUID v7; induló receptnél a seed JSON-ban rögzített ([ADR-0005](../02_architecture/adr/0005-postgresql-ef-core-migraciok.md)) |
+| HouseholdId | uuid (FK → Households.Id), null | null: induló recept; kitöltve: a háztartás saját receptje |
+| Name | text | A recept neve |
+| Servings | integer | Alapértelmezett adagszám; > 0 (CHECK) |
+| Instructions | text | Elkészítés |
+| Source | text | `Seed` (induló receptkészlet) vagy `User` (kézi felvitel); az AI-receptötlet (stretch) új értékkel bővítené |
+| SeedKey | text, null | Induló receptnél egyedi, nem változtatható kulcs |
+| CreatedAt | timestamptz | Létrehozás (UTC) |
+| RetiredAt | timestamptz, null | Visszavont induló recept: egyik háztartásban sem jelenik meg az ajánlásban, a főzések hivatkozása megmarad. A háztartásonkénti archiválás a `RecipeArchives` táblában van |
+
+- A saját recept létrehozható, szerkesztés nincs (Ismert korlátok); bármely recept archiválható a saját háztartásban (`RecipeArchives`).
+- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 20 recept (az okt. 16-i 5 változatlan, 15 új; saját szöveg, a fejlesztő ellenőrizte, [V-43](../07_ai/verification_log.md)): [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept `Source = User`, a háztartás azonosítójával; a hozzávalói nem lehetnek más háztartáséi (a Domain is őrzi, [OwnRecipeTests.cs](../../tests/KamraApp.Unit.Tests/OwnRecipeTests.cs)).
+
+### RecipeIngredients (Recept hozzávalója)
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| RecipeId | uuid (PK, FK → Recipe.Id) | A recept |
+| IngredientId | uuid (PK, FK → Ingredient.Id) | A hozzávaló; receptenként egyszer |
+| Quantity | numeric(12,3) | Mennyiség az alapértelmezett adagszámra, alapegységben; > 0 |
+| EnteredUnit | text | A megjelenítés egysége |
+
+- Az alaphozzávalók (víz, só, bors) szerepelhetnek a receptben, de az illesztés, a hiányszámítás és a levonás figyelmen kívül hagyja őket.
+- Az induló receptkészlet minden hozzávalója az induló hozzávaló-listán van (ADR-0003, integrációs teszt).
+- **Megvalósítás:** az `EnteredUnit` az enum nevével tárolódik; kényszer: `CK_RecipeIngredients_Quantity_Positive`; a recept törlése a sorait is törli, a hozzávaló-hivatkozás `NO ACTION`. Az egység–dimenzió invariánst az entitás maga ellenőrzi ([RecipeTests.cs](../../tests/KamraApp.Unit.Tests/RecipeTests.cs)).
+
+### RecipeArchives (Archivált recept)
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| HouseholdId | uuid (PK, FK → Households.Id) | Az archiváló háztartás; a háztartás törlése a sorait is törli |
+| RecipeId | uuid (PK, FK → Recipes.Id) | Az archivált recept (induló vagy saját); `NO ACTION` |
+| ArchivedAt | timestamptz | Az első archiválás ideje (UTC) |
+
+- A recept ebben a háztartásban nem jelenik meg a receptlistában és az ajánlásban, az előnézete és az új főzése 409; az ismételt főzéskérés továbbra is a tárolt eredményt adja.
+- **Megvalósítás:** a sort `INSERT … ON CONFLICT DO NOTHING` írja, így az ismételt és az egyidejű archiválás is egy sort hagy, az első idővel ([RecipesApiTests.cs](../../tests/KamraApp.Integration.Tests/RecipesApiTests.cs), a séma SQL-lel ellenőrizve).
+
+### Cookings (Főzés)
+
+Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking.cs).
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| Id | uuid (PK) | GUID v7 |
+| HouseholdId | uuid (FK → Households.Id) | A tulajdonos háztartás |
+| RecipeId | uuid (FK → Recipe.Id) | A megfőzött recept |
+| Servings | integer | A megadott adagszám; > 0 |
+| RequestId | uuid | A megerősítő képernyő kérésazonosítója; (`HouseholdId`, `RequestId`) egyedi – ez biztosítja, hogy az ismételt kérés ne vonjon le újra ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) |
+| CookedAt | timestamptz | A megerősítés időpontja (UTC) |
+
+- **Megvalósítás:** kényszer: `CK_Cookings_Servings_Positive`; egyedi index (`HouseholdId`, `RequestId`); a recept-hivatkozás `NO ACTION`, a háztartás törlése a főzéseit is törli. Az adagszám 1–100: a Domain is őrzi, így a skálázott mennyiség a `numeric(12,3)` határain belül marad.
+
+### CookingLines (Főzés sora)
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| CookingId | uuid (PK, FK → Cooking.Id) | A főzés |
+| IngredientId | uuid (PK, FK → Ingredient.Id) | A hozzávaló (alaphozzávaló nem kerül ide) |
+| RequiredQuantity | numeric(12,3) | Szükséges mennyiség: a recept mennyisége az adagszámmal skálázva és kerekítve (US-4) |
+| UsedQuantity | numeric(12,3) | A felhasználó által megerősített, ténylegesen felhasznált mennyiség; 0 ≤ `UsedQuantity` |
+| Depleted | boolean | A főzés fogyasztotta el a hozzávaló utolsó készletét („Elfogyott”); tárolva, hogy az ismételt kérés válasza azonos legyen ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) |
+| Suggested | boolean | A főzés ennél a hozzávalónál bevásárlójavaslatot hozott létre; tárolva, hogy az ismételt kérés válasza azonos legyen ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) |
+
+- A hiány = max(0, `RequiredQuantity` − `UsedQuantity`); nem könyvelődik, csak megjelenik, és a bevásárlólistára tehető. A felhasznált mennyiség a szükségesnél több is lehet (a készlet erejéig): ilyenkor nincs hiány.
+- A készlettételenkénti (FEFO) levonás a `StockMovement` `CookingId`-s soraiban van; hozzávalónként ezek összege = `UsedQuantity` (teszt ellenőrzi).
+- A „megmentett főzés” (North Star) a főzés mozgásaiból, a mozgáskori lejárat (`ExpiryDateAtMovement`) alapján számolódik: van-e köztük olyan készlettétel, amely a főzés napján hamarosan lejáró volt ([metrics.md](../01_product/metrics.md)).
+- **Megvalósítás:** kényszer: `CK_CookingLines_UsedQuantity_NonNegative`; a főzés törlése a sorait is törli, a hozzávaló-hivatkozás `NO ACTION`. A hiány nincs tárolva, a két mennyiségből számolódik.
+
+### IngredientMinimums (Minimumszint)
+
+(`HouseholdId`, `IngredientId`) PK; `MinimumQuantity` numeric(12,3) alapegységben, > 0; `EnteredUnit` a megjelenítéshez. Ha nincs sor, nincs minimumszint-figyelés. Csak a háztartás által látható hozzávalóra állítható be.
+
+- **Megvalósítás:** domain-entitás: [IngredientMinimum.cs](../../src/backend/KamraApp.Domain/Ingredients/IngredientMinimum.cs); kényszer: `CK_IngredientMinimums_MinimumQuantity_Positive`; a hozzávaló-hivatkozás `NO ACTION`, a háztartás törlése a sorait is törli.
+
+### ShoppingSuggestions (Bevásárlójavaslat)
+
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| Id | uuid (PK) | GUID v7 |
+| HouseholdId | uuid (FK) | A tulajdonos háztartás |
+| IngredientId | uuid (FK) | A hozzávaló |
+| Trigger | text | `Depleted` (*elfogyott* okkal 0-ra fogyott) vagy `BelowMinimum` |
+| State | text | `Open` / `Accepted` / `Rejected` |
+| CreatedAt, ResolvedAt | timestamptz | Keletkezés; elfogadás vagy elutasítás |
+| ClearedAt | timestamptz, null | Elutasított javaslatnál: a hozzávaló újra a feltétel fölé került |
+| CookingId | uuid (FK → Cooking.Id), null | A főzés, amely a hozzávalót elfogyasztotta; a javaslat indoka ebből nevezi meg a receptet (`NO ACTION`) |
+
+- A javaslat a kiváltó csökkenéssel egy tranzakcióban keletkezik. Kiváltó csak az *elfogyott* ok (a főzés is); a *kidobtam* és a *hibás rögzítés* nem. A minimumszint beállítása is kivált, ha a készlet már alatta van.
+- Nem keletkezik javaslat, ha van blokkoló javaslat (`Open`, vagy `Rejected` és `ClearedAt` null – részleges egyedi index, háztartásonként és hozzávalónként legfeljebb egy), vagy ha a hozzávaló pipa nélkül a bevásárlólistán van.
+- Feloldás (`ClearedAt`): az összmennyiséget növelő művelet (rögzítés, *hibás rögzítés* okú növelés, a minimumszint törlése vagy csökkentése) tranzakciójában, ha `Depleted`-nél az összmennyiség > 0, `BelowMinimum`-nál ≥ a minimumszint.
+- Egyidejű csökkentéseknél a kiértékelést hozzávalónkénti tranzakciós zár sorosítja ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 6. pont).
+- **Megvalósítás:** domain-entitás: [ShoppingSuggestion.cs](../../src/backend/KamraApp.Domain/ShoppingList/ShoppingSuggestion.cs), szabályok: [SuggestionRules.cs](../../src/backend/KamraApp.Domain/ShoppingList/SuggestionRules.cs); részleges egyedi index `IX_ShoppingSuggestions_HouseholdId_IngredientId`. A minimumszint törlésekor a nyitott „minimumszint alatti” javaslat megmarad (a felhasználó dönt róla), csak az elutasított oldódik fel.
+
+### ShoppingListItems (Bevásárlólista-tétel)
+
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| Id | uuid (PK) | GUID v7 |
+| HouseholdId | uuid (FK) | A tulajdonos háztartás |
+| IngredientId | uuid (FK) | A hozzávaló; (`HouseholdId`, `IngredientId`) egyedi |
+| Quantity | numeric(12,3), null | Mennyiség alapegységben; null, ha a forrás nem ad mennyiséget |
+| EnteredUnit | text, null | A megjelenítés egysége |
+| Checked | boolean | Kipipálva (megvett) |
+| AddedAt | timestamptz | Felvétel (UTC) |
+
+- Forrás: elfogadott javaslat (opcionális mennyiséggel), kézi felvétel, majdnem elkészíthető recept hiánya (US-3) vagy a főzés hiánya (US-4).
+- Összevonás azonos hozzávalónál, pipa nélküli tételnél: két ismert mennyiség összeadódik; ismeretlen (null) és ismert találkozásakor az ismert marad (és az egysége); két ismeretlenből ismeretlen lesz. Kipipált tételnél a pipa törlődik, és a mennyiség az új mennyiség lesz. Az összeg sem lehet több 100 000-nél (a bemeneti korlát). Az összevonást a Domain végzi a hozzávalónkénti zár alatt ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 5–6. pont); mindkét beszúrási sorrend tesztelve (P16). A módosítás (kipipálás) mennyiség nélkül a meglévő mennyiséget megtartja.
+- **Megvalósítás:** domain-entitás: [ShoppingListItem.cs](../../src/backend/KamraApp.Domain/ShoppingList/ShoppingListItem.cs); kényszerek: `CK_ShoppingListItems_Quantity_Positive`, `CK_ShoppingListItems_Quantity_WithUnit` (mennyiség és egység együtt vagy egyik sem); egyedi index (`HouseholdId`, `IngredientId`).
+
+## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
+
+- Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
+- A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
+- Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
 
 ## Migrációk
 
 | Név | Leírás | Állapot |
 |---|---|---|
 | `InitialIdentityAndHousehold` | Identity-táblák és `Households` | Megvalósítva |
+| `AddIngredientsAndPantryItems` | `Ingredients` (36 rendszer-hozzávaló), `PantryItems`, `StockMovements` | Megvalósítva |
+| `AddRecipes` | `Recipes` (5 induló recept), `RecipeIngredients` | Megvalósítva |
+| `AddCookings` | `Cookings`, `CookingLines`, `StockMovements.CookingId` | Megvalósítva |
+| `AddShoppingList` | `IngredientMinimums`, `ShoppingSuggestions` (részleges egyedi index, `CookingId`), `ShoppingListItems`, `CookingLines.Suggested` | Megvalósítva |
+| `ExpandSeedData` | 121 hozzávaló, 15 recept és hozzávalóik (csak beszúrás) | Megvalósítva |
+| `AddRecipeArchives` | `RecipeArchives` (PK háztartás + recept, CASCADE a háztartásra) | Megvalósítva |
 
 ## Ismert hiányosságok
 
-- Séma tervezés alatt, változhat.
-- A séma még nem követi teljesen a [CONTEXT.md](../../CONTEXT.md) fogalmait és a [scope_contract.md](../01_product/scope_contract.md) story-jait. Hiányzik: kanonikus Hozzávaló (ADR-0003), készletmozgás-napló csökkenési okkal, főzés-esemény, minimumszint, bevásárlójavaslat és tételjavaslat, valamint a kapcsolatok és az adatélettartam. A teljes újratervezés külön adatmodell-tervezési lépés.
-- Egyidejű készletlevonás (például két fül): a készlettételen konkurenciakezelés kell (optimista zárolás vagy atomikus feltételes frissítés), hogy ne vesszen el levonás. A megoldásról az adatmodell-tervezéskor döntünk, lehetséges ADR-téma.
-- A fix kategórialista az alapértelmezett eltarthatósági napértékekkel és azok forrásával itt készül el (a [scope_contract.md](../01_product/scope_contract.md) Korlátok / Adat része erre hivatkozik).
+- Csak az 1. lépcső táblái szerepelnek; a tételjavaslat (US-2) a 2. lépcső előtt kerül be.
+- Két recept hiánya egymástól függetlenül, ugyanabból a készletből számolódik, és a listán összeadódik; ha mindkettőt megfőznék, a valódi hiány ennél nagyobb is lehet (például 1 tojás mellett a rántotta 2, a palacsinta 1 hiányát adja, összesen 3, holott a kettőhöz 4 kellene).
+- Az archivált recept nem állítható vissza.
+- A nulla szélességű szóköz (U+200B) nem szóköz, ezért a „zab​tej” és a „zabtej” két külön saját hozzávaló lehet, bár egyformán néz ki. Csak a saját háztartást érinti ([V-50](../07_ai/verification_log.md)).
+- A saját hozzávaló nem nevezhető át és nem törölhető; a saját recept nem szerkeszthető, csak archiválható.
+- A kategória-napértékek amerikai (USDA FoodKeeper) adatokon alapulnak, a magyar termékekre közelítések ([V-18](../07_ai/verification_log.md)).
+- A „ma” (hamarosan lejáró, becsült lejárat) a Europe/Budapest naptári napja ([V-23](../07_ai/verification_log.md)); több időzónához háztartásonkénti beállítás kellene.
+- A táblák a migrációkkal együtt, storyként készülnek el; a „Megvalósított táblák” szakasz ennek megfelelően bővül.

@@ -17,7 +17,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [scope_contract.md](01_product/scope_contract.md) | MVP story-k, elfogadási kritériumok, Definition of Done | Kész |
 | [capability_map.md](01_product/capability_map.md) | Funkciók állapottáblája (Value + Productization) | Kész |
 | [metrics.md](01_product/metrics.md) | North Star + guardrail metrikák, mérési terv | Kész |
-| [ux_flows.md](01_product/ux_flows.md) | 3 fő user flow, hiba- és üres állapotok, alap a11y | Kész (screenshotok az implementációval) |
+| [ux_flows.md](01_product/ux_flows.md) | 4 fő user flow, hiba- és üres állapotok, alap a11y | Kész (képernyőképekkel; a mondatos bevitel a 2. lépcsővel) |
 
 ---
 
@@ -26,7 +26,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | [c4_context_container.md](02_architecture/c4_context_container.md) | C4 Context + Container diagram, deployment view | Kész (váz – a kódhoz igazítás az 1. lépcső végén) |
-| *c4_component.md* | C4 Component diagram (backend modulhatárok) | **Hiányzik** |
+| [c4_component.md](02_architecture/c4_component.md) | C4 Component diagram (backend modulhatárok) | Kész |
 | [quality_attributes.md](02_architecture/quality_attributes.md) | 7 nemfunkcionális elvárás, 3 quality scenario mérőszámmal | Kész (váz – igazolás a megvalósítással) |
 | [adr/0001-template.md](02_architecture/adr/0001-template.md) | ADR sablon (másolható, min. 8 ADR kell) | Kész (sablon) |
 | [adr/0002-fix-atvalthato-mertekegysegek.md](02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md) | Fix, átváltható mértékegységek „csomag” nélkül | Accepted |
@@ -35,6 +35,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [adr/0005-postgresql-ef-core-migraciok.md](02_architecture/adr/0005-postgresql-ef-core-migraciok.md) | PostgreSQL + EF Core, migrator-szolgáltatás, JSON seed, GUID v7 | Accepted |
 | [adr/0006-cookie-auth-identity.md](02_architecture/adr/0006-cookie-auth-identity.md) | Cookie-alapú authentikáció ASP.NET Core Identity-vel, azonos origin, antiforgery | Accepted |
 | [adr/0007-rest-api-hibamodell.md](02_architecture/adr/0007-rest-api-hibamodell.md) | REST + controllerek, /api/v1, kivétel-alapú ProblemDetails, generált OpenAPI | Accepted |
+| [adr/0008-konkurencia-es-idempotencia.md](02_architecture/adr/0008-konkurencia-es-idempotencia.md) | Optimista zárolás xmin-nel, főzés-idempotencia kérésazonosítóval, upsert és egyedi kényszerek | Accepted |
 | [adr/0011-serilog-strukturalt-naplozas.md](02_architecture/adr/0011-serilog-strukturalt-naplozas.md) | Serilog JSON-napló, szerver által generált correlationId | Accepted |
 
 ---
@@ -43,9 +44,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| [api.md](03_design/api.md) | REST végpontok, auth, hibakódok, OpenAPI | Folyamatban (auth-végpontok, generált OpenAPI) |
-| [data_model.md](03_design/data_model.md) | Entitások, kapcsolatok, migrációs stratégia | Folyamatban (Households + Identity; újratervezés a B kapuban) |
-| [error_handling.md](03_design/error_handling.md) | Hibakategóriák, RFC 7807, retry, logolás | Folyamatban (auth- és keretrendszer-kódok megvalósítva) |
+| [api.md](03_design/api.md) | REST végpontok, auth, hibakódok, OpenAPI | Kész az 1. lépcsőre (a 2–3. lépcső végpontjai tervezettek) |
+| [data_model.md](03_design/data_model.md) | Entitások, kapcsolatok, migrációs stratégia | Kész az 1. lépcsőre (a tételjavaslat a 2. lépcsővel) |
+| [error_handling.md](03_design/error_handling.md) | Hibakategóriák, RFC 9457, retry, logolás | Kész az 1. lépcsőre (az LLM-hibakódok tervezettek) |
 | [mcp_tools.md](03_design/mcp_tools.md) | MCP eszközök leírása, input séma, biztonság | Kész (skeleton) |
 
 ---
@@ -54,8 +55,11 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *test_strategy.md* | Teszt piramis, mock stratégia, CI quality gate-ek | **Hiányzik** |
-| [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Folyamatban (61 teszt, zöld CI) |
+| [test_strategy.md](04_quality/test_strategy.md) | Teszt piramis, mock stratégia, CI quality gate-ek | Kész (1. lépcső) |
+| [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Kész az 1. lépcsőre (663 teszt, P1–P20, zöld CI) |
+| [manual_tests.md](04_quality/manual_tests.md) | Kézi tesztjegyzőkönyv (kiírás 5. pont) | Folyamatban (MT-01, MT-02 kész; MT-03, MT-04 tervezett) |
+| [traceability.md](04_quality/traceability.md) | Megfeleltetés: követelmény → flow → végpont és képernyő → teszt | Kész |
+| [uat.md](04_quality/uat.md) | Felhasználói kipróbálás terve, két kör | Kész (terv; az eredmények az 1. kör után) |
 | *performance.md* | Teljesítmény-alapmérés, legalább egy mért szűk keresztmetszet | **Hiányzik** |
 
 ---
@@ -64,10 +68,10 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| *threat_model.md* | STRIDE fenyegetések (≥6), mitigáció, residual risk | **Hiányzik** |
-| *privacy_licensing.md* | Adatkategóriák, adatáramlás, AI adatküldési szabály, licencek | **Hiányzik** |
-| *deploy_runbook.md* | Deploy lépések, rollback, ≥2 incident forgatókönyv | **Hiányzik** |
-| [observability.md](05_security_ops/observability.md) | Naplózás, health check, metrikák, debugging guide | Folyamatban (Serilog JSON, `/health`; metrikák hiányoznak) |
+| [threat_model.md](05_security_ops/threat_model.md) | STRIDE fenyegetések (≥6), mitigáció, residual risk | Kész (10 fenyegetés; az MI-funkcióké az ADR-ekkel) |
+| [privacy_licensing.md](05_security_ops/privacy_licensing.md) | Adatkategóriák, adatáramlás, AI adatküldési szabály, licencek | Kész |
+| [deploy_runbook.md](05_security_ops/deploy_runbook.md) | Deploy lépések, rollback, ≥2 incident forgatókönyv | Kész (3 incidens; tiszta környezetben kipróbálva, MT-02) |
+| [observability.md](05_security_ops/observability.md) | Naplózás, health check, metrikák, debugging guide | Kész (metrikagyűjtés szándékosan nincs, indoklással) |
 
 ---
 
@@ -86,8 +90,8 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Folyamatban (D-1–D-3, 7 tanulság) |
-| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-13 bejegyzéssel) |
-| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Kész (V-01–V-17) |
+| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Folyamatban (P-01–P-18; a „Kulcsbejegyzések” lista a leadás előtt) |
+| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Kész (V-01–V-53) |
 | [review_prompts.md](07_ai/review_prompts.md) | Verziózott review-, ellenséges teszt- és megértés-ellenőrző promptsablonok | Kész |
 
 ---
@@ -103,13 +107,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 ## Hiányzó fájlok összesítve (teendők)
 
-- `docs/02_architecture/c4_component.md`
-- `docs/02_architecture/adr/0008-*.md` … (min. 8 ADR kell összesen, eddig 7: 0002–0007 és 0011; kötelezően még: LLM-szolgáltató; további tervezett: egyidejű készletlevonás / konkurenciakezelés, MCP-integráció)
-- `docs/04_quality/test_strategy.md`
+- `docs/02_architecture/adr/0009-*.md`, `0010-*.md` (8 ADR megvan: 0002–0008 és 0011; kötelezően még: LLM-szolgáltató; tervezett: MCP-integráció)
 - `docs/04_quality/performance.md`
-- `docs/05_security_ops/threat_model.md`
-- `docs/05_security_ops/privacy_licensing.md`
-- `docs/05_security_ops/deploy_runbook.md`
 - `docs/06_release/demo_script.md`
 - `docs/06_release/self_assessment.md`
-- `docs/06_release/changelog.md`
