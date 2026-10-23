@@ -7,6 +7,7 @@ A kurzus-kiírás 5. pontja szerinti kézi tesztek: ki, mikor, melyik verzión, 
 | MT-01 | A fő folyamat a fejlesztő gépén | 2026-10-17 | `v0.2.0` (`develop @ 2deb55e`) | a fejlesztő | PASS |
 | MT-02 | Telepítés tiszta környezetben a runbook szerint, mért idővel | 2026-10-23 | `develop @ 7b6a484` | a fejlesztő | PASS, 2 runbook-eltéréssel (javítva) |
 | MT-03 | Az UAT-forgatókönyvek fejlesztői végigpróbálása | a `v0.3.0` után, az UAT előtt (okt. 25.) | `v0.3.0` | a fejlesztő | tervezett |
+| MT-04 | Visszaállás az előző kiadásra (rollback) a runbook szerint | a `v0.3.0` után | `v0.3.0` → `v0.2.0` → `v0.3.0` | a fejlesztő | tervezett |
 
 ## MT-01 – A fő folyamat a fejlesztő gépén
 
@@ -43,3 +44,7 @@ A kurzus-kiírás 5. pontja szerinti kézi tesztek: ki, mikor, melyik verzión, 
 ## MT-03 – Az UAT-forgatókönyvek fejlesztői végigpróbálása
 
 Tervezett a `v0.3.0` kiadás után, az UAT első köre (okt. 26.) előtt: az [uat.md](uat.md) öt forgatókönyve asztali gépen és 360 px-en, a képernyőolvasós próbával (az élő régiók felolvasása, V-45, V-47). A jegyzőkönyv ide kerül.
+
+## MT-04 – Visszaállás az előző kiadásra
+
+Tervezett a `v0.3.0` kiadás után, a [deploy_runbook.md](../05_security_ops/deploy_runbook.md) „Visszaállás az előző verzióra” része szerint: mentés (`pg_dump`), `git checkout v0.2.0`, `docker compose up --build -d`, `/health` és bejelentkezés egy `v0.3.0`-ban létrehozott fiókkal, majd vissza a `v0.3.0`-ra ugyanígy. Elvárt: a régi kiadás elindul az új sémán, az adatok megmaradnak, és a visszatérés után a `v0.3.0` funkciói (bevásárlólista, saját recept) ugyanazokkal az adatokkal működnek. A jegyzőkönyv ide kerül.

@@ -39,9 +39,9 @@ Egy kezelt üzleti hiba (409) és a kérés összefoglaló sora, ugyanazzal a `c
 
 ## Metrikák
 
-Jelenleg nem implementált. Jövőbeli lehetőség: Prometheus + Grafana.
+Nincs külön metrikagyűjtés: egy gépen, kevés felhasználóval a kérésenkénti naplósor (útvonal, státusz, időtartam) és a `/health` elég a hibakereséshez ([deploy_runbook.md](deploy_runbook.md), Incidensek). A termékmetrikák (North Star, guardrailek) SQL-lekérdezésekből jönnek ([metrics.md](../01_product/metrics.md)).
 
 ## Ismert hiányosságok
 
 - Váratlan kivételnél a kivétel üzenete és stack trace-e a naplóba kerül (a válaszba nem); ha egy külső könyvtár üzenete személyes adatot tartalmazna, az a naplóba jutna ([ADR-0011](../02_architecture/adr/0011-serilog-strukturalt-naplozas.md) Consequences).
-- Metrikák és riasztás még nincsenek.
+- Riasztás nincs: a hibát a felhasználó vagy a `/health` ellenőrzése jelzi.

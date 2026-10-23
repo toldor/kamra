@@ -2,6 +2,11 @@
 
 A Kamra egy gépen fut Docker Compose-zal: PostgreSQL 18, egy egyszer lefutó migrátor, és az API, amely a React-felületet is kiszolgálja ugyanarról a címről. Ez az útmutató a telepítést, az ellenőrzést, a mentést, a frissítést és a leállítást írja le. Az első, tiszta környezetű telepítés jegyzőkönyve: [manual_tests.md](../04_quality/manual_tests.md) (MT-02).
 
+## Környezetek és verziók
+
+- **Környezet:** egy van, a helyi gép (fejlesztés, bemutató, UAT); staging és éles környezet nincs. A CI minden pushnál a Compose-stacket is elindítja, és ez ellen futnak az e2e tesztek.
+- **Verziózás:** kiadás = annotált git tag a `main` ágon (`v0.1.0`, `v0.2.0`, `v0.3.0`), a változások a [changelog.md](../06_release/changelog.md)-ben. A futó verzió: `git describe --tags` a telepítés mappájában.
+
 ## Előfeltételek
 
 | Mi | Verzió (kipróbálva) | Honnan |
@@ -51,6 +56,42 @@ Más nem kell: a .NET és a Node.js a build-konténerben fut.
 4. Ellenőrzés: `/health` és egy bejelentkezés.
 
 A migrációk csak hozzáadnak (táblát, oszlopot, seed-sort); adatot törlő vagy átalakító migráció külön jóváhagyással és mentéssel jár (AGENTS.md 11.).
+
+## Visszaállás az előző verzióra (rollback)
+
+Ha egy frissítés után az alkalmazás nem indul, vagy hibásan működik:
+
+1. Vissza az előző kiadásra: `git checkout <előző tag>` és `docker compose up --build -d`. A migrációk eddig csak hozzáadtak (táblát, oszlopot, seed-sort), ezért a régi kód az új sémán is fut.
+2. Ha a frissítés adatot rontott el, vagy a régi kód mégsem fut az új sémán: állítsd vissza a frissítés előtti mentést (lásd „Mentés és visszaállítás”), utána az 1. lépés.
+
+Kipróbálás: a `v0.3.0` kiadás után, visszaállás a `v0.2.0`-ra és vissza ([manual_tests.md](../04_quality/manual_tests.md), MT-04, tervezett).
+
+## Incidensek
+
+### 1. Az alkalmazás nem válaszol, vagy tömegesen 500-as hibát ad
+
+- **Tünet:** a felhasználó „Váratlan hiba történt. Próbáld újra később.” üzenetet lát, vagy a lap nem töltődik be; a `/health` nem `Healthy`.
+- **Gyors diagnózis:**
+  1. `docker compose ps` – fut-e az `api` és a `db`? A `migrator` `Exited (0)`?
+  2. `curl http://localhost:8080/health` – 503 `Unhealthy`: az adatbázis nem érhető el (2. incidens).
+  3. `docker compose logs --tail 100 api` – az `Error` szintű sorok és a `correlationId`; egy felhasználói hibához: `docker compose logs api | grep <correlationId>`.
+  4. Ha az `api` nem indult el: `docker compose logs migrator` – a sikertelen migráció megállítja az indulást.
+- **Ideiglenes megoldás:** `docker compose restart api`; sikertelen migráció vagy frissítés után rollback (lásd fent).
+
+### 2. Megszakad az adatbázis-kapcsolat
+
+- **Tünet:** minden adatkérés 500, a `/health` 503 `Unhealthy`; a naplóban Npgsql-kapcsolódási hiba.
+- **Gyors diagnózis:**
+  1. `docker compose ps db` – fut és `healthy`?
+  2. `docker compose logs --tail 50 db` – leállt, elfogyott a hely, vagy hibás a jelszó?
+  3. `df -h` – van-e szabad lemezhely (a volume a Docker adatkönyvtárában).
+- **Ideiglenes megoldás:** `docker compose up -d db` (az API újra kapcsolódik, újraindítás nem kell); helyhiánynál `docker system prune` a régi image-ekre (a volume-ok maradnak). Ha a `.env` jelszava változott, a meglévő adatbázis a régi jelszóval maradt: vissza kell írni a régit.
+
+### 3. A felhasználók nem tudnak bejelentkezni
+
+- **Tünet:** „Túl sok kérés érkezett…” (429 `RATE_LIMITED`), a fiók zárolva (429 `LOGIN_LOCKED_OUT`), vagy újraindítás után mindenkit kiléptetett.
+- **Gyors diagnózis:** a naplóban a 429-es sorok; ha mindenki egy címről jön (proxy, porttovábbítás), a rate limit közös. Ha mindenkit kiléptetett: megvan-e a `dpkeys` volume (`docker volume ls`).
+- **Ideiglenes megoldás:** a zárolás 5 perc után magától feloldódik; a rate limit a `.env`-ben emelhető (`RateLimiting__Auth__PermitLimit`), majd `docker compose up -d`. Elveszett cookie-kulcsoknál a felhasználók egyszer újra bejelentkeznek, adat nem vész el.
 
 ## Leállítás és törlés
 

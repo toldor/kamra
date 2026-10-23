@@ -37,19 +37,21 @@ A projekt célja egy olyan mérnökileg ellenőrizhető rendszer megtervezése �
 4. főzés után következetesen frissíti a készletet;
 5. az AI-t csak ellenőrzött, validált és felhasználói jóváhagyással működő folyamatokban használja.
 
-## Jelenlegi állapot – 2026. október 11.
+## Jelenlegi állapot – 2026. október 23.
 
-Elkészült az 1. lépcső első mérföldköve (**v0.2.0**): készletkezelés, „Mit főzzek?” ajánlás és főzés öt saját recepttel.
+Elkészült az 1. lépcső, a determinisztikus mag: a teljes út a készlettől a bevásárlólistáig, 20 saját szövegű recepttel.
 
 - készlettételek rögzítése, szerkesztése, csökkentése okkal és törlése; becsült, jelölt lejárat; keresés és szűrők; alapegységű tárolás és készletmozgás-napló;
 - ajánlás: elkészíthető és majdnem elkészíthető receptek, indoklás a hamarosan lejáró hozzávalókkal, hiány „van / kell” bontásban;
 - főzés: adagszám, szükséges és felhasznált mennyiség hozzávalónként, FEFO-levonás (a legkorábban lejárótól), az ismételt vagy egyidejű főzés nem von le kétszer;
-- tíz előre, kézzel kiszámolt ellenőrző példa, mind egyezik ([test report](docs/04_quality/test_report.md));
+- bevásárlólista: bevásárlójavaslat elfogyáskor és a minimumszint alá csökkenéskor, indokkal és javasolt mennyiséggel; a hiány a receptből és a főzésből egy kattintással a listára;
+- saját recept saját hozzávalóval, bármely recept archiválása a saját háztartásban;
+- húsz előre, kézzel kiszámolt ellenőrző példa, mind egyezik ([test report](docs/04_quality/test_report.md)); az első telepítés tiszta környezetben 1,5 perc alatt elindult ([kézi tesztek](docs/04_quality/manual_tests.md));
 - az alapok a walking skeletonból: regisztráció és bejelentkezés, egységes hibamodell, strukturált napló, Docker Compose stack, GitHub Actions CI.
 
-Még **nincs kész**: bevásárlólista és bevásárlójavaslatok, saját recept, a főzés hibás eseteinek teljes felülete (okt. 23.), AI-alapú bevitel, chatasszisztens. Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
+Még **nincs kész**: AI-alapú egy mondatos bevitel (nov. 6.), chatasszisztens (nov. 10.). Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-Következő mérföldkő: **okt. 23.** – a készlet–recept–főzés–bevásárlás teljes útja. A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+Következő mérföldkő: **nov. 6.** – stabil mag és kipróbálható MI-bevitel; közben okt. 26. és nov. 1. között az első felhasználói kipróbálás ([UAT-terv](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 
@@ -138,6 +140,12 @@ A teljes dokumentáció a repository `docs` könyvtárában található.
 - [AI-manifeszt](https://github.com/toldor/kamra/blob/develop/docs/07_ai/ai_manifest.md)
 - [Promptnapló](https://github.com/toldor/kamra/blob/develop/docs/07_ai/prompt_log.md)
 - [Ellenőrzési napló](https://github.com/toldor/kamra/blob/develop/docs/07_ai/verification_log.md)
+- [Telepítési útmutató](https://github.com/toldor/kamra/blob/develop/docs/05_security_ops/deploy_runbook.md)
+- [Fenyegetésmodell](https://github.com/toldor/kamra/blob/develop/docs/05_security_ops/threat_model.md)
+- [Adatkezelés és licencek](https://github.com/toldor/kamra/blob/develop/docs/05_security_ops/privacy_licensing.md)
+- [Kézi tesztek](https://github.com/toldor/kamra/blob/develop/docs/04_quality/manual_tests.md)
+- [Megfeleltetési táblázat](https://github.com/toldor/kamra/blob/develop/docs/04_quality/traceability.md)
+- [UAT-terv](https://github.com/toldor/kamra/blob/develop/docs/04_quality/uat.md)
 
 ## Futtatás
 
@@ -229,4 +237,4 @@ https://github.com/toldor/kamra
 
 ## Licenc
 
-A licenc a projekt jelenlegi állapotában még nincs véglegesítve.
+MIT, lásd [LICENSE](LICENSE).

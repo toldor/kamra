@@ -1,0 +1,45 @@
+# Fenyegetésmodell (STRIDE)
+
+A Kamra egy háztartás élelmiszer-nyilvántartása: a legfontosabb érték a felhasználók fiókja és az, hogy egy háztartás adata soha ne jusson el egy másikhoz. A modell az okt. 23-i állapotot írja le (`develop @ 7b6a484`, az 1. lépcső); az MI-funkciók (US-2, US-6) fenyegetései az LLM- és az MCP-ADR-rel együtt kerülnek be.
+
+## Támadási felület
+
+| Belépési pont | Ki éri el | Védelem |
+|---|---|---|
+| A SPA statikus fájljai (`/`) | bárki | Csak statikus tartalom; CSP `default-src 'self'`, `X-Content-Type-Options: nosniff` |
+| REST API (`/api/v1/*`) | bejelentkezett felhasználó | Globális `AuthorizeFilter`, session-cookie, antiforgery a módosító kéréseknél, validáció a use case-ekben, háztartás-szűrés minden lekérdezésben |
+| Regisztráció és bejelentkezés (`/api/v1/auth/*`) | bárki | Rate limit IP-címenként, kiléptetés 5 sikertelen próba után, legalább 15 karakteres jelszó |
+| `/health` | bárki | Csak `Healthy` / `Unhealthy`, belső adat nélkül |
+| PostgreSQL (Docker Compose, port 5432) | a gépről (D1) | Jelszó a `.env`-ből; a port csak a gépen elérhető |
+| Docker-volume-ok (`pgdata`, `dpkeys`) | a gép üzemeltetője | A gép hozzáférés-védelme |
+| CI (GitHub Actions) | a repó írói | Branch-védelem, titkok a GitHub Secrets-ben, gitleaks |
+
+Admin felület nincs; az MCP-szerver és az LLM-hívás még nincs implementálva.
+
+## Fenyegetések
+
+| # | Fenyegetés (STRIDE) | Leírás | Hatás | Valószínűség | Mitigáció | Verification |
+|---|---|---|---|---|---|---|
+| T-1 | **Spoofing** – a session ellopása | Egy másik oldal vagy szkript megszerzi, vagy elküldeti a bejelentkezési sütit | Magas: a fiók teljes átvétele | Alacsony | `HttpOnly`, `Secure`, `SameSite=Strict` süti, 14 nap csúszó lejárattal; a kijelentkezés új biztonsági bélyeget ír, és ezt minden kérés ellenőrzi, így a kilépés azonnal érvényteleníti a sütit ([AuthenticationSetup.cs](../../src/backend/KamraApp.Api/Auth/AuthenticationSetup.cs), [DependencyInjection.cs](../../src/backend/KamraApp.Infrastructure/DependencyInjection.cs), [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md)) | [AuthTests.cs](../../tests/KamraApp.Integration.Tests/AuthTests.cs), [AdversarialAuthTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialAuthTests.cs) (hamisított süti, a kilépés utáni süti újrafelhasználása) |
+| T-2 | **Spoofing** – jelszópróbálgatás | Automatizált bejelentkezési kísérletek egy fiókra vagy sok fiókra | Magas | Közepes | Kiléptetés 5 sikertelen próba után 5 percre; rate limit a `register` és a `login` végpontra IP-címenként (10 / 60 mp); legalább 15 karakteres jelszó (NIST SP 800-63B-4); a hibaüzenet nem árulja el, hogy a fiók létezik-e | AuthTests, AdversarialAuthTests (kiléptetés, párhuzamos kérések a küszöbnél, egységes hibaválasz) |
+| T-3 | **Tampering** – kérés hamisítása más oldalról (CSRF) | Egy idegen oldal a felhasználó sütijével módosító kérést küld | Magas: készlet vagy lista módosítása | Alacsony | Antiforgery token az `X-XSRF-TOKEN` fejlécben minden POST, PUT, DELETE kéréshez (a tokent a bejelentkezett felhasználóhoz köti); `SameSite=Strict` | Minden új modul integrációs tesztje: antiforgery nélkül 400 `ANTIFORGERY_TOKEN_INVALID` ([PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs), [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs), [RecipesApiTests.cs](../../tests/KamraApp.Integration.Tests/RecipesApiTests.cs)) |
+| T-4 | **Information disclosure** – másik háztartás adata (IDOR) | Egy felhasználó egy kitalált vagy megszerzett azonosítóval más háztartás tételét, receptjét, hozzávalóját vagy listáját olvassa vagy módosítja | Magas: a fő adatvédelmi ígéret sérül | Közepes (minden új lekérdezésnél újra felmerül) | A háztartás azonosítója mindig a sessionből jön (`ICurrentHousehold`), soha nem a kérésből; minden repository-metódus kötelező paramétere; más háztartás adata 404, a nem létezővel azonos válasszal; a saját receptbe idegen hozzávaló a Domainben sem kerülhet ([ADR-0004](../02_architecture/adr/0004-clean-architecture-retegek.md), QA-1) | Két háztartásos integrációs teszt minden végponton; ellenséges tesztek: [AdversarialPantryApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialPantryApiTests.cs), [AdversarialShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialShoppingListApiTests.cs), [AdversarialRecipesAndCookingTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialRecipesAndCookingTests.cs); `/security-review` szakaszonként ([V-48](../07_ai/verification_log.md)) |
+| T-5 | **Information disclosure** – az adatbázis közvetlen elérése | A Compose kinyitja a PostgreSQL portját; a példajelszó ismert | Magas: minden adat | Alacsony (D1 után) | A port csak a gépen érhető el (`127.0.0.1`); a runbook szerint más környezetben a jelszót le kell cserélni; a connection string csak környezeti változóban | A `docker-compose.yml` portleképezése; MT-02 ([manual_tests.md](../04_quality/manual_tests.md)) |
+| T-6 | **Tampering / Information disclosure** – SQL injection | Felhasználói bevitel SQL-ként fut le | Magas | Alacsony | Minden lekérdezés EF Core-ral, paraméterezve; a két nyers SQL (az archiválás és a hozzávalónkénti zár) `FormattableString`-et kap, így minden érték paraméter | `/security-review` ([V-48](../07_ai/verification_log.md)); a T1 külső reviewja ([V-39](../07_ai/verification_log.md)); ellenséges bemenetek a tesztekben |
+| T-7 | **Tampering** – XSS a felhasználó által beírt szövegen | Egy receptnév vagy hozzávalónév szkriptet tartalmaz, és egy másik képernyőn lefut | Közepes: a saját háztartásban (más háztartás nem látja) | Alacsony | A React minden szöveget szövegként jelenít meg; `dangerouslySetInnerHTML` tilos (AGENTS.md); CSP `default-src 'self'` (inline szkript nem fut) | [ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs) (a fejlécek); kódkeresés a `dangerouslySetInnerHTML`-re a reviewkban |
+| T-8 | **Information disclosure** – belső részletek a hibaválaszban vagy a naplóban | A hibaválasz stack trace-t, SQL-t vagy más háztartás adatát mutat; a napló személyes adatot tárol | Közepes | Alacsony | Minden hiba ProblemDetails, stabil kóddal és biztonságos magyar címmel; váratlan hibánál csak `INTERNAL_ERROR` és `correlationId`; a `correlationId` a szerveré (a klienstől érkező érték naplóhamisításra adna módot); az Npgsql „Include Error Detail” kikapcsolva; a napló nem tartalmaz e-mail-címet és jelszót ([ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md), [ADR-0011](../02_architecture/adr/0011-serilog-strukturalt-naplozas.md)) | ErrorHandlingTests; a szivárgás-tesztek az ellenséges tesztosztályokban |
+| T-9 | **Repudiation / Tampering** – elveszett vagy csendben felülírt változás | Két fülön egyszerre módosított tétel, kétszer elküldött főzés | Közepes: hibás készlet | Közepes | Optimista zárolás (`xmin`), idempotens főzés kérésazonosítóval, csak hozzáfűzhető készletmozgás-napló, hozzávalónkénti zár a bevásárlójavaslatoknál ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs) (P8, P9), [StockMovementLogTests.cs](../../tests/KamraApp.Integration.Tests/StockMovementLogTests.cs), ShoppingListApiTests (P20) |
+| T-10 | **Elevation of privilege** – sérülékeny függőség vagy kiszivárgott titok | Egy ismert sérülékenységű csomag vagy a repóba került titok | Magas | Közepes | CI: NuGet- és npm-sérülékenységvizsgálat (a `high` szint megállítja az ágat), gitleaks a teljes historyn, Dependabot; titok csak a `.env`-ben és a GitHub Secrets-ben | CI `secrets`, `backend`, `frontend` job; [V-51](../07_ai/verification_log.md) (a Vite-figyelmeztetés megállította az ágat, javítva) |
+
+## Fennmaradó kockázat (residual risk)
+
+- **Nincs HTTPS a helyi telepítésben.** A Compose `http://localhost:8080`-on fut; a `Secure` süti a `localhost`-on így is működik. Interneten futó telepítéshez TLS-t végző reverse proxy kellene; ez a hatókörön kívül van (a december 4-i telepítés is helyi gépen lesz).
+- **A rate limit IP-címenként számol.** Proxy vagy porttovábbítás mögött minden kérés ugyanarról a címről jöhet, így a limit közös; a továbbított IP-fejléceket szándékosan nem fogadjuk el ([api.md](../03_design/api.md), Ismert hiányosságok).
+- **A háztartás-szűrés fegyelmen múlik.** Nincs adatbázis-szintű sorvédelem (RLS); minden új lekérdezésnél a teszt és a review ellenőrzi. Az MVP méretében ezt elfogadjuk.
+- **A napló váratlan kivételnél a kivétel üzenetét is tárolja** ([observability.md](observability.md), Ismert hiányosságok).
+- **Fiók törlése a felületen nincs;** a törlést az üzemeltető végzi ([privacy_licensing.md](privacy_licensing.md)).
+
+## Ellenőrzés
+
+- Automatizált: a fenti tesztek a CI-ban minden pushnál; sérülékenység- és titokvizsgálat a CI-ban.
+- Review: `/security-review` a kritikus szakaszoknál, független review és ellenséges tesztek ([review_prompts.md](../07_ai/review_prompts.md)); az állítások ellenőrzése a [verification_log.md](../07_ai/verification_log.md)-ben.
