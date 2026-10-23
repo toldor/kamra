@@ -146,12 +146,14 @@ describe('recipe suggestions', () => {
     expect(screen.getByRole('article', { name: 'Rántotta' })).toBeTruthy()
   })
 
+  // N12 (T3): the final text of ux_flows, with a new recipe as the first next step.
   it('says so when nothing matches the pantry', async () => {
     backend([recommendations({})])
     render(<App />)
 
-    expect(await screen.findByText('A kamrád alapján most nem találtam receptet. Rögzíts további hozzávalókat, és újra megnézem.')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Készlet rögzítése' })).toBeTruthy()
+    expect(await screen.findByText('A kamrád alapján most nem találtam receptet. Vegyél fel saját receptet, vagy rögzíts további hozzávalókat.')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Új recept' }).getAttribute('href')).toBe('#/receptek/uj')
+    expect(screen.getByRole('link', { name: 'Bevásárlás rögzítése' }).getAttribute('href')).toBe('#/')
   })
 
   it('shows an error and loads again on retry', async () => {

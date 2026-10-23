@@ -14,6 +14,13 @@ public sealed class IngredientsController : ControllerBase
         CancellationToken cancellationToken) =>
         listIngredients.ExecuteAsync(new ListIngredientsQuery { Search = search }, cancellationToken);
 
+    // M11: a household's own ingredient, 201 with its row (the GET /ingredients shape).
+    [HttpPost]
+    [ProducesResponseType<IngredientResponse>(StatusCodes.Status201Created)]
+    public async Task<IActionResult> Create(CreateIngredientRequest? request, [FromServices] CreateIngredient createIngredient,
+        CancellationToken cancellationToken) =>
+        StatusCode(StatusCodes.Status201Created, await createIngredient.ExecuteAsync(request, cancellationToken));
+
     // US-5: set the household's minimum, or remove it with an empty body ({}); 204.
     [HttpPut("{id:guid}/minimum")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

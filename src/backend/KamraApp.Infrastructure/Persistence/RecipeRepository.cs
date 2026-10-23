@@ -1,13 +1,25 @@
+using KamraApp.Application.Recipes;
 using KamraApp.Application.Recommendations;
 using KamraApp.Domain.Ingredients;
+using KamraApp.Domain.Recipes;
 using KamraApp.Domain.Recommendations;
 using Microsoft.EntityFrameworkCore;
 
 namespace KamraApp.Infrastructure.Persistence;
 
 // The system recipes and the household's own ones (from okt. 23), not retired (QA-1: household filter).
-public sealed class RecipeRepository(KamraDbContext db) : IRecipeRepository
+public sealed class RecipeRepository(KamraDbContext db) : IRecipeRepository, IRecipeCatalog
 {
+    public Task<IReadOnlyList<RecipeResponse>> ListAsync(Guid householdId, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public void Add(Recipe recipe, IReadOnlyList<RecipeIngredient> ingredients) => throw new NotImplementedException();
+
+    public Task ArchiveAsync(Guid householdId, Guid recipeId, DateTimeOffset archivedAt, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
     public async Task<IReadOnlyList<RecipeCandidate>> ListCandidatesAsync(Guid householdId, CancellationToken cancellationToken)
     {
         var recipes = await db.Recipes.AsNoTracking()

@@ -27,6 +27,10 @@ export type Amount = components['schemas']['AmountResponse']
 export type ShoppingListItem = components['schemas']['ShoppingListItemResponse']
 export type ShoppingSuggestion = components['schemas']['ShoppingSuggestionResponse']
 export type AddShoppingListItemRequest = components['schemas']['AddShoppingListItemRequest']
+export type Recipe = components['schemas']['RecipeResponse']
+export type CreateRecipeRequest = components['schemas']['CreateRecipeRequest']
+// The request's fields are strings in the OpenAPI document (validated by the backend); the page sends the enums.
+export type CreateIngredientRequest = { name: string; dimension: Dimension; defaultCategory: Category }
 // The `available` extension of INSUFFICIENT_STOCK (error_handling.md); ProblemDetails are not in the OpenAPI.
 export type AvailableAmount = { ingredientId: string; ingredientName: string; amount: number; unit: Unit }
 // A request amount: both fields or neither (api.md, Bevásárlólista).
@@ -156,6 +160,19 @@ export const api = {
   categories: () => json<CategoryInfo[]>(send('GET', '/categories')),
 
   ingredients: () => json<Ingredient[]>(send('GET', '/ingredients')),
+
+  // M11: visible only in the own household.
+  createIngredient: (request: CreateIngredientRequest) => json<Ingredient>(write('POST', '/ingredients', request)),
+
+  // System and own recipes, without archived ones (N2).
+  recipes: () => json<Recipe[]>(send('GET', '/recipes')),
+
+  createRecipe: (request: CreateRecipeRequest) => json<Recipe>(write('POST', '/recipes', request)),
+
+  // M10: a repeated archiving is a 204 too.
+  async archiveRecipe(id: string): Promise<void> {
+    await post(`/recipes/${id}/archive`)
+  },
 
   pantryItems: (filter: PantryFilter) => json<PantryItem[]>(send('GET', `/pantry-items${pantryQuery(filter)}`)),
 

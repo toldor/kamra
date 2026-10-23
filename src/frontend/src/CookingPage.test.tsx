@@ -240,6 +240,25 @@ describe('cooking', () => {
     expect(screen.getByRole('button', { name: 'Újraszámolás' })).toBeTruthy()
   })
 
+  // M8 (T3): archived in another tab; recalculating would not help, so only the way back is offered.
+  it('says so when the recipe was archived, on the preview and on the confirmation', async () => {
+    const archived = { status: 409, body: { code: 'RECIPE_ARCHIVED', title: 'Ezt a receptet archiváltad, ezért már nem főzhető.' } }
+    backend({ [confirm]: [archived] })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
+
+    expect((await screen.findByText('Ezt a receptet archiváltad, ezért már nem főzhető.')).getAttribute('role')).toBe('alert')
+    expect(screen.queryByRole('button', { name: 'Újraszámolás' })).toBeNull()
+
+    cleanup()
+    backend({ [preview]: [archived] })
+    render(<App />)
+
+    expect((await screen.findByText('Ezt a receptet archiváltad, ezért már nem főzhető.')).getAttribute('role')).toBe('alert')
+    expect(screen.getByRole('link', { name: 'Vissza a receptekhez' }).getAttribute('href')).toBe('#/mit-fozzek')
+  })
+
   it('says so when the recipe does not exist', async () => {
     backend({ [preview]: [{ status: 404, body: { code: 'RECIPE_NOT_FOUND', title: 'Ez a recept nem található.' } }] })
     render(<App />)

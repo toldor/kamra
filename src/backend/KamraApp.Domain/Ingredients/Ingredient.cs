@@ -44,7 +44,16 @@ public sealed class Ingredient
     public static Ingredient CreateSystem(Guid id, string seedKey, string name, Dimension dimension, Category defaultCategory) =>
         new(id, householdId: null, name, Normalize(name), dimension, defaultCategory, seedKey, retiredAt: null);
 
+    public const int MaxNameLength = 100;
+
+    // M11: a household's own ingredient; the use case has checked that the name is free.
+    public static Ingredient CreateOwn(Guid householdId, string name, Dimension dimension, Category defaultCategory) =>
+        throw new NotImplementedException();
+
+    // The stored form of a name: no leading or trailing white space, single spaces inside (any Unicode white space).
+    public static string Tidy(string name) =>
+        string.Join(' ', name.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
     // Lower case with single spaces, the form used for name uniqueness (data_model.md).
-    public static string Normalize(string name) =>
-        string.Join(' ', name.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)).ToLowerInvariant();
+    public static string Normalize(string name) => Tidy(name).ToLowerInvariant();
 }

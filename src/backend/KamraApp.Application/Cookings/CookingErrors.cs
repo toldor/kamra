@@ -7,6 +7,10 @@ public static class CookingErrors
 {
     public static NotFoundException RecipeNotFound() => new("RECIPE_NOT_FOUND", "Ez a recept nem található.");
 
+    // M8 / D-c: the preview and a new cooking of an archived recipe; a repeated request still gets its stored answer.
+    public static ConflictException RecipeArchived() =>
+        new("RECIPE_ARCHIVED", "Ezt a receptet archiváltad, ezért már nem főzhető.");
+
     public static ConflictException IdempotencyConflict() =>
         new("IDEMPOTENCY_CONFLICT", "Ezt a főzést már más adatokkal rögzítetted. Töltsd újra az oldalt, és kezdd újra.");
 }

@@ -5,8 +5,15 @@ using Microsoft.EntityFrameworkCore;
 namespace KamraApp.Infrastructure.Persistence;
 
 // ADR-0003: system ingredients and the household's own ones; retired ones cannot be chosen.
-public sealed class IngredientRepository(KamraDbContext db) : IIngredientRepository
+public sealed class IngredientRepository(KamraDbContext db) : IIngredientRepository, IOwnIngredientRepository
 {
+    public Task<bool> NameTakenAsync(Guid householdId, string normalizedName, CancellationToken cancellationToken) =>
+        throw new NotImplementedException();
+
+    public void Add(Ingredient ingredient) => throw new NotImplementedException();
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+
     public async Task<IReadOnlyList<Ingredient>> ListVisibleAsync(Guid householdId, string? normalizedSearch, CancellationToken cancellationToken) =>
         await Visible(householdId)
             .Where(i => normalizedSearch == null || i.NormalizedName.Contains(normalizedSearch))

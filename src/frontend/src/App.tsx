@@ -4,6 +4,8 @@ import { AuthForm } from './AuthForm'
 import { CookingPage } from './CookingPage'
 import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
+import { RecipeForm } from './RecipeForm'
+import { RecipesPage } from './RecipesPage'
 import { RecommendationsPage } from './RecommendationsPage'
 import { ShoppingListPage } from './ShoppingListPage'
 import { cookingRecipeId, routes, useHashRoute, type Route } from './useHashRoute'
@@ -30,6 +32,8 @@ function Page({ route, onSignedOut }: { route: Route; onSignedOut: (notice: stri
   if (recipeId) return <CookingPage key={recipeId} recipeId={recipeId} onSignedOut={onSignedOut} />
   if (route === routes.recommendations) return <RecommendationsPage onSignedOut={onSignedOut} />
   if (route === routes.shopping) return <ShoppingListPage onSignedOut={onSignedOut} />
+  if (route === routes.recipes) return <RecipesPage onSignedOut={onSignedOut} />
+  if (route === routes.newRecipe) return <RecipeForm onSignedOut={onSignedOut} />
   return <PantryPage onSignedOut={onSignedOut} />
 }
 

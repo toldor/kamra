@@ -6,6 +6,7 @@ using KamraApp.Api.ErrorHandling;
 using KamraApp.Application.Cookings;
 using KamraApp.Application.Ingredients;
 using KamraApp.Application.Pantry;
+using KamraApp.Application.Recipes;
 using KamraApp.Application.Recommendations;
 using KamraApp.Application.ShoppingList;
 using KamraApp.Infrastructure;
@@ -50,6 +51,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddKamraAuthentication(builder.Configuration);
 // US-1 use cases (ADR-0004: one class per use case, no mediator).
 builder.Services.AddScoped<ListIngredients>();
+builder.Services.AddScoped<CreateIngredient>();
+builder.Services.AddScoped<ListRecipes>();
+builder.Services.AddScoped<CreateRecipe>();
+builder.Services.AddScoped<ArchiveRecipe>();
 builder.Services.AddScoped<ListPantryItems>();
 builder.Services.AddScoped<AddPantryItem>();
 builder.Services.AddScoped<UpdatePantryItem>();
