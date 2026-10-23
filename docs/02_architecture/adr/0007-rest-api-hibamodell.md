@@ -11,7 +11,8 @@ Státusz: Accepted
 
 ## Decision
 
-- Az API REST + JSON stílusú, ASP.NET controllerekkel és globális antiforgery-szűrővel, fix `/api/v1` prefixszel; a használati esetek egy közös `AppException` hierarchiával jelzik a hibát, amelyet a beépített exception handler RFC 7807 ProblemDetails-re képez le stabil `code`-dal és biztonságos magyar `title`-lel, az OpenAPI-leírás pedig build közben generálódik, és a repóban verziózott.
+- Az API REST + JSON stílusú, ASP.NET controllerekkel és globális antiforgery-szűrővel, fix `/api/v1` prefixszel; a használati esetek egy közös `AppException` hierarchiával jelzik a hibát, amelyet a beépített exception handler RFC 9457 ProblemDetails-re képez le stabil `code`-dal és biztonságos magyar `title`-lel, az OpenAPI-leírás pedig build közben generálódik, és a repóban verziózott.
+- *Pontosítás (2026-10-23):* az eredeti szöveg az RFC 7807-et nevezte meg; ezt 2023-ban az RFC 9457 felváltotta, a formátum változatlan ([V-56](../../07_ai/verification_log.md)).
 
 ## Alternatives
 

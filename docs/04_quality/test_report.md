@@ -34,6 +34,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 - Dátum: 2026-10-23
 - Eredmény: PASS – .NET 563/563 helyben; Domain + Application sorlefedettség a kapu fölött (80%); Vitest 3 × 91/91; Playwright 18/18 futás (9 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen, a recept-teszt 5×, illetve 3× ismételve. Az új teszteket mutációval ellenőriztük (5 mutáció, mind elbukott); a review-javítások előtt a 7 regressziós teszt piros volt.
 - CI link: [GitHub Actions – run 39971394255](https://github.com/toldor/kamra/actions/runs/39971394255) (2026-10-23, `feature/us-5-shopping-list`, `c6ee6e4`): `secrets`, `backend`, `frontend` és `e2e` job zöld.
+- A `develop` mergelt állapota: [run 40005343477](https://github.com/toldor/kamra/actions/runs/40005343477) (2026-10-23, `b87fb14`): mind a négy job zöld. Ez a `v0.3.0` kódja.
 
 ## Tesztelt modulok
 

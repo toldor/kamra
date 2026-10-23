@@ -46,7 +46,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 |---|---|---|
 | [api.md](03_design/api.md) | REST végpontok, auth, hibakódok, OpenAPI | Kész az 1. lépcsőre (a 2–3. lépcső végpontjai tervezettek) |
 | [data_model.md](03_design/data_model.md) | Entitások, kapcsolatok, migrációs stratégia | Kész az 1. lépcsőre (a tételjavaslat a 2. lépcsővel) |
-| [error_handling.md](03_design/error_handling.md) | Hibakategóriák, RFC 7807, retry, logolás | Kész az 1. lépcsőre (az LLM-hibakódok tervezettek) |
+| [error_handling.md](03_design/error_handling.md) | Hibakategóriák, RFC 9457, retry, logolás | Kész az 1. lépcsőre (az LLM-hibakódok tervezettek) |
 | [mcp_tools.md](03_design/mcp_tools.md) | MCP eszközök leírása, input séma, biztonság | Kész (skeleton) |
 
 ---

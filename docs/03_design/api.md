@@ -1,7 +1,7 @@
 # REST API
 
 Alap URL: `/api/v1`
-Hibák: RFC 7807 `ProblemDetails` (lásd [error_handling.md](error_handling.md)); stílus, verziózás és hibamodell: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md)
+Hibák: RFC 9457 `ProblemDetails` (lásd [error_handling.md](error_handling.md)); stílus, verziózás és hibamodell: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md)
 OpenAPI spec: [`src/backend/KamraApp.Api/openapi.json`](../../src/backend/KamraApp.Api/openapi.json) – OpenAPI 3.1, build közben generálódik (`Microsoft.Extensions.ApiDescription.Server`), ne szerkeszd kézzel; a frontend típusai ebből készülnek (`cd src/frontend && npm run gen:api`). Futás közben csak `Development` környezetben érhető el: `/openapi/v1.json`, valamint a Scalar API-felület a `/scalar` alatt ([ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md)); élesben (Docker Compose) nincs közzétéve.
 
 ## Autentikáció
