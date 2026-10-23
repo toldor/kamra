@@ -305,3 +305,27 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **A főzésoldal linkje:** a meglévő „Vissza a receptekhez” maradt.
   - **A review és a külső review után:** a javasolt javításokat, a két port megtartását és a „Válassz…” szöveget elfogadtam; az ellenséges tesztek a három tesztkód-javítással bekerültek.
   - **A Vite frissítése:** jóváhagytam a lockfile-frissítést.
+
+### P-19 – T5: telepítés tiszta környezetben, kézi tesztek, UAT-terv, megfeleltetés, fenyegetésmodell
+- **Dátum:** 2026-10-23
+- **Cél:** Az okt. 22-i mérföldkő dokumentációs és üzemeltetési része: az első dokumentált telepítés tiszta környezetben, mért idővel; kézi tesztjegyzőkönyv; a felhasználói kipróbálás terve; megfeleltetési táblázat; fenyegetésmodell, adatkezelés és licencek; komponensnézet.
+- **Eszköz:** Claude Code (claude-opus-5-5). Külső review nem volt (lásd lent).
+- **Prompt összefoglaló:** „pusholtam, A” (a feature-PR külön review nélkül) → „mergeltem, a runbook jóváhagyva” → az MT-02 lépésről lépésre („honnan indítsam ezt a parancsot?”, „most a disztróban vagyok?”, „most jó ez?”) → „igen, kiegészítetted a leírást azokkal amikre rá kellett kérdeznem?” → az UAT-terv és a táblázat jóváhagyása → „A” (D1, D2) → a PR #17.
+- **AI javaslat (eredeti):**
+  - **Feature-PR:** a vágólista 2. pontja szerint külön PR-review nélkül, mert a T1 és a T3 már kapott független reviewt.
+  - **Runbook:** a Docker Engine telepítése a hivatalos apt-tároló szerint; a tiszta környezet egy új, saját nevű WSL-disztró (`--name kamra-clean`), a Docker Desktop leállítva.
+  - **A tiszta környezet:** azt feltételeztem, hogy az új disztró a Docker Desktop integrációja nélkül tiszta. A WSL alapból hozzáfűzi a Windows-`PATH`-ot, ezért a Docker Desktop `docker` parancsa mégis látszott. Ezt az ellenőrző lépés (`command -v docker`) mutatta ki, a runbook javítva.
+  - **UAT:** öt önálló forgatókönyv; az első változatban az S1 készletéből (25 dkg vaj) a főzés után nem lett volna javaslat, így az S3 üres lett volna; a valós induló listán ellenőrizve javítottam (2 dkg vaj, plusz kenyér).
+  - **Megfeleltetés:** a US-2-nél egy nem létező végpontnevet írtam (`/intake`); ellenőrzéskor javítva.
+  - **Biztonsági doksik:** a leadandó csomag sablonjából kiderült, hogy a runbookból hiányzik a rollback és a két incidens; pótolva. Két döntést igénylő pont: D1 – az adatbázis portja a helyi hálózaton is elérhető volt, ismert példajelszóval; D2 – a projekt licence nem volt eldöntve. A licenceket a csomagok metaadatából olvastam ki ([V-53](verification_log.md)). Két túlzó állítást a kód alapján pontosítottam (a fióktörlés láncolása, a „kipróbált” rollback helyett tervezett MT-04).
+- **Érintett fájlok:**
+  - docs: `05_security_ops/deploy_runbook.md`, `threat_model.md`, `privacy_licensing.md` (új), `observability.md`; `04_quality/manual_tests.md`, `uat.md`, `traceability.md` (új); `02_architecture/c4_component.md` (új); `00_index.md`, `README.md`, verification_log V-52–V-53; `docs/assets/mt02-shopping-360.png`;
+  - kód és egyéb: `docker-compose.yml` (az adatbázis portja `127.0.0.1`-en), `LICENSE` (MIT);
+  - a repón kívül: `t5_deploy_runbook.md`, `t5_mt02.md`, `t5_uat.md`, `t5_traceability.md`, `t5_security_docs.md`, `pr_us5.md`; a toborzó üzenet.
+- **Mit változtattam / döntésem:**
+  - **Feature-PR:** elfogadtam, külön review nélkül mergeltem (PR #16).
+  - **MT-02:** a telepítést én végeztem a runbook szerint, tiszta WSL-disztróban; a klóntól a `/health`-ig 1 perc 26 másodperc. Ahol elakadtam, kérdeztem, és kértem, hogy ezek a részletek kerüljenek be a runbookba (PowerShell, a disztró parancssora, `cd ~`, a `wsl.conf` hozzáfűzése, újra belépés).
+  - **MT-01:** a saját okt. 17-i kipróbálásomról: kényelmes volt.
+  - **UAT-terv és toborzó üzenet:** változtatás nélkül jóváhagytam, és az üzenetet elküldtem a résztvevőknek.
+  - **D1, D2:** az ajánlás szerint (az adatbázis portja csak a gépről, MIT licenc).
+  - **CI a `docs/**` ágon:** pushra nem indul; a PR megnyitásával futott le, a `ci.yml`-t nem módosítottuk.
