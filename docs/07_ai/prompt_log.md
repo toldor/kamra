@@ -329,3 +329,28 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **UAT-terv és toborzó üzenet:** változtatás nélkül jóváhagytam, és az üzenetet elküldtem a résztvevőknek.
   - **D1, D2:** az ajánlás szerint (az adatbázis portja csak a gépről, MIT licenc).
   - **CI a `docs/**` ágon:** pushra nem indul; a PR megnyitásával futott le, a `ci.yml`-t nem módosítottuk.
+
+### P-20 – T6: a dolgozat 1–4. fejezete
+- **Dátum:** 2026-10-23
+- **Cél:** Az okt. 22-i mérföldkő dolgozatrésze: az 1–4. fejezet a kari sablon és formai előírás szerint. A szöveg követett változtatásként kerül a fejlesztő fájljába, hogy a fejlesztő változtatásai elkülöníthetők legyenek az MI-szövegtől.
+- **Eszköz:** Claude Code (claude-opus-5-5). Segédeszközök: python-docx 1.2.0 (a Word-fájl), Mermaid 11.4.1 és a tesztek Playwright Chromiuma (az ábrák). Külső review még nem volt (lásd lent).
+- **Prompt összefoglaló:** „jó a word hova fogod tenni a kamra_dolgozat.docx-t?” → „formai követelmények: <a kari oldal linkje>” → „A, egyenlőre hagyjuk üresen” (a feladatkiírás) → „mehet a többi” → „bezártam” → „commitoltam, … néhány dolgot átírtam az ai szövegből de nagyobb módosításokat később végzek”.
+- **AI javaslat (eredeti):**
+  - **Folyamat:** a dolgozat saját git-repóban van (`00_dolgozat`). A git a `docx2txt.py`-jal a szöveget hasonlítja össze. Az MI „Claude” szerzőjű követett változtatásként szúrja be a szöveget, a fejlesztő a Wordben fogadja el, írja át vagy veti el. Előbb egy próbafájl készült (`word_proba.docx`, [V-54](verification_log.md)).
+  - **Formázás:** a kari Word-sablon szerkezete és a kari weboldal írott formai előírása: Times 12, 1,5-es sorköz, 14/12 pontos címsorok, fejezetenként számozott ábrák és táblázatok, [n] alakú hivatkozás.
+  - **Tartalom:**
+    - 1. Háttér és piaci áttekintés, 2. Követelmények és hatókör, 3. Tervezés, 4. A determinisztikus mag megvalósítása;
+    - 5 ábra Mermaid-forrásból (`abrak/*.mmd`), 4 képernyőkép a `docs/assets`-ből, 7 táblázat, a [3]–[18] források.
+  - **Ellenőrzés:** a számadatokat és a szabványokat az eredeti forrásban ellenőriztem ([V-55](verification_log.md)). Kiderült, hogy a repó doksiai az RFC 7807-re hivatkoznak, amelyet az RFC 9457 felváltott ([V-56](verification_log.md)); a dolgozat a 9457-et hivatkozza.
+  - **Menet közbeni hibák:**
+    - A Wordben nyitva lévő fájlt nem lehetett felülírni. Ezért az új változat külön fájlba került, és a cserére a bezárás után került sor, előtte md5-összevetéssel ellenőriztem, hogy közben nem módosult.
+    - Az első ábrák olvashatatlanul kicsik lettek. Javítás: `useMaxWidth: false`, egyszerűsített komponensábra, rövidebb csoportnevek.
+  - **Hiba, amely a szövegben maradt:** „Az 3.1. táblázat” és „az 3.2. táblázat” (helyesen: „A”, „a”). A szám mező, de az előtte álló névelő sima szöveg, ezért nem igazodik a számhoz.
+- **Érintett fájlok:**
+  - a repóban: verification_log V-54–V-56, prompt_log P-20;
+  - a repón kívül: `00_dolgozat/kamra_dolgozat.docx`, `00_dolgozat/abrak/` (5 `.mmd` és `.png`), `.gitattributes`, `docx2txt.py`; `04_munkaanyagok/okt22/word_proba.docx`, `t6_docs.md`.
+- **Mit változtattam / döntésem:**
+  - **A fájl helye:** a dolgozat a `00_dolgozat` saját repójába került, nem a projekt repójába.
+  - **A feladatkiírás:** üres hely marad, amíg a témavezető meg nem fogalmazza.
+  - **Az 1–4. fejezet:** minden változtatást elfogadtam, öt helyen átírtam a szöveget: pontosabb megfogalmazás („egy háztartás”, „valóban egyszerűbbé” az „először teszi olcsóvá” helyett), rövidebb táblázatcella, és töröltem a munkaórát, a vágási szabályt és a „jelenlegi változatában bemutatott” mellékmondatot. A nagyobb átdolgozást később végzem.
+  - **Külső review:** a tartalmi review (Gemini, a review_prompts 6. sablonja) a nagyobb átdolgozásom után, a novemberi változat előtt lesz; amit úgyis átírok, azt most fölösleges reviewztatni.
