@@ -90,7 +90,9 @@ public sealed class Recipe
 public sealed record RecipeLine(Ingredient Ingredient, decimal Amount, Unit Unit);
 
 // M10: a recipe archived in one household (any recipe, a system one too). It leaves the household's
-// recommendations and cannot be cooked again; its cookings stay (data_model.md, RecipeArchives).
+// recommendations and cannot be cooked again; its cookings stay (data_model.md, RecipeArchives). Only the
+// table mapping: the row is written with SQL (ON CONFLICT keeps the first) and read inside queries, so no
+// rule lives here.
 public sealed class RecipeArchive
 {
     private RecipeArchive(Guid householdId, Guid recipeId, DateTimeOffset archivedAt)

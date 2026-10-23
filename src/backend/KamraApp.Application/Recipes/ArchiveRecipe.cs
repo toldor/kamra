@@ -1,5 +1,4 @@
 using KamraApp.Application.Common;
-using KamraApp.Application.Cookings;
 using KamraApp.Application.Recommendations;
 
 namespace KamraApp.Application.Recipes;
@@ -11,7 +10,7 @@ public sealed class ArchiveRecipe(IRecipeRepository recipes, IRecipeCatalog cata
     public async Task ExecuteAsync(Guid recipeId, CancellationToken cancellationToken)
     {
         var householdId = household.HouseholdId;
-        var details = await recipes.FindAsync(householdId, recipeId, cancellationToken) ?? throw CookingErrors.RecipeNotFound();
+        var details = await recipes.FindAsync(householdId, recipeId, cancellationToken) ?? throw RecipeErrors.RecipeNotFound();
         if (!details.Archived)
         {
             await catalog.ArchiveAsync(householdId, recipeId, time.GetUtcNow(), cancellationToken);

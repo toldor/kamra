@@ -1,5 +1,6 @@
 using KamraApp.Application.Common;
 using KamraApp.Application.Pantry;
+using KamraApp.Application.Recipes;
 using KamraApp.Application.Recommendations;
 using KamraApp.Application.ShoppingList;
 using KamraApp.Domain;
@@ -27,11 +28,11 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
             return await RepeatAsync(existing, valid, cancellationToken);
         }
 
-        var details = await recipes.FindAsync(householdId, valid.RecipeId!.Value, cancellationToken) ?? throw CookingErrors.RecipeNotFound();
+        var details = await recipes.FindAsync(householdId, valid.RecipeId!.Value, cancellationToken) ?? throw RecipeErrors.RecipeNotFound();
         // M8 / D-c: only a new cooking is refused; a repeated request was answered above.
         if (details.Archived)
         {
-            throw CookingErrors.RecipeArchived();
+            throw RecipeErrors.RecipeArchived();
         }
 
         var recipe = details.Candidate;
