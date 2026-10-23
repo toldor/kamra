@@ -382,3 +382,60 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Minden állítás a kódon és forrással (ux_flows a11y, K10, AGENTS.md 3. pont); a valósaknál regressziós teszt a javítás előtt (piros), utána mutáció (14/14 elbukott).
 - **Eredmény:** **PASS** a valós megállapításokra (fókusz, élő régió, duplikálás, `busy`, `keepUsed`, minimum-súgó, üres minimummennyiség); az „üzleti logika a komponensben” **téves** (meglévő számítás kiemelése, illetve a K1-ben jóváhagyott kliensvezérlés). Két jóváhagyott eltérés a spectől maradt (az azonosító ellenőrzése a P11-ben; a picker interfésze a lint-szabály miatt). Három új felhasználói szöveg jóváhagyással.
 - **Következtetés:** A két tengely itt is mást talált: a Standards az akadálymentességet, a Spec a K10-et és a versenyhelyzetet. Az akadálymentességi állításokat (például hogy egy élő régió felolvasódik-e) a Vitest csak a DOM szintjén igazolja; a képernyőolvasós kézi próba a T5 kézi tesztjeibe kerül.
+
+### V-46 – Saját hibák a T3-ban: a sémateszt, a várakozás és a 360 px (Claude Code)
+- **Dátum:** 2026-10-23
+- **Állítás:** A T3 tesztjei és felülete készen állnak: a piros fázis után az implementációval minden teszt zöld lesz.
+- **Kockázat:** Közepes. Egy rossz teszt hamis biztonságot ad; a kilógó mező mobilon nehezen használható.
+- **Ellenőrzési módszer:** Teljes futás minden szinten; e2e valódi böngészőben 360 px-en; szkript a kilógó elemekre; a képernyőkép átnézése.
+- **Eredmény:** **FAIL**, négy saját hibával.
+  - (1) A migráció sématesztje a `pg_constraint` minden sorát várta, de a PostgreSQL 18 a `NOT NULL` megkötéseket is ott tartja. Javítás: a lekérdezés a kulcsokra szűkül; az ellenőrzött tartalom (PK, CASCADE, NO ACTION) nem változott.
+  - (2) Három Vitest-teszt a hozzávalósort az űrlap betöltése előtt kereste. Javítás: előbb megvárják az űrlapot.
+  - (3) Az e2e kimutatta, hogy 360 px-en a hozzávalósor 8 px-szel kilógott: a `fieldset` alapértelmezett `min-width: min-content`-je, margója és térköze. A Vitest ezt nem látja (jsdom). Javítás CSS-sel; utána a szkript 0 kilógó elemet talált, az e2e 18/18.
+  - (4) A képernyőképen a sorok címkéje a mező mellé került, és az elkészítés gépírásos betűvel jelent meg. Javítás CSS-sel.
+- **Következtetés:** A sématesztet az adatbázis tényleges verzióján kell megírni. A mobil elrendezést csak az e2e és a képernyőkép mutatja meg, ezért a képernyőkép átnézése az ellenőrzés része, nem csak dokumentáció.
+
+### V-47 – A T3 kódreviewja (Claude Code `/code-review`, Claude Opus 5.5)
+- **Dátum:** 2026-10-23
+- **Állítás:** A reviewer szerint
+  - archivált receptnél a megerősítés hibája után az űrlap aktív marad, link nélkül;
+  - az „Új hozzávaló” mérési módjának hibája és a recept szintű hiba nincs mezőhöz kötve;
+  - a kis űrlap nyitásakor és zárásakor elvész a fókusz;
+  - az élő régió már az első rendereléskor tartalmazza az értesítést;
+  - két port van aggregátumonként, ami az AGENTS.md „aggregate-level repository interfaces” szabályába ütközhet.
+- **Kockázat:** Közepes. Akadálymentesség és egy félrevezető hibaállapot; azonos modellcsaládú reviewer.
+- **Ellenőrzési módszer:** Minden állítás a kódon és forrással (ux_flows a11y, AGENTS.md 63. sor); a valósaknál regressziós teszt a javítás előtt (7, mind piros).
+- **Eredmény:** **PASS** a valós megállapításokra (C1, S1, S2, S3, S5, S7). Az S9-nél a két port marad (nincs generikus repository, a meglévő fake-ek érintetlenek; indok a kódkommentben), a „Válassz…” felirat jóváhagyva. Az S5-höz nincs Vitest-teszt, mert a jsdom nem mutatja meg, felolvas-e a képernyőolvasó; kódolvasással ellenőrizve.
+- **Következtetés:** A Spec-tengely olyan hibát talált (C1), amelyet a saját tesztem nem ellenőrzött; a teszt a hibaszöveget nézte, a következő lépést nem.
+
+### V-48 – A T3 biztonsági reviewja (Claude Code `/security-review`)
+- **Dátum:** 2026-10-23
+- **Állítás:** A változásban nincs High vagy Medium sebezhetőség.
+- **Kockázat:** Magas, ha téves: háztartások közti adatszivárgás vagy archivált recept főzése.
+- **Ellenőrzési módszer:** Ügynök a `git diff 0d12ebf` felett; az ellenőrzött utak: SQL injection (paraméterezett `FormattableString`), IDOR (recept, hozzávaló, archiválás), a D-c kijátszása, bejelentkezés és antiforgery, mass assignment, XSS, a `sessionStorage`-piszkozat. Az utakat az ellenséges tesztek (V-50) futással is igazolták.
+- **Eredmény:** **PASS**.
+- **Következtetés:** A statikus vizsgálat és az ellenséges tesztek ugyanarra jutottak; a második futással bizonyít.
+
+### V-49 – A T3 külső szakasz-reviewja (Antigravity, Claude Sonnet 4.6)
+- **Dátum:** 2026-10-23
+- **Állítás:** A reviewer 15 megállapítást tett. Köztük: az EF a paraméter nélküli konstruktor hiánya miatt nem tudná olvasni a `RecipeArchives`-t; az üres `role="alert"` ne legyen a DOM-ban; a főzési teszt előnézet-mock nélkül fut; a piszkozat-értesítés minden újrapróbáláskor megjelenik; az oldal címe nem kap fókuszt; az archiválás a `CookingErrors`-ra épül.
+- **Kockázat:** Alacsony–közepes. Azonos modellcsaládú reviewer; a téves javaslatok elfogadása rontaná az akadálymentességet.
+- **Ellenőrzési módszer:** Minden állítás forrással: [Microsoft Learn – EF Core constructors](https://learn.microsoft.com/ef/core/modeling/constructors) (paraméteres konstruktor név szerinti kötése), a kód (`CookingPage.test.tsx:73`, `Layout.tsx:20`, `RecipeForm.tsx` betöltési ág), a ux_flows a11y és a V-45 (élő régió).
+- **Eredmény:** **FAIL** öt állításra: az EF-konstruktor, az üres élő régió, a hiányzó mock, az ismétlődő értesítés és a cím fókusza téves. **PASS** a függőség irányára (a `RecipeErrors` a `Recipes` névtérbe került), és a `RecipeArchive` kommentjére. A receptnév egyedisége már eldöntött (N3).
+- **Következtetés:** A reviewer az akadálymentességben ellentétes irányú javaslatot is tett (az élő régió eltávolítása); ezt csak a saját, forrással rögzített szabály (V-45) alapján lehetett elvetni.
+
+### V-50 – A T3 ellenséges tesztjei (Antigravity, Claude Sonnet 4.6)
+- **Dátum:** 2026-10-23
+- **Állítás:** A 8 ellenséges teszt (24 eset) közül 4 elbukik, ami hibát jelezhet az alkalmazásban.
+- **Kockázat:** Magas, ha valós: IDOR, archivált recept főzése, névütközés megkerülése.
+- **Ellenőrzési módszer:** Futtatás; minden bukásnál a teszt érvényessége a szerződés alapján (a kategórialista, a `used` szabálya, a normalizálás definíciója); a javított teszttel újra.
+- **Eredmény:** **FAIL a tesztekre, PASS az alkalmazásra.** Három teszt érvénytelen volt: nem létező kategória (`fruits`, `spices`), a recept hozzávalóinak hiányos felsorolása, és a „zabtej” = „zab tej” elvárás (a belső szóköz összevonódik, de nem törlődik). Javítva (a támadás szándéka szerint, az NBSP-eset „zab tej” = „zab tej” lett) mind a 24 eset zöld. A reviewer a nulla szélességű szóközt kihagyta; ellenőrizve: a .NET-ben nem szóköz, ezért két egyformán kinéző név létrehozható; ismert korlát, csak a saját háztartást érinti.
+- **Következtetés:** Az ellenséges teszt bukása először a teszt ellenőrzését kéri; itt egyik sem jelzett alkalmazáshibát.
+
+### V-51 – A Vite biztonsági figyelmeztetései a CI-ban
+- **Dátum:** 2026-10-23
+- **Állítás:** A `feat:` commit CI-ja piros, mert a frontend sérülékeny csomagot tartalmaz.
+- **Kockázat:** Közepes a fejlesztői gépen (a Vite fejlesztői szervere és a `launch-editor`), alacsony élesben.
+- **Ellenőrzési módszer:** `npm audit` és `npm audit --omit=dev` helyben; a GitHub-figyelmeztetések (GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw, GHSA-587h-7wmj-h5pm, GHSA-9jrq-w75r-8gcw, GHSA-rq7h-c2jc-7f22, GHSA-vfpm-58rq-9qcg).
+- **Eredmény:** **PASS a kapura:** a `vite 8.3.2` sérülékeny, a `8.3.5` javított (a `^8.3.0` tartományon belül, csak a lockfile változott, a fejlesztő jóváhagyásával); az éles csomagok tiszták (`--omit=dev`: 0). Utána a CI mind a négy jobja zöld.
+- **Következtetés:** A függőség-ellenőrző kapu a saját kódtól függetlenül is megállíthatja az ágat; a javítás külön commitba kerül, hogy a változás nyoma egyértelmű legyen.

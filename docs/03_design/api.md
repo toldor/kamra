@@ -30,17 +30,16 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 |---|---|---|---|---|---|
 | GET | `/categories` | Kategórialista az alapértelmezett eltarthatósággal | US-1 | – | Megvalósítva |
 | GET | `/ingredients?search=` | Választható hozzávalók: rendszer (nem visszavont) és saját; hozzávalónként a háztartás minimumszintje (`minimum`) vagy null | US-1, US-3 | `VALIDATION_FAILED` | Megvalósítva |
-| POST | `/ingredients` | Saját hozzávaló (név, dimenzió, alapértelmezett kategória) → 201 | US-1 | `VALIDATION_FAILED`, `INGREDIENT_NAME_TAKEN` | Tervezett |
+| POST | `/ingredients` | Saját hozzávaló (név, dimenzió, alapértelmezett kategória) → 201 | US-1, US-3 | `VALIDATION_FAILED`, `INGREDIENT_NAME_TAKEN` | Megvalósítva |
 | GET | `/pantry-items?search=&category=&expiringSoon=` | Készlet (csak `Quantity > 0`), tételenként `version`, becsült és lejárt jelöléssel | US-1 | `VALIDATION_FAILED` | Megvalósítva |
 | POST | `/pantry-items` | Készlettétel rögzítése (`Added` mozgás) → 201 | US-1 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
 | PUT | `/pantry-items/{id}` | Szerkesztés, csökkentés és törlés (0-ra csökkentés); kötelező `version`, csökkenésnél kötelező ok | US-1 | `VALIDATION_FAILED`, `PANTRY_ITEM_NOT_FOUND`, `PANTRY_ITEM_MODIFIED` | Megvalósítva |
-| GET | `/recipes` | Receptek (induló és saját, archivált nélkül) | US-3 | – | Tervezett – okt. 23. (a felület most nem használja) |
-| GET | `/recipes/{id}` | Recept részletei | US-3 | `RECIPE_NOT_FOUND` | Tervezett – okt. 23. (a recept szövegét a főzés előnézete adja) |
-| POST | `/recipes` | Saját recept → 201 | US-3 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Tervezett |
-| POST | `/recipes/{id}/archive` | Recept archiválása a saját háztartásban (az induló is) → 204; ismételt → 204 | US-3 | `RECIPE_NOT_FOUND` | Tervezett |
+| GET | `/recipes` | Receptek (induló és saját; visszavont és archivált nélkül), magyar betűrendben | US-3 | – | Megvalósítva |
+| POST | `/recipes` | Saját recept → 201 | US-3 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
+| POST | `/recipes/{id}/archive` | Recept archiválása a saját háztartásban (az induló is) → 204; ismételt → 204 | US-3 | `RECIPE_NOT_FOUND` | Megvalósítva |
 | GET | `/recommendations` | Elkészíthető és majdnem elkészíthető receptek indoklással és hiánnyal | US-3 | – | Megvalósítva |
-| GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED`, `RECIPE_ARCHIVED` (tervezett) | Megvalósítva |
-| POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT`, `RECIPE_ARCHIVED` (tervezett; az ismételt kérés nem) | Megvalósítva |
+| GET | `/recipes/{id}/cooking-preview?servings=` | Megerősítő képernyő: hozzávalónként szükséges, elérhető és alapértelmezett felhasznált mennyiség, FEFO-felosztás | US-4 | `RECIPE_NOT_FOUND`, `VALIDATION_FAILED`, `RECIPE_ARCHIVED` | Megvalósítva |
+| POST | `/cookings` | Főzés megerősítése (`requestId`, recept, adagszám, felhasznált mennyiségek) → 201; ismételt kérés → 200 azonos törzzsel | US-4 | `VALIDATION_FAILED`, `RECIPE_NOT_FOUND`, `INSUFFICIENT_STOCK`, `PANTRY_ITEM_MODIFIED`, `IDEMPOTENCY_CONFLICT`, `RECIPE_ARCHIVED` (az ismételt kérés nem) | Megvalósítva |
 | GET | `/shopping-list` | Bevásárlólista-tételek magyar betűrendben | US-5 | – | Megvalósítva |
 | POST | `/shopping-list/items` | Felvétel → 200 a sorral; azonos hozzávalónál összeadódik, kipipált tételnél az új mennyiséggel indul újra | US-3, US-4, US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
 | PUT | `/shopping-list/items/{id}` | Kipipálás → 200 a sorral; megadott mennyiség lecseréli, hiányzó megtartja | US-5 | `VALIDATION_FAILED`, `SHOPPING_LIST_ITEM_NOT_FOUND` | Megvalósítva |
@@ -65,6 +64,13 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 - **Megerősítés** (`POST /cookings`): `{ requestId, recipeId, servings, used: [{ ingredientId, amount }] }` → 201, ismételt kérésre 200 ugyanazzal a törzzsel: `{ cookingId, recipeId, recipeName, servings, cookedAt, lines: [{ ingredientName, unit, required, used, shortage }], depletedIngredients, suggestedIngredients }`. A `used` pontosan a recept nem alaphozzávalóit sorolja fel, a recept egységében; alapegységre váltva legfeljebb 3 tizedes.
 - **Szabályok:** a szükséges mennyiség g-ban és ml-ben egészre kerekedik (a fél felfelé), db-ban mindig felfelé; a levonás FEFO szerint, tételenként `Consumed` mozgással a főzés azonosítójával; 0 felhasználásnál nincs mozgás; a hiány nem könyvelődik; a felhasznált mennyiség a készlet erejéig több lehet a szükségesnél.
 - **Hibák:** `INSUFFICIENT_STOCK` – a friss mennyiségek az `available` kiterjesztésben, levonás nélkül; `IDEMPOTENCY_CONFLICT` – a `requestId`-t eltérő tartalmú főzés használta; `PANTRY_ITEM_MODIFIED` – egy tétel közben megváltozott. Bármely ütközés után a szerver előbb a `requestId`-t keresi: ha közben ugyanez a kérés mentődött, 200-at ad ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)).
+
+### Receptek és saját hozzávaló (US-3) – a megvalósított szerződés
+
+- **Lista** (`GET /recipes`): `[{ id, name, servings, own, ingredients }]`; az `ingredients` a hozzávalók neve (az alaphozzávalókkal együtt) magyar betűrendben, a lista is az.
+- **Saját recept** (`POST /recipes`): `{ name, servings, instructions?, ingredients: [{ ingredientId, amount, unit }] }` → 201 a lista sorával, `Location` nélkül (egyedi lekérdező végpont nincs). Név 1–100 karakter (a szélek levágva, a belső szóközök egyesítve; nem egyedi), adagszám 1–100, legalább egy nem alaphozzávaló, legfeljebb 50 sor, hozzávalónként egy sor, mennyiség 0,001–100 000 legfeljebb 3 tizedessel, egység a hozzávaló dimenziójából, elkészítés legfeljebb 4000 karakter. A sorhibák kulcsa `ingredients[2].amount` alakú. Visszavont, nem létező vagy más háztartás hozzávalója: 404 `INGREDIENT_NOT_FOUND`, azonos válasszal.
+- **Archiválás** (`POST /recipes/{id}/archive`): 204, ismételt és egyidejű kérésre is; az első időpont marad. Más háztartás saját receptje és nem létező recept: 404 `RECIPE_NOT_FOUND`. Az induló recept archiválása csak a kérő háztartásra hat. Archivált receptnél az előnézet és az új főzés 409 `RECIPE_ARCHIVED`; a korábbi `requestId` ismétlése 200, azonos törzzsel.
+- **Saját hozzávaló** (`POST /ingredients`): `{ name, dimension, defaultCategory }` → 201 a `GET /ingredients` sorával (`minimum: null`). A név a recept nevével azonos módon tárolódik; ha a kisbetűs, egyesített szóközű alakja egyezik egy aktív rendszer- vagy a háztartás saját hozzávalójáéval, 409 `INGREDIENT_NAME_TAKEN` (egyidejű kérésnél is). Más háztartás azonos nevű hozzávalója nem ütközik.
 
 ### Bevásárlólista (US-5) – a megvalósított szerződés
 
@@ -93,7 +99,7 @@ A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. é
 
 ## Ismert hiányosságok
 
-- Az archivált recept előnézetének és első főzésének tiltása az archiválással együtt készül.
+- Ha egy recept archiválása és egy első főzése pontosan egyszerre fut, a főzés még átmehet; a recept ilyenkor is archivált marad, és a főzés helyes.
 - Az ajánlás az összes illeszkedő receptet visszaadja, lapozás nélkül; háztartási méretnél (20–40 recept) erre nincs szükség.
 - Egy készlettétel friss adatát (például verzióütközés után) a felület a teljes készletlistából veszi; tételenkénti `GET /pantry-items/{id}` végpont nincs, háztartási méretnél erre nincs szükség.
 

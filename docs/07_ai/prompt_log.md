@@ -282,3 +282,26 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **K1:** rákérdeztem, hogy az A opcióval megmarad-e a terv szerinti működés; az AI kimutatta, hogy a scope_contract „egy kattintással”-t kér, a terv „egy kéréssel”-e pontatlan volt. Az A-t választottam.
   - **K2–K13 és a szövegek:** változtatás nélkül jóváhagytam.
   - **A review után:** a javasolt javításokat és a három új szöveget elfogadtam.
+
+### P-18 – T3: saját recept, archiválás, saját hozzávaló
+- **Dátum:** 2026-10-23
+- **Cél:** Saját recept saját hozzávalóval, bármely recept archiválása a saját háztartásban, az archivált recept főzésének tiltása (M8, D-c); a felület a piszkozattal (M14).
+- **Eszköz:** Claude Code (claude-opus-5-5); review: Claude Code `/code-review` (két ügynök, Claude Opus 5.5) és `/security-review`; külső review és ellenséges teszt: Antigravity (Claude Sonnet 4.6).
+- **Prompt összefoglaló:** „hozz képbe, hogyan állunk” → „menjen minden az eddigi terv szerint” → mini-spec → „Jóváhagyom” → piros tesztek → a főzésoldal linkjéről döntés („A”) → implementáció → két review → javítások („A”) → külső review és ellenséges teszt → szétválogatás („A”).
+- **AI javaslat (eredeti):**
+  - **Ütemezés:** a lekésett okt. 20-i döntési pont után a T3 halasztását javasoltam, a kötelező részek (telepítés, dolgozat) előre vételével.
+  - **Mini-spec:** N1–N12; a lelet szerint a `GET /recipes/{id}` fölösleges, a D-c már teljesül, a névütközést a use case-nek kell ellenőriznie.
+  - **Tervezet:** két új port a meglévő interfészek bővítése helyett; az archiválás nyers SQL `ON CONFLICT`-tal; a megerősítés a böngésző ablakával.
+  - **A főzésoldal linkje:** a spec új szöveget írt, a meglévőt nem vettem észre.
+- **Érintett fájlok:**
+  - backend: `Domain/Recipes/Recipe.cs`, `Domain/Ingredients/Ingredient.cs`, `Application/Recipes/*` (új), `Application/Ingredients/CreateIngredient*.cs`, `IOwnIngredientRepository.cs` (új), `Application/Cookings/PreviewCooking.cs`, `ConfirmCooking.cs`, `CookingErrors.cs`, `Recommendations/IRecipeRepository.cs`, `Infrastructure/Persistence/RecipeRepository.cs`, `IngredientRepository.cs`, `KamraDbContext.cs`, `DependencyInjection.cs`, migráció `AddRecipeArchives`, `Api/Recipes/RecipesController.cs` (új), `Api/Pantry/IngredientsController.cs`, `Program.cs`, `openapi.json`;
+  - frontend: `RecipesPage.tsx`, `RecipeForm.tsx` (új), `IngredientPicker.tsx`, `CookingPage.tsx`, `RecommendationsPage.tsx`, `PantryPage.tsx`, `PantryItemForm.tsx`, `App.tsx`, `Layout.tsx`, `useHashRoute.ts`, `fieldErrors.tsx`, `api/client.ts`, `api/schema.d.ts`, `index.css`, `package-lock.json`;
+  - tesztek: `OwnRecipeTests.cs`, `CookingUseCaseTests.cs`, `RecipesApiTests.cs`, `AdversarialRecipesAndCookingTests.cs`, `RecipesPage.test.tsx`, `CookingPage.test.tsx`, `RecommendationsPage.test.tsx`, `tests/e2e/recipes.spec.ts`;
+  - docs: ux_flows, api, error_handling, data_model, ADR-0003, capability_map, test_report, verification_log V-46–V-51, `docs/assets/recipes-360.png`, `recipes-form-360.png`;
+  - a repón kívül: `t3_minispec.md`, `t3_review.md`, `t3_review_promptok.md`, `t3_docs.md`.
+- **Mit változtattam / döntésem:**
+  - **Ütemezés:** a halasztást elvetettem: „menjen minden az eddigi terv szerint”, a levél egy nappal később mehet.
+  - **Mini-spec:** változtatás nélkül jóváhagytam.
+  - **A főzésoldal linkje:** a meglévő „Vissza a receptekhez” maradt.
+  - **A review és a külső review után:** a javasolt javításokat, a két port megtartását és a „Válassz…” szöveget elfogadtam; az ellenséges tesztek a három tesztkód-javítással bekerültek.
+  - **A Vite frissítése:** jóváhagytam a lockfile-frissítést.

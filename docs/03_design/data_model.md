@@ -38,6 +38,7 @@ Domain-entitás: [Ingredient.cs](../../src/backend/KamraApp.Domain/Ingredients/I
 - Visszavonás törlés helyett: rendszer-hozzávaló nem törölhető a seedből; a visszavont hozzávaló új készlettételhez és recepthez nem választható, a meglévő hivatkozások változatlanul működnek.
 - A saját hozzávaló az MVP-ben csak létrehozható; átnevezés és törlés nincs (Ismert korlátok).
 - **Megvalósítás:** a `Dimension` és a `DefaultCategory` az enum nevével tárolódik (`Mass`, `Dairy`). Az induló lista 157 rendszer-hozzávaló (az okt. 16-i 36 és 121 új): [ingredients.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/ingredients.json) (beágyazott erőforrás, a `HasData` ebből olvas; üres, duplikált vagy ismeretlen értéknél a betöltés leáll).
+- **Megvalósítás (saját hozzávaló):** a név levágott szélekkel és egyesített belső szóközökkel (bármely Unicode-szóköz) tárolódik, a `NormalizedName` ennek kisbetűs alakja. A rendszernévvel való ütközést a use case ellenőrzi, két egyidejű, azonos nevű saját hozzávalónál a részleges egyedi index (`IX_Ingredients_HouseholdId_NormalizedName`) dönt, és a második 409 `INGREDIENT_NAME_TAKEN` ([RecipesApiTests.cs](../../tests/KamraApp.Integration.Tests/RecipesApiTests.cs)).
 
 ### Kategória
 
@@ -124,7 +125,7 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 | RetiredAt | timestamptz, null | Visszavont induló recept: egyik háztartásban sem jelenik meg az ajánlásban, a főzések hivatkozása megmarad. A háztartásonkénti archiválás a `RecipeArchives` táblában van |
 
 - A saját recept létrehozható, szerkesztés nincs (Ismert korlátok); bármely recept archiválható a saját háztartásban (`RecipeArchives`).
-- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 20 recept (az okt. 16-i 5 változatlan, 15 új; saját szöveg, a fejlesztő ellenőrizte, [V-43](../07_ai/verification_log.md)): [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept okt. 23-ig készül.
+- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 20 recept (az okt. 16-i 5 változatlan, 15 új; saját szöveg, a fejlesztő ellenőrizte, [V-43](../07_ai/verification_log.md)): [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept `Source = User`, a háztartás azonosítójával; a hozzávalói nem lehetnek más háztartáséi (a Domain is őrzi, [OwnRecipeTests.cs](../../tests/KamraApp.Unit.Tests/OwnRecipeTests.cs)).
 
 ### RecipeIngredients (Recept hozzávalója)
 
@@ -138,6 +139,17 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 - Az alaphozzávalók (víz, só, bors) szerepelhetnek a receptben, de az illesztés, a hiányszámítás és a levonás figyelmen kívül hagyja őket.
 - Az induló receptkészlet minden hozzávalója az induló hozzávaló-listán van (ADR-0003, integrációs teszt).
 - **Megvalósítás:** az `EnteredUnit` az enum nevével tárolódik; kényszer: `CK_RecipeIngredients_Quantity_Positive`; a recept törlése a sorait is törli, a hozzávaló-hivatkozás `NO ACTION`. Az egység–dimenzió invariánst az entitás maga ellenőrzi ([RecipeTests.cs](../../tests/KamraApp.Unit.Tests/RecipeTests.cs)).
+
+### RecipeArchives (Archivált recept)
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| HouseholdId | uuid (PK, FK → Households.Id) | Az archiváló háztartás; a háztartás törlése a sorait is törli |
+| RecipeId | uuid (PK, FK → Recipes.Id) | Az archivált recept (induló vagy saját); `NO ACTION` |
+| ArchivedAt | timestamptz | Az első archiválás ideje (UTC) |
+
+- A recept ebben a háztartásban nem jelenik meg a receptlistában és az ajánlásban, az előnézete és az új főzése 409; az ismételt főzéskérés továbbra is a tárolt eredményt adja.
+- **Megvalósítás:** a sort `INSERT … ON CONFLICT DO NOTHING` írja, így az ismételt és az egyidejű archiválás is egy sort hagy, az első idővel ([RecipesApiTests.cs](../../tests/KamraApp.Integration.Tests/RecipesApiTests.cs), a séma SQL-lel ellenőrizve).
 
 ### Cookings (Főzés)
 
@@ -219,12 +231,6 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 - A mennyiség **alapegységben** tárolódik (g, ml, db), `numeric(12,3)` típusban; a számítás (illesztés, hiány, levonás, minimumszint) mindig alapegységben fut. A felhasználó által bevitt egység (például dl) külön tárolódik, és csak a megjelenítést befolyásolja: a 30 dkg és a 300 g ugyanaz a mennyiség.
 - Kerekítés csak a főzés adagskálázásánál van (US-4): g és ml egészre, db felfelé egészre.
 
-## Tervezett entitások
-
-### Archivált recept (US-3) – a T3-ban valósul meg
-
-**RecipeArchives (Archivált recept):** (`HouseholdId`, `RecipeId`) PK, `ArchivedAt` timestamptz. A recept ebben a háztartásban nem jelenik meg az ajánlásban, és nem főzhető újra (az ismételt főzéskérés továbbra is a tárolt eredményt adja); a háztartás törlése a sorait is törli.
-
 ## Migrációk
 
 | Név | Leírás | Állapot |
@@ -235,12 +241,14 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | `AddCookings` | `Cookings`, `CookingLines`, `StockMovements.CookingId` | Megvalósítva |
 | `AddShoppingList` | `IngredientMinimums`, `ShoppingSuggestions` (részleges egyedi index, `CookingId`), `ShoppingListItems`, `CookingLines.Suggested` | Megvalósítva |
 | `ExpandSeedData` | 121 hozzávaló, 15 recept és hozzávalóik (csak beszúrás) | Megvalósítva |
+| `AddRecipeArchives` | `RecipeArchives` (PK háztartás + recept, CASCADE a háztartásra) | Megvalósítva |
 
 ## Ismert hiányosságok
 
 - Csak az 1. lépcső táblái szerepelnek; a tételjavaslat (US-2) a 2. lépcső előtt kerül be.
 - Két recept hiánya egymástól függetlenül, ugyanabból a készletből számolódik, és a listán összeadódik; ha mindkettőt megfőznék, a valódi hiány ennél nagyobb is lehet (például 1 tojás mellett a rántotta 2, a palacsinta 1 hiányát adja, összesen 3, holott a kettőhöz 4 kellene).
 - Az archivált recept nem állítható vissza.
+- A nulla szélességű szóköz (U+200B) nem szóköz, ezért a „zab​tej” és a „zabtej” két külön saját hozzávaló lehet, bár egyformán néz ki. Csak a saját háztartást érinti ([V-50](../07_ai/verification_log.md)).
 - A saját hozzávaló nem nevezhető át és nem törölhető; a saját recept nem szerkeszthető, csak archiválható.
 - A kategória-napértékek amerikai (USDA FoodKeeper) adatokon alapulnak, a magyar termékekre közelítések ([V-18](../07_ai/verification_log.md)).
 - A „ma” (hamarosan lejáró, becsült lejárat) a Europe/Budapest naptári napja ([V-23](../07_ai/verification_log.md)); több időzónához háztartásonkénti beállítás kellene.
