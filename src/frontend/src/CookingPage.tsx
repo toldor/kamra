@@ -192,6 +192,12 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
       // A conflicting earlier cooking with this id: the next screen starts with a new one.
       if (caught instanceof ApiError && caught.code === 'IDEMPOTENCY_CONFLICT') forgetRequestId(recipeId)
       const code = caught instanceof ApiError ? caught.code : ''
+      if (code === 'RECIPE_ARCHIVED') {
+        // Review C1: confirming again cannot help, so the page offers the way back, like a failed preview.
+        failWith(onSignedOut, (message) => setLoad({ status: 'error', message }))(caught)
+        setBusy(false)
+        return
+      }
       const recalculate = code === 'INSUFFICIENT_STOCK' || code === 'PANTRY_ITEM_MODIFIED'
       const fieldErrors = caught instanceof ApiError ? Object.values(caught.errors).flat() : []
       const show = (message: string) =>

@@ -250,6 +250,9 @@ describe('cooking', () => {
 
     expect((await screen.findByText('Ezt a receptet archiváltad, ezért már nem főzhető.')).getAttribute('role')).toBe('alert')
     expect(screen.queryByRole('button', { name: 'Újraszámolás' })).toBeNull()
+    // Review C1: confirming again cannot help, so the form goes and the way back is offered.
+    expect(screen.queryByRole('button', { name: 'Főzés megerősítése' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Vissza a receptekhez' }).getAttribute('href')).toBe('#/mit-fozzek')
 
     cleanup()
     backend({ [preview]: [archived] })

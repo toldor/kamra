@@ -90,11 +90,14 @@ function Suggestions({ data, onSignedOut }: { data: RecommendationsResponse; onS
   }
 
   if (data.makeable.length === 0 && data.almostMakeable.length === 0) {
-    // D4: the ux_flows text offers an own recipe, which arrives on okt. 23.
+    // N12: the ux_flows text, with an own recipe as the first next step.
     return (
       <>
-        <p className="empty">A kamrád alapján most nem találtam receptet. Rögzíts további hozzávalókat, és újra megnézem.</p>
-        {recordPantry}
+        <p className="empty">A kamrád alapján most nem találtam receptet. Vegyél fel saját receptet, vagy rögzíts további hozzávalókat.</p>
+        <div className="actions">
+          <a href={routes.newRecipe} className="button-link">Új recept</a>
+          <a href={routes.pantry} className="button-link secondary">Bevásárlás rögzítése</a>
+        </div>
       </>
     )
   }

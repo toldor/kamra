@@ -10,10 +10,12 @@ const fieldOrder = ['ingredientId', 'amount', 'unit', 'category', 'expiryDate'] 
 
 // US-1: a new pantry item. The ingredient is chosen from the list (ADR-0003); the units follow its
 // dimension (ADR-0002); a missing expiry date is estimated by the backend from the category.
-export function PantryItemForm({ categories, ingredients, onAdded, onSignedOut }: {
+export function PantryItemForm({ categories, ingredients, onAdded, onIngredientCreated, onSignedOut }: {
   categories: CategoryInfo[]
   ingredients: Ingredient[]
   onAdded: () => void
+  // N11: a new own ingredient from the picker.
+  onIngredientCreated: (ingredient: Ingredient) => void
   onSignedOut: (notice: string) => void
 }) {
   const [ingredientName, setIngredientName] = useState('')
@@ -72,6 +74,7 @@ export function PantryItemForm({ categories, ingredients, onAdded, onSignedOut }
         onChange={setIngredientName}
         field={fields.props('ingredientId')}
         error={fields.error('ingredientId')}
+        create={{ categories, onCreated: onIngredientCreated, onSignedOut }}
       />
 
       <div className="row">

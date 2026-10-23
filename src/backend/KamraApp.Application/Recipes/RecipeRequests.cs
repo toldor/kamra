@@ -1,4 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using KamraApp.Application.Cookings;
+using KamraApp.Application.Pantry;
+using KamraApp.Domain.Cookings;
+using KamraApp.Domain.Ingredients;
+using KamraApp.Domain.Recipes;
+using QuantityUnit = KamraApp.Domain.Quantities.Unit;
 
 namespace KamraApp.Application.Recipes;
 
@@ -16,7 +22,59 @@ public sealed class CreateRecipeRequest : IValidatableObject
 
     public IReadOnlyList<RecipeIngredientRequest?>? Ingredients { get; init; }
 
-    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) => throw new NotImplementedException();
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Ingredient.Tidy(Name ?? "").Length is 0 or > Recipe.MaxNameLength)
+        {
+            yield return new ValidationResult(RecipeInput.NameMessage, [nameof(Name)]);
+        }
+
+        if (Servings is not (>= 1 and <= Cooking.MaxServings))
+        {
+            yield return new ValidationResult(CookingInput.ServingsMessage, [nameof(Servings)]);
+        }
+
+        if (Instructions?.Length > Recipe.MaxInstructionsLength)
+        {
+            yield return new ValidationResult(RecipeInput.InstructionsMessage, [nameof(Instructions)]);
+        }
+
+        var rows = Ingredients ?? [];
+        if (rows.Count == 0 || rows.Count > Recipe.MaxIngredients)
+        {
+            yield return new ValidationResult(rows.Count == 0 ? RecipeInput.NeedsIngredientMessage : RecipeInput.TooManyMessage, [nameof(Ingredients)]);
+            yield break;
+        }
+
+        var seen = new HashSet<Guid>();
+        for (var i = 0; i < rows.Count; i++)
+        {
+            if (rows[i] is not { } row)
+            {
+                yield return new ValidationResult(PantryInput.IngredientMessage, [RecipeInput.Row(i, "ingredientId")]);
+                continue;
+            }
+
+            if (row.IngredientId is not { } id || id == Guid.Empty)
+            {
+                yield return new ValidationResult(PantryInput.IngredientMessage, [RecipeInput.Row(i, "ingredientId")]);
+            }
+            else if (!seen.Add(id))
+            {
+                yield return new ValidationResult(RecipeInput.DuplicateMessage, [RecipeInput.Row(i, "ingredientId")]);
+            }
+
+            if (row.Amount is not { } amount || !PantryInput.IsValidAmount(amount, minimum: 0.001m))
+            {
+                yield return new ValidationResult(PantryInput.AmountMessage, [RecipeInput.Row(i, "amount")]);
+            }
+
+            if (!PantryInput.TryParse<QuantityUnit>(row.Unit, out _))
+            {
+                yield return new ValidationResult(PantryInput.UnitMessage, [RecipeInput.Row(i, "unit")]);
+            }
+        }
+    }
 }
 
 public sealed class RecipeIngredientRequest

@@ -85,6 +85,8 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
             setNotice(null)
             reload()
           }}
+          onIngredientCreated={(ingredient) =>
+            setCatalog((current) => (current.status === 'ready' ? { ...current, ingredients: [...current.ingredients, ingredient] } : current))}
           onSignedOut={onSignedOut}
         />
       )}

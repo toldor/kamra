@@ -27,7 +27,14 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
             return await RepeatAsync(existing, valid, cancellationToken);
         }
 
-        var recipe = (await recipes.FindAsync(householdId, valid.RecipeId!.Value, cancellationToken) ?? throw CookingErrors.RecipeNotFound()).Candidate;
+        var details = await recipes.FindAsync(householdId, valid.RecipeId!.Value, cancellationToken) ?? throw CookingErrors.RecipeNotFound();
+        // M8 / D-c: only a new cooking is refused; a repeated request was answered above.
+        if (details.Archived)
+        {
+            throw CookingErrors.RecipeArchived();
+        }
+
+        var recipe = details.Candidate;
         var used = UsedInBaseUnits(recipe, valid) ?? throw ValidationException.ForField("used", CookingInput.UsedMessage);
         if (!used.Values.All(CookingInput.IsStorable))
         {

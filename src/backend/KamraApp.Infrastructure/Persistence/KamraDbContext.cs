@@ -26,6 +26,8 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
 
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
 
+    public DbSet<RecipeArchive> RecipeArchives => Set<RecipeArchive>();
+
     public DbSet<Cooking> Cookings => Set<Cooking>();
 
     public DbSet<IngredientMinimum> IngredientMinimums => Set<IngredientMinimum>();
@@ -112,6 +114,15 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             line.HasOne<Recipe>().WithMany().HasForeignKey(l => l.RecipeId).OnDelete(DeleteBehavior.Cascade);
             line.HasOne<Ingredient>().WithMany().HasForeignKey(l => l.IngredientId).OnDelete(DeleteBehavior.NoAction);
             line.HasData(SeedData.Recipes.Ingredients);
+        });
+
+        // data_model.md, RecipeArchives (M10): one row per household and recipe; the household's deletion removes
+        // its rows, a recipe is never deleted while archived (NO ACTION).
+        builder.Entity<RecipeArchive>(archive =>
+        {
+            archive.HasKey(a => new { a.HouseholdId, a.RecipeId });
+            archive.HasOne<Household>().WithMany().HasForeignKey(a => a.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            archive.HasOne<Recipe>().WithMany().HasForeignKey(a => a.RecipeId).OnDelete(DeleteBehavior.NoAction);
         });
 
         // data_model.md, Cooking and CookingLine; ADR-0008: (HouseholdId, RequestId) is unique, so a repeated

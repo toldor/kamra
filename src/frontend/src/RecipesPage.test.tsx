@@ -182,6 +182,42 @@ describe('the Új recept form (N10)', () => {
     expect(row(1).getByLabelText('Mennyiség').getAttribute('aria-invalid')).toBeNull()
   })
 
+  // Review S2: a recipe-level error ("ingredients") is tied to the first row's field and focused.
+  it('ties the recipe-level ingredient error to the first row and focuses it', async () => {
+    const message = 'Adj meg legalább egy hozzávalót a víz, a só és a bors mellett.'
+    backend({
+      [createUrl]: [{
+        status: 400,
+        body: { code: 'VALIDATION_FAILED', title: 'Néhány mező hibás. Javítsd a jelölt mezőket, és próbáld újra.', errors: { ingredients: [message] } },
+      }],
+    })
+    render(<App />)
+
+    await fillKakao()
+    fireEvent.click(screen.getByRole('button', { name: 'Mentés' }))
+
+    const first = row(1).getByLabelText('Hozzávaló')
+    expect(await row(1).findByText(message)).toBeTruthy()
+    expect(first.getAttribute('aria-invalid')).toBe('true')
+    await waitFor(() => expect(document.activeElement).toBe(first))
+  })
+
+  // Review S2: row errors follow the row index, so deleting a row must not leave them under another row.
+  it('clears the row errors when a row is deleted', async () => {
+    backend()
+    render(<App />)
+
+    await fillKakao()
+    fireEvent.change(row(1).getByLabelText('Hozzávaló'), { target: { value: 'ismeretlen' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Mentés' }))
+    expect(await row(1).findByText('Válassz hozzávalót a listából.')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sor törlése: 1. hozzávaló' }))
+
+    expect(screen.queryByText('Válassz hozzávalót a listából.')).toBeNull()
+    expect(row(1).getByLabelText('Hozzávaló').getAttribute('aria-invalid')).toBeNull()
+  })
+
   it('asks for an ingredient from the list before sending anything', async () => {
     const calls = backend()
     render(<App />)
@@ -203,7 +239,7 @@ describe('the Új recept form (N10)', () => {
     render(<App />)
 
     expect(await screen.findByText('Visszatöltöttem a félbehagyott receptet.')).toBeTruthy()
-    expect((screen.getByLabelText('Név') as HTMLInputElement).value).toBe('Kakaó')
+    expect((await screen.findByLabelText('Név') as HTMLInputElement).value).toBe('Kakaó')
     expect((row(2).getByLabelText('Hozzávaló') as HTMLInputElement).value).toBe('kakaópor')
     expect((row(2).getByLabelText('Mértékegység') as HTMLSelectElement).value).toBe('dkg')
 
@@ -219,20 +255,19 @@ describe('Új hozzávaló in the picker (N11)', () => {
   })
 
   it('offers a new ingredient only for an unknown name, creates it and then the row matches it', async () => {
-    const calls = backend({
-      'GET /api/v1/ingredients': [ingredients(tej, kakao), ingredients(tej, kakao, zabtej)],
-      'POST /api/v1/ingredients': [{ status: 201, body: zabtej }],
-    })
+    const calls = backend({ 'POST /api/v1/ingredients': [{ status: 201, body: zabtej }] })
     render(<App />)
 
-    const field = row(1).getByLabelText('Hozzávaló')
     fireEvent.change(await screen.findByLabelText('Név'), { target: { value: 'Zabtejes kakaó' } })
+    const field = row(1).getByLabelText('Hozzávaló')
     fireEvent.change(field, { target: { value: 'tej' } })
     expect(row(1).queryByRole('button', { name: /^Új hozzávaló/ })).toBeNull()
     fireEvent.change(field, { target: { value: ' zabtej ' } })
     fireEvent.click(row(1).getByRole('button', { name: 'Új hozzávaló: zabtej' }))
 
     const create = within(row(1).getByRole('group', { name: 'Új hozzávaló: zabtej' }))
+    // Review S3: the button is gone, so the focus moves into the small form.
+    await waitFor(() => expect(document.activeElement).toBe(create.getByLabelText('Mivel méred?')))
     fireEvent.change(create.getByLabelText('Mivel méred?'), { target: { value: 'volume' } })
     fireEvent.change(create.getByLabelText('Kategória'), { target: { value: 'beverages' } })
     fireEvent.click(create.getByRole('button', { name: 'Létrehozom' }))
@@ -240,7 +275,41 @@ describe('Új hozzávaló in the picker (N11)', () => {
     expect(await row(1).findByText('Létrehoztam: zabtej. Csak a te háztartásodban látszik.')).toBeTruthy()
     expect(calls.find((c) => c.key === 'POST /api/v1/ingredients')?.body).toEqual({ name: 'zabtej', dimension: 'volume', defaultCategory: 'beverages' })
     await waitFor(() => expect(row(1).queryByRole('button', { name: 'Új hozzávaló: zabtej' })).toBeNull())
+    expect(document.activeElement).toBe(field)
     expect(Array.from((row(1).getByLabelText('Mértékegység') as HTMLSelectElement).options, (o) => o.value)).toEqual(['ml', 'dl', 'l'])
+  })
+
+  // Review S1: the missing choice is tied to its field and gets the focus (ux_flows a11y).
+  it('ties a missing measure to its field and focuses it, without a request', async () => {
+    const calls = backend()
+    render(<App />)
+
+    await screen.findByRole('group', { name: '1. hozzávaló' })
+    fireEvent.change(row(1).getByLabelText('Hozzávaló'), { target: { value: 'zabtej' } })
+    fireEvent.click(row(1).getByRole('button', { name: 'Új hozzávaló: zabtej' }))
+    const create = within(row(1).getByRole('group', { name: 'Új hozzávaló: zabtej' }))
+    fireEvent.click(create.getByRole('button', { name: 'Létrehozom' }))
+
+    const measure = create.getByLabelText('Mivel méred?')
+    await waitFor(() => expect(measure.getAttribute('aria-invalid')).toBe('true'))
+    expect(document.getElementById(measure.getAttribute('aria-describedby')!)?.textContent)
+      .toBe('Válaszd ki, mivel méred: tömeg, térfogat vagy darab.')
+    await waitFor(() => expect(document.activeElement).toBe(measure))
+    expect(calls.some((c) => c.key === 'POST /api/v1/ingredients')).toBe(false)
+  })
+
+  // Review S3: Mégse removes the small form; the focus goes back to the ingredient field.
+  it('gives the focus back to the ingredient field on Mégse', async () => {
+    backend()
+    render(<App />)
+
+    await screen.findByRole('group', { name: '1. hozzávaló' })
+    const field = row(1).getByLabelText('Hozzávaló')
+    fireEvent.change(field, { target: { value: 'zabtej' } })
+    fireEvent.click(row(1).getByRole('button', { name: 'Új hozzávaló: zabtej' }))
+    fireEvent.click(within(row(1).getByRole('group', { name: 'Új hozzávaló: zabtej' })).getByRole('button', { name: 'Mégse' }))
+
+    await waitFor(() => expect(document.activeElement).toBe(field))
   })
 
   it('shows the name conflict and keeps the small form open', async () => {
@@ -249,6 +318,7 @@ describe('Új hozzávaló in the picker (N11)', () => {
     })
     render(<App />)
 
+    await screen.findByRole('group', { name: '1. hozzávaló' })
     fireEvent.change(row(1).getByLabelText('Hozzávaló'), { target: { value: 'Tej2' } })
     fireEvent.click(row(1).getByRole('button', { name: 'Új hozzávaló: Tej2' }))
     const create = within(row(1).getByRole('group', { name: 'Új hozzávaló: Tej2' }))

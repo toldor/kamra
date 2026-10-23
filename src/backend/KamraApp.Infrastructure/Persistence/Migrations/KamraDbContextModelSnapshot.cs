@@ -1934,6 +1934,24 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeArchive", b =>
+                {
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("HouseholdId", "RecipeId");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeArchives");
+                });
+
             modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeIngredient", b =>
                 {
                     b.Property<Guid>("RecipeId")
@@ -3334,6 +3352,21 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("HouseholdId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeArchive", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Recipes.Recipe", null)
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeIngredient", b =>

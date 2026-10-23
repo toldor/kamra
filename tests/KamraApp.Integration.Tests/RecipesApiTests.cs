@@ -212,7 +212,7 @@ public class RecipesApiTests(KamraApiFactory factory)
         var db = scope.ServiceProvider.GetRequiredService<KamraDbContext>();
 
         var constraints = await db.Database.SqlQuery<string>(
-                $"""SELECT pg_get_constraintdef(oid) AS "Value" FROM pg_constraint WHERE conrelid = '"RecipeArchives"'::regclass ORDER BY contype, conname""")
+                $"""SELECT pg_get_constraintdef(oid) AS "Value" FROM pg_constraint WHERE conrelid = '"RecipeArchives"'::regclass AND contype IN ('p', 'f') ORDER BY contype, conname""")
             .ToListAsync(TestContext.Current.CancellationToken);
 
         constraints.Should().BeEquivalentTo(

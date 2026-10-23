@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-type Field = HTMLInputElement | HTMLSelectElement
+type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
 
 export type FieldProps = ReturnType<ReturnType<typeof useFieldErrors>['props']>
 

@@ -1,4 +1,8 @@
 using KamraApp.Application.Common;
+using KamraApp.Application.Pantry;
+using KamraApp.Domain.Ingredients;
+using KamraApp.Domain.Pantry;
+using KamraApp.Domain.Quantities;
 
 namespace KamraApp.Application.Ingredients;
 
@@ -6,10 +10,21 @@ namespace KamraApp.Application.Ingredients;
 // another own one of the household (normalized); another household's is no conflict.
 public sealed class CreateIngredient(IOwnIngredientRepository ingredients, ICurrentHousehold household)
 {
-    public Task<IngredientResponse> ExecuteAsync(CreateIngredientRequest? request, CancellationToken cancellationToken)
+    public async Task<IngredientResponse> ExecuteAsync(CreateIngredientRequest? request, CancellationToken cancellationToken)
     {
-        _ = (ingredients, household);
-        throw new NotImplementedException();
+        var valid = RequestValidator.Validate(request);
+        var householdId = household.HouseholdId;
+        var name = Ingredient.Tidy(valid.Name!);
+        if (await ingredients.NameTakenAsync(householdId, Ingredient.Normalize(name), cancellationToken))
+        {
+            throw IngredientErrors.NameTaken();
+        }
+
+        var ingredient = Ingredient.CreateOwn(householdId, name, PantryInput.Parse<Dimension>(valid.Dimension!),
+            PantryInput.Parse<Category>(valid.DefaultCategory!));
+        ingredients.Add(ingredient);
+        await ingredients.SaveChangesAsync(cancellationToken);
+        return new IngredientResponse(ingredient.Id, ingredient.Name, ingredient.Dimension, ingredient.DefaultCategory, Minimum: null);
     }
 }
 

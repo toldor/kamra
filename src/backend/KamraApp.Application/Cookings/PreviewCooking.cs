@@ -15,6 +15,11 @@ public sealed class PreviewCooking(IRecipeRepository recipes, IPantryRepository 
     {
         var servings = RequestValidator.Validate(query).Servings;
         var details = await recipes.FindAsync(household.HouseholdId, recipeId, cancellationToken) ?? throw CookingErrors.RecipeNotFound();
+        if (details.Archived)
+        {
+            throw CookingErrors.RecipeArchived();
+        }
+
         var recipe = details.Candidate;
         var count = servings ?? recipe.Servings;
         var stock = (await pantry.ListAsync(household.HouseholdId, PantryFilter.None, cancellationToken)).Select(e => StockItem.From(e.Item));
