@@ -287,3 +287,155 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Mérés (Claude Code, F#-szkript a `StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), false)` összehasonlítóval): a „Paprikás krumpli, lecsó, Bableves, almás pite, Ágyas, Túrós csusza, ostya, őrölt pirospaprika” lista rendezve *„Ágyas, almás pite, Bableves, lecsó, ostya, őrölt pirospaprika, Paprikás krumpli, Túrós csusza”*; `Compare("alma", "Banán")` = −1.
 - **Eredmény:** **FAIL.** A nyelvi összehasonlítás a kis- és nagybetűt csak harmadlagos különbségként, holtversenynél veszi figyelembe; a betűrendi helyet nem változtatja meg.
 - **Következtetés:** Nincs változtatás. A reviewer nyelvi rendezésről szóló állítását is mérni kell, mert a kultúra-alapú összehasonlítás nem bájtsorrend.
+
+### V-35 – Az egyidejű fogyás elnyelheti a bevásárlójavaslatot (saját tervezés)
+- **Dátum:** 2026-10-17
+- **Állítás:** READ COMMITTED mellett ha ugyanannak a hozzávalónak két utolsó tételét két kérés egyszerre fogyasztja el, mindkettő a másik tételt még meglévőnek látja, és egyik sem hoz létre bevásárlójavaslatot (write skew); a hozzávalónkénti tranzakciós zár ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 6. pont) ezt kizárja.
+- **Kockázat:** Közepes. A javaslat csendben elmaradna, a lista nem tükrözné a valós hiányt.
+- **Ellenőrzési módszer:** Teszt és mutáció: a P20 (két tétel egyidejű 0-ra csökkentése, ötször, [ShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/ShoppingListApiTests.cs)) a zárral zöld, a zár SQL-jének eltávolításával piros.
+- **Eredmény:** **PASS.**
+- **Következtetés:** A zár marad; a P20 a regressziós teszt.
+
+### V-36 – Az ismételt elfogadás nem bájtra azonos választ adott (saját teszt)
+- **Dátum:** 2026-10-17
+- **Állítás:** Az ismételt elfogadás a [ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) szerint az első válasszal azonos törzset ad.
+- **Kockázat:** Alacsony. Eltérő ismételt válasz megtörné az idempotencia ígéretét.
+- **Ellenőrzési módszer:** Integrációs teszt: az első válasz a memóriából (`200`), az ismétlés az adatbázisból (`200.000`, `numeric(12,3)`) épült.
+- **Eredmény:** **FAIL.** Javítva: a válasz mennyisége normalizált (záró nullák nélkül); a spec-review után az elfogadás 204 lett, így törzs sincs.
+- **Következtetés:** Az ismételt kérés válaszát mindig ugyanabból a forrásból vagy normalizálva kell építeni.
+
+### V-37 – A nullázható enum a közös OpenAPI-sémát is nullázhatóvá tette (mérés)
+- **Dátum:** 2026-10-17
+- **Állítás:** A bevásárlólista-válasz nullázható `Unit?` mezője csak a saját mezőjét teszi nullázhatóvá.
+- **Kockázat:** Közepes. A generált frontend-típusokban minden egységmező nullázható lenne.
+- **Ellenőrzési módszer:** Mérés: a generált `openapi.json` közös `Unit` sémája `null`-t kapott az enum értékei közé; a `npm run lint` (`tsc`) a `PantryItemForm.tsx`-ben hibát jelzett.
+- **Eredmény:** **FAIL.** Javítva: a nem kötelező mennyiség a válaszban `{ value, unit }` objektum (`AmountResponse`), így a `Unit` séma változatlan.
+- **Következtetés:** Nullázható enumot a válaszban kerülünk; a frontend-típusok újragenerálása minden API-változás után kapu.
+
+### V-38 – „SQL-injekció az advisory lockban” (Claude Sonnet 4.6, Antigravity-review)
+- **Dátum:** 2026-10-17
+- **Állítás:** A reviewer szerint az `IngredientLocks` kulcsa „előre összerakott stringként szó szerint bekerül az SQL-be”, ezért kritikus SQL-injekció.
+- **Kockázat:** Ha igaz lenne, magas (AGENTS.md 7. pont).
+- **Ellenőrzési módszer:** Forrás és kód: az EF Core [SQL Queries – Passing parameters](https://learn.microsoft.com/en-us/ef/core/querying/sql-queries#passing-parameters) szerint a `FormattableString` minden lyuka `DbParameter`-ré alakul; az `IngredientLocks.cs`-ben a kulcs C#-változó, amely lyukként (`{key}`) kerül a lekérdezésbe, és két Guidból áll.
+- **Eredmény:** **FAIL** (téves állítás).
+- **Következtetés:** Nincs változtatás. A „Kritikus” címke nem bizonyíték.
+
+### V-39 – A T1-review további téves állításai (Claude Sonnet 4.6)
+- **Dátum:** 2026-10-17
+- **Állítás:** A főzés „before” összege a levonás után számolódik; hiányzik a párhuzamos elfogadás/elutasítás, a kettős felvétel és a háztartásközi teszt; a javasolt mennyiség alapegységben jelenik meg.
+- **Kockázat:** Közepes, ha igazak lennének.
+- **Ellenőrzési módszer:** Kód (`ConfirmCooking.cs`: a `ToDictionary` a `Cooking.Create` előtt fut) és a meglévő tesztek (P13; `ShoppingListApiTests` párhuzamos és háztartásközi tesztjei; unit teszt dl-re).
+- **Eredmény:** **FAIL** mind. A review egyetlen valós pontja (nyitott „minimumszint alatti” javaslat törölt minimum mellett mennyiség nélkül) javítva, teszttel.
+- **Következtetés:** A reviewer állításait a kódon kell ellenőrizni, nem a diff összefoglalóján.
+
+### V-40 – Ellenséges bevásárlólista-tesztek (Claude Sonnet 4.6, Antigravity)
+- **Dátum:** 2026-10-17
+- **Állítás:** A US-5 ellenáll az ismétlésnek, a versenynek, a határértékeknek, a kiváltás kijátszásának és a hibaválasz-szivárgásnak.
+- **Kockázat:** Magas, ha nem állna ellen (adatkonzisztencia, információszivárgás).
+- **Ellenőrzési módszer:** Teszt: 8 ellenséges integrációs teszt; 7 érvényes és zöld ([AdversarialShoppingListApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialShoppingListApiTests.cs)), 1 érvénytelen (a közös rendszer-hozzávaló minimumának „törlésére” 404-et várt; háztartásonkénti minimumnál a 204 a helyes), nem felvéve.
+- **Eredmény:** **PASS** a kódra.
+- **Következtetés:** Új határeset (pontosan 100 000) és szivárgás-ellenőrzés került a tesztek közé.
+
+### V-41 – A formázó teszteket törölt (saját folyamathiba)
+- **Dátum:** 2026-10-17
+- **Állítás:** A `dotnet format` csak formáz.
+- **Kockázat:** Magas. Tesztek csendben eltűnhetnek.
+- **Ellenőrzési módszer:** Tesztszám-összevetés: két új teszt mellett a unit tesztek száma 293-ról 291-re csökkent; a diff szerint egy szintaktikailag hibás fájlon (az `unchecked` kulcsszó változónévként) négy tesztmetódus tűnt el.
+- **Eredmény:** **FAIL.** A fájl a HEAD-ből helyreállítva, a módosítás újra alkalmazva; minden eltávolított metódus ellenőrizve.
+- **Következtetés:** Formázás csak forduló kódon; a tesztszámot minden futás után összevetjük az előzővel.
+
+### V-42 – A spec-review két valós eltérése (Claude Code, spec-review)
+- **Dátum:** 2026-10-17
+- **Állítás:** Az ismételt elfogadás törölt sor után 404-et ad; a listatétel `{ checked }` PUT-ja törli a mennyiséget.
+- **Kockázat:** Közepes. Az idempotencia ígérete sérül; kipipáláskor elveszne a mennyiség.
+- **Ellenőrzési módszer:** Kód és teszt (a P13 csak azért volt zöld, mert a teszt újraküldte a mennyiséget).
+- **Eredmény:** **PASS** (mindkettő valós). Javítva: az elfogadás 204, az ismétlés is (D-R1); a mennyiség nélküli PUT megtartja a mennyiséget (D-R3); mindkettő teszttel, mutációval ellenőrizve.
+- **Következtetés:** A spec-review a teszt-hiányt is megfogta: a teszt az implementáció hibáját kerülte meg.
+
+### V-43 – Az induló receptek saját szövegűek, a mennyiségek reálisak (az MI írta)
+- **Dátum:** 2026-10-17
+- **Állítás:** A 15 új induló recept elkészítési szövege saját, nem másolt; a mennyiségek 4 adagra reálisak; a 121 új hozzávaló neve, dimenziója és kategóriája helyes; az új receptek nem változtatják meg a kézzel számolt példák eredményét.
+- **Kockázat:** Közepes. Másolt szöveg licenckérdést, hibás mennyiség rossz ajánlást és levonást okozna.
+- **Ellenőrzési módszer:** A fejlesztő a tervezetet soronként átnézte, és változtatás nélkül jóváhagyta (`kamra_seed_atnezes.md`, 2026-10-17); a beépítés szkripttel, közvetlenül ebből a táblázatból történt, és a spec-review szkripttel karakterre egyezőnek találta. Automatizált teszt: minden receptben van nem alap hozzávaló, az adagszám 1 és 100 közé esik, a név egyedi, a lista mérete a vállalás szerinti ([SeedDataTests.cs](../../tests/KamraApp.Unit.Tests/SeedDataTests.cs)); a P5 és a P7 integrációs tesztje a bővített seeden is pontosan ugyanazt a „majdnem elkészíthető” listát adja.
+- **Eredmény:** **PASS**, egy javítással: a tervezet „Tervezési szempontok” pontja azt állította, hogy egyik új recept sem „majdnem elkészíthető” a P1–P10 egyik készletéhez képest sem; a T4 spec-reviewja megmutatta, hogy a **Rizibizi** a rántotta-készlethez (tojás, vaj) képest az (2 hozzávaló hiányzik). Ez a készlet csak főzési példa (P3), ajánlási teszt nem használja, így eredmény nem változik. A fejlesztő döntése: a recept marad, az állítás a P5/P7 készletekre szűkült.
+- **Következtetés:** Az AI által írt adatnál a saját tervezési állítást is ellenőrizni kell (itt a spec-review szkriptje tette meg); a védőháló a P5 és a P7 pontos listájú tesztje.
+
+### V-44 – Az e2e két saját hibát talált a bevásárlólista felületén (Claude Code)
+- **Dátum:** 2026-10-18
+- **Állítás:** A bevásárlólista oldal kész: a Vitest-tesztek (72/72) zöldek.
+- **Kockázat:** Közepes. A boltban a felhasználó azt látja, hogy a pipa nem marad meg, ezért újra kattint.
+- **Ellenőrzési módszer:** E2E valódi böngészőben (`shopping.spec.ts`, P13), elkülönített stacken; utána regressziós Vitest-tesztek és mutáció.
+- **Eredmény:** **FAIL**, két hibával.
+  - (1) A jelölőnégyzet vezérelt volt, ezért a mentés válaszáig visszaugrott üresre („Clicking the checkbox did not change its state”). A Vitest nem vette észre, mert a végállapotra várt. Javítás: optimista pipa, sikertelen mentésnél visszaáll; két regressziós teszt (azonnal látszik; hálózati hibánál visszaáll), mutációval ellenőrizve.
+  - (2) A javítás után a saját e2e-tesztem nem várt a mentésre, és a `page.reload()` hideg szervernél megszakította a `PUT`-ot. Javítás: a teszt a `PUT` válaszát várja meg; az API hideg újraindítása után 3 × 16/16.
+- **Következtetés:** A komponensteszt az azonnali visszajelzést nem bizonyítja; ehhez az e2e és egy kattintás utáni, várakozás nélküli ellenőrzés kell. Optimista felületnél az e2e-nek a kérés végét kell megvárnia, nem a látható állapotot.
+
+### V-45 – A T2 kódreviewja (Claude Code `/code-review`, Claude Opus 5.5)
+- **Dátum:** 2026-10-18
+- **Állítás:** A reviewer szerint
+  - a fókusz elvész, amikor a megnyomott gomb eltűnik;
+  - a sikerüzenet nem olvasódik fel;
+  - a főzésnél a mennyiség duplán kerülhet a listára;
+  - a gombok a frissítés vége előtt újra aktívak;
+  - üzleti logika van a komponensekben.
+- **Kockázat:** Közepes. Akadálymentesség és duplikált listatétel; azonos modellcsaládú reviewer, ezért a függetlenség gyenge.
+- **Ellenőrzési módszer:** Minden állítás a kódon és forrással (ux_flows a11y, K10, AGENTS.md 3. pont); a valósaknál regressziós teszt a javítás előtt (piros), utána mutáció (14/14 elbukott).
+- **Eredmény:** **PASS** a valós megállapításokra (fókusz, élő régió, duplikálás, `busy`, `keepUsed`, minimum-súgó, üres minimummennyiség); az „üzleti logika a komponensben” **téves** (meglévő számítás kiemelése, illetve a K1-ben jóváhagyott kliensvezérlés). Két jóváhagyott eltérés a spectől maradt (az azonosító ellenőrzése a P11-ben; a picker interfésze a lint-szabály miatt). Három új felhasználói szöveg jóváhagyással.
+- **Következtetés:** A két tengely itt is mást talált: a Standards az akadálymentességet, a Spec a K10-et és a versenyhelyzetet. Az akadálymentességi állításokat (például hogy egy élő régió felolvasódik-e) a Vitest csak a DOM szintjén igazolja; a képernyőolvasós kézi próba a T5 kézi tesztjeibe kerül.
+
+### V-46 – Saját hibák a T3-ban: a sémateszt, a várakozás és a 360 px (Claude Code)
+- **Dátum:** 2026-10-23
+- **Állítás:** A T3 tesztjei és felülete készen állnak: a piros fázis után az implementációval minden teszt zöld lesz.
+- **Kockázat:** Közepes. Egy rossz teszt hamis biztonságot ad; a kilógó mező mobilon nehezen használható.
+- **Ellenőrzési módszer:** Teljes futás minden szinten; e2e valódi böngészőben 360 px-en; szkript a kilógó elemekre; a képernyőkép átnézése.
+- **Eredmény:** **FAIL**, négy saját hibával.
+  - (1) A migráció sématesztje a `pg_constraint` minden sorát várta, de a PostgreSQL 18 a `NOT NULL` megkötéseket is ott tartja. Javítás: a lekérdezés a kulcsokra szűkül; az ellenőrzött tartalom (PK, CASCADE, NO ACTION) nem változott.
+  - (2) Három Vitest-teszt a hozzávalósort az űrlap betöltése előtt kereste. Javítás: előbb megvárják az űrlapot.
+  - (3) Az e2e kimutatta, hogy 360 px-en a hozzávalósor 8 px-szel kilógott: a `fieldset` alapértelmezett `min-width: min-content`-je, margója és térköze. A Vitest ezt nem látja (jsdom). Javítás CSS-sel; utána a szkript 0 kilógó elemet talált, az e2e 18/18.
+  - (4) A képernyőképen a sorok címkéje a mező mellé került, és az elkészítés gépírásos betűvel jelent meg. Javítás CSS-sel.
+- **Következtetés:** A sématesztet az adatbázis tényleges verzióján kell megírni. A mobil elrendezést csak az e2e és a képernyőkép mutatja meg, ezért a képernyőkép átnézése az ellenőrzés része, nem csak dokumentáció.
+
+### V-47 – A T3 kódreviewja (Claude Code `/code-review`, Claude Opus 5.5)
+- **Dátum:** 2026-10-23
+- **Állítás:** A reviewer szerint
+  - archivált receptnél a megerősítés hibája után az űrlap aktív marad, link nélkül;
+  - az „Új hozzávaló” mérési módjának hibája és a recept szintű hiba nincs mezőhöz kötve;
+  - a kis űrlap nyitásakor és zárásakor elvész a fókusz;
+  - az élő régió már az első rendereléskor tartalmazza az értesítést;
+  - két port van aggregátumonként, ami az AGENTS.md „aggregate-level repository interfaces” szabályába ütközhet.
+- **Kockázat:** Közepes. Akadálymentesség és egy félrevezető hibaállapot; azonos modellcsaládú reviewer.
+- **Ellenőrzési módszer:** Minden állítás a kódon és forrással (ux_flows a11y, AGENTS.md 63. sor); a valósaknál regressziós teszt a javítás előtt (7, mind piros).
+- **Eredmény:** **PASS** a valós megállapításokra (C1, S1, S2, S3, S5, S7). Az S9-nél a két port marad (nincs generikus repository, a meglévő fake-ek érintetlenek; indok a kódkommentben), a „Válassz…” felirat jóváhagyva. Az S5-höz nincs Vitest-teszt, mert a jsdom nem mutatja meg, felolvas-e a képernyőolvasó; kódolvasással ellenőrizve.
+- **Következtetés:** A Spec-tengely olyan hibát talált (C1), amelyet a saját tesztem nem ellenőrzött; a teszt a hibaszöveget nézte, a következő lépést nem.
+
+### V-48 – A T3 biztonsági reviewja (Claude Code `/security-review`)
+- **Dátum:** 2026-10-23
+- **Állítás:** A változásban nincs High vagy Medium sebezhetőség.
+- **Kockázat:** Magas, ha téves: háztartások közti adatszivárgás vagy archivált recept főzése.
+- **Ellenőrzési módszer:** Ügynök a `git diff 0d12ebf` felett; az ellenőrzött utak: SQL injection (paraméterezett `FormattableString`), IDOR (recept, hozzávaló, archiválás), a D-c kijátszása, bejelentkezés és antiforgery, mass assignment, XSS, a `sessionStorage`-piszkozat. Az utakat az ellenséges tesztek (V-50) futással is igazolták.
+- **Eredmény:** **PASS**.
+- **Következtetés:** A statikus vizsgálat és az ellenséges tesztek ugyanarra jutottak; a második futással bizonyít.
+
+### V-49 – A T3 külső szakasz-reviewja (Antigravity, Claude Sonnet 4.6)
+- **Dátum:** 2026-10-23
+- **Állítás:** A reviewer 15 megállapítást tett. Köztük: az EF a paraméter nélküli konstruktor hiánya miatt nem tudná olvasni a `RecipeArchives`-t; az üres `role="alert"` ne legyen a DOM-ban; a főzési teszt előnézet-mock nélkül fut; a piszkozat-értesítés minden újrapróbáláskor megjelenik; az oldal címe nem kap fókuszt; az archiválás a `CookingErrors`-ra épül.
+- **Kockázat:** Alacsony–közepes. Azonos modellcsaládú reviewer; a téves javaslatok elfogadása rontaná az akadálymentességet.
+- **Ellenőrzési módszer:** Minden állítás forrással: [Microsoft Learn – EF Core constructors](https://learn.microsoft.com/ef/core/modeling/constructors) (paraméteres konstruktor név szerinti kötése), a kód (`CookingPage.test.tsx:73`, `Layout.tsx:20`, `RecipeForm.tsx` betöltési ág), a ux_flows a11y és a V-45 (élő régió).
+- **Eredmény:** **FAIL** öt állításra: az EF-konstruktor, az üres élő régió, a hiányzó mock, az ismétlődő értesítés és a cím fókusza téves. **PASS** a függőség irányára (a `RecipeErrors` a `Recipes` névtérbe került), és a `RecipeArchive` kommentjére. A receptnév egyedisége már eldöntött (N3).
+- **Következtetés:** A reviewer az akadálymentességben ellentétes irányú javaslatot is tett (az élő régió eltávolítása); ezt csak a saját, forrással rögzített szabály (V-45) alapján lehetett elvetni.
+
+### V-50 – A T3 ellenséges tesztjei (Antigravity, Claude Sonnet 4.6)
+- **Dátum:** 2026-10-23
+- **Állítás:** A 8 ellenséges teszt (24 eset) közül 4 elbukik, ami hibát jelezhet az alkalmazásban.
+- **Kockázat:** Magas, ha valós: IDOR, archivált recept főzése, névütközés megkerülése.
+- **Ellenőrzési módszer:** Futtatás; minden bukásnál a teszt érvényessége a szerződés alapján (a kategórialista, a `used` szabálya, a normalizálás definíciója); a javított teszttel újra.
+- **Eredmény:** **FAIL a tesztekre, PASS az alkalmazásra.** Három teszt érvénytelen volt: nem létező kategória (`fruits`, `spices`), a recept hozzávalóinak hiányos felsorolása, és a „zabtej” = „zab tej” elvárás (a belső szóköz összevonódik, de nem törlődik). Javítva (a támadás szándéka szerint, az NBSP-eset „zab tej” = „zab tej” lett) mind a 24 eset zöld. A reviewer a nulla szélességű szóközt kihagyta; ellenőrizve: a .NET-ben nem szóköz, ezért két egyformán kinéző név létrehozható; ismert korlát, csak a saját háztartást érinti.
+- **Következtetés:** Az ellenséges teszt bukása először a teszt ellenőrzését kéri; itt egyik sem jelzett alkalmazáshibát.
+
+### V-51 – A Vite biztonsági figyelmeztetései a CI-ban
+- **Dátum:** 2026-10-23
+- **Állítás:** A `feat:` commit CI-ja piros, mert a frontend sérülékeny csomagot tartalmaz.
+- **Kockázat:** Közepes a fejlesztői gépen (a Vite fejlesztői szervere és a `launch-editor`), alacsony élesben.
+- **Ellenőrzési módszer:** `npm audit` és `npm audit --omit=dev` helyben; a GitHub-figyelmeztetések (GHSA-698v-4r3x-3vcv, GHSA-r825-w8mm-5pxw, GHSA-587h-7wmj-h5pm, GHSA-9jrq-w75r-8gcw, GHSA-rq7h-c2jc-7f22, GHSA-vfpm-58rq-9qcg).
+- **Eredmény:** **PASS a kapura:** a `vite 8.3.2` sérülékeny, a `8.3.5` javított (a `^8.3.0` tartományon belül, csak a lockfile változott, a fejlesztő jóváhagyásával); az éles csomagok tiszták (`--omit=dev`: 0). Utána a CI mind a négy jobja zöld.
+- **Következtetés:** A függőség-ellenőrző kapu a saját kódtól függetlenül is megállíthatja az ágat; a javítás külön commitba kerül, hogy a változás nyoma egyértelmű legyen.

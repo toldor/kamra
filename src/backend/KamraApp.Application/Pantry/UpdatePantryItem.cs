@@ -1,11 +1,14 @@
 using KamraApp.Application.Common;
+using KamraApp.Application.ShoppingList;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Quantities;
 
 namespace KamraApp.Application.Pantry;
 
-// US-1: edit, decrease (with a reason) or delete (decrease to 0) a pantry item, guarded by its version.
-public sealed class UpdatePantryItem(IPantryRepository pantry, ICurrentHousehold household, TimeProvider time)
+// US-1: edit, decrease (with a reason) or delete (decrease to 0) a pantry item, guarded by its version. US-5: a
+// decrease may suggest buying more, an increase clear a rejected suggestion, inside the ingredient lock (ADR-0008 6.).
+public sealed class UpdatePantryItem(IPantryRepository pantry, IIngredientLocks locks, SuggestionEvaluator suggestions,
+    ICurrentHousehold household, TimeProvider time)
 {
     public async Task<PantryItemResponse> ExecuteAsync(Guid id, UpdatePantryItemRequest? request, CancellationToken cancellationToken)
     {
@@ -40,10 +43,16 @@ public sealed class UpdatePantryItem(IPantryRepository pantry, ICurrentHousehold
         }
 
         var now = time.GetUtcNow();
+        await locks.LockAsync(household.HouseholdId, [item.IngredientId], cancellationToken);
+        // The saved total still holds this item's old quantity; a change made meanwhile fails the save (ADR-0008 1.).
+        var before = await pantry.TotalAsync(household.HouseholdId, item.IngredientId, cancellationToken);
+        var oldQuantity = item.Quantity;
         item.UpdateDetails(category, valid.ExpiryDate, entryDay: Today.Of(item.CreatedAt), now);
         if (item.ChangeQuantity(valid.Amount.Value, unit, reason, now) is { } movement)
         {
             pantry.AddMovement(movement);
+            await suggestions.AfterQuantityChangeAsync(household.HouseholdId, item.IngredientId, before, before - oldQuantity + item.Quantity,
+                movement.Reason, now, cancellationToken);
         }
 
         await pantry.SaveChangesAsync(cancellationToken);

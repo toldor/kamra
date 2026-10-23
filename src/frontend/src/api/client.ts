@@ -23,6 +23,18 @@ export type CookingPreview = components['schemas']['CookingPreviewResponse']
 export type CookingPreviewLine = components['schemas']['CookingPreviewLine']
 export type ConfirmCookingRequest = components['schemas']['ConfirmCookingRequest']
 export type Cooking = components['schemas']['CookingResponse']
+export type Amount = components['schemas']['AmountResponse']
+export type ShoppingListItem = components['schemas']['ShoppingListItemResponse']
+export type ShoppingSuggestion = components['schemas']['ShoppingSuggestionResponse']
+export type AddShoppingListItemRequest = components['schemas']['AddShoppingListItemRequest']
+export type Recipe = components['schemas']['RecipeResponse']
+export type CreateRecipeRequest = components['schemas']['CreateRecipeRequest']
+// The request's fields are strings in the OpenAPI document (validated by the backend); the page sends the enums.
+export type CreateIngredientRequest = { name: string; dimension: Dimension; defaultCategory: Category }
+// The `available` extension of INSUFFICIENT_STOCK (error_handling.md); ProblemDetails are not in the OpenAPI.
+export type AvailableAmount = { ingredientId: string; ingredientName: string; amount: number; unit: Unit }
+// A request amount: both fields or neither (api.md, Bevásárlólista).
+export type AmountRequest = { amount: number | null; unit: Unit }
 export type PantryFilter = { search: string; category: Category | ''; expiringSoon: boolean }
 
 export const noFilter: PantryFilter = { search: '', category: '', expiringSoon: false }
@@ -31,12 +43,14 @@ export class ApiError extends Error {
   readonly status: number
   readonly code: string
   readonly errors: Record<string, string[]>
+  readonly available: AvailableAmount[]
 
-  constructor(status: number, code: string, message: string, errors: Record<string, string[]> = {}) {
+  constructor(status: number, code: string, message: string, errors: Record<string, string[]> = {}, available: AvailableAmount[] = []) {
     super(message)
     this.status = status
     this.code = code
     this.errors = errors
+    this.available = available
   }
 }
 
@@ -54,7 +68,7 @@ export const failWith = (onSignedOut: (notice: string) => void, show: (message: 
 // before the next POST - a failed refresh can then never turn a successful login into an error.
 let antiforgeryToken: string | null = null
 
-async function send(method: 'GET' | 'POST' | 'PUT', path: string, body?: unknown): Promise<Response> {
+async function send(method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {}
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   if (method !== 'GET' && antiforgeryToken) headers['X-XSRF-TOKEN'] = antiforgeryToken
@@ -79,9 +93,10 @@ async function toApiError(response: Response): Promise<ApiError> {
     code?: string
     title?: string
     errors?: Record<string, string[]>
+    available?: AvailableAmount[]
   }
   const code = problem.code ?? 'UNKNOWN_ERROR'
-  return new ApiError(response.status, code, messageFor(code, problem.title), problem.errors ?? {})
+  return new ApiError(response.status, code, messageFor(code, problem.title), problem.errors ?? {}, problem.available ?? [])
 }
 
 async function refreshAntiforgeryToken(): Promise<void> {
@@ -89,7 +104,8 @@ async function refreshAntiforgeryToken(): Promise<void> {
   antiforgeryToken = ((await response.json()) as components['schemas']['AntiforgeryTokenResponse']).requestToken
 }
 
-async function write(method: 'POST' | 'PUT', path: string, body: unknown = {}): Promise<Response> {
+// A DELETE goes without a body.
+async function write(method: 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<Response> {
   if (!antiforgeryToken) await refreshAntiforgeryToken()
   try {
     return await send(method, path, body)
@@ -145,6 +161,19 @@ export const api = {
 
   ingredients: () => json<Ingredient[]>(send('GET', '/ingredients')),
 
+  // M11: visible only in the own household.
+  createIngredient: (request: CreateIngredientRequest) => json<Ingredient>(write('POST', '/ingredients', request)),
+
+  // System and own recipes, without archived ones (N2).
+  recipes: () => json<Recipe[]>(send('GET', '/recipes')),
+
+  createRecipe: (request: CreateRecipeRequest) => json<Recipe>(write('POST', '/recipes', request)),
+
+  // M10: a repeated archiving is a 204 too.
+  async archiveRecipe(id: string): Promise<void> {
+    await post(`/recipes/${id}/archive`)
+  },
+
   pantryItems: (filter: PantryFilter) => json<PantryItem[]>(send('GET', `/pantry-items${pantryQuery(filter)}`)),
 
   addPantryItem: (request: AddPantryItemRequest) => json<PantryItem>(write('POST', '/pantry-items', request)),
@@ -160,6 +189,36 @@ export const api = {
 
   // US-4 / ADR-0008: the same requestId may be sent again; the backend deducts only once.
   confirmCooking: (request: ConfirmCookingRequest) => json<Cooking>(write('POST', '/cookings', request)),
+
+  shoppingList: () => json<ShoppingListItem[]>(send('GET', '/shopping-list')),
+
+  // The same ingredient adds up on one row; a checked row starts again with the new amount (M2).
+  addShoppingListItem: (request: AddShoppingListItemRequest) =>
+    json<ShoppingListItem>(write('POST', '/shopping-list/items', request)),
+
+  // Without an amount the row keeps its own.
+  checkShoppingListItem: (id: string, checked: boolean) =>
+    json<ShoppingListItem>(write('PUT', `/shopping-list/items/${id}`, { checked })),
+
+  async deleteShoppingListItem(id: string): Promise<void> {
+    await write('DELETE', `/shopping-list/items/${id}`)
+  },
+
+  shoppingSuggestions: () => json<ShoppingSuggestion[]>(send('GET', '/shopping-suggestions')),
+
+  // null: on the list without an amount (M13).
+  async acceptSuggestion(id: string, amount: AmountRequest | null): Promise<void> {
+    await post(`/shopping-suggestions/${id}/accept`, amount ?? {})
+  },
+
+  async rejectSuggestion(id: string): Promise<void> {
+    await post(`/shopping-suggestions/${id}/reject`)
+  },
+
+  // null removes the minimum level.
+  async setMinimum(ingredientId: string, minimum: AmountRequest | null): Promise<void> {
+    await write('PUT', `/ingredients/${ingredientId}/minimum`, minimum ?? {})
+  },
 }
 
 // Tests start every case without a cached token.

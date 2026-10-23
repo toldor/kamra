@@ -3,13 +3,25 @@
 This file is for AI coding agents (Claude Code, Gemini CLI, Cline, Copilot Agent, etc.).
 Read it before every task. If this file and the code contradict each other, **stop and ask**.
 
+## Sources of truth
+
+When documents disagree, this order wins:
+
+1. The course requirements (outside the repo); `docs/01_product/scope_contract.md` records how they apply here.
+2. `docs/01_product/scope_contract.md` – what is built, and what is not.
+3. The ADRs and `docs/03_design/` (api, data_model, error_handling) – how it is built.
+4. This file – coding, testing and security rules.
+5. `docs/07_ai/ai_manifest.md`, "Munkamódszer" – how the developer and the AI work together (approvals, reviews, logs).
+
+Milestone plans and working notes live outside the repo. For implemented behaviour the repo docs are authoritative; if a plan, a doc and the code disagree, stop and ask.
+
 ## 1. Project overview
 
 A web-based pantry and recipe management app with AI-assisted inventory tracking (BSc thesis, University of Szeged).
 
 - Add inventory items via a form **or** via natural-language quick entry (the LLM extracts name, quantity, expiry date).
 - Expiry estimation based on product category when the date is missing.
-- Recipe recommendations from current stock, prioritising items that expire soon (deterministic ranking); AI-driven serving adjustment and ingredient substitution are stretch goals.
+- Recipe recommendations from current stock, prioritising items that expire soon (deterministic ranking); AI-driven serving adjustment and ingredient substitution are future work, outside the current scope (agreed with the supervisor, 2026-10).
 - Automatic stock deduction after cooking; depleted or low-stock ingredients become shopping list suggestions that the user accepts or rejects.
 - Chat assistant that queries data through **MCP** tools.
 
@@ -151,7 +163,7 @@ See [docs/00_index.md](docs/00_index.md) for the full documentation index.
 
 ## 10. AI transparency (mandatory deliverable)
 
-At the end of every meaningful session, propose an entry for [docs/07_ai/prompt_log.md](docs/07_ai/prompt_log.md) (ID e.g. `P-07`):
+At the end of every plan stage (e.g. T2) and of every other chat session with meaningful work, propose an entry for [docs/07_ai/prompt_log.md](docs/07_ai/prompt_log.md) (ID e.g. `P-07`):
 date, goal, tool, prompt summary, AI proposal summary, affected files. The **"What I changed / my decision"** field is filled in by the developer – do not invent it.
 
 When you make a claim about security, performance, correctness or licensing (e.g. "this validation is sufficient", "this query is fast"), flag it and propose a verification entry for [docs/07_ai/verification_log.md](docs/07_ai/verification_log.md): claim, risk, verification method, result, conclusion.

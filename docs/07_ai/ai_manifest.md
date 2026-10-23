@@ -3,7 +3,7 @@
 A Kamra projekt AI-first módon készül. Ez a dokumentum leírja, **milyen AI eszközöket, mire és milyen korlátokkal** használok.
 Élő dokumentum: a fejlesztés során folyamatosan bővül. Részletek: [prompt_log.md](prompt_log.md), [verification_log.md](verification_log.md).
 
-Utolsó frissítés: 2026-10-11
+Utolsó frissítés: 2026-10-18
 
 ---
 
@@ -14,7 +14,7 @@ Utolsó frissítés: 2026-10-11
 | Claude Code | CLI ágens | claude-sonnet-4-6, claude-opus-5-5 | Architect / Tutor, CLI Agent: tervezés, ADR; a walking skeleton és az 1. lépcső implementálója (kód, tesztek, Docker, CI); elő-review a `/code-review` (két külön subagent: kódolási szabályok és spec) és a `/security-review` skillekkel (ugyanaz a modellcsalád, ezért nem független) |
 | Copilot CLI | CLI ágens | Claude Sonnet 4 | Claude Code alternatívája |
 | GitHub Copilot | IDE asszisztens | Claude Sonnet 4, gpt-5.6-luna | Pair Programmer: implementáció, boilerplate, unit tesztek; Reviewer: dokumentum-review |
-| Antigravity | Agentic IDE | Gemini 3.1 Pro (High) | Reviewer: keresztvalidáció, dokumentációs audit; független kódreview szakaszonként és ellenséges tesztek (auth, készlet, főzés) |
+| Antigravity | Agentic IDE | Gemini 3.1 Pro (High); 2026-10-17-től Claude Sonnet 4.6 | Reviewer: keresztvalidáció, dokumentációs audit; független kódreview szakaszonként és ellenséges tesztek (auth, készlet, főzés) |
 | Gemini chat | Chat LLM | Gemini 3.1 Pro | Scope tervezés, debug, trianguláció |
 
 ## 2. Felhasználási területek
@@ -38,8 +38,13 @@ Utolsó frissítés: 2026-10-11
 - **Trianguláció:** fontos architekturális döntésnél két modell véleménye; az ellentmondás az ADR része lesz.
 - **Commitonkénti átnézés:** minden commit előtt átnézem a diffet; a Claude Code minden commitnál kipipált AI-review checklistet mutat (lent).
 - **Szakaszonkénti review-kapu (walking skeleton):** elő-review (Claude Code `/code-review`, az auth-szakaszban `/security-review`) → független review (Antigravity) → **a review után `git status`: a reviewer nem hozhat létre fájlt** → kritikus modulnál (auth, készlet, főzés) ellenséges teszt → szétválogatás forrással (valós / részben / már benne van / téves / döntést igényel) → javítás csak jóváhagyás után → commit → push. A promptsablonok verziózva: [review_prompts.md](review_prompts.md).
-- **Spec-first szakaszonként (1. lépcső):** mini-spec → jóváhagyás → piros tesztek `NotImplementedException`-vázakkal (`test:`) → implementáció (`feat:`) → a „zöld” jelentés előtt minden CI-kapu helyben, a `dotnet format` is → reviewk → `docs:`.
+- **Spec-first szakaszonként (az 1. lépcsőtől):** mini-spec → jóváhagyás → piros tesztek `NotImplementedException`-vázakkal (`test:`) → implementáció (`feat:`) → a „zöld” jelentés előtt minden CI-kapu helyben, a `dotnet format` is → reviewk → `docs:`.
 - **Kikérdezés:** a megértés-ellenőrző kérdéseket (MI-eszköztár 27.) a walking skeletonban saját döntésem alapján kihagytam; helyette minden szakasz összefoglalóját és a diffet néztem át.
+- **Jóváhagyás:** egyszerre egy kérdés, opciókkal és indokolt ajánlással. Terv, mini-spec, felhasználói és dokumentációs szöveg csak a jóváhagyásom után kerül be; az MI a módosított szöveget írja be, nem kérdez újra.
+- **Commit és CI:** az MI nem commitol és nem pushol, a Conventional Commits parancsot adja meg (Co-Authored-By nélkül; az MI-használatot ez a manifest és a prompt log bizonyítja). Push után a CI eredményét az MI kérdezi le, a zöld futás linkje kerül a dokumentációba.
+- **Tesztek ellenőrzése:** új tesztnél mutációs ellenőrzés – a szabályt szándékosan elrontva a tesztnek el kell buknia; a `dotnet format` csak forduló kódon fut ([V-41](verification_log.md)).
+- **Naplózás:** P-bejegyzés a terv minden szakaszának (például T2) végén, és minden más érdemi munkát hozó chat végén; V-bejegyzés minden ellenőrzött MI-állításhoz, a PASS és a FAIL is; a külső reviewer modellje a naplóban szerepel.
+- **Tervek és dolgozat a repón kívül:** a mérföldkő-tervek, a jóváhagyásra írt munkaanyagok és az aktuális állapot a saját szakdolgozat-mappámban élnek; a megvalósított viselkedésre a repó dokumentumai az irányadók. A dolgozat Wordben készül: az MI követett változtatásként szerkeszt, én elfogadom vagy átírom, a változatok külön, privát git-repóban vannak.
 
 ### AI-review checklist (generált kódnál, commitonként)
 
@@ -94,6 +99,8 @@ Technikai védelem: `.gitignore` (`.env`), `.env.example` érték nélkül, comm
 - **A reviewer elavult tudásból is állít ([V-08](verification_log.md)).** A Gemini a .NET 10 tesztfuttató-beállítását „hallucináltnak” nevezte a .NET 8/9 tudása alapján; kísérlet és forrás cáfolta. Tanulság: keretrendszer-verziós állítást kísérlettel ellenőrzök.
 - **A reviewer nem tartja be a tiltásokat.** A promptban tiltott fájlírást a reviewer négyszer is megkísérelte (diff-fájlok, próbafájl); a parancsfuttatási engedélykéréseknél ezért mindig ellenőrzöm, nincs-e benne fájlba írás (`>`). Tanulság: az AI eszköz korlátait technikai kontrollal (engedélykérés) érdemes kikényszeríteni, nem csak a prompttal. Az 1. lépcsőben további két alkalommal (S2, S3) hozott létre fájlt; azóta minden review után `git status` következik.
 - **Az AI-írt teszt is lehet vakon zöld ([V-30](verification_log.md)).** Az S4-ben egy rangsorteszt egy szabályváltozás után elvesztette az elkülönítő erejét; az S5-ben a Gemini „hibás JSON” ellenséges tesztje el sem jutott a szerverig, és két saját tesztem a Layout üres hibarégióját találta meg az oldal hibaüzenete helyett. Tanulság: új vagy módosított tesztnél ellenőrizni kell, hogy hibás kód mellett elbukna-e (mutáció).
+- **Azonos modellcsaládú reviewer, kritikusnak jelölt téves állítással ([V-38](verification_log.md), [V-39](verification_log.md)).** A T1 reviewja (Claude Sonnet 4.6) „Kritikus” SQL-injekciót jelzett egy paraméterezett lekérdezésben, és három már meglévő tesztet hiányzónak nevezett. Tanulság: a súlyosság nem bizonyíték; minden állítást a kódon és forrással ellenőrzök, és a reviewer modellcsaládját a naplóban rögzítem.
+- **A formázó csonkolhatja a nem forduló fájlt ([V-41](verification_log.md)).** Egy szintaktikailag hibás tesztfájlon futtatott `dotnet format` négy tesztet törölt; a tesztszám csökkenéséből derült ki. Tanulság: formázás csak forduló kódon, és a tesztszámot minden futás után összevetem az előzővel.
 - **A spec szerinti review valódi hibát talált ([V-32](verification_log.md)).** A `/code-review` spec-ügynöke a kg-os recept és a grammos készlet kombinációját végigkövetve olyan hibát talált, amelyet sem a tesztek, sem az implementáló nem vett észre. Tanulság: a két tengelyt (kódolási szabályok és spec) érdemes külön ügynökkel vizsgálni.
 - **Helyi kapu kimaradt, a CI piros lett (S5).** Az AI „zöldet” jelentett a `dotnet format` ellenőrzés nélkül, a CI backend-jobja elbukott. Tanulság: a „zöld” jelentés előtt minden CI-kaput helyben kell futtatni.
 

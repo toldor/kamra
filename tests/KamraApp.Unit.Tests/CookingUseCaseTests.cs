@@ -2,6 +2,7 @@ using KamraApp.Application.Common;
 using KamraApp.Application.Cookings;
 using KamraApp.Application.Pantry;
 using KamraApp.Application.Recommendations;
+using KamraApp.Application.ShoppingList;
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
@@ -41,6 +42,7 @@ public class CookingUseCaseTests
     // A recipe in kg, so a default taken from grams in stock has more than 3 decimals (D-a).
     private static readonly RecipeCandidate Krumpli = new(Guid.CreateVersion7(), "Paprikás krumpli", 4, [Need(Burgonya, 1, Unit.Kg)]);
 
+    private readonly FakeRecipes _recipes = new();
     private readonly FakePantry _pantry = new();
     private readonly FakeCookings _cookings = new();
 
@@ -79,11 +81,12 @@ public class CookingUseCaseTests
         };
 
     private Task<ConfirmCookingResult> ConfirmAsync(ConfirmCookingRequest? request) =>
-        new ConfirmCooking(new FakeRecipes(), _pantry, _cookings, new FixedHousehold(), new FixedTime(Now))
+        new ConfirmCooking(_recipes, _pantry, _cookings, new NoIngredientLocks(), new SuggestionEvaluator(new FakeShopping()),
+            new FixedHousehold(), new FixedTime(Now))
             .ExecuteAsync(request, CancellationToken.None);
 
     private Task<CookingPreviewResponse> PreviewAsync(Guid recipeId, int? servings) =>
-        new PreviewCooking(new FakeRecipes(), _pantry, new FixedHousehold(), new FixedTime(Now))
+        new PreviewCooking(_recipes, _pantry, new FixedHousehold(), new FixedTime(Now))
             .ExecuteAsync(recipeId, new CookingPreviewQuery { Servings = servings }, CancellationToken.None);
 
     public static TheoryData<string, ConfirmCookingRequest> InvalidRequests() => new()
@@ -385,6 +388,44 @@ public class CookingUseCaseTests
         error.Which.Code.Should().Be("RECIPE_NOT_FOUND");
     }
 
+    [Fact]
+    public async Task M8_the_preview_of_an_archived_recipe_is_RECIPE_ARCHIVED()
+    {
+        _recipes.Archived.Add(Palacsinta.RecipeId);
+
+        var error = await FluentActions.Awaiting(() => PreviewAsync(Palacsinta.RecipeId, 4)).Should().ThrowAsync<ConflictException>();
+
+        error.Which.Code.Should().Be("RECIPE_ARCHIVED");
+    }
+
+    [Fact]
+    public async Task M8_a_new_cooking_of_an_archived_recipe_is_RECIPE_ARCHIVED_and_nothing_is_deducted()
+    {
+        StockForSixServings();
+        _recipes.Archived.Add(Palacsinta.RecipeId);
+
+        var error = await FluentActions.Awaiting(() => ConfirmAsync(Request())).Should().ThrowAsync<ConflictException>();
+
+        error.Which.Code.Should().Be("RECIPE_ARCHIVED");
+        _cookings.Saves.Should().Be(0);
+        _pantry.Items.Select(i => i.Quantity).Should().Equal(1000m, 1000m, 10m, 1000m);
+    }
+
+    [Fact]
+    public async Task D_c_a_cooking_repeated_after_archiving_still_gets_its_stored_answer()
+    {
+        StockForSixServings();
+        var request = Request();
+        var first = await ConfirmAsync(request);
+        _recipes.Archived.Add(Palacsinta.RecipeId);
+
+        var repeated = await ConfirmAsync(request);
+
+        repeated.Created.Should().BeFalse();
+        repeated.Cooking.Should().BeEquivalentTo(first.Cooking);
+        _cookings.Saves.Should().Be(1);
+    }
+
     private sealed class FixedHousehold : ICurrentHousehold
     {
         public Guid HouseholdId => CookingUseCaseTests.HouseholdId;
@@ -392,13 +433,16 @@ public class CookingUseCaseTests
 
     private sealed class FakeRecipes : IRecipeRepository
     {
+        // Recipes the household has archived (M10): still found, flagged.
+        public HashSet<Guid> Archived { get; } = [];
+
         public Task<IReadOnlyList<RecipeCandidate>> ListCandidatesAsync(Guid householdId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public Task<RecipeDetails?> FindAsync(Guid householdId, Guid recipeId, CancellationToken cancellationToken) =>
             Task.FromResult(householdId != HouseholdId ? null
-                : recipeId == Palacsinta.RecipeId ? new RecipeDetails(Palacsinta, "Keverd ki.")
-                : recipeId == Krumpli.RecipeId ? new RecipeDetails(Krumpli, "Főzd meg.")
+                : recipeId == Palacsinta.RecipeId ? new RecipeDetails(Palacsinta, "Keverd ki.", Archived.Contains(recipeId))
+                : recipeId == Krumpli.RecipeId ? new RecipeDetails(Krumpli, "Főzd meg.", Archived.Contains(recipeId))
                 : null);
     }
 
@@ -424,6 +468,9 @@ public class CookingUseCaseTests
                 && ingredientIds.Contains(i.IngredientId))]);
 
         public Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+
+        public Task<decimal> TotalAsync(Guid householdId, Guid ingredientId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
         public void Add(PantryItem item, StockMovement movement) => throw new NotSupportedException();

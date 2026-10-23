@@ -1,5 +1,6 @@
 using KamraApp.Application.Common;
 using KamraApp.Application.Pantry;
+using KamraApp.Application.Recipes;
 using KamraApp.Application.Recommendations;
 using KamraApp.Domain;
 using KamraApp.Domain.Cookings;
@@ -14,7 +15,12 @@ public sealed class PreviewCooking(IRecipeRepository recipes, IPantryRepository 
     public async Task<CookingPreviewResponse> ExecuteAsync(Guid recipeId, CookingPreviewQuery query, CancellationToken cancellationToken)
     {
         var servings = RequestValidator.Validate(query).Servings;
-        var details = await recipes.FindAsync(household.HouseholdId, recipeId, cancellationToken) ?? throw CookingErrors.RecipeNotFound();
+        var details = await recipes.FindAsync(household.HouseholdId, recipeId, cancellationToken) ?? throw RecipeErrors.RecipeNotFound();
+        if (details.Archived)
+        {
+            throw RecipeErrors.RecipeArchived();
+        }
+
         var recipe = details.Candidate;
         var count = servings ?? recipe.Servings;
         var stock = (await pantry.ListAsync(household.HouseholdId, PantryFilter.None, cancellationToken)).Select(e => StockItem.From(e.Item));

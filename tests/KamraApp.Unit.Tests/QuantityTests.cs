@@ -46,4 +46,11 @@ public class QuantityTests
     {
         Units.DimensionOf(unit).Should().Be(dimension);
     }
+
+    [Theory]
+    [InlineData(Dimension.Mass, Unit.G)]
+    [InlineData(Dimension.Volume, Unit.Ml)]
+    [InlineData(Dimension.Count, Unit.Db)]
+    public void Every_dimension_has_its_base_unit(Dimension dimension, Unit expected) =>
+        Units.BaseUnit(dimension).Should().Be(expected);
 }

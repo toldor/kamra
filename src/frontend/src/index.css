@@ -30,7 +30,8 @@ main {
 
 .nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0 1rem;
   margin: 0.75rem 0 0;
 }
 
@@ -65,6 +66,19 @@ main {
   margin: 0;
 }
 
+/* A fieldset's default min-width (min-content), margin and padding push it past a 360 px screen. */
+.recipe-row,
+.new-ingredient {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0 0 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #c4c4c4;
+  border-radius: 8px;
+}
+
 .recipe ul {
   margin: 0.5rem 0 0;
   padding-left: 1.25rem;
@@ -87,7 +101,8 @@ label {
 }
 
 input,
-select {
+select,
+textarea {
   font: inherit;
   min-height: 44px;
   padding: 0 0.75rem;
@@ -96,7 +111,8 @@ select {
 }
 
 input[aria-invalid='true'],
-select[aria-invalid='true'] {
+select[aria-invalid='true'],
+textarea[aria-invalid='true'] {
   border-color: #b00020;
 }
 
@@ -300,4 +316,15 @@ dialog::backdrop {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+/* US-5: a checked shopping list row stays on the list, crossed out. */
+.item.done .check {
+  text-decoration: line-through;
+  color: #4a4a4a;
+}
+
+/* The recipe steps: the padding of the other fields, also for a long text. */
+textarea {
+  padding: 0.5rem 0.75rem;
 }

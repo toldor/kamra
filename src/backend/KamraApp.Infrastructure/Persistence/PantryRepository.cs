@@ -58,6 +58,10 @@ public sealed class PantryRepository(KamraDbContext db) : IPantryRepository
             .Where(i => i.HouseholdId == householdId && i.Quantity > 0 && ingredientIds.Contains(i.IngredientId))
             .ToListAsync(cancellationToken);
 
+    public async Task<decimal> TotalAsync(Guid householdId, Guid ingredientId, CancellationToken cancellationToken) =>
+        await db.PantryItems.Where(i => i.HouseholdId == householdId && i.IngredientId == ingredientId)
+            .SumAsync(i => (decimal?)i.Quantity, cancellationToken) ?? 0;
+
     public void Add(PantryItem item, StockMovement movement)
     {
         db.PantryItems.Add(item);
@@ -70,7 +74,7 @@ public sealed class PantryRepository(KamraDbContext db) : IPantryRepository
     {
         try
         {
-            await db.SaveChangesAsync(cancellationToken);
+            await db.SaveAndCommitAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {

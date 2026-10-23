@@ -1,6 +1,8 @@
 using KamraApp.Application.Common;
 using KamraApp.Application.Pantry;
+using KamraApp.Application.Recipes;
 using KamraApp.Application.Recommendations;
+using KamraApp.Application.ShoppingList;
 using KamraApp.Domain;
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Pantry;
@@ -14,7 +16,7 @@ namespace KamraApp.Application.Cookings;
 // FEFO and save in one transaction. After any conflict the request id is looked up first: a concurrent
 // request with the same id may have won, and then this one is a repeat (F3).
 public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository pantry, ICookingRepository cookings,
-    ICurrentHousehold household, TimeProvider time)
+    IIngredientLocks locks, SuggestionEvaluator suggestions, ICurrentHousehold household, TimeProvider time)
 {
     public async Task<ConfirmCookingResult> ExecuteAsync(ConfirmCookingRequest? request, CancellationToken cancellationToken)
     {
@@ -26,7 +28,14 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
             return await RepeatAsync(existing, valid, cancellationToken);
         }
 
-        var recipe = (await recipes.FindAsync(householdId, valid.RecipeId!.Value, cancellationToken) ?? throw CookingErrors.RecipeNotFound()).Candidate;
+        var details = await recipes.FindAsync(householdId, valid.RecipeId!.Value, cancellationToken) ?? throw RecipeErrors.RecipeNotFound();
+        // M8 / D-c: only a new cooking is refused; a repeated request was answered above.
+        if (details.Archived)
+        {
+            throw RecipeErrors.RecipeArchived();
+        }
+
+        var recipe = details.Candidate;
         var used = UsedInBaseUnits(recipe, valid) ?? throw ValidationException.ForField("used", CookingInput.UsedMessage);
         if (!used.Values.All(CookingInput.IsStorable))
         {
@@ -35,9 +44,24 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
 
         try
         {
+            // ADR-0008 6.: the stock is read inside the ingredient lock, so the suggestions see every other change.
+            await locks.LockAsync(householdId, [.. used.Keys], cancellationToken);
             var items = await pantry.ListForCookingAsync(householdId, [.. used.Keys], cancellationToken);
             EnsureStockCovers(recipe, used, items);
-            var (cooking, movements) = Cooking.Create(householdId, recipe, valid.Servings!.Value, requestId, used, items, time.GetUtcNow());
+            // Taken before Cooking.Create deducts from these tracked items (ToDictionary evaluates at once).
+            var before = items.GroupBy(i => i.IngredientId).ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+            var now = time.GetUtcNow();
+            var (cooking, movements) = Cooking.Create(householdId, recipe, valid.Servings!.Value, requestId, used, items, now);
+            foreach (var (ingredientId, amount) in used.Where(u => u.Value > 0))
+            {
+                var total = before.GetValueOrDefault(ingredientId);
+                if (await suggestions.AfterQuantityChangeAsync(householdId, ingredientId, total, total - amount, MovementReason.Consumed, now,
+                    cancellationToken, cooking.Id))
+                {
+                    cooking.MarkSuggested(ingredientId);
+                }
+            }
+
             cookings.Add(cooking, movements);
             await cookings.SaveChangesAsync(cancellationToken);
         }
@@ -108,6 +132,7 @@ public sealed class ConfirmCooking(IRecipeRepository recipes, IPantryRepository 
         return new CookingResponse(cooking.Id, cooking.RecipeId, recipe.Name, cooking.Servings, cooking.CookedAt,
             [.. lines.Select(x => new CookingResponseLine(x.Need.IngredientName, x.Need.Unit, Units.FromBase(x.Line.RequiredQuantity, x.Need.Unit),
                 Units.FromBase(x.Line.UsedQuantity, x.Need.Unit), Units.FromBase(x.Line.Shortage, x.Need.Unit)))],
-            [.. lines.Where(x => x.Line.Depleted).Select(x => x.Need.IngredientName)]);
+            [.. lines.Where(x => x.Line.Depleted).Select(x => x.Need.IngredientName)],
+            [.. lines.Where(x => x.Line.Suggested).Select(x => x.Need.IngredientName)]);
     }
 }

@@ -70,6 +70,9 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .HasPrecision(12, 3)
                         .HasColumnType("numeric(12,3)");
 
+                    b.Property<bool>("Suggested")
+                        .HasColumnType("boolean");
+
                     b.Property<decimal>("UsedQuantity")
                         .HasPrecision(12, 3)
                         .HasColumnType("numeric(12,3)");
@@ -473,6 +476,1121 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                             Name = "narancslé",
                             NormalizedName = "narancslé",
                             SeedKey = "narancsle"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fb8-7d94-a937-28da98afaa55"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "marhalábszár",
+                            NormalizedName = "marhalábszár",
+                            SeedKey = "marhalabszar"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fb9-7f41-842e-0b53a40e84f9"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "petrezselyemgyökér",
+                            NormalizedName = "petrezselyemgyökér",
+                            SeedKey = "petrezselyemgyoker"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fba-722b-bd18-071f08b0a1d4"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "köménymag",
+                            NormalizedName = "köménymag",
+                            SeedKey = "komenymag"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fbb-7108-b43a-0619e7bc9097"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "csirkecomb",
+                            NormalizedName = "csirkecomb",
+                            SeedKey = "csirkecomb"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fbc-781e-9084-50717d7a7926"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "zsemlemorzsa",
+                            NormalizedName = "zsemlemorzsa",
+                            SeedKey = "zsemlemorzsa"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fbd-7439-9bca-70a478075d66"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "petrezselyemzöld",
+                            NormalizedName = "petrezselyemzöld",
+                            SeedKey = "petrezselyemzold"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fbe-7b14-932f-c7f01a0dadf0"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Count",
+                            Name = "babérlevél",
+                            NormalizedName = "babérlevél",
+                            SeedKey = "baberlevel"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fbf-7bb6-bf48-090b5d6be2b2"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "szárazbab",
+                            NormalizedName = "szárazbab",
+                            SeedKey = "szarazbab"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc0-7682-9163-2771298f3e69"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "búzadara",
+                            NormalizedName = "búzadara",
+                            SeedKey = "buzadara"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc1-765b-9843-49e3c5a0fedc"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "kakaópor",
+                            NormalizedName = "kakaópor",
+                            SeedKey = "kakaopor"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc2-70ce-be70-6e1540e0553c"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "csiperkegomba",
+                            NormalizedName = "csiperkegomba",
+                            SeedKey = "csiperkegomba"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc3-71e0-a769-8e6806da8751"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "lencse",
+                            NormalizedName = "lencse",
+                            SeedKey = "lencse"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc4-7604-8519-03132846423c"),
+                            DefaultCategory = "Dairy",
+                            Dimension = "Volume",
+                            Name = "kefir",
+                            NormalizedName = "kefir",
+                            SeedKey = "kefir"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc5-734c-86d7-490e6314c360"),
+                            DefaultCategory = "Dairy",
+                            Dimension = "Volume",
+                            Name = "író",
+                            NormalizedName = "író",
+                            SeedKey = "iro"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc6-7e83-8043-668b7428fdfc"),
+                            DefaultCategory = "Dairy",
+                            Dimension = "Mass",
+                            Name = "görög joghurt",
+                            NormalizedName = "görög joghurt",
+                            SeedKey = "gorog-joghurt"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc7-7dd5-950b-fc03f854fca1"),
+                            DefaultCategory = "Dairy",
+                            Dimension = "Mass",
+                            Name = "margarin",
+                            NormalizedName = "margarin",
+                            SeedKey = "margarin"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc8-7ac2-8aa0-16773dcb500c"),
+                            DefaultCategory = "Dairy",
+                            Dimension = "Volume",
+                            Name = "laktózmentes tej",
+                            NormalizedName = "laktózmentes tej",
+                            SeedKey = "laktozmentes-tej"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fc9-7d4c-90e0-8afaf46fd6de"),
+                            DefaultCategory = "Cheese",
+                            Dimension = "Mass",
+                            Name = "mozzarella",
+                            NormalizedName = "mozzarella",
+                            SeedKey = "mozzarella"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fca-7a7d-9d84-8656f58e741c"),
+                            DefaultCategory = "Cheese",
+                            Dimension = "Mass",
+                            Name = "parmezán",
+                            NormalizedName = "parmezán",
+                            SeedKey = "parmezan"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fcb-7a6a-b2ef-39e22c6b8c70"),
+                            DefaultCategory = "Cheese",
+                            Dimension = "Mass",
+                            Name = "feta",
+                            NormalizedName = "feta",
+                            SeedKey = "feta"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fcc-7eb1-a4b4-de9e80e305f0"),
+                            DefaultCategory = "Cheese",
+                            Dimension = "Mass",
+                            Name = "gouda sajt",
+                            NormalizedName = "gouda sajt",
+                            SeedKey = "gouda-sajt"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fcd-7579-8861-619572b13526"),
+                            DefaultCategory = "Cheese",
+                            Dimension = "Mass",
+                            Name = "füstölt sajt",
+                            NormalizedName = "füstölt sajt",
+                            SeedKey = "fustolt-sajt"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fce-7a65-abd1-002ace82f53a"),
+                            DefaultCategory = "Cheese",
+                            Dimension = "Mass",
+                            Name = "krémsajt",
+                            NormalizedName = "krémsajt",
+                            SeedKey = "kremsajt"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fcf-73fb-8b90-0706c234f795"),
+                            DefaultCategory = "Cheese",
+                            Dimension = "Mass",
+                            Name = "camembert",
+                            NormalizedName = "camembert",
+                            SeedKey = "camembert"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd0-7916-9584-553f57ca4459"),
+                            DefaultCategory = "Eggs",
+                            Dimension = "Count",
+                            Name = "fürjtojás",
+                            NormalizedName = "fürjtojás",
+                            SeedKey = "furjtojas"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd1-7dda-925a-a379cdc065a3"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "sertéskaraj",
+                            NormalizedName = "sertéskaraj",
+                            SeedKey = "serteskaraj"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd2-7982-8ec6-fc5496eb59f5"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "sertéstarja",
+                            NormalizedName = "sertéstarja",
+                            SeedKey = "sertestarja"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd3-7959-9985-50cc29f105b0"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "csirkeszárny",
+                            NormalizedName = "csirkeszárny",
+                            SeedKey = "csirkeszarny"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd4-7bb7-9d80-55e0c08866e7"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "pulykamell",
+                            NormalizedName = "pulykamell",
+                            SeedKey = "pulykamell"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd5-7f81-ad20-140f4a45078c"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "darált marhahús",
+                            NormalizedName = "darált marhahús",
+                            SeedKey = "daralt-marhahus"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd6-7f80-a261-6913e3d33cc0"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "darált pulykahús",
+                            NormalizedName = "darált pulykahús",
+                            SeedKey = "daralt-pulykahus"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd7-7ad7-bf01-070af95592e1"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "lazacfilé",
+                            NormalizedName = "lazacfilé",
+                            SeedKey = "lazacfile"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd8-77f1-bfb5-7dffd142f68a"),
+                            DefaultCategory = "FreshMeatFish",
+                            Dimension = "Mass",
+                            Name = "hekk",
+                            NormalizedName = "hekk",
+                            SeedKey = "hekk"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fd9-70c5-bb30-c437b1648340"),
+                            DefaultCategory = "ProcessedMeat",
+                            Dimension = "Mass",
+                            Name = "virsli",
+                            NormalizedName = "virsli",
+                            SeedKey = "virsli"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fda-7be8-bc6d-1106cd0be464"),
+                            DefaultCategory = "ProcessedMeat",
+                            Dimension = "Mass",
+                            Name = "párizsi",
+                            NormalizedName = "párizsi",
+                            SeedKey = "parizsi"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fdb-79b4-a2fd-ad339e92eabc"),
+                            DefaultCategory = "ProcessedMeat",
+                            Dimension = "Mass",
+                            Name = "szalámi",
+                            NormalizedName = "szalámi",
+                            SeedKey = "szalami"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fdc-7a7b-b49e-1dfef8c68166"),
+                            DefaultCategory = "ProcessedMeat",
+                            Dimension = "Mass",
+                            Name = "bacon",
+                            NormalizedName = "bacon",
+                            SeedKey = "bacon"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fdd-799f-afdc-9f8799a0dfcc"),
+                            DefaultCategory = "ProcessedMeat",
+                            Dimension = "Mass",
+                            Name = "főtt tarja",
+                            NormalizedName = "főtt tarja",
+                            SeedKey = "fott-tarja"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fde-7d90-8344-caf1476cc97e"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "uborka",
+                            NormalizedName = "uborka",
+                            SeedKey = "uborka"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fdf-772e-8ece-9fd7ab082bb6"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "cukkini",
+                            NormalizedName = "cukkini",
+                            SeedKey = "cukkini"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe0-7216-97e2-23760c372ffc"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "padlizsán",
+                            NormalizedName = "padlizsán",
+                            SeedKey = "padlizsan"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe1-7fac-b0a3-0abe2a1c390a"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "brokkoli",
+                            NormalizedName = "brokkoli",
+                            SeedKey = "brokkoli"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe2-774c-afe2-9e345305568d"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "karfiol",
+                            NormalizedName = "karfiol",
+                            SeedKey = "karfiol"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe3-73d6-9129-d810b1085734"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "fejes káposzta",
+                            NormalizedName = "fejes káposzta",
+                            SeedKey = "fejes-kaposzta"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe4-7096-baed-7c0c578af435"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "kelkáposzta",
+                            NormalizedName = "kelkáposzta",
+                            SeedKey = "kelkaposzta"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe5-7b24-a651-345536885c5f"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "lilahagyma",
+                            NormalizedName = "lilahagyma",
+                            SeedKey = "lilahagyma"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe6-79a8-87ef-f4d86b7d1fc3"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Count",
+                            Name = "újhagyma",
+                            NormalizedName = "újhagyma",
+                            SeedKey = "ujhagyma"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe7-7c74-8b15-498bade992d3"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Count",
+                            Name = "póréhagyma",
+                            NormalizedName = "póréhagyma",
+                            SeedKey = "porehagyma"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe8-78b4-b4f2-dd205aded85c"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "zellergumó",
+                            NormalizedName = "zellergumó",
+                            SeedKey = "zellergumo"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fe9-716a-b2db-90cf247d9ba0"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "cékla",
+                            NormalizedName = "cékla",
+                            SeedKey = "cekla"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fea-7c77-9efb-d220150bd556"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "spenót",
+                            NormalizedName = "spenót",
+                            SeedKey = "spenot"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9feb-7c24-857c-4dd3d6aefc81"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Count",
+                            Name = "jégsaláta",
+                            NormalizedName = "jégsaláta",
+                            SeedKey = "jegsalata"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fec-7120-a25c-461eb47c6a0b"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "retek",
+                            NormalizedName = "retek",
+                            SeedKey = "retek"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fed-75a8-adf6-a937e74344ca"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "zöldbab",
+                            NormalizedName = "zöldbab",
+                            SeedKey = "zoldbab"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fee-7392-a523-2448e4ac3088"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "sütőtök",
+                            NormalizedName = "sütőtök",
+                            SeedKey = "sutotok"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fef-734c-90dc-9789e1789aa4"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "édesburgonya",
+                            NormalizedName = "édesburgonya",
+                            SeedKey = "edesburgonya"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff0-749f-9374-fddfb810fe55"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "kapor",
+                            NormalizedName = "kapor",
+                            SeedKey = "kapor"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff1-7339-94f5-18a7ecfafeaa"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "snidling",
+                            NormalizedName = "snidling",
+                            SeedKey = "snidling"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff2-7631-b24f-e26f456a5011"),
+                            DefaultCategory = "Vegetables",
+                            Dimension = "Mass",
+                            Name = "gyömbér",
+                            NormalizedName = "gyömbér",
+                            SeedKey = "gyomber"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff3-7e16-9113-cbc044b3a3f3"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "körte",
+                            NormalizedName = "körte",
+                            SeedKey = "korte"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff4-79b7-8e59-ed88e3c0d2c8"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "narancs",
+                            NormalizedName = "narancs",
+                            SeedKey = "narancs"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff5-7612-8561-09e35cf6de4f"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "mandarin",
+                            NormalizedName = "mandarin",
+                            SeedKey = "mandarin"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff6-730d-b867-a562f03ce85b"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "kiwi",
+                            NormalizedName = "kiwi",
+                            SeedKey = "kiwi"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff7-7f9c-a433-3eb150069ca9"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "őszibarack",
+                            NormalizedName = "őszibarack",
+                            SeedKey = "oszibarack"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff8-7777-b595-f44a5f1d8da8"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "avokádó",
+                            NormalizedName = "avokádó",
+                            SeedKey = "avokado"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ff9-7836-9d3d-6a648dd6c265"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "lime",
+                            NormalizedName = "lime",
+                            SeedKey = "lime"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ffa-70b7-9376-789903025e23"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "ananász",
+                            NormalizedName = "ananász",
+                            SeedKey = "ananasz"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ffb-75b1-a879-e2bc79de1d39"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Count",
+                            Name = "görögdinnye",
+                            NormalizedName = "görögdinnye",
+                            SeedKey = "gorogdinnye"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ffc-75a8-a701-f555efeddca1"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Mass",
+                            Name = "szőlő",
+                            NormalizedName = "szőlő",
+                            SeedKey = "szolo"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ffd-7474-9a65-d84efbfe68a4"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Mass",
+                            Name = "eper",
+                            NormalizedName = "eper",
+                            SeedKey = "eper"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9ffe-7dee-84c5-832578d291bb"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Mass",
+                            Name = "málna",
+                            NormalizedName = "málna",
+                            SeedKey = "malna"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-9fff-7b03-8822-ea3769c5b1aa"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Mass",
+                            Name = "szilva",
+                            NormalizedName = "szilva",
+                            SeedKey = "szilva"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a000-7f08-9a84-df6acf733a32"),
+                            DefaultCategory = "Fruit",
+                            Dimension = "Mass",
+                            Name = "meggy",
+                            NormalizedName = "meggy",
+                            SeedKey = "meggy"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a001-76fd-8541-04aaaf7e3f53"),
+                            DefaultCategory = "Bakery",
+                            Dimension = "Count",
+                            Name = "zsemle",
+                            NormalizedName = "zsemle",
+                            SeedKey = "zsemle"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a002-795d-9c8b-0bce0f4b87d4"),
+                            DefaultCategory = "Bakery",
+                            Dimension = "Count",
+                            Name = "kalács",
+                            NormalizedName = "kalács",
+                            SeedKey = "kalacs"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a003-70dd-9c05-17a74df128ff"),
+                            DefaultCategory = "Bakery",
+                            Dimension = "Count",
+                            Name = "bagett",
+                            NormalizedName = "bagett",
+                            SeedKey = "bagett"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a004-7783-bb49-47e81d030551"),
+                            DefaultCategory = "Bakery",
+                            Dimension = "Count",
+                            Name = "rozskenyér",
+                            NormalizedName = "rozskenyér",
+                            SeedKey = "rozskenyer"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a005-7a26-8752-9da48ddad226"),
+                            DefaultCategory = "Bakery",
+                            Dimension = "Count",
+                            Name = "tortilla lap",
+                            NormalizedName = "tortilla lap",
+                            SeedKey = "tortilla-lap"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a006-7f2c-84ac-ff417150b8d2"),
+                            DefaultCategory = "Bakery",
+                            Dimension = "Count",
+                            Name = "croissant",
+                            NormalizedName = "croissant",
+                            SeedKey = "croissant"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a007-71c0-a02d-56c5f6e69195"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "zabpehely",
+                            NormalizedName = "zabpehely",
+                            SeedKey = "zabpehely"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a008-794b-bbb3-fcf98f1a1ad8"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "teljes kiőrlésű liszt",
+                            NormalizedName = "teljes kiőrlésű liszt",
+                            SeedKey = "teljes-kiorlesu-liszt"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a009-78dc-a770-5022b03eee29"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "sütőpor",
+                            NormalizedName = "sütőpor",
+                            SeedKey = "sutopor"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a00a-7d3a-a8a1-9bcf42e2d5dc"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "szárított élesztő",
+                            NormalizedName = "szárított élesztő",
+                            SeedKey = "szaritott-eleszto"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a00b-78ac-a1e9-c19a448491be"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "porcukor",
+                            NormalizedName = "porcukor",
+                            SeedKey = "porcukor"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a00c-7ee9-822f-69c85de782eb"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "vaníliás cukor",
+                            NormalizedName = "vaníliás cukor",
+                            SeedKey = "vanilias-cukor"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a00d-7e3c-aae9-bdd24efe90e7"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "csicseriborsó",
+                            NormalizedName = "csicseriborsó",
+                            SeedKey = "csicseriborso"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a00e-77aa-a1dc-17ebe6cb7431"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "kuszkusz",
+                            NormalizedName = "kuszkusz",
+                            SeedKey = "kuszkusz"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a00f-735f-b84e-7935033bcaa2"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "tarhonya",
+                            NormalizedName = "tarhonya",
+                            SeedKey = "tarhonya"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a010-747e-ae52-c39a3a7d4a85"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "müzli",
+                            NormalizedName = "müzli",
+                            SeedKey = "muzli"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a011-751b-bd8f-4d507d9b93e0"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "keksz",
+                            NormalizedName = "keksz",
+                            SeedKey = "keksz"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a012-72ee-84de-de5b1d8e2ddf"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "dió",
+                            NormalizedName = "dió",
+                            SeedKey = "dio"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a013-7a5c-85ba-285b8b0faec9"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "mandula",
+                            NormalizedName = "mandula",
+                            SeedKey = "mandula"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a014-7c6d-a531-8294214fbb39"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "mazsola",
+                            NormalizedName = "mazsola",
+                            SeedKey = "mazsola"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a015-7f8d-81c7-290508754b65"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "napraforgómag",
+                            NormalizedName = "napraforgómag",
+                            SeedKey = "napraforgomag"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a016-73af-a9a6-09c2d9570a37"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Volume",
+                            Name = "olívaolaj",
+                            NormalizedName = "olívaolaj",
+                            SeedKey = "olivaolaj"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a017-7aa4-ae35-df0a4f093337"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "majoranna",
+                            NormalizedName = "majoranna",
+                            SeedKey = "majoranna"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a018-7707-8fd1-e7075b717e54"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "oregánó",
+                            NormalizedName = "oregánó",
+                            SeedKey = "oregano"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a019-7856-a508-e008752fb31f"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "bazsalikom (szárított)",
+                            NormalizedName = "bazsalikom (szárított)",
+                            SeedKey = "bazsalikom"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a01a-7db5-9fc7-1a5d136b1c97"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "fahéj",
+                            NormalizedName = "fahéj",
+                            SeedKey = "fahej"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a01b-7d1a-af85-3f187b20f07b"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Mass",
+                            Name = "kávé",
+                            NormalizedName = "kávé",
+                            SeedKey = "kave"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a01c-7b85-8544-9c50185d4f32"),
+                            DefaultCategory = "DryGoods",
+                            Dimension = "Count",
+                            Name = "filteres tea",
+                            NormalizedName = "filteres tea",
+                            SeedKey = "filteres-tea"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a01d-7b87-9c2e-aa7ce5bb4202"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "ketchup",
+                            NormalizedName = "ketchup",
+                            SeedKey = "ketchup"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a01e-7346-87c2-acaa3432ee65"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "mustár",
+                            NormalizedName = "mustár",
+                            SeedKey = "mustar"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a01f-77a4-9e21-ef64d2c0d141"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "majonéz",
+                            NormalizedName = "majonéz",
+                            SeedKey = "majonez"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a020-73a0-970f-d4c6f4d47c3a"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "lekvár",
+                            NormalizedName = "lekvár",
+                            SeedKey = "lekvar"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a021-7cb8-91f2-bb150a4cd4e9"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "méz",
+                            NormalizedName = "méz",
+                            SeedKey = "mez"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a022-7e52-b005-6f92f590ebb8"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "csemegekukorica (konzerv)",
+                            NormalizedName = "csemegekukorica (konzerv)",
+                            SeedKey = "csemegekukorica"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a023-7143-be77-d1c06cf90ab6"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "tonhalkonzerv",
+                            NormalizedName = "tonhalkonzerv",
+                            SeedKey = "tonhalkonzerv"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a024-7fdb-a3ac-5a8a9175f979"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "hámozott paradicsom (konzerv)",
+                            NormalizedName = "hámozott paradicsom (konzerv)",
+                            SeedKey = "hamozott-paradicsom"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a025-7fc0-8e75-fe73347fe208"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Volume",
+                            Name = "szójaszósz",
+                            NormalizedName = "szójaszósz",
+                            SeedKey = "szojaszosz"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a026-7d8a-af60-c1d6ec50ee59"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Volume",
+                            Name = "ecet",
+                            NormalizedName = "ecet",
+                            SeedKey = "ecet"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a027-70f4-a30c-7097901c5ff4"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "csemegeuborka",
+                            NormalizedName = "csemegeuborka",
+                            SeedKey = "csemegeuborka"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a028-7919-afdd-0366fdaff468"),
+                            DefaultCategory = "CannedAndSauces",
+                            Dimension = "Mass",
+                            Name = "sűrített tej",
+                            NormalizedName = "sűrített tej",
+                            SeedKey = "suritett-tej"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a029-7789-9ba2-024ba8cd5e00"),
+                            DefaultCategory = "Frozen",
+                            Dimension = "Mass",
+                            Name = "fagyasztott spenót",
+                            NormalizedName = "fagyasztott spenót",
+                            SeedKey = "fagyasztott-spenot"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a02a-7aef-819d-d70f7c004360"),
+                            DefaultCategory = "Frozen",
+                            Dimension = "Mass",
+                            Name = "fagyasztott vegyes zöldség",
+                            NormalizedName = "fagyasztott vegyes zöldség",
+                            SeedKey = "fagyasztott-vegyes-zoldseg"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a02b-7465-9466-47818fce4a2e"),
+                            DefaultCategory = "Frozen",
+                            Dimension = "Mass",
+                            Name = "fagyasztott hasábburgonya",
+                            NormalizedName = "fagyasztott hasábburgonya",
+                            SeedKey = "fagyasztott-hasabburgonya"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a02c-74c3-9ffe-43fb07d79541"),
+                            DefaultCategory = "Frozen",
+                            Dimension = "Mass",
+                            Name = "halrudacska",
+                            NormalizedName = "halrudacska",
+                            SeedKey = "halrudacska"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a02d-75d3-968e-0fc7373183b4"),
+                            DefaultCategory = "Beverages",
+                            Dimension = "Volume",
+                            Name = "ásványvíz",
+                            NormalizedName = "ásványvíz",
+                            SeedKey = "asvanyviz"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a02e-765b-b2b9-c81a987e13f1"),
+                            DefaultCategory = "Beverages",
+                            Dimension = "Volume",
+                            Name = "almalé",
+                            NormalizedName = "almalé",
+                            SeedKey = "almale"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a02f-7bf0-a330-510520918764"),
+                            DefaultCategory = "Beverages",
+                            Dimension = "Volume",
+                            Name = "szörp",
+                            NormalizedName = "szörp",
+                            SeedKey = "szorp"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a030-7b2b-babe-d00949f6fa5c"),
+                            DefaultCategory = "PreparedFood",
+                            Dimension = "Mass",
+                            Name = "hummusz",
+                            NormalizedName = "hummusz",
+                            SeedKey = "hummusz"
+                        });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Ingredients.IngredientMinimum", b =>
+                {
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EnteredUnit")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("MinimumQuantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("HouseholdId", "IngredientId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("IngredientMinimums", t =>
+                        {
+                            t.HasCheckConstraint("CK_IngredientMinimums_MinimumQuantity_Positive", "\"MinimumQuantity\" > 0");
                         });
                 });
 
@@ -663,7 +1781,175 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                             SeedKey = "paprikas-krumpli",
                             Servings = 4,
                             Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a031-7595-9a6f-cde8f2db92f1"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A burgonyát héjában, a tojást keményre főzzük, majd mindkettőt megtisztítjuk és felkarikázzuk. Kivajazott tálba rétegezzük a burgonyát, a tojást és a karikára vágott kolbászt, minden réteget megsózunk és tejföllel kenünk meg; a tetejére burgonya és tejföl kerül. Előmelegített sütőben kb. 30 percig sütjük, amíg a teteje megpirul.",
+                            Name = "Rakott krumpli",
+                            SeedKey = "rakott-krumpli",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A hagymát az olajon megdinszteljük, a kockára vágott húst hozzáadva fehéredésig pirítjuk. Lehúzzuk a tűzről, megszórjuk pirospaprikával és köménymaggal, felöntjük vízzel, és fedő alatt kb. másfél órán át főzzük. Hozzáadjuk a kockára vágott zöldségeket, a paprikát és a paradicsomot, megsózzuk, és addig főzzük, amíg minden megpuhul.",
+                            Name = "Gulyásleves",
+                            SeedKey = "gulyasleves",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A hagymát az olajon üvegesre pároljuk, levesszük a tűzről, és elkeverjük benne a pirospaprikát. Beletesszük a csirkecombot, a felaprított paprikát és paradicsomot, megsózzuk, kevés vízzel felöntjük, és fedő alatt puhára pároljuk. A tejfölt a liszttel csomómentesre keverjük, a szaftba forgatjuk, és még néhány percig forraljuk.",
+                            Name = "Csirkepaprikás",
+                            SeedKey = "csirkepaprikas",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A finomra vágott hagymát, fokhagymát és reszelt répát az olajon megfuttatjuk, hozzáadjuk a darált húst, és morzsásra pirítjuk. Belekeverjük a paradicsompürét és kevés vizet, sózzuk, borsozzuk, és lassú tűzön kb. 30 percig főzzük. A tésztát sós vízben kifőzzük, a szósszal tálaljuk, a tetejére reszelt sajtot szórunk.",
+                            Name = "Bolognai spagetti",
+                            SeedKey = "bolognai-spagetti",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A csirkemellet szeletekre vágjuk, kissé kiklopfoljuk és megsózzuk. Lisztbe, felvert tojásba, majd zsemlemorzsába forgatjuk, és forró olajban mindkét oldalát aranybarnára sütjük. A rizst kevés olajon átforgatjuk, kétszeres mennyiségű sós vízzel felöntjük, és fedő alatt puhára pároljuk.",
+                            Name = "Rántott csirkemell rizzsel",
+                            SeedKey = "rantott-csirkemell-rizzsel",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A borsót a vajon néhány percig pároljuk, megszórjuk cukorral és sóval, majd kevés vízzel felöntve puhára főzzük. A lisztet a tejjel simára keverjük, a főzelékhez adjuk, és sűrűre forraljuk. Végül belekeverjük az apróra vágott petrezselymet.",
+                            Name = "Zöldborsófőzelék",
+                            SeedKey = "zoldborsofozelek",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A kockára vágott burgonyát a babérlevéllel sós vízben puhára főzzük. Az olajon a finomra vágott hagymát megdinszteljük, rászórjuk a lisztet és a pirospaprikát, majd hideg vízzel csomómentes rántást készítünk. A rántással besűrítjük a főzeléket, végül a tejföllel elkeverjük; a babérlevelet tálalás előtt kivesszük.",
+                            Name = "Krumplifőzelék",
+                            SeedKey = "krumplifozelek",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a038-71ec-b471-4e969a7271fa"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A tésztát sós vízben kifőzzük és leszűrjük. A vajon a felkockázott sonkát átforgatjuk, hozzáadjuk a tésztát és a tejfölt. A reszelt sajt felét belekeverjük, a többit a tetejére szórjuk, és tálalás előtt fedő alatt hagyjuk megolvadni.",
+                            Name = "Sajtos-sonkás tészta",
+                            SeedKey = "sajtos-sonkas-teszta",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A babot előző este beáztatjuk, majd friss vízben a babérlevéllel félpuhára főzzük. Hozzáadjuk a felkarikázott zöldségeket és kolbászt, és együtt puhára főzzük. Az olajon a hagymát és a fokhagymát megfuttatjuk, rászórjuk a pirospaprikát, a tejfölös-lisztes habarással együtt a leveshez adjuk, megsózzuk, és még néhány percig forraljuk.",
+                            Name = "Bableves",
+                            SeedKey = "bableves",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a03a-70da-a649-24b7b3176829"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A rizst a vajon üvegesre pirítjuk, majd kétszeres mennyiségű sós vízzel felöntjük. Amikor felforrt, hozzáadjuk a zöldborsót, és fedő alatt, kis lángon puhára pároljuk. Tálalás előtt villával átlazítjuk.",
+                            Name = "Rizibizi",
+                            SeedKey = "rizibizi",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a03b-7d4e-9200-9ef52d9aefcf"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A tejet a cukorral és a vajjal felforraljuk. Folyamatos keverés mellett beleszórjuk a búzadarát, és kis lángon addig főzzük, amíg besűrűsödik. Tálaláskor a tetejét kakaóporral szórjuk meg.",
+                            Name = "Tejbegríz",
+                            SeedKey = "tejbegriz",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A hagymát az olajon megdinszteljük, levesszük a tűzről, és elkeverjük benne a pirospaprikát. Hozzáadjuk a felszeletelt gombát, megsózzuk, és saját levében puhára pároljuk. A tejfölt a liszttel elkeverjük, a gombához adjuk, és néhány perc alatt összeforraljuk.",
+                            Name = "Gombapaprikás",
+                            SeedKey = "gombapaprikas",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A vajon a lisztet világosra pirítjuk, hozzáadjuk a paradicsompürét, majd felöntjük vízzel, és csomómentesre keverjük. Cukorral és sóval ízesítjük, és kb. 10 percig főzzük. Közben a tésztát külön kifőzzük, és a tányérban a levesre szedjük.",
+                            Name = "Paradicsomleves",
+                            SeedKey = "paradicsomleves",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A darált húst összekeverjük a nyers rizzsel, a tojással, az apróra vágott hagymával, sóval és borssal. A paprikák magházát kivágjuk, és lazán megtöltjük a masszával. A paradicsompürét vízzel felhígítjuk, cukorral és sóval ízesítjük, beletesszük a paprikákat, és fedő alatt kb. egy órán át főzzük; végül a mártást lisztes habarással besűrítjük.",
+                            Name = "Töltött paprika",
+                            SeedKey = "toltott-paprika",
+                            Servings = 4,
+                            Source = "Seed"
+                        },
+                        new
+                        {
+                            Id = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Instructions = "A lencsét átválogatjuk, és a babérlevéllel sós vízben puhára főzzük. Az olajon a hagymát megdinszteljük, a lisztet rászórva világos rántást készítünk, és a főzelékhez adjuk. Néhány perc forralás után a tejföllel elkeverjük; a babérlevelet tálalás előtt kivesszük.",
+                            Name = "Lencsefőzelék",
+                            SeedKey = "lencsefozelek",
+                            Servings = 4,
+                            Source = "Seed"
                         });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeArchive", b =>
+                {
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("HouseholdId", "RecipeId");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeArchives");
                 });
 
             modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeIngredient", b =>
@@ -880,7 +2166,958 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                             IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
                             EnteredUnit = "Dl",
                             Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a031-7595-9a6f-cde8f2db92f1"),
+                            IngredientId = new Guid("01a126a0-f499-70f0-baca-644f79523c11"),
+                            EnteredUnit = "Kg",
+                            Quantity = 1000m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a031-7595-9a6f-cde8f2db92f1"),
+                            IngredientId = new Guid("01a126a0-f4a1-76ae-8300-46253511172a"),
+                            EnteredUnit = "Db",
+                            Quantity = 4m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a031-7595-9a6f-cde8f2db92f1"),
+                            IngredientId = new Guid("01a126a0-f4a3-761c-ba7a-3ba388ba03e9"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a031-7595-9a6f-cde8f2db92f1"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 400m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a031-7595-9a6f-cde8f2db92f1"),
+                            IngredientId = new Guid("01a126a0-f4a2-7ba6-9efe-59bd7fd8e1bc"),
+                            EnteredUnit = "G",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a031-7595-9a6f-cde8f2db92f1"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a14b8b-9fb8-7d94-a937-28da98afaa55"),
+                            EnteredUnit = "G",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f499-70f0-baca-644f79523c11"),
+                            EnteredUnit = "G",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f4b5-7e6f-80b9-dbcb7048edaa"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a14b8b-9fb9-7f41-842e-0b53a40e84f9"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f497-711a-a974-dff897cec5ad"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f496-7926-80c2-fffa4640a3c7"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f4a4-748b-acd6-1ce2382afd1e"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a14b8b-9fba-722b-bd18-071f08b0a1d4"),
+                            EnteredUnit = "G",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "L",
+                            Quantity = 1500.0m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a032-7b7c-a567-4e863defc98a"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a14b8b-9fbb-7108-b43a-0619e7bc9097"),
+                            EnteredUnit = "Kg",
+                            Quantity = 1000m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f496-7926-80c2-fffa4640a3c7"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f497-711a-a974-dff897cec5ad"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f4a4-748b-acd6-1ce2382afd1e"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a033-7f8d-ae8a-afbcfce714ee"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 8m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f49b-7dc6-bf52-af8623e29f9b"),
+                            EnteredUnit = "G",
+                            Quantity = 400m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f4ae-7bad-a26d-3db0c8e0bd77"),
+                            EnteredUnit = "G",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f4b7-7546-a5a1-9b55e78e6dc0"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f4b6-72dc-9d01-ddf60e84df77"),
+                            EnteredUnit = "Db",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f4b5-7e6f-80b9-dbcb7048edaa"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f4ac-74eb-8f00-38d37814a809"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 8m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a034-7d8f-a4f9-9755074455b3"),
+                            IngredientId = new Guid("01a126a0-f4a6-79c2-a6b4-083b402ee44a"),
+                            EnteredUnit = "G",
+                            Quantity = 1m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a126a0-f4ad-73e7-857a-7396a56d6d75"),
+                            EnteredUnit = "G",
+                            Quantity = 600m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a126a0-f4a1-76ae-8300-46253511172a"),
+                            EnteredUnit = "Db",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a14b8b-9fbc-781e-9084-50717d7a7926"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a126a0-f4b0-7909-8e1b-b4a28be99399"),
+                            EnteredUnit = "G",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "Ml",
+                            Quantity = 600m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a035-77e0-ae1d-8d93fb45ecc1"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 8m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a126a0-f4b8-70a8-92e7-887762859205"),
+                            EnteredUnit = "G",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a126a0-f4a2-7ba6-9efe-59bd7fd8e1bc"),
+                            EnteredUnit = "G",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a126a0-f4a0-7528-a0fa-827975890a2c"),
+                            EnteredUnit = "Ml",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a126a0-f4b1-7548-9a34-96e76ef4d804"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a14b8b-9fbd-7439-9bca-70a478075d66"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "Ml",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a036-7313-af94-a38a4c73d060"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 5m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f499-70f0-baca-644f79523c11"),
+                            EnteredUnit = "G",
+                            Quantity = 800m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f4a4-748b-acd6-1ce2382afd1e"),
+                            EnteredUnit = "G",
+                            Quantity = 5m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a14b8b-9fbe-7b14-932f-c7f01a0dadf0"),
+                            EnteredUnit = "Db",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "Ml",
+                            Quantity = 600m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a037-7238-b442-81754ef8d587"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 8m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a038-71ec-b471-4e969a7271fa"),
+                            IngredientId = new Guid("01a126a0-f49b-7dc6-bf52-af8623e29f9b"),
+                            EnteredUnit = "G",
+                            Quantity = 400m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a038-71ec-b471-4e969a7271fa"),
+                            IngredientId = new Guid("01a126a0-f4af-7d94-a469-1140c47e4814"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a038-71ec-b471-4e969a7271fa"),
+                            IngredientId = new Guid("01a126a0-f4ac-74eb-8f00-38d37814a809"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a038-71ec-b471-4e969a7271fa"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a038-71ec-b471-4e969a7271fa"),
+                            IngredientId = new Guid("01a126a0-f4a2-7ba6-9efe-59bd7fd8e1bc"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a038-71ec-b471-4e969a7271fa"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 8m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a14b8b-9fbf-7bb6-bf48-090b5d6be2b2"),
+                            EnteredUnit = "G",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f4b5-7e6f-80b9-dbcb7048edaa"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a14b8b-9fb9-7f41-842e-0b53a40e84f9"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f4b6-72dc-9d01-ddf60e84df77"),
+                            EnteredUnit = "Db",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f4a3-761c-ba7a-3ba388ba03e9"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f4a4-748b-acd6-1ce2382afd1e"),
+                            EnteredUnit = "G",
+                            Quantity = 5m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a14b8b-9fbe-7b14-932f-c7f01a0dadf0"),
+                            EnteredUnit = "Db",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "L",
+                            Quantity = 2000m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a039-7c94-bd89-5668e36dc0d1"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03a-70da-a649-24b7b3176829"),
+                            IngredientId = new Guid("01a126a0-f4b0-7909-8e1b-b4a28be99399"),
+                            EnteredUnit = "G",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03a-70da-a649-24b7b3176829"),
+                            IngredientId = new Guid("01a126a0-f4b8-70a8-92e7-887762859205"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03a-70da-a649-24b7b3176829"),
+                            IngredientId = new Guid("01a126a0-f4a2-7ba6-9efe-59bd7fd8e1bc"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03a-70da-a649-24b7b3176829"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "Ml",
+                            Quantity = 600m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03a-70da-a649-24b7b3176829"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 5m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03b-7d4e-9200-9ef52d9aefcf"),
+                            IngredientId = new Guid("01a126a0-f4a0-7528-a0fa-827975890a2c"),
+                            EnteredUnit = "L",
+                            Quantity = 1000m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03b-7d4e-9200-9ef52d9aefcf"),
+                            IngredientId = new Guid("01a14b8b-9fc0-7682-9163-2771298f3e69"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03b-7d4e-9200-9ef52d9aefcf"),
+                            IngredientId = new Guid("01a126a0-f4b1-7548-9a34-96e76ef4d804"),
+                            EnteredUnit = "G",
+                            Quantity = 60m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03b-7d4e-9200-9ef52d9aefcf"),
+                            IngredientId = new Guid("01a126a0-f4a2-7ba6-9efe-59bd7fd8e1bc"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03b-7d4e-9200-9ef52d9aefcf"),
+                            IngredientId = new Guid("01a14b8b-9fc1-765b-9843-49e3c5a0fedc"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            IngredientId = new Guid("01a14b8b-9fc2-70ce-be70-6e1540e0553c"),
+                            EnteredUnit = "G",
+                            Quantity = 600m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 150m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            IngredientId = new Guid("01a126a0-f4a4-748b-acd6-1ce2382afd1e"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03c-7a15-8165-ad6d3575227b"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 6m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            IngredientId = new Guid("01a126a0-f4b7-7546-a5a1-9b55e78e6dc0"),
+                            EnteredUnit = "G",
+                            Quantity = 200m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            IngredientId = new Guid("01a126a0-f4b1-7548-9a34-96e76ef4d804"),
+                            EnteredUnit = "G",
+                            Quantity = 40m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            IngredientId = new Guid("01a126a0-f4a2-7ba6-9efe-59bd7fd8e1bc"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            IngredientId = new Guid("01a126a0-f49b-7dc6-bf52-af8623e29f9b"),
+                            EnteredUnit = "G",
+                            Quantity = 80m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "L",
+                            Quantity = 1200.0m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03d-7517-9607-4b88976269ba"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 6m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f496-7926-80c2-fffa4640a3c7"),
+                            EnteredUnit = "G",
+                            Quantity = 800m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4ae-7bad-a26d-3db0c8e0bd77"),
+                            EnteredUnit = "G",
+                            Quantity = 500m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4b0-7909-8e1b-b4a28be99399"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4a1-76ae-8300-46253511172a"),
+                            EnteredUnit = "Db",
+                            Quantity = 1m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4b7-7546-a5a1-9b55e78e6dc0"),
+                            EnteredUnit = "G",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4b1-7548-9a34-96e76ef4d804"),
+                            EnteredUnit = "G",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 20m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "Ml",
+                            Quantity = 800m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 10m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03e-76e3-82dc-b015066f8b07"),
+                            IngredientId = new Guid("01a126a0-f4a6-79c2-a6b4-083b402ee44a"),
+                            EnteredUnit = "G",
+                            Quantity = 1m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a14b8b-9fc3-71e0-a769-8e6806da8751"),
+                            EnteredUnit = "G",
+                            Quantity = 300m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a126a0-f498-7ceb-818b-3d4613bec488"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a14b8b-9fbe-7b14-932f-c7f01a0dadf0"),
+                            EnteredUnit = "Db",
+                            Quantity = 2m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a126a0-f49f-7974-9214-d4c1336a00ff"),
+                            EnteredUnit = "G",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a126a0-f49a-71be-8b17-cb68391f337b"),
+                            EnteredUnit = "Ml",
+                            Quantity = 30m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a126a0-f49d-7056-b903-76a6f2b64b57"),
+                            EnteredUnit = "G",
+                            Quantity = 100m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a126a0-f4a7-746d-8f8a-d6173bc02904"),
+                            EnteredUnit = "L",
+                            Quantity = 1000m
+                        },
+                        new
+                        {
+                            RecipeId = new Guid("01a14b8b-a03f-7536-9668-c84e89ce0917"),
+                            IngredientId = new Guid("01a126a0-f4a5-7dae-b0c3-91a860a253f3"),
+                            EnteredUnit = "G",
+                            Quantity = 8m
                         });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Checked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("EnteredUnit")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("HouseholdId", "IngredientId")
+                        .IsUnique();
+
+                    b.ToTable("ShoppingListItems", t =>
+                        {
+                            t.HasCheckConstraint("CK_ShoppingListItems_Quantity_Positive", "\"Quantity\" IS NULL OR \"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_ShoppingListItems_Quantity_WithUnit", "(\"Quantity\" IS NULL) = (\"EnteredUnit\" IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ClearedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Trigger")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CookingId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("HouseholdId", "IngredientId")
+                        .IsUnique()
+                        .HasFilter("\"State\" = 'Open' OR (\"State\" = 'Rejected' AND \"ClearedAt\" IS NULL)");
+
+                    b.ToTable("ShoppingSuggestions");
                 });
 
             modelBuilder.Entity("KamraApp.Infrastructure.Persistence.AppUser", b =>
@@ -1059,6 +3296,21 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.Ingredients.IngredientMinimum", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("KamraApp.Domain.Pantry.PantryItem", b =>
                 {
                     b.HasOne("KamraApp.Domain.Households.Household", null)
@@ -1102,6 +3354,21 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeArchive", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Recipes.Recipe", null)
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("KamraApp.Domain.Recipes.RecipeIngredient", b =>
                 {
                     b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
@@ -1114,6 +3381,41 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("RecipeId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingListItem", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ShoppingList.ShoppingSuggestion", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Cookings.Cooking", null)
+                        .WithMany()
+                        .HasForeignKey("CookingId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 

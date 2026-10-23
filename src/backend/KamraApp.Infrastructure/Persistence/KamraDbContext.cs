@@ -3,6 +3,7 @@ using KamraApp.Domain.Households;
 using KamraApp.Domain.Ingredients;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Recipes;
+using KamraApp.Domain.ShoppingList;
 using KamraApp.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +26,15 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
 
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
 
+    public DbSet<RecipeArchive> RecipeArchives => Set<RecipeArchive>();
+
     public DbSet<Cooking> Cookings => Set<Cooking>();
+
+    public DbSet<IngredientMinimum> IngredientMinimums => Set<IngredientMinimum>();
+
+    public DbSet<ShoppingSuggestion> ShoppingSuggestions => Set<ShoppingSuggestion>();
+
+    public DbSet<ShoppingListItem> ShoppingListItems => Set<ShoppingListItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -107,6 +116,15 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             line.HasData(SeedData.Recipes.Ingredients);
         });
 
+        // data_model.md, RecipeArchives (M10): one row per household and recipe; the household's deletion removes
+        // its rows, a recipe is never deleted while archived (NO ACTION).
+        builder.Entity<RecipeArchive>(archive =>
+        {
+            archive.HasKey(a => new { a.HouseholdId, a.RecipeId });
+            archive.HasOne<Household>().WithMany().HasForeignKey(a => a.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            archive.HasOne<Recipe>().WithMany().HasForeignKey(a => a.RecipeId).OnDelete(DeleteBehavior.NoAction);
+        });
+
         // data_model.md, Cooking and CookingLine; ADR-0008: (HouseholdId, RequestId) is unique, so a repeated
         // confirmation cannot deduct twice.
         builder.Entity<Cooking>(cooking =>
@@ -127,6 +145,49 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             line.Property(l => l.UsedQuantity).HasPrecision(12, 3);
             line.ToTable("CookingLines", t => t.HasCheckConstraint("CK_CookingLines_UsedQuantity_NonNegative", "\"UsedQuantity\" >= 0"));
             line.HasOne<Ingredient>().WithMany().HasForeignKey(l => l.IngredientId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // data_model.md, Bevásárlólista (US-5). Writes are serialised per ingredient (ADR-0008 6.); the unique
+        // indexes stay as a safety net.
+        builder.Entity<IngredientMinimum>(minimum =>
+        {
+            minimum.HasKey(m => new { m.HouseholdId, m.IngredientId });
+            minimum.Property(m => m.MinimumQuantity).HasPrecision(12, 3);
+            minimum.Property(m => m.EnteredUnit).HasConversion<string>();
+            minimum.ToTable(t => t.HasCheckConstraint("CK_IngredientMinimums_MinimumQuantity_Positive", "\"MinimumQuantity\" > 0"));
+            minimum.HasOne<Household>().WithMany().HasForeignKey(m => m.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            minimum.HasOne<Ingredient>().WithMany().HasForeignKey(m => m.IngredientId).OnDelete(DeleteBehavior.NoAction);
+        });
+
+        builder.Entity<ShoppingSuggestion>(suggestion =>
+        {
+            suggestion.HasKey(s => s.Id);
+            suggestion.Property(s => s.Id).ValueGeneratedNever();
+            suggestion.Property(s => s.Trigger).HasConversion<string>();
+            suggestion.Property(s => s.State).HasConversion<string>();
+            suggestion.HasOne<Household>().WithMany().HasForeignKey(s => s.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            suggestion.HasOne<Ingredient>().WithMany().HasForeignKey(s => s.IngredientId).OnDelete(DeleteBehavior.NoAction);
+            suggestion.HasOne<Cooking>().WithMany().HasForeignKey(s => s.CookingId).OnDelete(DeleteBehavior.NoAction);
+            // At most one blocking suggestion per household and ingredient (data_model.md).
+            suggestion.HasIndex(s => new { s.HouseholdId, s.IngredientId }).IsUnique()
+                .HasFilter("\"State\" = 'Open' OR (\"State\" = 'Rejected' AND \"ClearedAt\" IS NULL)");
+        });
+
+        builder.Entity<ShoppingListItem>(item =>
+        {
+            item.HasKey(i => i.Id);
+            item.Property(i => i.Id).ValueGeneratedNever();
+            item.Property(i => i.Quantity).HasPrecision(12, 3);
+            item.Property(i => i.EnteredUnit).HasConversion<string>();
+            item.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_ShoppingListItems_Quantity_Positive", "\"Quantity\" IS NULL OR \"Quantity\" > 0");
+                t.HasCheckConstraint("CK_ShoppingListItems_Quantity_WithUnit", "(\"Quantity\" IS NULL) = (\"EnteredUnit\" IS NULL)");
+            });
+            item.HasOne<Household>().WithMany().HasForeignKey(i => i.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            item.HasOne<Ingredient>().WithMany().HasForeignKey(i => i.IngredientId).OnDelete(DeleteBehavior.NoAction);
+            // One row per ingredient (US-5).
+            item.HasIndex(i => new { i.HouseholdId, i.IngredientId }).IsUnique();
         });
     }
 }

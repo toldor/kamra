@@ -4,7 +4,10 @@ import { AuthForm } from './AuthForm'
 import { CookingPage } from './CookingPage'
 import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
+import { RecipeForm } from './RecipeForm'
+import { RecipesPage } from './RecipesPage'
 import { RecommendationsPage } from './RecommendationsPage'
+import { ShoppingListPage } from './ShoppingListPage'
 import { cookingRecipeId, routes, useHashRoute, type Route } from './useHashRoute'
 
 // Signed out: the auth screens; signed in: the pages chosen by the hash route (useHashRoute).
@@ -23,11 +26,21 @@ async function loadSession(): Promise<State> {
   }
 }
 
-function Page({ route, onSignedOut }: { route: Route; onSignedOut: (notice: string) => void }) {
+function Page({ route, onSignedOut, recipeNotice, onRecipeSaved }: {
+  route: Route
+  onSignedOut: (notice: string) => void
+  // The new recipe form's message, shown once on the Receptek page it opens.
+  recipeNotice: string | null
+  onRecipeSaved: (notice: string) => void
+}) {
   const recipeId = cookingRecipeId(route)
   // key: another recipe is a new cooking screen with its own state.
   if (recipeId) return <CookingPage key={recipeId} recipeId={recipeId} onSignedOut={onSignedOut} />
-  return route === routes.recommendations ? <RecommendationsPage onSignedOut={onSignedOut} /> : <PantryPage onSignedOut={onSignedOut} />
+  if (route === routes.recommendations) return <RecommendationsPage onSignedOut={onSignedOut} />
+  if (route === routes.shopping) return <ShoppingListPage onSignedOut={onSignedOut} />
+  if (route === routes.recipes) return <RecipesPage notice={recipeNotice} onSignedOut={onSignedOut} />
+  if (route === routes.newRecipe) return <RecipeForm onSaved={onRecipeSaved} onSignedOut={onSignedOut} />
+  return <PantryPage onSignedOut={onSignedOut} />
 }
 
 export default function App() {
@@ -35,6 +48,13 @@ export default function App() {
   const route = useHashRoute()
   // Stable, so the pantry page does not reload its data whenever App renders.
   const signOut = useCallback((notice?: string) => setState({ screen: 'login', notice }), [])
+  const [recipeNotice, setRecipeNotice] = useState<string | null>(null)
+  // Shown once: leaving the Receptek page drops it.
+  const [noticeRoute, setNoticeRoute] = useState(route)
+  if (route !== noticeRoute) {
+    setNoticeRoute(route)
+    if (route !== routes.recipes) setRecipeNotice(null)
+  }
 
   useEffect(() => {
     let active = true
@@ -68,7 +88,15 @@ export default function App() {
     case 'pantry':
       return (
         <Layout me={state.me} route={route} onSignedOut={signOut}>
-          <Page route={route} onSignedOut={signOut} />
+          <Page
+            route={route}
+            onSignedOut={signOut}
+            recipeNotice={recipeNotice}
+            onRecipeSaved={(notice) => {
+              setRecipeNotice(notice)
+              window.location.hash = routes.recipes
+            }}
+          />
         </Layout>
       )
     default:

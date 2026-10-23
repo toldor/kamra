@@ -5,8 +5,6 @@ namespace KamraApp.Application.Cookings;
 
 public static class CookingErrors
 {
-    public static NotFoundException RecipeNotFound() => new("RECIPE_NOT_FOUND", "Ez a recept nem található.");
-
     public static ConflictException IdempotencyConflict() =>
         new("IDEMPOTENCY_CONFLICT", "Ezt a főzést már más adatokkal rögzítetted. Töltsd újra az oldalt, és kezdd újra.");
 }

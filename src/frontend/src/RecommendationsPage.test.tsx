@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { resetClientForTests } from './api/client'
@@ -14,6 +14,8 @@ function fakeBackend(routes: Record<string, Reply[]>) {
     const queue = routes[key]
     if (!queue) throw new Error(`Unexpected request: ${key}`)
     const reply = queue.length > 1 ? queue.shift()! : queue[0]
+    // status 0 = the request never reached the server (network error).
+    if (reply.status === 0) throw new TypeError('Failed to fetch')
     return new Response(reply.body === undefined ? null : JSON.stringify(reply.body), { status: reply.status })
   }))
   return calls
@@ -144,12 +146,14 @@ describe('recipe suggestions', () => {
     expect(screen.getByRole('article', { name: 'Rántotta' })).toBeTruthy()
   })
 
+  // N12 (T3): the final text of ux_flows, with a new recipe as the first next step.
   it('says so when nothing matches the pantry', async () => {
     backend([recommendations({})])
     render(<App />)
 
-    expect(await screen.findByText('A kamrád alapján most nem találtam receptet. Rögzíts további hozzávalókat, és újra megnézem.')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Készlet rögzítése' })).toBeTruthy()
+    expect(await screen.findByText('A kamrád alapján most nem találtam receptet. Vegyél fel saját receptet, vagy rögzíts további hozzávalókat.')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Új recept' }).getAttribute('href')).toBe('#/receptek/uj')
+    expect(screen.getByRole('link', { name: 'Bevásárlás rögzítése' }).getAttribute('href')).toBe('#/')
   })
 
   it('shows an error and loads again on retry', async () => {
@@ -163,5 +167,70 @@ describe('recipe suggestions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Újra' }))
 
     await waitFor(() => expect(screen.getByRole('article', { name: 'Lecsó' })).toBeTruthy())
+  })
+})
+
+describe('shortage to the shopping list', () => {
+  const addItem = 'POST /api/v1/shopping-list/items'
+  const rantotta = recipe('Rántotta', {
+    servings: 2,
+    shortages: [
+      { ingredientId: 'i-tojás', ingredientName: 'tojás', missing: 3, available: 0, required: 3, unit: 'db' },
+      { ingredientId: 'i-tejföl', ingredientName: 'tejföl', missing: 50, available: 150, required: 200, unit: 'g' },
+    ],
+  })
+  const row = { id: 'l-1', ingredientId: 'i-tojás', ingredientName: 'tojás', amount: { value: 3, unit: 'db' }, checked: false }
+  const sent = (calls: { url: string; init: RequestInit }[]) =>
+    calls.filter((c) => `${c.init.method} ${c.url}` === addItem).map((c) => JSON.parse(c.init.body as string))
+
+  it('puts every missing amount on the list with one click (P11)', async () => {
+    const calls = backend([recommendations({ almostMakeable: [rantotta] })], {
+      'GET /api/v1/auth/antiforgery': [{ status: 200, body: { requestToken: 'token-1' } }],
+      [addItem]: [{ status: 200, body: row }],
+    })
+    render(<App />)
+
+    const card = await screen.findByRole('article', { name: 'Rántotta' })
+    // The live region is in place before it speaks, so a screen reader announces the result.
+    const status = within(card).getByRole('status')
+    expect(status.textContent).toBe('')
+    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+
+    await waitFor(() => expect(status.textContent).toBe('Felvettem a listára: tojás 3 db, tejföl 50 g.'))
+    // The pressed button is gone, so the focus moves to the result.
+    expect(document.activeElement).toBe(status)
+    expect(within(card).getByRole('link', { name: 'Megnézem' }).getAttribute('href')).toBe('#/bevasarlolista')
+    expect(within(card).queryByRole('button', { name: 'Bevásárlólistára' })).toBeNull()
+    expect(sent(calls)).toEqual([
+      { ingredientId: 'i-tojás', amount: 3, unit: 'db' },
+      { ingredientId: 'i-tejföl', amount: 50, unit: 'g' },
+    ])
+  })
+
+  it('sends only what is still missing after a failed attempt (K1)', async () => {
+    const calls = backend([recommendations({ almostMakeable: [rantotta] })], {
+      'GET /api/v1/auth/antiforgery': [{ status: 200, body: { requestToken: 'token-1' } }],
+      [addItem]: [{ status: 200, body: row }, { status: 0 }, { status: 200, body: row }],
+    })
+    render(<App />)
+
+    const card = await screen.findByRole('article', { name: 'Rántotta' })
+    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+    expect((await within(card).findByText(/Nem sikerült kapcsolódni a szerverhez/)).getAttribute('role')).toBe('alert')
+    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+
+    expect(await within(card).findByText('Felvettem a listára: tojás 3 db, tejföl 50 g.')).toBeTruthy()
+    expect(sent(calls)).toEqual([
+      { ingredientId: 'i-tojás', amount: 3, unit: 'db' },
+      { ingredientId: 'i-tejföl', amount: 50, unit: 'g' },
+      { ingredientId: 'i-tejföl', amount: 50, unit: 'g' },
+    ])
+  })
+
+  it('offers the button only for almost makeable recipes', async () => {
+    backend([recommendations({ makeable: [recipe('Lecsó')], almostMakeable: [rantotta] })])
+    render(<App />)
+
+    expect(within(await screen.findByRole('article', { name: 'Lecsó' })).queryByRole('button', { name: 'Bevásárlólistára' })).toBeNull()
   })
 })

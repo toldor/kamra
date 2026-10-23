@@ -63,12 +63,16 @@ public class SeedDataTests
     }
 
     [Fact]
-    public void The_recipe_list_loads_the_five_recipes_on_known_ingredients()
+    public void The_recipe_list_loads_the_twenty_recipes_on_known_ingredients()
     {
         var ingredientIds = SeedData.Ingredients.Select(i => i.Id).ToHashSet();
 
-        SeedData.Recipes.Recipes.Select(r => r.SeedKey).Should()
-            .BeEquivalentTo("lecso", "turos-csusza", "palacsinta", "rantotta", "paprikas-krumpli");
+        // The first five (Oct 16 milestone) unchanged, so P1-P10 keep their data; fifteen added (O3, seed review).
+        SeedData.Recipes.Recipes.Select(r => r.SeedKey).Should().BeEquivalentTo(
+            "lecso", "turos-csusza", "palacsinta", "rantotta", "paprikas-krumpli",
+            "rakott-krumpli", "gulyasleves", "csirkepaprikas", "bolognai-spagetti", "rantott-csirkemell-rizzsel",
+            "zoldborsofozelek", "krumplifozelek", "sajtos-sonkas-teszta", "bableves", "rizibizi",
+            "tejbegriz", "gombapaprikas", "paradicsomleves", "toltott-paprika", "lencsefozelek");
         SeedData.Recipes.Recipes.Should().OnlyContain(r => r.Id.Version == 7 && r.HouseholdId == null && r.Servings > 0);
         SeedData.Recipes.Ingredients.Should().OnlyContain(i => ingredientIds.Contains(i.IngredientId) && i.Quantity > 0);
         SeedData.Recipes.Ingredients.Select(i => (i.RecipeId, i.IngredientId)).Should().OnlyHaveUniqueItems();
@@ -104,5 +108,25 @@ public class SeedDataTests
     public void Names_are_normalized_for_uniqueness()
     {
         Ingredient.Normalize("  Őrölt   Pirospaprika ").Should().Be("őrölt pirospaprika");
+    }
+
+    // scope_contract.md, 3. Korlátok / Adat: 20-40 recipes and about 150-250 ingredients.
+    [Fact]
+    public void The_starter_lists_are_within_the_committed_size()
+    {
+        SeedData.Recipes.Recipes.Count.Should().BeInRange(20, 40);
+        SeedData.Ingredients.Count.Should().BeInRange(150, 250);
+    }
+
+    // Every starter recipe can be matched and cooked: at least one non-staple ingredient, servings within the
+    // cooking limit (1-100), and a name of its own.
+    [Fact]
+    public void Every_starter_recipe_has_a_non_staple_ingredient_valid_servings_and_a_unique_name()
+    {
+        var staples = SeedData.Ingredients.Where(i => i.IsStaple).Select(i => i.Id).ToHashSet();
+
+        SeedData.Recipes.Recipes.Should().OnlyContain(r => r.Servings >= 1 && r.Servings <= 100
+            && SeedData.Recipes.Ingredients.Any(i => i.RecipeId == r.Id && !staples.Contains(i.IngredientId)));
+        SeedData.Recipes.Recipes.Select(r => Ingredient.Normalize(r.Name)).Should().OnlyHaveUniqueItems();
     }
 }

@@ -2,7 +2,7 @@
 
 A kód reviewjához és ellenőrzéséhez használt promptsablonok, verziózva, hogy a review megismételhető legyen (v1.2 5.3.9). A `<…>` helyekre a szakasz adatai kerülnek. A használat a [prompt_log.md](prompt_log.md) bejegyzéseiben, az ellenőrzött állítások a [verification_log.md](verification_log.md)-ben szerepelnek.
 
-Alapelv: aki a kódot írta, nem az reviewzza ([ai_manifest.md](ai_manifest.md) „Munkamódszer”). Az implementáló Claude Code, a független reviewer és ellenséges tesztelő az Antigravity (Gemini), a PR második reviewere a GitHub Copilot, a döntés a fejlesztőé.
+Alapelv: aki a kódot írta, nem az reviewzza ([ai_manifest.md](ai_manifest.md) „Munkamódszer”). Az implementáló Claude Code, a független reviewer és ellenséges tesztelő az Antigravity (2026-10-17-ig Gemini 3.1 Pro, azóta Claude Sonnet 4.6), a PR második reviewere (a Copilot-keret elfogyása óta) szintén az Antigravity, a döntés a fejlesztőé. A Claude Sonnet 4.6 az implementálóval azonos modellcsaládból való, ezért a függetlenség gyengébb: a reviewer állításait forrással vagy méréssel ellenőrzöm ([V-38](verification_log.md)).
 
 ## 1. Szakasz-review (Antigravity, a repo megnyitva)
 
@@ -58,7 +58,7 @@ Minden teszthez írd le egy mondatban, milyen támadást modellez, és mit várs
 Utána az implementálónak (Claude Code):
 
 ```text
-Itt a Gemini ellenséges tesztjei: [BEILLESZTVE]. Tedd be őket, futtasd le.
+Itt a reviewer ellenséges tesztjei: [BEILLESZTVE]. Tedd be őket, futtasd le.
 Mindegyikről: (1) érvényes-e a teszt (lehet, hogy a teszt a hibás); (2) ha érvényes és elbukik: diagnózis + minimális javítás jóváhagyás után;
 (3) ha érvénytelen: miért, és ne vedd fel. A teszteket ne gyengítsd. A végén javasolj V-bejegyzést.
 ```
@@ -81,4 +81,26 @@ Javíts ki, ha tévedek. A végén mondd meg, mit nézzek át.
 Itt a <Gemini/Copilot> reviewja: [BEILLESZTVE]. Válogasd szét: valós / részben valós / már benne van / téves / döntést igényel.
 Minden tényállítást ellenőrizz forrással (Microsoft Learn, a csomag forráskódja, NuGet/npm oldal). Javítani csak a jóváhagyásom után javíts.
 A reviewer nem engedélyezhet függőséget. Javasolj V-bejegyzést arra, ami ellenőrzött állítás volt.
+```
+
+## 6. Dolgozat-tartalmi review (Antigravity, a repo megnyitva)
+
+```text
+Szereped: független tartalmi reviewer egy BSc szakdolgozat fejezeteihez. NEM te írtad a szöveget.
+
+Tiltások:
+- Ne módosíts és ne hozz létre fájlt, csak olvass és válaszolj.
+- Ne fogalmazd át a szöveget; csak jelezd a hibát, és mondd meg, mi a helyes állítás.
+
+Bemenet: a dolgozat <fejezetei> (PDF) és a repo (<branch>, <commit>).
+
+Szempontok:
+1. Minden tényállítás (működés, szám, teszteredmény, döntés) egyezik-e a repóval? Add meg a forrást (fájl:sor vagy doksi-szakasz).
+2. Állít-e a szöveg olyat, ami nincs megvalósítva, vagy amit teszt nem igazol (scope_contract, capability_map, test_report)?
+3. Ábrák: van-e számuk, címük, szöveges hivatkozásuk és magyarázatuk; látszik-e rajtuk személyes adat?
+4. Érthető-e a szöveg önállóan, a repo ismerete nélkül?
+5. A külső források (statisztika, hasonló alkalmazások) hivatkozása pontos-e?
+
+Kimenet: táblázat, oszlopok: # | Hely (fejezet, oldal) | Megállapítás | Forrás a repóban | Súlyosság (Kritikus/Közepes/Alacsony) | Javaslat.
+Ha egy szempontnál nincs megállapításod, írd ki, hogy „nincs”.
 ```

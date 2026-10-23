@@ -27,6 +27,10 @@ _Avoid_: küszöb, riasztási szint
 A rendszer által felajánlott, még el nem fogadott bevásárlólista-tétel; csak a felhasználó elfogadásával kerül a bevásárlólistára.
 _Avoid_: automatikus bevásárlólista-tétel
 
+**Bevásárlólista-tétel**:
+A bevásárlólistán szereplő hozzávaló, opcionális mennyiséggel; egy hozzávaló egyszer szerepel, és az újabb felvétel mennyisége hozzáadódik. A kipipált tétel már megvett: újbóli felvételkor a pipa törlődik, és az új mennyiséggel indul újra.
+_Avoid_: kosárelem, bevásárlási tétel
+
 **Tételjavaslat**:
 Az AI által szabad szövegből kinyert, még nem végleges készlettétel, amely csak a felhasználó jóváhagyásával (vagy javításával) válik a készlet részévé.
 _Avoid_: parse eredmény, AI tétel
@@ -65,6 +69,10 @@ _Avoid_: audit log, history
 
 **Recept**:
 Mentett elkészítési leírás adagszámmal és hozzávalókkal (mennyiséggel és mértékegységgel); forrása az induló receptkészlet, a felhasználó kézi felvitele vagy egy jóváhagyott AI-receptötlet.
+
+**Archivált recept**:
+Olyan recept, amelyet egy háztartás kivett a saját ajánlásaiból; nem főzhető újra, a korábbi főzései megmaradnak. Az induló recept archiválása csak az adott háztartásra hat.
+_Avoid_: törölt recept
 
 **Szükséges mennyiség**:
 Főzésnél egy hozzávalóból a recept szerint kellő mennyiség, a megadott adagszámmal skálázva és kerekítve.

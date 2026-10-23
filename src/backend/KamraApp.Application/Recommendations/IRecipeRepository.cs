@@ -12,4 +12,5 @@ public interface IRecipeRepository
     Task<RecipeDetails?> FindAsync(Guid householdId, Guid recipeId, CancellationToken cancellationToken);
 }
 
-public sealed record RecipeDetails(RecipeCandidate Candidate, string Instructions);
+// Archived: the household has archived the recipe (M10); the repository still finds it for a repeated cooking (D-c).
+public sealed record RecipeDetails(RecipeCandidate Candidate, string Instructions, bool Archived = false);

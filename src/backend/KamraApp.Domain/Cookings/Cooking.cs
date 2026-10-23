@@ -76,6 +76,12 @@ public sealed class Cooking
         return (cooking, movements);
     }
 
+    // US-4: the cooking created a shopping suggestion for this ingredient; stored, so a repeated request gets the
+    // same answer (ADR-0008).
+    public void MarkSuggested(Guid ingredientId) =>
+        (_lines.SingleOrDefault(l => l.IngredientId == ingredientId)
+            ?? throw new ArgumentException("The cooking has no line for this ingredient.", nameof(ingredientId))).MarkSuggested();
+
     // ADR-0008: a repeated request is the same cooking only with the same recipe, servings and every used amount.
     public bool Matches(Guid recipeId, int servings, IReadOnlyDictionary<Guid, decimal> used) =>
         RecipeId == recipeId && Servings == servings && used.Count == _lines.Count
@@ -109,6 +115,11 @@ public sealed class CookingLine
     // This cooking used up the household's last stock of the ingredient ("Elfogyott"). Stored, so a repeated
     // request gets the same answer even after a later purchase (ADR-0008).
     public bool Depleted { get; private set; }
+
+    // US-4: the cooking made a shopping suggestion for the ingredient ("Felvettem a bevásárlójavaslatok közé: …").
+    public bool Suggested { get; private set; }
+
+    internal void MarkSuggested() => Suggested = true;
 
     internal static CookingLine Create(Guid cookingId, Guid ingredientId, decimal required, decimal used, bool depleted) =>
         new(cookingId, ingredientId, required, used, depleted);

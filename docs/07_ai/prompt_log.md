@@ -236,3 +236,72 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **Ellenőrzés:** a CI-futásokat magam követtem, az S5-ben a piros backend-jobot én jeleztem; a Gemini-reviewk után ellenőriztem a munkakönyvtárat – az S2-ben és az S3-ban a tiltás ellenére létrehozott fájlokat (`scratch.diff`, `diff.txt`) töröltem.
   - **Teszt-módosítások:** az AI által kért tesztpontosításokat (S2: `traceId`; S3: gombnév, `waitFor`; S5: hibaüzenet- és űrlapvárakozás, a D-a miatti tesztérték) egyenként jóváhagytam.
   - **PR-review:** a Copilot-kreditkeretem elfogyott, ezért a PR-review-t az Antigravity (Gemini 3.1 Pro) végezte a teljes ág-diffre. Négy megállapításából kettő valós (PR-1 üzenet, PR-3 szóközök), egy részben valós (PR-2 rendezés, [V-33](verification_log.md)), egy téves ([V-34](verification_log.md)); a javításokat az AI ajánlása szerint fogadtam el.
+
+### P-16 – Az okt. 22-i mérföldkő tervezése; T0 (scope és US-5 terv), T1 (bevásárlólista backendje), T4 (a lista bővítése)
+- **Dátum:** 2026-10-17
+- **Cél:** Az okt. 22-i mérföldkő (kurzus-kiírás: a fő folyamatok végig működnek, első dokumentált telepítés, a dolgozat 1–4. fejezete) implementációs és dokumentációs terve kérdésenként; a témavezető 4. levelének beépítése; a terv első szakaszai: a vállalás szűkítése és új ütemezése (T0), a bevásárlólista, a bevásárlójavaslatok és a minimumszint backendje (T1), az induló recept- és hozzávalólista bővítése (T4).
+- **Eszköz:** Claude Code (claude-opus-5-5) – kikérdezés, terv, mini-specek, piros tesztek és implementáció, elő-review (`/code-review` két külön subagenttel: kódolási szabályok és spec; `/security-review`), szétválogatás, doksiszövegek; Antigravity (**Claude Sonnet 4.6**, nem Gemini 3.1 Pro) – szakasz-review és ellenséges tesztek a T1-re.
+- **Prompt összefoglaló:** (1) Az átadó dokumentum 10 nyitott kérdése egyenként, opciókkal és indokolt ajánlással, majd a terv a `kamra_1_lepcso_terv.md` mintájára (`kamra_okt22_terv.md`). (2) A témavezető 4. levele után a terv és az okt. 16-i beszámoló módosítása. (3) A T0 mini-spec (M1–M15) és a doksiszövegek jóváhagyásra (`kamra_t0_szovegek.md`). (4) A T1 technikai mini-spec (D1–D7), piros tesztek, implementáció, elő-review, biztonsági review, külső review és ellenséges tesztek szétválogatása, docs (`kamra_t1_docs.md`). (5) A 15 recept és 121 hozzávaló tervezete átnézésre (`kamra_seed_atnezes.md`), majd beépítése (T4).
+- **AI javaslat összefoglaló:**
+  - **Tervezés (O1–O11, az eredeti ajánlások):** O1 a teljes dolgozat határideje a témavezető nov. 20-a, megerősítéssel a levélben; O2 két ág egymás után (`feature/us-5-shopping-list`, `docs/b2-deploy`); O3 a vállalás alsó határa (20 recept, kb. 150 hozzávaló), P11–P18; O4 teljes minimumszint minimális felülettel (P19); O5 saját recept szerkesztés nélkül, „Új hozzávaló” a választóból; O6 új WSL2-disztró okt. 22-re, másik gép dec. 4-re; O7 LaTeX a repóban (a fejlesztő kérdésére a Google Docs, a Claude Docs és a Word is mérlegelve, végül a Word ajánlva, követett változtatásokkal); O8 két UAT-kör, 3 résztvevő; O9 review a kockázat szerint; O10 egyetlen közös levél okt. 22-én; O11 minden nov. 13. előtt, előre rögzített vágási szabállyal.
+  - **A 4. levél után:** belső céldátum (nov. 13.) a témavezetői nov. 20. mellett; 4 fős kipróbálás; az 5. fejezet első része okt. 22-re (O12); új mini-spec pontok: M12 (miért került a javaslat a listára), M13 (mennyi), M14 (megszakadt művelet, mobil).
+  - **T0 mini-spec (M1–M15):** csak az *elfogyott* ok vált ki javaslatot (M6); minimumszint beállításakor azonnali javaslat (M1); feloldás a feltétel fölé kerüléskor (M3); **az egyidejű csökkentések write skew-ja (M4), amelyet a tervezés közben az AI vett észre, hozzávalónkénti advisory lockkal**; M2-ként először az összeadást javasolta kipipált sornál is (a fejlesztő kérdésére hibásnak bizonyult, javítva: újraindulás); M10-ként az induló recept archiválásának tiltását (a fejlesztő döntése: archiválható); M15 (nincs javaslat, ha a hozzávaló pipa nélkül a listán van) a P-példák összeállításakor derült ki.
+  - **T1:** D1 egyetlen mechanizmus (a zár) a nyers SQL upsert és a feltételes UPDATE helyett; D2–D7; a piros fázisban a migráció kimarad (D7). Implementáció közben: a nullázható `Unit?` elrontotta a közös OpenAPI-sémát → `{ value, unit }` (V-37); az ismételt elfogadás nem volt bájtra azonos (V-36). Az elő-review után D-R1 (elfogadás 204), D-R2 (a recept neve a javaslatban), D-R3 (a PUT megtartja a mennyiséget), az M15 a Domainbe, közös segédfüggvények, a tranzakció lezárása az ismétlés ágán, „javaslat a főzéssel egy tranzakcióban” (`xmin`) teszt. A `/security-review` nem talált sebezhetőséget.
+  - **Külső review (Claude Sonnet 4.6):** 18 megállapításból egy valós (nyitott minimumszint-javaslat törölt minimum mellett mennyiség nélkül), a „Kritikus” SQL-injekció és több további állítás téves (V-38, V-39); 8 ellenséges tesztből 7 érvényes és zöld, 1 érvénytelen (V-40).
+  - **T4:** 15 recept és 121 hozzávaló saját szöveggel; tervezési szempont, hogy egyik új recept se legyen „majdnem elkészíthető” a P1–P10 tesztkészletekhez képest; beépítés szkripttel a jóváhagyott táblázatból; additív `ExpandSeedData` migráció.
+  - **Az AI saját hibái:** a piros fázisban kimaradtak a use-case unit tesztek, és az Application-lefedettség 68,8%-ra esett (20 teszt az implementáció után, mutációval ellenőrizve); a `dotnet format` egy nem forduló fájlon 4 tesztet törölt, a tesztszámból derült ki (V-41); egy saját tesztben kétszer olvasta ki ugyanannak a válasznak a törzsét; egy mutáció (M8) rosszul volt megfogalmazva (rögzített idő mellett ekvivalens maradt), újrafuttatva; a seed-szkript első futása átformázta az `ingredients.json`-t (a diffből derült ki, visszaállítva); az első M2-ajánlás hibás volt.
+- **Érintett fájlok:** `src/backend` (Domain: `ShoppingList`, `Ingredients/IngredientMinimum`, `Quantities/Unit`, `Cookings/Cooking`; Application: `ShoppingList`, `Ingredients/SetIngredientMinimum*`, `ListIngredients`, `Pantry/AddPantryItem`, `UpdatePantryItem`, `Cookings/ConfirmCooking`, `Common/IIngredientLocks`; Infrastructure: `ShoppingListRepository`, `IngredientLocks`, `TransactionalSave`, `KamraDbContext`, migrációk `AddShoppingList`, `ExpandSeedData`, `Seed/*.json`; Api: `ShoppingList/*`, `IngredientsController`), `tests` (`ShoppingListTests`, `ShoppingListUseCaseTests`, `ShoppingListCommandTests`, `ShoppingFakes`, `ShoppingListApiTests`, `AdversarialShoppingListApiTests`, `SeedDataTests`, a meglévő fake-ek), `src/frontend/src/api/schema.d.ts`, `docs` (scope_contract, CONTEXT, AGENTS, README, capability_map, ux_flows, ADR-0008, data_model, api, error_handling, test_report, review_prompts, ai_manifest, verification_log V-35–V-43); a repón kívül: `kamra_okt22_terv.md`, `valasz_bilicki_03.md`, `kamra_t0_szovegek.md`, `kamra_t1_docs.md`, `kamra_seed_atnezes.md`, `kamra_gemini_t1.md`, `dolgozat_fejezetvazlat.md`.
+- **Mit változtattam / döntésem:** A tervet, a mini-speceket és minden doksiszöveget jóváhagyás után engedtem be; az ajánlásoktól ezekben tértem el:
+  - **O1 – határidő:** a kurzus-kiírás dátumait választottam a javasolt nov. 20. helyett; a témavezető 4. levele (amely megerősítette a nov. 20-at) után belső céldátumként tartottam meg a nov. 13-at, hogy legyen tartalék.
+  - **O7 – a dolgozat formátuma:** megkérdeztem, írhatunk-e Google Docsba, és hogy az AI tud-e Wordben szerkeszteni; a Wordet választottam, a `python-docx` telepítését engedélyeztem.
+  - **O8 – UAT:** 2 főt tudtam biztosítani, és magamat ajánlottam a harmadiknak; az AI a kiírás alapján ezt elvetette. A 4. levél után 4 fő lett (2 + 2 új).
+  - **O10 – levelek:** az okt. 16-i beszámolót külön, a terv után küldtem el, a 4. levélre válaszként, és az utolsó két bekezdést (a szűkítés határideje, a januári cél kérdése) kivettem.
+  - **M2 és M10:** az M2-nél rákérdeztem, miért adódna össze a kipipált sor mennyisége – az AI ajánlása hibás volt, javította; az M10-nél az induló recept archiválhatóságát választottam a tiltás helyett.
+  - **A review után (D-R1–R3):** az ajánlásokat elfogadtam (204, a recept neve, a megtartó PUT).
+  - **Seed:** a 15 receptet és a 121 hozzávalót átnéztem, és változtatás nélkül jóváhagytam.
+  - **Folyamat:** a T2-t új chatben folytatom; kértem, hogy a CI eredményét push után az AI ellenőrizze. A külső reviewt az Antigravityben Claude Sonnet 4.6-tal futtattam (nem Geminivel), ezért a függetlenség gyengébb; ezt a review_prompts és az ai_manifest rögzíti.
+
+### P-17 – T2: a bevásárlólista felülete, összekötés a recepttel és a főzéssel, R1
+- **Dátum:** 2026-10-18
+- **Cél:** A US-5 felülete; a „Bevásárlólistára” a receptnél; a hiány a listára és az összegző mondat a főzésnél; a közben fogyott készlet kiemelése (R1).
+- **Eszköz:** Claude Code (claude-opus-5-5); review: Claude Code `/code-review` (két ügynök, Claude Opus 5.5).
+- **Prompt összefoglaló:** „Folytatjuk… az ALLAPOT.md Következő lépése szerint” → mini-spec jóváhagyásra → „A, a többi is jóváhagyva” → piros tesztek → „mehet az implementáció” → review → javítások jóváhagyással.
+- **AI javaslat (eredeti):**
+  - **Lelet:** a recept hiánysorában nincs `ingredientId`, tömeges felvétel nincs.
+  - **K1:** A) azonosító a hiánysorba és hiányonként egy kérés, részleges hibánál csak a maradék (ajánlott); B) tömeges végpont; C) névalapú kikeresés.
+  - **K2–K13:** felépítés, szövegek, R1.
+  - **Tesztek:** a spec 15 Vitest-tesztet írt; 23 lett, mert több esetet külön tesztre bontottam.
+  - **Implementáció:** vezérelt jelölőnégyzettel; a review után 7 javítás és 3 új szöveg.
+- **Érintett fájlok:**
+  - backend: `Domain/Recommendations/Recommender.cs`, `Application/Recommendations/GetRecommendations.cs`, `openapi.json`;
+  - frontend: `ShoppingListPage.tsx`, `ShortageToList.tsx`, `IngredientPicker.tsx`, `CookingPage.tsx`, `RecommendationsPage.tsx`, `PantryItemForm.tsx`, `App.tsx`, `Layout.tsx`, `useHashRoute.ts`, `format.ts`, `fieldErrors.tsx`, `api/client.ts`, `api/messages.ts`, `api/schema.d.ts`, `index.css`;
+  - tesztek: `ShoppingListPage.test.tsx`, `RecommendationsPage.test.tsx`, `CookingPage.test.tsx`, `RecommenderTests.cs`, `ShoppingListApiTests.cs`, `tests/e2e/shopping.spec.ts`;
+  - docs: ux_flows, api, capability_map, test_report, verification_log V-44–V-45, `docs/assets/shopping-360.png`;
+  - a repón kívül: `t2_minispec.md`, `t2_review.md`, `t2_docs.md`, a terv T2 szakasza.
+- **Mit változtattam / döntésem:**
+  - **K1:** rákérdeztem, hogy az A opcióval megmarad-e a terv szerinti működés; az AI kimutatta, hogy a scope_contract „egy kattintással”-t kér, a terv „egy kéréssel”-e pontatlan volt. Az A-t választottam.
+  - **K2–K13 és a szövegek:** változtatás nélkül jóváhagytam.
+  - **A review után:** a javasolt javításokat és a három új szöveget elfogadtam.
+
+### P-18 – T3: saját recept, archiválás, saját hozzávaló
+- **Dátum:** 2026-10-23
+- **Cél:** Saját recept saját hozzávalóval, bármely recept archiválása a saját háztartásban, az archivált recept főzésének tiltása (M8, D-c); a felület a piszkozattal (M14).
+- **Eszköz:** Claude Code (claude-opus-5-5); review: Claude Code `/code-review` (két ügynök, Claude Opus 5.5) és `/security-review`; külső review és ellenséges teszt: Antigravity (Claude Sonnet 4.6).
+- **Prompt összefoglaló:** „hozz képbe, hogyan állunk” → „menjen minden az eddigi terv szerint” → mini-spec → „Jóváhagyom” → piros tesztek → a főzésoldal linkjéről döntés („A”) → implementáció → két review → javítások („A”) → külső review és ellenséges teszt → szétválogatás („A”).
+- **AI javaslat (eredeti):**
+  - **Ütemezés:** a lekésett okt. 20-i döntési pont után a T3 halasztását javasoltam, a kötelező részek (telepítés, dolgozat) előre vételével.
+  - **Mini-spec:** N1–N12; a lelet szerint a `GET /recipes/{id}` fölösleges, a D-c már teljesül, a névütközést a use case-nek kell ellenőriznie.
+  - **Tervezet:** két új port a meglévő interfészek bővítése helyett; az archiválás nyers SQL `ON CONFLICT`-tal; a megerősítés a böngésző ablakával.
+  - **A főzésoldal linkje:** a spec új szöveget írt, a meglévőt nem vettem észre.
+- **Érintett fájlok:**
+  - backend: `Domain/Recipes/Recipe.cs`, `Domain/Ingredients/Ingredient.cs`, `Application/Recipes/*` (új), `Application/Ingredients/CreateIngredient*.cs`, `IOwnIngredientRepository.cs` (új), `Application/Cookings/PreviewCooking.cs`, `ConfirmCooking.cs`, `CookingErrors.cs`, `Recommendations/IRecipeRepository.cs`, `Infrastructure/Persistence/RecipeRepository.cs`, `IngredientRepository.cs`, `KamraDbContext.cs`, `DependencyInjection.cs`, migráció `AddRecipeArchives`, `Api/Recipes/RecipesController.cs` (új), `Api/Pantry/IngredientsController.cs`, `Program.cs`, `openapi.json`;
+  - frontend: `RecipesPage.tsx`, `RecipeForm.tsx` (új), `IngredientPicker.tsx`, `CookingPage.tsx`, `RecommendationsPage.tsx`, `PantryPage.tsx`, `PantryItemForm.tsx`, `App.tsx`, `Layout.tsx`, `useHashRoute.ts`, `fieldErrors.tsx`, `api/client.ts`, `api/schema.d.ts`, `index.css`, `package-lock.json`;
+  - tesztek: `OwnRecipeTests.cs`, `CookingUseCaseTests.cs`, `RecipesApiTests.cs`, `AdversarialRecipesAndCookingTests.cs`, `RecipesPage.test.tsx`, `CookingPage.test.tsx`, `RecommendationsPage.test.tsx`, `tests/e2e/recipes.spec.ts`;
+  - docs: ux_flows, api, error_handling, data_model, ADR-0003, capability_map, test_report, verification_log V-46–V-51, `docs/assets/recipes-360.png`, `recipes-form-360.png`;
+  - a repón kívül: `t3_minispec.md`, `t3_review.md`, `t3_review_promptok.md`, `t3_docs.md`.
+- **Mit változtattam / döntésem:**
+  - **Ütemezés:** a halasztást elvetettem: „menjen minden az eddigi terv szerint”, a levél egy nappal később mehet.
+  - **Mini-spec:** változtatás nélkül jóváhagytam.
+  - **A főzésoldal linkje:** a meglévő „Vissza a receptekhez” maradt.
+  - **A review és a külső review után:** a javasolt javításokat, a két port megtartását és a „Válassz…” szöveget elfogadtam; az ellenséges tesztek a három tesztkód-javítással bekerültek.
+  - **A Vite frissítése:** jóváhagytam a lockfile-frissítést.
