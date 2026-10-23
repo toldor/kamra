@@ -1,6 +1,6 @@
 # Hibakezelés
 
-Minden API hiba RFC 7807 `ProblemDetails` formátumban érkezik, stabil `code` mezővel.
+Minden API hiba RFC 9457 `ProblemDetails` formátumban érkezik, stabil `code` mezővel.
 Stack trace soha nem kerül a kliensnek.
 A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md).
 

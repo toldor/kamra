@@ -455,3 +455,35 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Forrás: a csomagok saját metaadata a gépen (a NuGet-gyorsítótár `nuspec` fájljai, a `node_modules/*/package.json`), egy szkripttel kiolvasva, nem emlékezetből.
 - **Eredmény:** **PASS.** MIT, Apache-2.0 és PostgreSQL License. A FluentAssertions 8-as verziója kereskedelmi licencű; a projekt a 7.2.2-n (Apache-2.0) marad, és a `Directory.Packages.props` `[7.2.2,8.0)` tartománya ezt rögzíti. Közben kiderült, hogy a helyi `node_modules` a Vite 8.3.2-t tartalmazta a lockfile 8.3.5-je helyett; `npm ci`-vel szinkronizálva (a CI a lockfile-ból telepít, ott helyes volt).
 - **Következtetés:** A licencet a csomag metaadatából kell venni, nem a csomag nevéből vagy emlékezetből; a FluentAssertions példája mutatja, hogy a főverzió váltása licencet is válthat.
+
+### V-54 – A python-docx-szel írt követett változtatások és mezők a Wordben működnek
+- **Dátum:** 2026-10-23
+- **Állítás:** A python-docx 1.2.0 egy meglévő Word-fájlba írhat követett változtatásként szöveget, ábrát és táblázatot. A Word ezeket „Claude” szerzőjűként mutatja, egyenként elfogadhatók. A tartalomjegyzék, a fejezetenként számozott feliratok és a kereszthivatkozások (TOC, STYLEREF + SEQ, REF mezők) a megnyitáskor frissülnek. A `git diff` a `docx2txt.py`-jal a szövegkülönbséget mutatja.
+- **Kockázat:** Közepes. Ha nem így van, a fejlesztő változtatásai nem különíthetők el az MI-szövegtől, holott ez kell az MI-használat dokumentálásához, és a végleges változatban elcsúszhat a számozás.
+- **Ellenőrzési módszer:** Próba, két lépésben.
+  1. Egy próbafájl (`word_proba.docx`), amelyet a fejlesztő a saját Wordjében nyitott meg.
+  2. A valódi dokumentum: a fejlesztő megnyitotta, frissítette a mezőket, és a Véleményezés lapon átnézte. Utána egy szkript megszámolta a `document.xml` követett változtatásait, és a `docx2txt.py` összevetette a két szöveget.
+- **Eredmény:** **PASS.** A változtatások elfogadhatók voltak, a commitolt fájlban egy sem maradt. A diff pontosan az öt átírt helyet mutatja (P-20). Mellékeredmény: a REF mező előtti névelő sima szöveg, ezért két helyen hibás maradt („Az 3.1. táblázat”).
+- **Következtetés:** A folyamat a további fejezetekhez is használható. Ha a fejezetek száma változik, a hivatkozás előtti névelőt kézzel kell ellenőrizni: „az 1.x” és „az 5.x”, minden más szám előtt „a”.
+
+### V-55 – A dolgozat számadatai és szabványhivatkozásai
+- **Dátum:** 2026-10-23
+- **Állítás:** Az 1–3. fejezet állításai:
+  - egy magyar háztartásban egy fő évente 60,7 kg élelmiszerhulladékot termel, ebből 20,8 kg elkerülhető [1];
+  - az EU-ban 2023-ban a háztartások lakosonként 69 kg élelmiszert dobtak ki [2];
+  - a C4-modell Simon Brown nevéhez fűződik [13];
+  - az ADR-formát Michael Nygard írta le 2011. november 15-én [14];
+  - a NIST SP 800-63B legalább 15 karakteres jelszót ír elő, összetételi szabály nélkül [16];
+  - a FoodKeeper-adatok CC0 licencűek [18].
+- **Kockázat:** Magas. Egy hibás szám vagy szabványhivatkozás a bírálatban a dolgozat hitelét rontja, és ezeket az MI írta le.
+- **Ellenőrzési módszer:** Forrásellenőrzés. 2026. október 23-án minden állítást az elsődleges forrás megnyitásával ellenőriztem: a NÉBIH 2026. június 29-i cikke, az Eurostat 2025. október 16-i híre, a c4model.com, a Cognitect blogja, a NIST 800-63-4 oldala és a data.gov FoodKeeper-oldala. A megtekintés dátuma az irodalomjegyzékbe is bekerült.
+- **Eredmény:** **PASS** a felsorolt állításokra; az RFC-hivatkozásról lásd a V-56-ot. A [3]–[12] forrásokat (az alkalmazások saját oldalai) most nem ellenőriztem újra; az 1.1. táblázat a 2026. szeptember 26-i ellenőrzésen alapul (V-01).
+- **Következtetés:** A leadás előtt a [3]–[12] forrást újra meg kell nézni, mert az alkalmazások funkciói változnak, és frissíteni kell a megtekintés dátumát.
+
+### V-56 – A hibamodell szabványa: RFC 7807 helyett RFC 9457
+- **Dátum:** 2026-10-23
+- **Állítás:** Az API hibaformája az RFC 7807 szerinti ProblemDetails. Így szerepel az ADR-0007-ben, az `api.md`-ben, az `error_handling.md`-ben, a `00_index.md`-ben és a changelog 0.1.0-s részében.
+- **Kockázat:** Alacsony. A formátum nem változott, csak a hivatkozott dokumentum elavult; a dolgozatban viszont egy visszavont RFC hivatkozása pontatlanság.
+- **Ellenőrzési módszer:** Forrásellenőrzés az RFC Editor oldalán (rfc-editor.org/rfc/rfc9457), a dolgozat [17] hivatkozásának írásakor.
+- **Eredmény:** **FAIL.** Az RFC 9457 (2023. július) felváltja („obsoletes”) az RFC 7807-et; a `type`, `title`, `status`, `detail` és `instance` mező változatlan maradt, így a kód helyes, csak a hivatkozás elavult.
+- **Következtetés:** A dolgozat a 9457-et hivatkozza. A T7-ben az ADR-0007, az `api.md`, az `error_handling.md` és a `00_index.md` hivatkozása az RFC 9457-re változik. A changelog korábbi bejegyzései történeti szövegként változatlanok maradnak.
