@@ -25,8 +25,8 @@ Más nem kell: a .NET és a Node.js a build-konténerben fut.
    (Egy adott kiadás: `git checkout v0.3.0`.)
 2. Konfiguráció: `cp .env.example .env` (Windows PowerShell: `Copy-Item .env.example .env`). Helyi kipróbáláshoz a helykitöltő értékek elegendők; más környezetben a `POSTGRES_PASSWORD`-ot cseréld le, és a `ConnectionStrings__Default`-ban is. A `.env` soha nem kerül a repóba.
 3. Build és indítás: `docker compose up --build -d`
-   A sorrend: `db` → `migrator` (EF Core-migrációk, egyszer fut le, utána kilép) → `api`. Az első build az image-ek letöltésével tiszta gépen kb. 1,5 perc volt a klóntól a `/health`-ig ([MT-02](../04_quality/manual_tests.md)); lassabb hálózaton néhány perc.
-4. Állapot: `docker compose ps` – a `db` és az `api` fut, a `migrator` `Exited (0)` állapotú.
+   A sorrend: `db` → `migrator` (EF Core-migrációk, egyszer fut le, utána kilép) → `api`. Az első build az image-ek letöltésével tiszta gépen kb. 1,5 perc volt a klóntól a `/health`-ig ([MT-02](../04_quality/manual_tests.md)); lassabb hálózaton néhány perc. Az első build közben a migrációs bundle lépése (`Building bundle...`) lassú hálózaton percekig nem ír ki semmit (MT-03: kb. 4,5 perc); ne szakítsd meg.
+4. Állapot: `docker compose ps -a` – a `db` és az `api` fut, a `migrator` `Exited (0)` állapotú.
 
 ## Ellenőrzés
 
@@ -64,7 +64,9 @@ Ha egy frissítés után az alkalmazás nem indul, vagy hibásan működik:
 1. Vissza az előző kiadásra: `git checkout <előző tag>` és `docker compose up --build -d`. A migrációk eddig csak hozzáadtak (táblát, oszlopot, seed-sort), ezért a régi kód az új sémán is fut.
 2. Ha a frissítés adatot rontott el, vagy a régi kód mégsem fut az új sémán: állítsd vissza a frissítés előtti mentést (lásd „Mentés és visszaállítás”), utána az 1. lépés.
 
-Kipróbálás: a `v0.3.0` kiadás után, visszaállás a `v0.2.0`-ra és vissza ([manual_tests.md](../04_quality/manual_tests.md), MT-04, tervezett).
+Kipróbálva 2026-10-25-én: `v0.3.0` → `v0.2.0` → `v0.3.0`, adatvesztés nélkül ([manual_tests.md](../04_quality/manual_tests.md), MT-04). A `v0.2.0` alatt az archivált receptek újra látszanak, és nincs bevásárlólista-oldal, mert ezek a `v0.3.0`-ban jöttek; az adatok megmaradnak, és a visszatérés után újra működnek.
+
+**A `v0.3.0` előtti kiadásokban** az adatbázis portja minden hálózati címre kötött (`0.0.0.0:5432`, MT-04, E3). Ha a `.env`-ben a példajelszó van, a visszaállás idejére cseréld le, vagy ne legyen a gép megosztott hálózaton.
 
 ## Incidensek
 
@@ -72,7 +74,7 @@ Kipróbálás: a `v0.3.0` kiadás után, visszaállás a `v0.2.0`-ra és vissza 
 
 - **Tünet:** a felhasználó „Váratlan hiba történt. Próbáld újra később.” üzenetet lát, vagy a lap nem töltődik be; a `/health` nem `Healthy`.
 - **Gyors diagnózis:**
-  1. `docker compose ps` – fut-e az `api` és a `db`? A `migrator` `Exited (0)`?
+  1. `docker compose ps -a` – fut-e az `api` és a `db`? A `migrator` `Exited (0)`?
   2. `curl http://localhost:8080/health` – 503 `Unhealthy`: az adatbázis nem érhető el (2. incidens).
   3. `docker compose logs --tail 100 api` – az `Error` szintű sorok és a `correlationId`; egy felhasználói hibához: `docker compose logs api | grep <correlationId>`.
   4. Ha az `api` nem indult el: `docker compose logs migrator` – a sikertelen migráció megállítja az indulást.
