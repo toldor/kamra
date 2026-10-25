@@ -387,7 +387,7 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
 - **Dátum:** 2026-10-24 – 2026-10-25
 - **Cél:** Az UAT 1. köre (okt. 26.) előtt a fejlesztő végigpróbálja az öt forgatókönyvet a `v0.3.0`-n (MT-03), és kipróbálja a visszaállást a runbook szerint (MT-04).
 - **Eszköz:** Claude Code (claude-opus-5-5); az automatikus akadálymentességi ellenőrzéshez a tesztek Playwright-Chromiuma. Külső review nem volt: a változás csak dokumentáció.
-- **Prompt összefoglaló:** „Folytatjuk … a »Következő lépés« szerint haladj” → „A, jóváhagyom” → „mielőtt nekiállok … ellenőrizd át, hogy biztosan nem lesz-e valami probléma, pl. elveszik a v0.3.0” → „egy ideig leállt … nyomtam egy ctrl c-t” → „ezek alapján jó a migrator is?” → „írd be te a táblázatba a verziókat” → „megcsináltam az S1–S5-t … a felolvasót csak az S1-nél néztem, a többinél te ellenőrizd” → „A, mind sikerült, eltérés nincs” → „semmit nem mondott, elhallgatott” → „A, nekiállok az MT-04-nek” → „megcsináltam a takarításig, jók voltak az elvárt dolgok” → „jóváhagyom, indíthatom akkor a takarítást?” (a kimenetekkel) → „A, eddig jó a takarítás?” → „hozd létre te az ágat”.
+- **Prompt összefoglaló:** „Folytatjuk … a »Következő lépés« szerint haladj” → „A, jóváhagyom” → „mielőtt nekiállok … ellenőrizd át, hogy biztosan nem lesz-e valami probléma, pl. elveszik a v0.3.0” → „egy ideig leállt … nyomtam egy ctrl c-t” → „ezek alapján jó a migrator is?” → „írd be te a táblázatba a verziókat” → „megcsináltam az S1–S5-t … a felolvasót csak az S1-nél néztem, a többinél te ellenőrizd” → „A, mind sikerült, eltérés nincs” → „semmit nem mondott, elhallgatott” → „A, nekiállok az MT-04-nek” → „megcsináltam a takarításig, jók voltak az elvárt dolgok” → „jóváhagyom, indíthatom akkor a takarítást?” (a kimenetekkel) → „A, eddig jó a takarítás?” → „hozd létre te az ágat” → „pusholtam … de a CI rajta piros (#73)” → „A”.
 - **AI javaslat (eredeti):**
   - **Előzetes ellenőrzés:** a `v0.2.0` → `v0.3.0` migrációk csak hozzáadnak, a `v0.2.0` háztartásra szűr, két várt eltérés ([V-57](verification_log.md)); a mentési parancs bash-szintaxis, ezért Git Bash.
   - **Terv:** külön klón a `v0.3.0`-n, az MT-03 adataira épülő MT-04; az 1. kérdés: a parancsokat a fejlesztő futtatja (ajánlott) vagy a Claude Code.
@@ -396,8 +396,10 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **Az elakadt build:** nem fagyás volt; a bundle-lépés 273,7 mp alatt kimenet nélkül elkészült (a Claude Code egyszer külön lefuttatta). A `docker compose ps` nem mutatja a kilépett migrátort; helyesen `ps -a` (a listában javítva, a runbookba javaslat).
   - **Akadálymentesség:** az S2–S5 felolvasására három opció (automatikus ellenőrzés – ajánlott, a fejlesztő Narrátorral, csak az S1); az eredmény két lelet (L1, L2, [V-59](verification_log.md)). A javítás idejére két opció: az UAT után, a nov. 13-i változatban (ajánlott), vagy most egy `v0.3.1`-gyel.
   - **MT-04:** a fejlesztő kimenetei alapján PASS, mind a 10 sorszám egyezik mindhárom állapotban (a `v0.2.0`-s futást a Docker build-előzményei is igazolják, a `2deb55e`-ből). A kimenetekből egy új megfigyelés: a `v0.2.0` alatt az adatbázis portja `0.0.0.0`-ra kötött (E3); javaslat egy runbook-figyelmeztetésre.
+  - **A piros CI (#73):** nem a doksi okozta; új advisory az `undici`-ra (fejlesztői függőség). Három opció: `npm audit fix` ezen az ágon (ajánlott), külön ág, vagy a dependabot PR #21 előbb ([V-60](verification_log.md)).
 - **Érintett fájlok:**
-  - docs: `04_quality/manual_tests.md`, `05_security_ops/deploy_runbook.md`, `00_index.md`, `07_ai/verification_log.md` (V-57–V-59), `07_ai/prompt_log.md` (P-21, P-22);
+  - docs: `04_quality/manual_tests.md`, `05_security_ops/deploy_runbook.md`, `00_index.md`, `07_ai/verification_log.md` (V-57–V-60), `07_ai/prompt_log.md` (P-21, P-22);
+  - build: `src/frontend/package-lock.json` (`undici` 7.30.0 → 7.30.1);
   - a repón kívül: `04_munkaanyagok\nov06\mt03_mt04_lista.md`, `mt03_mt04_jegyzokonyv.md`; az ellenőrző szkript a scratchpadben (nem kerül a repóba).
 - **Mit változtattam / döntésem:**
   - **A parancsok:** az MT-04 parancsait én futtattam (1. kérdés, A).
@@ -405,4 +407,5 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **Az S2–S5 felolvasása:** automatikus ellenőrzés (A); az S1-et én hallgattam meg a Narrátorral.
   - **Az L1 és az L2:** az UAT 1. köre után, a nov. 13-i változatban javul (A).
   - **Az E3:** megfigyelésként a jegyzőkönyvbe, és figyelmeztetés a runbookba (A).
+  - **Az `undici`:** `npm audit fix` ezen az ágon, külön commitként (A).
   - **A szöveg:** változtatás nélkül jóváhagytam.

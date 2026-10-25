@@ -511,3 +511,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Az S1-nél a fejlesztő a Narrátorral. Az S2–S5-nél a Claude Code egy eldobható Playwright-szkripttel (a tesztek Chromiuma, a repón kívül) a `kamra-mt` stacken, külön fiókkal: egy MutationObserver rögzítette, hogy az élő régió (`role="status"`, `role="alert"`, `aria-live`) üresen került-e a DOM-ba, és a szöveg utána került-e bele; mellé a `document.activeElement`. Korlát: ez a felolvasás feltételét méri, nem a felolvasást.
 - **Eredmény:** **PASS** a V-45 és a V-47 pontjain (S3, S4, S5), és a többi vizsgált ponton is, két kivétellel. **Új lelet: L1** – a készlettétel mentésekor a letiltott gomb elveszíti a fókuszt, és üzenet sincs (a Narrátor elhallgat); ugyanaz a hibaosztály, mint a V-45 első pontja, de ezt a helyet a review nem találta meg. **L2** – a bevásárlójavaslat értesítése nincs élő régióban.
 - **Következtetés:** Az L1 és az L2 a nov. 13-i változatban javul, teszttel. A javítás után a Narrátorral az S1–S5-öt a fejlesztő is meghallgatja.
+
+### V-60 – Új npm-advisory a fejlesztői függőségben (`undici`)
+- **Dátum:** 2026-10-25
+- **Állítás:** A CI `npm audit --audit-level=high` lépése szerint az `undici` 7.30.0 három „high” sérülékenységet tartalmaz (GHSA-4qv8-2p9j-2685, GHSA-f72v-6w45-q472, GHSA-xjj6-f33q-929c). A Claude Code szerint a csomag csak fejlesztői (a `jsdom` húzza be a Vitesthez), és a 7.30.1 a `jsdom` verziótartományán belül javítja.
+- **Kockázat:** Alacsony. A kiadott alkalmazásba nem kerül (`npm audit --omit=dev`: 0); a CI viszont minden ágon piros.
+- **Ellenőrzési módszer:** `npm ls undici`, `npm audit --omit=dev`, az advisory adatai a GitHub Advisory API-ból (közzétéve 2026-10-23 22:13 UTC, javítva a 7.30.1-ben), `npm audit fix` után a frontend-kapuk helyben.
+- **Eredmény:** **PASS.** A lockfile-ban csak az `undici` változott; az audit 0, a lint és a build zöld. A Vitest 12 futásból egyszer 1 tesztet bukott (az első futás az `npm ci` után; a teszt nem azonosítva), a többi 11 futás 91/91.
+- **Következtetés:** A dependabot PR #21 (`jsdom` 30) külön átnézést kap. Ha a Vitest-bukás a CI-ban is előjön, a tesztet azonosítjuk és stabilizáljuk.
