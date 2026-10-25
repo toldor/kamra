@@ -354,3 +354,55 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **A feladatkiírás:** üres hely marad, amíg a témavezető meg nem fogalmazza.
   - **Az 1–4. fejezet:** minden változtatást elfogadtam, öt helyen átírtam a szöveget: pontosabb megfogalmazás („egy háztartás”, „valóban egyszerűbbé” az „először teszi olcsóvá” helyett), rövidebb táblázatcella, és töröltem a munkaórát, a vágási szabályt és a „jelenlegi változatában bemutatott” mellékmondatot. A nagyobb átdolgozást később végzem.
   - **Külső review:** a tartalmi review (Gemini, a review_prompts 6. sablonja) a nagyobb átdolgozásom után, a novemberi változat előtt lesz; amit úgyis átírok, azt most fölösleges reviewztatni.
+
+### P-21 – T7: a 0.3.0-s kiadás és a levél a témavezetőnek
+- **Dátum:** 2026-10-23 – 2026-10-24
+- **Cél:** Az okt. 22-i mérföldkő lezárása. A kiadás doksija (changelog, a hibamodell szabványhivatkozása, capability_map, test_report, README), a `develop` → `main` merge és a `v0.3.0` tag; a levél a témavezetőnek az okt. 20-i visszajelzéssel és az okt. 22-i csomaggal együtt.
+- **Eszköz:** Claude Code (claude-opus-5-5). Külső review nem volt: a PR-ok csak doksit tartalmaztak, a kiadott kód a T1-ben és a T3-ban kapott reviewt.
+- **Prompt összefoglaló:** „commitoltam, mehet a T7” → „jóváhagyom, mehet” → „pusholtam, megnyitottam a PR-t” → „mergeltem, megnyitottam a kiadási PR-t, beleírtam az emailbe, exportáltam” → „mergeltem, a tag fent van, commitoltam”.
+- **AI javaslat (eredeti):**
+  - **Ellenőrzések a tervezet előtt:**
+    - mind a 25 OpenAPI-végpont szerepel az `api.md`-ben, mind a 7 migráció a `data_model.md`-ben, és nincs törött relatív link;
+    - a diffben nincs titok vagy személyes adat (csak a tesztek `example.com`-os címei);
+    - az MT-02 (`7b6a484`) óta a `src` és a `tests` változatlan, csak a `docker-compose.yml` port-kötése változott.
+  - **Lelet:** a `v0.2.0` tag a `develop` egy commitján volt, a `main` a `v0.1.0`-n állt, holott a runbook szerint a kiadás a `main`-en van. A mostani merge után a `v0.2.0` is a `main` történetében van, így az MT-04 visszaállása működik.
+  - **Doksi:** changelog 0.3.0; RFC 7807 → 9457 négy doksiban, az ADR-0007-ben pontosító sorral ([V-56](verification_log.md)); CAP-10 a runbookkal (*Partial* marad, mert metrikák nincsenek); a test_report a `develop` zöld CI-futásával; README: az 1. lépcső kész. A changelog dátuma 2026-10-24, mert a tag éjfél után készült.
+  - **A levél:**
+    - egy mondat a csúszásról;
+    - válasz a témavezető fő kérdésére: mi történik az elfogadott és az elutasított javaslattal, ha változik a készlet. A kódból (`SuggestionRules.cs`) és a P11–P20 példákból ellenőriztem;
+    - a nov. 6-i lépés tarthatósága, három kérdés.
+  - **Saját pontatlanság a levéltervezetben:** az egyidejű esetre „öt párhuzamos kérést” írtam. A teszt két párhuzamos kérést futtat, ötször ismételve; a küldés előtt javítva.
+  - **A PDF:** a dolgozatban még benne van a két névelőhiba („Az 3.1. táblázat”), ezt jeleztem.
+- **Érintett fájlok:**
+  - docs: `06_release/changelog.md`, `02_architecture/adr/0007-rest-api-hibamodell.md`, `03_design/api.md`, `03_design/error_handling.md`, `00_index.md`, `01_product/capability_map.md`, `04_quality/test_report.md`, `README.md`;
+  - git: PR #18 (`docs/thesis-okt22` → `develop`), PR #19 (`develop` → `main`), `v0.3.0` annotált tag a `main` merge-commitján (`ad2d93a`), a `main` CI-ja zöld;
+  - a repón kívül: `t7_release.md`, `level_okt22.md`, `t7_p21.md`; `00_dolgozat` (mezőfrissítés); `kamra_dolgozat_v1_2.pdf`.
+- **Mit változtattam / döntésem:**
+  - **A kiadás doksija:** változtatás nélkül jóváhagytam.
+  - **Merge és tag:** a két PR-t zöld CI után mergeltem, a kiadásit merge committal; a `v0.3.0` taget én tettem fel.
+  - **A levél:** a saját kipróbálásról szóló mondatot én írtam („Gördülékeny volt a telepítés.”), a dolgozatot PDF-be exportáltam, a levél első mondatát átírtam, és a levelet 2026-10-24-én elküldtem.
+  - **A névelőhibák:** később javítom.
+
+### P-22 – MT-03 és MT-04: az UAT-forgatókönyvek és a visszaállás kipróbálása
+- **Dátum:** 2026-10-24 – 2026-10-25
+- **Cél:** Az UAT 1. köre (okt. 26.) előtt a fejlesztő végigpróbálja az öt forgatókönyvet a `v0.3.0`-n (MT-03), és kipróbálja a visszaállást a runbook szerint (MT-04).
+- **Eszköz:** Claude Code (claude-opus-5-5); az automatikus akadálymentességi ellenőrzéshez a tesztek Playwright-Chromiuma. Külső review nem volt: a változás csak dokumentáció.
+- **Prompt összefoglaló:** „Folytatjuk … a »Következő lépés« szerint haladj” → „A, jóváhagyom” → „mielőtt nekiállok … ellenőrizd át, hogy biztosan nem lesz-e valami probléma, pl. elveszik a v0.3.0” → „egy ideig leállt … nyomtam egy ctrl c-t” → „ezek alapján jó a migrator is?” → „írd be te a táblázatba a verziókat” → „megcsináltam az S1–S5-t … a felolvasót csak az S1-nél néztem, a többinél te ellenőrizd” → „A, mind sikerült, eltérés nincs” → „semmit nem mondott, elhallgatott” → „A, nekiállok az MT-04-nek” → „megcsináltam a takarításig, jók voltak az elvárt dolgok” → „jóváhagyom, indíthatom akkor a takarítást?” (a kimenetekkel) → „A, eddig jó a takarítás?” → „hozd létre te az ágat”.
+- **AI javaslat (eredeti):**
+  - **Előzetes ellenőrzés:** a `v0.2.0` → `v0.3.0` migrációk csak hozzáadnak, a `v0.2.0` háztartásra szűr, két várt eltérés ([V-57](verification_log.md)); a mentési parancs bash-szintaxis, ezért Git Bash.
+  - **Terv:** külön klón a `v0.3.0`-n, az MT-03 adataira épülő MT-04; az 1. kérdés: a parancsokat a fejlesztő futtatja (ajánlott) vagy a Claude Code.
+  - **Ellenőrzőlista** (`04_munkaanyagok\nov06\mt03_mt04_lista.md`): parancsok, a felület pontos szövegei, a sorszámok SQL-je. Írás közben derült ki, hogy a compose-fájl fix projektnevet ad, és a klón a fejlesztői volume-okat használta volna ([V-58](verification_log.md)); javítás: `COMPOSE_PROJECT_NAME` a `.env`-ben, `config`-ellenőrzés.
+  - **Kockázat-átnézés a fejlesztő kérésére:** a tagek fent vannak a GitHubon, a klón nem pushol, a `v0.2.0` migrátora nem töröl; az egyetlen veszélyes lépés a takarítás `down -v` parancsa volt, ez teljes útvonalat és `-p kamra-mt` kapcsolót kapott; inkognitó ablak.
+  - **Az elakadt build:** nem fagyás volt; a bundle-lépés 273,7 mp alatt kimenet nélkül elkészült (a Claude Code egyszer külön lefuttatta). A `docker compose ps` nem mutatja a kilépett migrátort; helyesen `ps -a` (a listában javítva, a runbookba javaslat).
+  - **Akadálymentesség:** az S2–S5 felolvasására három opció (automatikus ellenőrzés – ajánlott, a fejlesztő Narrátorral, csak az S1); az eredmény két lelet (L1, L2, [V-59](verification_log.md)). A javítás idejére két opció: az UAT után, a nov. 13-i változatban (ajánlott), vagy most egy `v0.3.1`-gyel.
+  - **MT-04:** a fejlesztő kimenetei alapján PASS, mind a 10 sorszám egyezik mindhárom állapotban (a `v0.2.0`-s futást a Docker build-előzményei is igazolják, a `2deb55e`-ből). A kimenetekből egy új megfigyelés: a `v0.2.0` alatt az adatbázis portja `0.0.0.0`-ra kötött (E3); javaslat egy runbook-figyelmeztetésre.
+- **Érintett fájlok:**
+  - docs: `04_quality/manual_tests.md`, `05_security_ops/deploy_runbook.md`, `00_index.md`, `07_ai/verification_log.md` (V-57–V-59), `07_ai/prompt_log.md` (P-21, P-22);
+  - a repón kívül: `04_munkaanyagok\nov06\mt03_mt04_lista.md`, `mt03_mt04_jegyzokonyv.md`; az ellenőrző szkript a scratchpadben (nem kerül a repóba).
+- **Mit változtattam / döntésem:**
+  - **A parancsok:** az MT-04 parancsait én futtattam (1. kérdés, A).
+  - **A kockázat-átnézés:** a lista futtatása előtt kértem, hogy nézze át, mi veszhet el.
+  - **Az S2–S5 felolvasása:** automatikus ellenőrzés (A); az S1-et én hallgattam meg a Narrátorral.
+  - **Az L1 és az L2:** az UAT 1. köre után, a nov. 13-i változatban javul (A).
+  - **Az E3:** megfigyelésként a jegyzőkönyvbe, és figyelmeztetés a runbookba (A).
+  - **A szöveg:** változtatás nélkül jóváhagytam.

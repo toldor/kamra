@@ -487,3 +487,27 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Forrásellenőrzés az RFC Editor oldalán (rfc-editor.org/rfc/rfc9457), a dolgozat [17] hivatkozásának írásakor.
 - **Eredmény:** **FAIL.** Az RFC 9457 (2023. július) felváltja („obsoletes”) az RFC 7807-et; a `type`, `title`, `status`, `detail` és `instance` mező változatlan maradt, így a kód helyes, csak a hivatkozás elavult.
 - **Következtetés:** A dolgozat a 9457-et hivatkozza. A T7-ben az ADR-0007, az `api.md`, az `error_handling.md` és a `00_index.md` hivatkozása az RFC 9457-re változik. A changelog korábbi bejegyzései történeti szövegként változatlanok maradnak.
+
+### V-57 – A régi kiadás az új sémán is fut (rollback, MT-04)
+- **Dátum:** 2026-10-24 – 2026-10-25
+- **Állítás:** A Claude Code szerint a `v0.2.0` kódja a `v0.3.0` sémáján is fut: a köztes három migráció (`AddShoppingList`, `ExpandSeedData`, `AddRecipeArchives`) csak hozzáad, az egyetlen új oszlop (`CookingLines.Suggested`) alapértéket kap, a `v0.2.0` migrátora (EF-bundle) csak a hiányzó migrációkat futtatja, és a `v0.2.0` is háztartásra szűri a recepteket és a hozzávalókat. Várt eltérés: az archivált recept látszik, bevásárlólista-oldal nincs.
+- **Kockázat:** Közepes. A visszaállás a runbook egyetlen visszaútja; ha az állítás téves, egy hibás frissítés után adatvesztés vagy egy másik háztartás saját receptjének megjelenése a következmény.
+- **Ellenőrzési módszer:** Kódolvasás a `v0.2.0` tagen (`git diff v0.2.0 v0.3.0` a migrációkon, `RecipeRepository.cs:14`, `IngredientRepository.cs:19`, a Dockerfile `migrator` célja), majd mérés: [MT-04](../04_quality/manual_tests.md) – mentés, sorszámok mindhárom állapotban, böngésző.
+- **Eredmény:** **PASS.** A `v0.2.0` migrátora nem futtatott semmit („No migrations were applied. The database is already up to date.”), az alkalmazás elindult, a sorszámok mindhárom állapotban mind a 10 táblában egyeztek, és a két várt eltérés jelentkezett. Az állításból kimaradt a hálózati oldal: a `v0.2.0` compose-fájlja még minden címre köti az adatbázis portját (E3).
+- **Következtetés:** A runbook visszaállási része „kipróbálva” jelölést kap. Ha egy későbbi migráció nem csak hozzáad, az MT-04-et meg kell ismételni (AGENTS.md 11.).
+
+### V-58 – A külön klón saját Compose-projektet kap
+- **Dátum:** 2026-10-24
+- **Állítás:** A Claude Code az MT-03 tervében azt írta, hogy a repó külön klónja (`kamra-mt`) saját Compose-projektet és saját volume-okat kap, így a fejlesztői adatbázis érintetlen marad.
+- **Kockázat:** Magas. Ha téves, a teszt a fejlesztői adatbázison fut, és a takarítás `docker compose down -v` parancsa azt törölné.
+- **Ellenőrzési módszer:** A `docker-compose.yml` elolvasása az ellenőrzőlista írásakor, majd próba a scratchpadben: a `v0.3.0` compose-fájlja és egy `.env` `COMPOSE_PROJECT_NAME=kamra-mt` sorral, `docker compose config | head -1`.
+- **Eredmény:** **FAIL.** A compose-fájl fix projektnevet ad (`name: kamra`), ezért a projektnév nem a mappából jön; a klón a fejlesztői volume-okat (`kamra_pgdata`, `kamra_dpkeys`) használta volna. A `.env`-ben megadott `COMPOSE_PROJECT_NAME` felülírja (`name: kamra-mt`).
+- **Következtetés:** Az ellenőrzőlista a `.env`-be írja a projektnevet, a 0. lépésben `config`-ellenőrzéssel; a takarítás kifejezett `-p kamra-mt` kapcsolóval és teljes útvonallal fut, utána `docker volume ls`. A fejlesztő a listát a hiba javítása után kapta meg.
+
+### V-59 – Az élő régiók és a fókusz az UAT-forgatókönyvekben (MT-03)
+- **Dátum:** 2026-10-25
+- **Állítás:** A V-45 és a V-47 javításai (a fókusz nem vész el, ha a megnyomott gomb eltűnik; az élő régió üresen van a lapon, és a szöveg utána kerül bele, így a képernyőolvasó felolvassa) a `v0.3.0`-n az UAT öt forgatókönyvében működnek.
+- **Kockázat:** Közepes. Akadálymentesség; a V-45 és a V-47 azonos modellcsaládú reviewer leletei voltak, a javításukat eddig csak komponensteszt igazolta.
+- **Ellenőrzési módszer:** Az S1-nél a fejlesztő a Narrátorral. Az S2–S5-nél a Claude Code egy eldobható Playwright-szkripttel (a tesztek Chromiuma, a repón kívül) a `kamra-mt` stacken, külön fiókkal: egy MutationObserver rögzítette, hogy az élő régió (`role="status"`, `role="alert"`, `aria-live`) üresen került-e a DOM-ba, és a szöveg utána került-e bele; mellé a `document.activeElement`. Korlát: ez a felolvasás feltételét méri, nem a felolvasást.
+- **Eredmény:** **PASS** a V-45 és a V-47 pontjain (S3, S4, S5), és a többi vizsgált ponton is, két kivétellel. **Új lelet: L1** – a készlettétel mentésekor a letiltott gomb elveszíti a fókuszt, és üzenet sincs (a Narrátor elhallgat); ugyanaz a hibaosztály, mint a V-45 első pontja, de ezt a helyet a review nem találta meg. **L2** – a bevásárlójavaslat értesítése nincs élő régióban.
+- **Következtetés:** Az L1 és az L2 a nov. 13-i változatban javul, teszttel. A javítás után a Narrátorral az S1–S5-öt a fejlesztő is meghallgatja.
