@@ -288,73 +288,73 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
     // C3: the suggestions and the list in the content column, the minimum levels beside them.
     <div className="split">
       <div className="content">
-      {suggestions.length > 0 && (
-        <section aria-labelledby="suggestions-heading" className="panel">
-          <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
-          {/* key: a new suggestion for the same ingredient starts with its own amount. */}
-          {suggestions.map((s) => <SuggestionRow key={s.id} suggestion={s} busy={busy} write={write} />)}
-        </section>
-      )}
+        {suggestions.length > 0 && (
+          <section aria-labelledby="suggestions-heading" className="panel">
+            <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
+            {/* key: a new suggestion for the same ingredient starts with its own amount. */}
+            {suggestions.map((s) => <SuggestionRow key={s.id} suggestion={s} busy={busy} write={write} />)}
+          </section>
+        )}
 
-      <section aria-labelledby="list-heading" className="panel">
-        <h2 id="list-heading">A listád</h2>
-        <div className="panel-body">
-        <p className="hint">Amíg egy hozzávaló pipa nélkül a listán van, nem javaslom újra.</p>
-        {items.length > 0 && (
-          <form role="search" className="filters" onSubmit={(e) => e.preventDefault()}>
-            <label htmlFor="list-search">Keresés</label>
-            <input id="list-search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} />
-          </form>
-        )}
-        {items.length === 0 && (
-          <p className="empty">
-            {suggestions.length > 0
-              ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
-              : 'A listád üres. Vegyél fel tételt alább.'}
-          </p>
-        )}
-        {items.length > 0 && shown.length === 0 && <p className="empty">Nincs a keresésnek megfelelő tétel a listádon.</p>}
-        </div>
-        {shown.length > 0 && (
-          <ul className="items">
-            {shown.map((item) => (
-              <li key={item.id} className={item.checked ? 'item text-row done' : 'item text-row'}>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={item.checked}
+        <section aria-labelledby="list-heading" className="panel">
+          <h2 id="list-heading">A listád</h2>
+          <div className="panel-body">
+            <p className="hint">Amíg egy hozzávaló pipa nélkül a listán van, nem javaslom újra.</p>
+            {items.length > 0 && (
+              <form role="search" className="filters" onSubmit={(e) => e.preventDefault()}>
+                <label htmlFor="list-search">Keresés</label>
+                <input id="list-search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} />
+              </form>
+            )}
+            {items.length === 0 && (
+              <p className="empty">
+                {suggestions.length > 0
+                  ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
+                  : 'A listád üres. Vegyél fel tételt alább.'}
+              </p>
+            )}
+            {items.length > 0 && shown.length === 0 && <p className="empty">Nincs a keresésnek megfelelő tétel a listádon.</p>}
+          </div>
+          {shown.length > 0 && (
+            <ul className="items">
+              {shown.map((item) => (
+                <li key={item.id} className={item.checked ? 'item text-row done' : 'item text-row'}>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={item.checked}
+                      disabled={busy}
+                      onChange={(e) => onCheck(item.id, e.target.checked)}
+                    />
+                    {item.amount ? `${item.ingredientName} – ${formatAmount(item.amount.value, item.amount.unit)}` : item.ingredientName}
+                  </label>
+                  <span className="leader" aria-hidden="true" />
+                  <button
+                    type="button"
+                    className="secondary"
+                    aria-label={`Törlés: ${item.ingredientName}`}
                     disabled={busy}
-                    onChange={(e) => onCheck(item.id, e.target.checked)}
-                  />
-                  {item.amount ? `${item.ingredientName} – ${formatAmount(item.amount.value, item.amount.unit)}` : item.ingredientName}
-                </label>
-                <span className="leader" aria-hidden="true" />
-                <button
-                  type="button"
-                  className="secondary"
-                  aria-label={`Törlés: ${item.ingredientName}`}
-                  disabled={busy}
-                  onClick={() => void write(() => api.deleteShoppingListItem(item.id), `Töröltem a listáról: ${item.ingredientName}.`)}
-                >
-                  Törlés
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <IngredientAmountForm
-          prefix="list"
-          heading="Új tétel a listára"
-          amountLabel="Mennyiség (nem kötelező)"
-          button="Felveszem"
-          hint="Ha a hozzávaló már a listán van, a mennyiség hozzáadódik; ha kipipáltad, az új mennyiséggel kerül vissza."
-          ingredients={ingredients}
-          busy={busy}
-          onSubmit={(ingredient, amount) => write(
-            () => api.addShoppingListItem(amount.amount === null ? { ingredientId: ingredient.id } : { ingredientId: ingredient.id, ...amount }),
-            `Felvettem a listára: ${formatListLine(ingredient.name, amount.amount === null ? null : { value: amount.amount, unit: amount.unit })}.`)}
-        />
-      </section>
+                    onClick={() => void write(() => api.deleteShoppingListItem(item.id), `Töröltem a listáról: ${item.ingredientName}.`)}
+                  >
+                    Törlés
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <IngredientAmountForm
+            prefix="list"
+            heading="Új tétel a listára"
+            amountLabel="Mennyiség (nem kötelező)"
+            button="Felveszem"
+            hint="Ha a hozzávaló már a listán van, a mennyiség hozzáadódik; ha kipipáltad, az új mennyiséggel kerül vissza."
+            ingredients={ingredients}
+            busy={busy}
+            onSubmit={(ingredient, amount) => write(
+              () => api.addShoppingListItem(amount.amount === null ? { ingredientId: ingredient.id } : { ingredientId: ingredient.id, ...amount }),
+              `Felvettem a listára: ${formatListLine(ingredient.name, amount.amount === null ? null : { value: amount.amount, unit: amount.unit })}.`)}
+          />
+        </section>
       </div>
 
       <section aria-labelledby="minimum-heading" className="panel side">

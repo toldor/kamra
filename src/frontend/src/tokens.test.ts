@@ -36,12 +36,13 @@ const text: [string, string][] = [
   ['c-primary', 'c-neutral-tag'],
   ['c-missing', 'c-surface'],
   ['c-missing', 'c-ground'],
+  // button.danger
+  ['c-on-primary', 'c-missing'],
 ]
 
 const nonText: [string, string][] = [
   ['c-focus', 'c-surface'],
   ['c-focus', 'c-ground'],
-  ['c-band-ink', 'c-band'],
   ['c-field', 'c-surface'],
   ['c-indicator', 'c-band'],
   ['c-accent', 'c-surface'],
