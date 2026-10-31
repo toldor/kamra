@@ -14,5 +14,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // tokens.test.ts reads index.css as text; other CSS stays unprocessed in the tests.
+    css: { include: [/index\.css/] },
   },
 })

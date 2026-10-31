@@ -44,19 +44,25 @@ export function Layout({ me, route, onSignedOut, children }: {
   )
 
   return (
-    <div className="shell">
-      <header className="topbar">
-        <span>{me.email}</span>
-        <button type="button" onClick={logout} disabled={busy}>Kijelentkezés</button>
+    <>
+      {/* ADR-0013: the olive band; on a phone the menu wraps under the brand and the account. */}
+      <header className="band">
+        <div className="band-inner">
+          <span className="brand">Kamra</span>
+          <nav aria-label="Oldalak" className="nav">
+            {link(routes.pantry, 'Készlet')}
+            {link(routes.recommendations, 'Mit főzzek?')}
+            {link(routes.recipes, 'Receptek')}
+            {link(routes.shopping, 'Bevásárlólista')}
+          </nav>
+          <div className="account">
+            <span>{me.email}</span>
+            <button type="button" className="link" onClick={logout} disabled={busy}>Kijelentkezés</button>
+          </div>
+          <div role="alert" className="form-error">{error}</div>
+        </div>
       </header>
-      <div role="alert" className="form-error">{error}</div>
-      <nav aria-label="Oldalak" className="nav">
-        {link(routes.pantry, 'Készlet')}
-        {link(routes.recommendations, 'Mit főzzek?')}
-        {link(routes.recipes, 'Receptek')}
-        {link(routes.shopping, 'Bevásárlólista')}
-      </nav>
       {children}
-    </div>
+    </>
   )
 }

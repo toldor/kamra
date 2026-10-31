@@ -12,8 +12,11 @@ function RecipeCard({ recipe, onSignedOut }: { recipe: Recommendation; onSignedO
   const headingId = useId()
   return (
     <article aria-labelledby={headingId} className="recipe">
-      <h3 id={headingId}>{recipe.name}</h3>
-      <p className="hint">{recipe.servings} adag</p>
+      <div className="recipe-head">
+        <h3 id={headingId}>{recipe.name}</h3>
+        <span className="leader" aria-hidden="true" />
+        <span className="serv">{recipe.servings} adag</span>
+      </div>
       {recipe.shortages.length > 0 ? (
         <ul>{recipe.shortages.map((s) => <li key={s.ingredientName}>{formatShortage(s)}</li>)}</ul>
       ) : (
@@ -22,16 +25,18 @@ function RecipeCard({ recipe, onSignedOut }: { recipe: Recommendation; onSignedO
       {recipe.expiredIngredients.length > 0 && (
         <p className="warning">Lejárt tételt is felhasznál: {recipe.expiredIngredients.join(', ')}.</p>
       )}
-      <a href={cookingRoute(recipe.recipeId)} className="button-link">Recept megtekintése</a>
-      {/* Only an almost makeable recipe has shortages. */}
-      {recipe.shortages.length > 0 && (
-        <ShortageToList
-          label="Hiány a bevásárlólistára"
-          lines={recipe.shortages.map((s) => ({ ingredientId: s.ingredientId, ingredientName: s.ingredientName, amount: s.missing, unit: s.unit }))}
-          showLink
-          onSignedOut={onSignedOut}
-        />
-      )}
+      <div className="actions">
+        <a href={cookingRoute(recipe.recipeId)} className="button-link">Recept megtekintése</a>
+        {/* Only an almost makeable recipe has shortages. */}
+        {recipe.shortages.length > 0 && (
+          <ShortageToList
+            label="Hiány a bevásárlólistára"
+            lines={recipe.shortages.map((s) => ({ ingredientId: s.ingredientId, ingredientName: s.ingredientName, amount: s.missing, unit: s.unit }))}
+            showLink
+            onSignedOut={onSignedOut}
+          />
+        )}
+      </div>
     </article>
   )
 }
@@ -103,9 +108,9 @@ function Suggestions({ data, onSignedOut }: { data: RecommendationsResponse; onS
   }
 
   return (
-    <>
+    <div className="pair">
       {data.makeable.length > 0 ? (
-        <section aria-labelledby="makeable-heading">
+        <section aria-labelledby="makeable-heading" className="panel">
           <h2 id="makeable-heading">Elkészíthető</h2>
           {data.makeable.map((r) => <RecipeCard key={r.recipeId} recipe={r} onSignedOut={onSignedOut} />)}
         </section>
@@ -113,11 +118,11 @@ function Suggestions({ data, onSignedOut }: { data: RecommendationsResponse; onS
         <p className="empty">Most egyik receptedhez sincs meg minden hozzávaló.</p>
       )}
       {data.almostMakeable.length > 0 && (
-        <section aria-labelledby="almost-heading">
+        <section aria-labelledby="almost-heading" className="panel">
           <h2 id="almost-heading">Majdnem elkészíthető</h2>
           {data.almostMakeable.map((r) => <RecipeCard key={r.recipeId} recipe={r} onSignedOut={onSignedOut} />)}
         </section>
       )}
-    </>
+    </div>
   )
 }

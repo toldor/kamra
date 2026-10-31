@@ -6,7 +6,7 @@ Azt vizsgálja, hogy a célcsoportba tartozó felhasználó a valós feladatát 
 
 | Kör | Időszak | Verzió | Tartalom | Résztvevők |
 |---|---|---|---|---|
-| 1. | 2026. okt. 26. – nov. 1. | `v0.3.1` | A determinisztikus út: készlet, „Mit főzzek?”, főzés, bevásárlólista, saját recept (US-1, US-3, US-4, US-5) | 4 fő (U1–U4) |
+| 1. | 2026. okt. 26. – nov. 1. | `v0.4.0` | A determinisztikus út: készlet, „Mit főzzek?”, főzés, bevásárlólista, saját recept (US-1, US-3, US-4, US-5) | 4 fő (U1–U4) |
 | 2. | 2026. nov. 16–27. | a nov. 13-i változat | Egy mondatos bevitel és a csak olvasó chat (US-2, US-6), az 1. kör javításai | 3–4 fő ugyanezek közül |
 | Újratesztelés | dec. 4. előtt | a javított változat | Az 1–2. körben talált elakadások javítása után ugyanazok a forgatókönyvek | aki vállalja |
 
@@ -23,7 +23,7 @@ A résztvevők nevét, elérhetőségét és a hozzájárulást a fejlesztő a r
 
 ## Lebonyolítás
 
-- **Hol:** személyesen a fejlesztő laptopján, vagy képernyőmegosztással, ahol a résztvevő vezérel (távoli vezérlés). Az alkalmazás nem kerül ki az internetre: a laptopon fut, Docker Compose-zal, a `v0.3.1`-en ([deploy_runbook.md](../05_security_ops/deploy_runbook.md)).
+- **Hol:** személyesen a fejlesztő laptopján, vagy képernyőmegosztással, ahol a résztvevő vezérel (távoli vezérlés). Az alkalmazás nem kerül ki az internetre: a laptopon fut, Docker Compose-zal, a `v0.4.0`-n ([deploy_runbook.md](../05_security_ops/deploy_runbook.md)).
 - **Mobil:** az S5 a Chrome telefonnézetében (360 × 740 px) fut. A bejelentkezési süti `Secure`, ezért valódi telefonról a laptop helyi címén, `http`-n nem lehet bejelentkezni; ez az 1. kör korlátja.
 - **Tesztfiók:** minden résztvevő maga regisztrál egy előre kiadott, kitalált címmel (`u1@example.com` …), nem a saját e-mail-címével.
 - **Időtartam:** kb. 40 perc: 5 perc bevezetés és hozzájárulás, 5 × 5–7 perc feladat, 5 perc kérdések.
