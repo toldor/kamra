@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { api, failWith, type Recipe } from './api/client'
+import { matchesSearch } from './format'
 import { cookingRoute, routes } from './useHashRoute'
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; recipes: Recipe[] }
@@ -72,8 +73,27 @@ export function RecipesPage({ notice: openingNotice, onSignedOut }: { notice?: s
       {load.status === 'ready' && load.recipes.length === 0 && (
         <p className="empty">Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.</p>
       )}
-      {load.status === 'ready' && load.recipes.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => void archive(r)} />)}
+      {load.status === 'ready' && load.recipes.length > 0 && (
+        <RecipeList recipes={load.recipes} busy={busy} onArchive={(r) => void archive(r)} />
+      )}
     </main>
+  )
+}
+
+// v0.3.1: the search filters the loaded recipes in the browser, by name and ingredients.
+function RecipeList({ recipes, busy, onArchive }: { recipes: Recipe[]; busy: boolean; onArchive: (recipe: Recipe) => void }) {
+  const [search, setSearch] = useState('')
+  const shown = recipes.filter((r) => matchesSearch(search, r.name, ...r.ingredients))
+  return (
+    <>
+      <form role="search" className="filters" onSubmit={(e) => e.preventDefault()}>
+        <label htmlFor="recipe-search">Keresés</label>
+        <input id="recipe-search" type="search" aria-describedby="recipe-search-hint" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <p id="recipe-search-hint" className="hint">A recept nevében és a hozzávalóiban keresek.</p>
+      </form>
+      {shown.length === 0 && <p className="empty">Nincs a keresésnek megfelelő recept.</p>}
+      {shown.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => onArchive(r)} />)}
+    </>
   )
 }
 
@@ -86,7 +106,7 @@ function RecipeCard({ recipe, busy, onArchive }: { recipe: Recipe; busy: boolean
       {recipe.own && <p>Saját recept</p>}
       <p>Hozzávalók: {recipe.ingredients.join(', ')}</p>
       <div className="actions">
-        <a href={cookingRoute(recipe.id)} className="button-link">Megfőztem</a>
+        <a href={cookingRoute(recipe.id)} className="button-link">Recept megtekintése</a>
         <button type="button" className="secondary" aria-label={`Archiválás: ${recipe.name}`} disabled={busy} onClick={onArchive}>
           Archiválás
         </button>
