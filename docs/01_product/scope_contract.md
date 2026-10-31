@@ -201,4 +201,6 @@ Tudatosan kihagyott, de a jelenlegi tervezéssel összeegyeztethető bővítése
 - **A kategória-eltarthatóság felhasználói felülírása** a háztartás saját szokásaihoz.
 - **Hozzávaló-hierarchia és helyettesíthetőség** („trappista sajt” ⊂ „sajt”), lásd [ADR-0003](../02_architecture/adr/0003-kanonikus-hozzavalo-lista.md).
 - **Tömeg–térfogat átváltás** hozzávalónkénti sűrűséggel, lásd [ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md).
+- **„Csak az elkészíthetők” szűrő a Receptek oldalon:** a receptlista szűrése arra, ami a készletből most elkészíthető; az ajánlás adataiból, a backend számolja.
+- **A bevásárlólista-tétel forrása:** minden tételnél látszana, honnan került a listára (melyik receptből vagy kézzel); ehhez a tétel a forrását is tárolná.
 - **Automatizált akadálymentesség-ellenőrzés** az e2e tesztekben (axe-core); jelenleg Lighthouse-audit és kézi bejárás.

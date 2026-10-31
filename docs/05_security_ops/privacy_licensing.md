@@ -14,7 +14,7 @@ A tesztekben és a dokumentációban csak kitalált adat szerepel (`@example.com
 
 ## Adatáramlás
 
-Böngésző → API (`/api/v1`, session-cookie) → PostgreSQL ugyanazon a gépen. Harmadik félhez jelenleg semmi nem megy. A tervezett MI-funkciók (US-2, US-6) a beírt szöveget és a válaszhoz szükséges készletadatot küldik egy LLM-szolgáltatónak, fiókadatot (e-mail, jelszó) soha ([scope_contract.md](../01_product/scope_contract.md), 3. Korlátok); a szolgáltató és az adatküldés részletei a megfelelő ADR-ben.
+Böngésző → API (`/api/v1`, session-cookie) → PostgreSQL ugyanazon a gépen. Harmadik félhez jelenleg semmi nem megy. A felület sem tölt be külső erőforrást: a betűk is az alkalmazás saját címéről jönnek ([ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md)). A tervezett MI-funkciók (US-2, US-6) a beírt szöveget és a válaszhoz szükséges készletadatot küldik egy LLM-szolgáltatónak, fiókadatot (e-mail, jelszó) soha ([scope_contract.md](../01_product/scope_contract.md), 3. Korlátok); a szolgáltató és az adatküldés részletei a megfelelő ADR-ben.
 
 ## Megőrzés és törlés
 
@@ -51,6 +51,7 @@ A projekt licence: MIT ([LICENSE](../../LICENSE)) (D2).
 | vite, @vitejs/plugin-react, vitest, jsdom, @testing-library/react, @testing-library/dom, openapi-typescript, oxlint, @types/* | lásd `package-lock.json` | MIT | frontend (fejlesztés) |
 | typescript | 5.9.3 | Apache-2.0 | frontend, e2e |
 | @playwright/test | 1.63.0 | Apache-2.0 | e2e |
+| Zilla Slab 700, IBM Plex Sans (betűtípus, woff2, latin + latin-ext) | Google Fonts, 2026-10-31 (Zilla Slab v12, IBM Plex Sans v23) | SIL OFL 1.1 (`src/frontend/public/fonts/OFL-*.txt`) | frontend, saját tárhelyről |
 
 Mind megengedő licenc, egymással és az MIT-tel kompatibilis. A Docker-alapképek: `postgres:18` (PostgreSQL License), `mcr.microsoft.com/dotnet/*` (MIT), `node:24-alpine` (MIT).
 

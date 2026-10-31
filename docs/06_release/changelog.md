@@ -2,6 +2,19 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [0.4.0] – 2026-11-01 – Új felület
+
+A fejlesztő által választott „Piaci tábla” design (a „Kamra stílusirányok” vászon C2 és C3 táblái) az egész alkalmazásban. A működés és az API nem változott. Részletek: [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md), [P-24](../07_ai/prompt_log.md), [V-63 – V-65](../07_ai/verification_log.md).
+
+### Hozzáadva
+- Saját vizuális rendszer: színek, betűk és térközök CSS-változóként; saját tárhelyű betűk (Zilla Slab, IBM Plex Sans, OFL 1.1) a magyar ő és ű betűvel.
+- Asztali elrendezés: fejsáv a menüvel, két oszlop (a szűrők és az űrlapok mellett a lista); 760 px alatt egymás alatt.
+- Kontrasztteszt a színekre; e2e a betűkre, az elrendezésre és két javított hibára (hosszú nevű minimumszint, a fejsáv hover-kontrasztja).
+
+### Módosítva
+- A Készlet oldal címe „Készlet” (a „Kamra” a fejsáv logója), a lista szakasza „Tételek”, a kereső az „Új tétel” fölött.
+- A Receptek oldalon a gomb felirata „Megnyitás”.
+
 ## [0.3.1] – 2026-10-31 – Az UAT előtti javítások
 
 A fejlesztő UAT előtti kipróbálásából: érthetőbb feliratok és kereső. A backend és az API nem változott. Részletek: [ADR-0012](../02_architecture/adr/0012-bongeszos-kereses.md), [P-23](../07_ai/prompt_log.md), [V-61](../07_ai/verification_log.md), [V-62](../07_ai/verification_log.md).
