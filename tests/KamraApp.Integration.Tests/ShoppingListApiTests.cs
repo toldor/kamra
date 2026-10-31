@@ -29,7 +29,7 @@ public class ShoppingListApiTests(KamraApiFactory factory)
         var shortage = (await client.GetJsonAsync("/api/v1/recommendations")).GetProperty("almostMakeable").EnumerateArray()
             .Single(r => r.GetProperty("name").GetString() == "Túrós csusza").GetProperty("shortages").EnumerateArray().Single();
 
-        // K1: the shortage carries the ingredient id, so the "Bevásárlólistára" button needs no name lookup.
+        // K1: the shortage carries the ingredient id, so the "Hiány a bevásárlólistára" button needs no name lookup.
         shortage.GetProperty("ingredientId").GetGuid().Should().Be(await IngredientIdAsync(client, "tejföl"));
 
         var response = await client.PostAsync("/api/v1/shopping-list/items", new

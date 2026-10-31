@@ -60,9 +60,11 @@ function Line({ line, value, onChange, field, error }: {
   const used = value.trim() === '' ? 0 : Number(value)
   const shortage = shortageOf(line, value)
   // F5: the split of the default amount; an edited amount is split by the backend the same way.
+  // Nothing in stock: no allocations and no line.
+  const allocations = line.allocations.map((a) => `${formatDate(a.expiryDate)} – ${formatAmount(a.amount, line.unit)}${a.expired ? ' (lejárt)' : ''}`).join(', ')
   const deduction = value === String(line.defaultUsed)
-    ? line.allocations.map((a) => `${formatDate(a.expiryDate)} – ${formatAmount(a.amount, line.unit)}${a.expired ? ' (lejárt)' : ''}`).join(', ')
-    : used > 0 ? 'a legkorábban lejáró tételtől kezdve.' : ''
+    ? allocations && `Levonás (lejárat – mennyiség): ${allocations}`
+    : used > 0 ? 'Levonás: a legkorábban lejáró tételtől kezdve.' : ''
 
   return (
     <fieldset className="cooking-line">
@@ -74,7 +76,7 @@ function Line({ line, value, onChange, field, error }: {
       {/* R1: an entered amount the stock no longer covers; a field error already says it. */}
       {!error && used > line.available && <p className="warning">Több, mint ami van ({formatAmount(line.available, line.unit)}).</p>}
       {shortage > 0 && <p className="warning">Hiány: {formatAmount(shortage, line.unit)}</p>}
-      {deduction && <p className="hint">Levonás: {deduction}</p>}
+      {deduction && <p className="hint">{deduction}</p>}
     </fieldset>
   )
 }

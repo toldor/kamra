@@ -4,7 +4,7 @@ using KamraApp.Application.Pantry;
 
 namespace KamraApp.Application.ShoppingList;
 
-// US-5 (and the "Bevásárlólistára" buttons of US-3 and US-4): one row per ingredient; a new amount adds up, a
+// US-5 (and the "Hiány a bevásárlólistára" buttons of US-3 and US-4): one row per ingredient; a new amount adds up, a
 // checked row starts again, and the sum stays within the input limit (data_model.md, ShoppingListItems).
 public sealed class AddShoppingListItem(IShoppingListRepository shopping, IIngredientRepository ingredients, IIngredientLocks locks,
     ICurrentHousehold household, TimeProvider time)

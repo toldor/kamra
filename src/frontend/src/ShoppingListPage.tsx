@@ -3,7 +3,7 @@ import {
   api, ApiError, failWith, type AmountRequest, type Ingredient, type ShoppingListItem, type ShoppingSuggestion, type Unit,
 } from './api/client'
 import { useFieldErrors } from './fieldErrors'
-import { findIngredient, formatAmount, formatDay, formatListLine, unitsOf } from './format'
+import { findIngredient, formatAmount, formatDay, formatListLine, matchesSearch, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
 
 type Data = { suggestions: ShoppingSuggestion[]; items: ShoppingListItem[]; ingredients: Ingredient[] }
@@ -280,6 +280,9 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
   onCheck: (id: string, checked: boolean) => void
 }) {
   const minimums = ingredients.filter((i) => i.minimum)
+  // v0.3.1: the search filters the loaded list in the browser.
+  const [search, setSearch] = useState('')
+  const shown = items.filter((i) => matchesSearch(search, i.ingredientName))
 
   return (
     <>
@@ -294,15 +297,23 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
       <section aria-labelledby="list-heading">
         <h2 id="list-heading">A listád</h2>
         <p className="hint">Amíg egy hozzávaló pipa nélkül a listán van, nem javaslom újra.</p>
+        {items.length > 0 && (
+          <form role="search" className="filters" onSubmit={(e) => e.preventDefault()}>
+            <label htmlFor="list-search">Keresés</label>
+            <input id="list-search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </form>
+        )}
         {items.length === 0 ? (
           <p className="empty">
             {suggestions.length > 0
               ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
               : 'A listád üres. Vegyél fel tételt alább.'}
           </p>
+        ) : shown.length === 0 ? (
+          <p className="empty">Nincs a keresésnek megfelelő tétel a listádon.</p>
         ) : (
           <ul className="items">
-            {items.map((item) => (
+            {shown.map((item) => (
               <li key={item.id} className={item.checked ? 'item done' : 'item'}>
                 <label className="check">
                   <input

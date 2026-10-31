@@ -21,8 +21,8 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Előfeltétel:** van készlet.
 - **Lépések:**
   1. Tomi megnyitja a „Mit főzzek?” oldalt. Elöl az elkészíthető receptek állnak, mindegyik egy mondatos indoklással (*„2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”*), alattuk a majdnem elkészíthetők a hiányzó mennyiségekkel (*„tejföl: 50 g hiányzik (150 g van, 200 g kell)”*). *Megvalósítva* ([recommendations-360.png](../assets/recommendations-360.png)); a lejárt tételt felhasználó receptnél: *„Lejárt tételt is felhasznál: …”*.
-  2. Kiválaszt egy receptet, és a „Megfőztem” gombbal megadja az adagszámot (Betti négyfős családnál nagyobb adagot ad meg). *Megvalósítva.*
-  3. A megerősítő képernyő hozzávalónként mutatja a szükséges és a felhasznált mennyiséget, és azt, hogy melyik készlettételből vonódik le (a legkorábban lejárótól). A felhasznált mennyiség itt módosítható; ha valamiből kevesebb van, a hiány külön látszik, és egy kattintással a bevásárlólistára tehető. *Megvalósítva* ([cooking-360.png](../assets/cooking-360.png)), a hiány listára tételével együtt ([shopping.spec.ts](../../tests/e2e/shopping.spec.ts)).
+  2. Kiválaszt egy receptet, a „Recept megtekintése” gombbal megnyitja a recept főzés-oldalát, és ott megadja az adagszámot (Betti négyfős családnál nagyobb adagot ad meg). *Megvalósítva.*
+  3. A megerősítő képernyő hozzávalónként mutatja a szükséges és a felhasznált mennyiséget, és azt, hogy melyik készlettételből vonódik le (a legkorábban lejárótól): *„Levonás (lejárat – mennyiség): okt. 12. – 200 g, …”*. A felhasznált mennyiség itt módosítható; ha valamiből kevesebb van, a hiány külön látszik, és egy kattintással a bevásárlólistára tehető. *Megvalósítva* ([cooking-360.png](../assets/cooking-360.png)), a hiány listára tételével együtt ([shopping.spec.ts](../../tests/e2e/shopping.spec.ts)).
   4. A megerősítés után a készlet frissül. Ha közben valami elfogyott, egy összegző sor jelzi: *„Elfogyott: tej, tojás. Felvettem a bevásárlójavaslatok közé: tej, tojás.”*, „Megnézem” linkkel. *Megvalósítva* ([cooking-done-360.png](../assets/cooking-done-360.png)); a bevásárlójavaslat-mondat és a „Megnézem” link a US-5-tel (okt. 23.), addig: *„Elfogyott: tej, tojás.”*
 - **Sikerkritérium:** a felhasznált mennyiségek levonódtak, a főzés rögzült, és Tomi tudja, mi fogyott el.
 - **Edge case – közben változott készlet:** ha a megerősítéskor valamiből már kevesebb van, mint a megadott felhasznált mennyiség, a főzés nem mentődik; a képernyő a friss készlettel újraszámol, kiemeli az eltérést (*„tejföl: már csak 150 g van, 200 g helyett”*), és újra megerősítést kér. Most: üzenet és „Újraszámolás” gomb; a kiemelés okt. 23-ig.
@@ -36,17 +36,17 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
   1. A főzés vagy a kézi levonás megerősítése után Tomi az összegző sorban látja, mi került a javaslatok közé, és a „Megnézem” linkkel a bevásárlólistára lép.
   2. A lista fölött a *„Javaslatok (2)”* blokk soronként „Hozzáadom” és „Nem kell” gombbal.
   3. A „Hozzáadom” a listára teszi a tételt; a „Nem kell” eltünteti, és addig nem jön vissza, amíg Tomi újra nem vesz belőle.
-  4. A „Majdnem elkészíthető” receptnél a „Bevásárlólistára” gomb a hiányzó mennyiségeket közvetlenül a listára teszi.
+  4. A „Majdnem elkészíthető” receptnél a „Hiány a bevásárlólistára” gomb a hiányzó mennyiségeket közvetlenül a listára teszi.
   5. A boltban Tomi kipipálja a megvett tételeket.
 - **Sikerkritérium:** a lista csak a Tomi által elfogadott vagy kézzel felvett tételeket tartalmazza, és egy hozzávaló nem szerepel rajta kétszer.
-- **Megvalósítva** ([shopping-360.png](../assets/shopping-360.png), [shopping.spec.ts](../../tests/e2e/shopping.spec.ts), P13). A javaslat sora megmondja, miért és mennyit javasol (*„Elfogyott (okt. 18., főzés: Lecsó).”*, *„A minimumszint (500 ml) alá csökkent: 400 ml van.”*), és a gombok alatt azt is, mi lesz a döntés következménye. A lista fölött: *„Amíg egy hozzávaló pipa nélkül a listán van, nem javaslom újra.”* A minimumszinteket ugyanezen az oldalon lehet megadni és törölni.
+- **Megvalósítva** ([shopping-360.png](../assets/shopping-360.png), [shopping.spec.ts](../../tests/e2e/shopping.spec.ts), P13). A javaslat sora megmondja, miért és mennyit javasol (*„Elfogyott (okt. 18., főzés: Lecsó).”*, *„A minimumszint (500 ml) alá csökkent: 400 ml van.”*), és a gombok alatt azt is, mi lesz a döntés következménye. A lista fölött: *„Amíg egy hozzávaló pipa nélkül a listán van, nem javaslom újra.”* A minimumszinteket ugyanezen az oldalon lehet megadni és törölni. A Készlet oldal a szűrők alatt ide mutat: *„Minimumszintet a Bevásárlólista oldalon állíthatsz be: ha a készlet az alá csökken, felveszem a bevásárlójavaslatok közé.”* A lista tételei között a „Keresés” mezővel lehet keresni.
 
 ## 4. Saját recept és archiválás (US-3)
 
 - **Cél:** Tomi felveszi a saját receptjét a saját hozzávalóival, és kiveszi az ajánlásból azt, amit nem főz.
 - **Előfeltétel:** bejelentkezett felhasználó.
 - **Lépések:**
-  1. A „Receptek” oldalon az induló és a saját receptek állnak, a saját „Saját recept” jelöléssel; mindegyiknél „Megfőztem” és „Archiválás”.
+  1. A „Receptek” oldalon az induló és a saját receptek állnak, a saját „Saját recept” jelöléssel; mindegyiknél „Recept megtekintése” és „Archiválás”. A lista fölötti „Keresés” mező a recept nevében és hozzávalóiban keres.
   2. Az „Új recept” űrlapon megadja a nevet, az adagszámot, a hozzávalókat mennyiséggel és egységgel, és ha akarja, az elkészítést. Ha egy hozzávaló nincs a listán, a mező alatt „Új hozzávaló: *név*”: megadja, mivel méri és melyik kategória, és a hozzávaló csak az ő háztartásában jelenik meg. Ugyanez a készletűrlapon is működik.
   3. Ha közben frissít vagy újra be kell jelentkeznie, a félbehagyott recept visszatöltődik: *„Visszatöltöttem a félbehagyott receptet.”*
   4. Mentés után: *„Elmentettem a receptet: Zabtejes kakaó.”* A recept a készletből ugyanúgy ajánlható és főzhető, mint az induló.
@@ -60,10 +60,12 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 |---|---|---|---|
 | Készlet | Üres készlet | *„Még üres a kamrád. Írd le egy mondatban, mit vettél – …”* | Mondatos bevitel vagy „Inkább tételenként rögzítem” |
 | „Mit főzzek?” | Üres készlet | *„Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.”* | „Készlet rögzítése” |
-| „Mit főzzek?” | Csak majdnem elkészíthető recept van | *„Most egyik receptedhez sincs meg minden hozzávaló.”* – alatta a majdnem elkészíthetők | „Bevásárlólistára” |
+| „Mit főzzek?” | Csak majdnem elkészíthető recept van | *„Most egyik receptedhez sincs meg minden hozzávaló.”* – alatta a majdnem elkészíthetők | „Hiány a bevásárlólistára” |
 | „Mit főzzek?” | Semmi nem illeszkedik | *„A kamrád alapján most nem találtam receptet. Vegyél fel saját receptet, vagy rögzíts további hozzávalókat.”* | „Új recept”, „Bevásárlás rögzítése” |
 | Receptek | Minden recept archiválva | *„Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.”* | „Új recept” |
+| Receptek | Nincs találat a keresésre | *„Nincs a keresésnek megfelelő recept.”* | A keresőszó módosítása |
 | Bevásárlólista | Üres lista | *„A listád üres. Vegyél fel tételt alább.”* – ha van javaslat: *„A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.”* | Kézi felvétel vagy „Hozzáadom” |
+| Bevásárlólista | Nincs találat a keresésre | *„Nincs a keresésnek megfelelő tétel a listádon.”* | A keresőszó módosítása |
 
 ## Hibakezelés
 
@@ -111,5 +113,7 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 
 - A 2., a 3. és a 4. flow kész. Lejárt munkamenet után a bejelentkezés ugyanarra az oldalra visz vissza (az útvonal az URL-ben marad), navigáláskor a fókusz az új oldal címére kerül. Az 1. flow kézi ága kész ([pantry.spec.ts](../../tests/e2e/pantry.spec.ts)), a mondatos bevitel a US-2-vel jön; addig az üres készlet szövege: *„Még üres a kamrád. Rögzítsd az első tételt az »Új tétel« űrlappal.”* A bejelentkezés, a regisztráció és a H4 hibaüzenet a walking skeleton óta él ([auth.spec.ts](../../tests/e2e/auth.spec.ts)).
 - Az „Új hozzávaló” csak a készlet- és a receptűrlapon érhető el, a bevásárlólistán és a minimumszintnél nem. A saját hozzávaló és a saját recept nem szerkeszthető, az archiválás nem vonható vissza (data_model, Ismert hiányosságok).
-- A „Bevásárlólistára” és a „Hiány a bevásárlólistára” gomb a sikeres felvétel után eltűnik az adott képernyőről. Ha az oldal újratöltése után újra megnyomod, a mennyiségek összeadódnak, a lista egy sor marad. Ha a főzés előnézetén a felvétel után módosítod a mennyiségeket, a különbséget kézzel veheted fel a listára.
+- A „Hiány a bevásárlólistára” gomb (a „Mit főzzek?” oldalon és a főzés előnézetén) a sikeres felvétel után eltűnik az adott képernyőről. Ha az oldal újratöltése után újra megnyomod, a mennyiségek összeadódnak, a lista egy sor marad. Ha a főzés előnézetén a felvétel után módosítod a mennyiségeket, a különbséget kézzel veheted fel a listára.
+- A keresés a böngészőben szűr; az ékezet számít (a „lecso” nem találja a „Lecsó”-t), ahogy a készletnél.
+- A képernyőképek (`docs/assets`) a `v0.3.0` feliratait mutatják.
 - A szerkesztőablak bezárásakor a fókusz visszakerül a megnyitó „Módosítás” gombra ([V-28](../07_ai/verification_log.md)); törléskor a gomb megszűnik, ilyenkor a fókusz a lap elejére kerül.

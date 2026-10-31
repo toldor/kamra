@@ -43,7 +43,7 @@ test('the shortage goes from the recipe to the list and the depleted item become
   await page.getByRole('link', { name: 'Mit főzzek?' }).click()
   const card = page.getByRole('article', { name: 'Lecsó' })
   await expect(card).toContainText('paradicsom: 100 g hiányzik (200 g van, 300 g kell)')
-  await card.getByRole('link', { name: 'Megfőztem' }).click()
+  await card.getByRole('link', { name: 'Recept megtekintése' }).click()
 
   await expect(page.getByRole('group', { name: 'paradicsom' })).toContainText('Hiány: 100 g')
   await page.getByRole('button', { name: 'Hiány a bevásárlólistára' }).click()

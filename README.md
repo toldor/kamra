@@ -97,7 +97,7 @@ A chat nem módosíthat közvetlenül adatot.
 
 ## Architektúra
 
-Megvalósult (v0.3.0): React-frontend, Web API, Application, Domain, Infrastructure, PostgreSQL. Tervezett: LLM-adapter (2. lépcső) és MCP-szerver (3. lépcső).
+Megvalósult (v0.3.1): React-frontend, Web API, Application, Domain, Infrastructure, PostgreSQL. Tervezett: LLM-adapter (2. lépcső) és MCP-szerver (3. lépcső).
 
 ```text
 React + TypeScript frontend
@@ -215,7 +215,7 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 | Szakasz | Tervezett tartalom | Állapot |
 |---|---|---|
 | Alapok | Repository, CI, architektúra, walking skeleton (autentikáció, Docker Compose) | Kész (2026-10-04) |
-| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Kész (v0.3.0, 2026-10-24); a felhasználói kipróbálás okt. 26-tól |
+| 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Kész (v0.3.0, 2026-10-24; az UAT előtti javítások: v0.3.1, 2026-10-31); a felhasználói kipróbálás okt. 26-tól |
 | 2. lépcső | AI-alapú egy mondatos készletbevitel | Tervezett (cél: nov. 3.; témavezetői: nov. 6.) |
 | 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett (cél: nov. 10.; témavezetői: nov. 20.) |
 | Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett (cél: dec. 4.) |
