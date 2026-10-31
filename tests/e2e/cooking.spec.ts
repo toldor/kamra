@@ -43,7 +43,7 @@ async function addLecsoStock(page: Page) {
 
 async function openLecso(page: Page) {
   await page.getByRole('link', { name: 'Mit főzzek?' }).click()
-  await page.getByRole('article', { name: 'Lecsó' }).getByRole('link', { name: 'Megfőztem' }).click()
+  await page.getByRole('article', { name: 'Lecsó' }).getByRole('link', { name: 'Recept megtekintése' }).click()
   await expect(page.getByRole('heading', { name: 'Lecsó főzése' })).toBeVisible()
 }
 

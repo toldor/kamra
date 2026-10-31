@@ -104,7 +104,7 @@ describe('cooking', () => {
     })
     render(<App />)
 
-    fireEvent.click(within(await screen.findByRole('article', { name: 'Lecsó' })).getByRole('link', { name: 'Megfőztem' }))
+    fireEvent.click(within(await screen.findByRole('article', { name: 'Lecsó' })).getByRole('link', { name: 'Recept megtekintése' }))
 
     expect(await screen.findByRole('heading', { name: 'Lecsó főzése' })).toBeTruthy()
   })
@@ -118,9 +118,10 @@ describe('cooking', () => {
     const tomatoes = group('paradicsom')
     expect(tomatoes.textContent).toContain('Kell: 300 g · Van: 600 g')
     expect((within(tomatoes).getByLabelText('Felhasznált (g)') as HTMLInputElement).value).toBe('300')
-    expect(tomatoes.textContent).toContain('Levonás: okt. 12. – 200 g, okt. 16. – 100 g')
-    expect(group('étolaj').textContent).toContain('Levonás: okt. 10. – 30 ml (lejárt)')
+    expect(tomatoes.textContent).toContain('Levonás (lejárat – mennyiség): okt. 12. – 200 g, okt. 16. – 100 g')
+    expect(group('étolaj').textContent).toContain('Levonás (lejárat – mennyiség): okt. 10. – 30 ml (lejárt)')
     expect(group('vöröshagyma').textContent).toContain('Hiány: 150 g')
+    expect(group('vöröshagyma').textContent).not.toContain('Levonás')
     expect(screen.getByText('Alaphozzávalók, ezek nem vonódnak le: só.')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Elkészítés' })).toBeTruthy()
     expect(screen.getByText(/Pirítsd meg a hagymát/)).toBeTruthy()

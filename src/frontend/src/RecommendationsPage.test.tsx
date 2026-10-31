@@ -194,13 +194,13 @@ describe('shortage to the shopping list', () => {
     // The live region is in place before it speaks, so a screen reader announces the result.
     const status = within(card).getByRole('status')
     expect(status.textContent).toBe('')
-    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Hiány a bevásárlólistára' }))
 
     await waitFor(() => expect(status.textContent).toBe('Felvettem a listára: tojás 3 db, tejföl 50 g.'))
     // The pressed button is gone, so the focus moves to the result.
     expect(document.activeElement).toBe(status)
     expect(within(card).getByRole('link', { name: 'Megnézem' }).getAttribute('href')).toBe('#/bevasarlolista')
-    expect(within(card).queryByRole('button', { name: 'Bevásárlólistára' })).toBeNull()
+    expect(within(card).queryByRole('button', { name: 'Hiány a bevásárlólistára' })).toBeNull()
     expect(sent(calls)).toEqual([
       { ingredientId: 'i-tojás', amount: 3, unit: 'db' },
       { ingredientId: 'i-tejföl', amount: 50, unit: 'g' },
@@ -215,9 +215,9 @@ describe('shortage to the shopping list', () => {
     render(<App />)
 
     const card = await screen.findByRole('article', { name: 'Rántotta' })
-    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Hiány a bevásárlólistára' }))
     expect((await within(card).findByText(/Nem sikerült kapcsolódni a szerverhez/)).getAttribute('role')).toBe('alert')
-    fireEvent.click(within(card).getByRole('button', { name: 'Bevásárlólistára' }))
+    fireEvent.click(within(card).getByRole('button', { name: 'Hiány a bevásárlólistára' }))
 
     expect(await within(card).findByText('Felvettem a listára: tojás 3 db, tejföl 50 g.')).toBeTruthy()
     expect(sent(calls)).toEqual([
@@ -231,6 +231,6 @@ describe('shortage to the shopping list', () => {
     backend([recommendations({ makeable: [recipe('Lecsó')], almostMakeable: [rantotta] })])
     render(<App />)
 
-    expect(within(await screen.findByRole('article', { name: 'Lecsó' })).queryByRole('button', { name: 'Bevásárlólistára' })).toBeNull()
+    expect(within(await screen.findByRole('article', { name: 'Lecsó' })).queryByRole('button', { name: 'Hiány a bevásárlólistára' })).toBeNull()
   })
 })
