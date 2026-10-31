@@ -56,7 +56,7 @@ describe('navigation', () => {
     backend([recommendations({})])
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Kamra' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Készlet' })).toBeTruthy()
     fireEvent.click(screen.getByRole('link', { name: 'Mit főzzek?' }))
 
     expect(await screen.findByRole('heading', { name: 'Mit főzzek?' })).toBeTruthy()
@@ -69,7 +69,7 @@ describe('navigation', () => {
     backend([recommendations({})])
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Kamra' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Készlet' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Készlet' }).getAttribute('aria-current')).toBe('page')
 
     fireEvent.click(screen.getByRole('link', { name: 'Mit főzzek?' }))

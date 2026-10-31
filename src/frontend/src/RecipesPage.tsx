@@ -51,8 +51,10 @@ export function RecipesPage({ notice: openingNotice, onSignedOut }: { notice?: s
 
   return (
     <main>
-      <h1 tabIndex={-1}>Receptek</h1>
-      <p><a href={routes.newRecipe} className="button-link">Új recept</a></p>
+      <div className="page-head">
+        <h1 tabIndex={-1}>Receptek</h1>
+        <a href={routes.newRecipe} className="button-link">Új recept</a>
+      </div>
       <p ref={noticeRef} role="status" className="notice" tabIndex={-1}>{notice}</p>
       <p role="alert" className="form-error">{error}</p>
       {load.status === 'loading' && <p>Betöltés…</p>}
@@ -85,15 +87,18 @@ function RecipeList({ recipes, busy, onArchive }: { recipes: Recipe[]; busy: boo
   const [search, setSearch] = useState('')
   const shown = recipes.filter((r) => matchesSearch(search, r.name, ...r.ingredients))
   return (
-    <>
-      <form role="search" className="filters" onSubmit={(e) => e.preventDefault()}>
+    <div className="split">
+      <form role="search" className="filters panel side" onSubmit={(e) => e.preventDefault()}>
         <label htmlFor="recipe-search">Keresés</label>
         <input id="recipe-search" type="search" aria-describedby="recipe-search-hint" value={search} onChange={(e) => setSearch(e.target.value)} />
         <p id="recipe-search-hint" className="hint">A recept nevében és a hozzávalóiban keresek.</p>
       </form>
-      {shown.length === 0 && <p className="empty">Nincs a keresésnek megfelelő recept.</p>}
-      {shown.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => onArchive(r)} />)}
-    </>
+      <div className="content">
+        {shown.length === 0
+          ? <p className="empty">Nincs a keresésnek megfelelő recept.</p>
+          : <div className="panel">{shown.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => onArchive(r)} />)}</div>}
+      </div>
+    </div>
   )
 }
 
@@ -101,12 +106,15 @@ function RecipeCard({ recipe, busy, onArchive }: { recipe: Recipe; busy: boolean
   const headingId = useId()
   return (
     <article aria-labelledby={headingId} className="recipe">
-      <h2 id={headingId}>{recipe.name}</h2>
-      <p>{recipe.servings} adag</p>
-      {recipe.own && <p>Saját recept</p>}
-      <p>Hozzávalók: {recipe.ingredients.join(', ')}</p>
+      <div className="recipe-head">
+        <h2 id={headingId}>{recipe.name}</h2>
+        <span className="leader" aria-hidden="true" />
+        <span className="serv">{recipe.servings} adag</span>
+      </div>
+      {recipe.own && <p><span className="badge neutral">Saját recept</span></p>}
+      <p className="hint">Hozzávalók: {recipe.ingredients.join(', ')}</p>
       <div className="actions">
-        <a href={cookingRoute(recipe.id)} className="button-link">Recept megtekintése</a>
+        <a href={cookingRoute(recipe.id)} className="button-link">Megnyitás</a>
         <button type="button" className="secondary" aria-label={`Archiválás: ${recipe.name}`} disabled={busy} onClick={onArchive}>
           Archiválás
         </button>

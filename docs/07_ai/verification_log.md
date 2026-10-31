@@ -533,3 +533,24 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Kódolvasás (`refresh` a `ShoppingListPage.tsx`-ben), a terv szövege, két mutáció: K7 (az újratöltés betöltő állapoton át, vagyis újramountolással), K1 (ékezet nélküli egyezés a `matchesSearch`-ben).
 - **Eredmény:** **Részben PASS.** #7: az indoklás téves (a `refresh` közvetlenül a kész állapotot állítja be, a keresőszó megmarad), de a K7 alatt a teszt zöld maradt, mert az utolsó ellenőrzés az újratöltés vége előtt futhatott. #1: a K1 alatt mind a 98 teszt zöld volt, az ékezetszabályt semmi sem rögzítette. #4 téves (a terv az átírt ágra a régi szöveget írja elő); a többi 6 téves vagy már eldöntött.
 - **Következtetés:** Két teszt erősödött (a frissítés végének megvárása és a keresőszó ellenőrzése; a „lecso” negatív eset); a K1 és a K7 most elbukik. Tanulság: a reviewer téves indoklása mögött is lehet valós gyengeség – kísérlettel ellenőrzöm, nem érveléssel.
+
+### V-63 – A színtokenek kontrasztja
+- **Állítás:** A Claude Code szerint a C2/C3 design színpárjai teljesítik a WCAG 2.2 AA kontrasztot (szöveg 4,5:1, nem-szöveges elem 3:1).
+- **Kockázat:** Közepes. Az akadálymentességi minimum az `ux_flows` része; egy rossz pár olvashatatlan szöveget vagy láthatatlan fókuszt ad.
+- **Ellenőrzési módszer:** [tokens.test.ts](../../src/frontend/src/tokens.test.ts): a WCAG relatív fényességével számol az `index.css` tokenjeiből (17 szöveges, 5 nem-szöveges pár); a böngészőben e2e a hover-állapotra.
+- **Eredmény:** **FAIL, majd PASS.** A kék fókuszkeret (`#0b57d0`) az olívazöld fejsávon csak kb. 2:1 – ott a fejsáv világos szövegszíne lett a fókuszkeret, ezt a teszt is rögzíti. A `/code-review` egy olyan esetet is talált, amit a tokenteszt nem lát: a „Kijelentkezés” hoverkor egy később álló, azonos specificitású szabálytól a másodlagos szövegszínt kapta (1,82:1, e2e-vel mérve) – regressziós teszt és javítás.
+- **Következtetés:** A tokenpárok tesztje a színeket védi, a CSS-szabályok sorrendjét nem; az állapotokat (hover, fókusz) a böngészőben is mérni kell.
+
+### V-64 – Az ő és az ű a saját tárhelyű betűkben
+- **Állítás:** A Google Fonts latin-ext fájljai (`unicode-range` U+0100–02BA) tartalmazzák a magyar ő (U+0151) és ű (U+0171) betűt, így a saját tárhelyű Zilla Slab és IBM Plex Sans ezeket is a saját alakjával rajzolja.
+- **Kockázat:** Alacsony–közepes. Hiányzó glifánál a böngésző tartalékbetűvel rajzolná a két betűt („Mit főzzek?”), ami a címekben feltűnő.
+- **Ellenőrzési módszer:** A letöltött Google Fonts CSS `unicode-range` mezője; e2e [pantry.spec.ts](../../tests/e2e/pantry.spec.ts): `document.fonts.load('…', 'őű')` a latin-ext tartományú betűt tölti be; mutáció: a latin-ext fájlok nélkül a teszt mindkét nézetben elbukik; képernyőkép a „Mit főzzek?” címről.
+- **Eredmény:** **PASS.**
+- **Következtetés:** A latin + latin-ext pár elég a magyar szöveghez; betűfrissítéskor a `unicode-range` értékeket is át kell venni (ADR-0013).
+
+### V-65 – Az újratervezés két reviewja
+- **Állítás:** A `/code-review` (Claude, két ágens: kódolási szabályok és spec) és az Antigravity (Gemini) megállapításai a `feature/design-system` ágon.
+- **Kockázat:** Közepes. Egy téves megállapítás felesleges változtatáshoz, egy elmulasztott valós hiba akadálymentességi hibához vezet.
+- **Ellenőrzési módszer:** Minden állítás a kódon: CSS-specificitás, a `tokens.test.ts` tömbjei, grep a nem használt osztályokra, a terv szövege; a hover-hiba e2e-mérése (1,82:1).
+- **Eredmény:** **Részben PASS.** `/code-review`: 1 valós hiba (a fejsáv hover-kontrasztja), 4 takarítás (nem használt CSS és betű, egy hiányzó tokenpár, a kommentek, a behúzás), a többi mérlegelés vagy már eldöntött. Antigravity: 8 megállapítás, valós hiba nincs; a közepesnek jelölt #2 téves (a pár a szöveges tömbben van, 4,5:1-re ellenőrizve), a #5 téves (a kereső már panelben van), egy doksi-teendő (#8: asztali képernyőkép mindkét ajánlási csoporttal).
+- **Következtetés:** A valós hibát a specificitást végigkövető review találta, nem a tesztek; a súlyosság itt sem bizonyíték, minden megállapítást a kódon ellenőrzök.

@@ -53,10 +53,10 @@ export function AuthForm({ mode, notice, onSignedIn, onSwitchMode }: {
   const showHint = mode === 'register' && !fieldError('password')
 
   return (
-    <main>
+    <main className="narrow">
       <h1>{text[mode].title}</h1>
       {notice && <p role="status" className="notice">{notice}</p>}
-      <form onSubmit={submit} noValidate>
+      <form className="panel" onSubmit={submit} noValidate>
         <label htmlFor="email">E-mail-cím</label>
         <input
           ref={emailInput}

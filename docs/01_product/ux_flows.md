@@ -46,7 +46,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Cél:** Tomi felveszi a saját receptjét a saját hozzávalóival, és kiveszi az ajánlásból azt, amit nem főz.
 - **Előfeltétel:** bejelentkezett felhasználó.
 - **Lépések:**
-  1. A „Receptek” oldalon az induló és a saját receptek állnak, a saját „Saját recept” jelöléssel; mindegyiknél „Recept megtekintése” és „Archiválás”. A lista fölötti „Keresés” mező a recept nevében és hozzávalóiban keres.
+  1. A „Receptek” oldalon az induló és a saját receptek állnak, a saját „Saját recept” jelöléssel; mindegyiknél „Megnyitás” és „Archiválás”. A lista fölötti „Keresés” mező a recept nevében és hozzávalóiban keres.
   2. Az „Új recept” űrlapon megadja a nevet, az adagszámot, a hozzávalókat mennyiséggel és egységgel, és ha akarja, az elkészítést. Ha egy hozzávaló nincs a listán, a mező alatt „Új hozzávaló: *név*”: megadja, mivel méri és melyik kategória, és a hozzávaló csak az ő háztartásában jelenik meg. Ugyanez a készletűrlapon is működik.
   3. Ha közben frissít vagy újra be kell jelentkeznie, a félbehagyott recept visszatöltődik: *„Visszatöltöttem a félbehagyott receptet.”*
   4. Mentés után: *„Elmentettem a receptet: Zabtejes kakaó.”* A recept a készletből ugyanúgy ajánlható és főzhető, mint az induló.
@@ -96,6 +96,7 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 - A hibaüzenetek képernyőolvasóval is felolvasódnak (`aria-live`), és a hibás mezőhöz kapcsolódnak.
 - Az ikonos gomboknak szöveges neve van.
 - Mobilon legalább 16 px-es alap betűméret, és legalább 44×44 px-es érintési felület.
+- A színek kontrasztját teszt őrzi ([tokens.test.ts](../../src/frontend/src/tokens.test.ts)); a sötét fejsávon a fókuszkeret a fejsáv világos szövegszíne.
 
 **Ellenőrzés:** a Chrome Lighthouse akadálymentességi auditja a készlet, a „Mit főzzek?” és a bevásárlólista oldalon (legalább 90 pont), valamint egy kézi billentyűzetes bejárás. Opcionális bővítés: automatizált axe-core ellenőrzés az e2e tesztekben (új függőség, jóváhagyás kell).
 
@@ -103,9 +104,9 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 
 | Flow | Screenshot / GIF | E2E teszt |
 |---|---|---|
-| 1. Első indulás és bevásárlás rögzítése | Kézi ág: [pantry-360.png](../assets/pantry-360.png) (360 px); a mondatos ág a US-2-vel | Kézi ág: [pantry.spec.ts](../../tests/e2e/pantry.spec.ts) (rögzítés becsült lejárattal, csökkentés okkal, törlés, fókusz-visszaadás); a mondatos ág a 2. lépcsőben |
-| 2. „Mit főzzek?” – főzés | Ajánlás: [recommendations-360.png](../assets/recommendations-360.png) (P7); főzés: [cooking-360.png](../assets/cooking-360.png), [cooking-done-360.png](../assets/cooking-done-360.png) (P2) | [cooking.spec.ts](../../tests/e2e/cooking.spec.ts) (a fő flow a P2-vel, dupla kattintás); [RecommendationsPage.test.tsx](../../src/frontend/src/RecommendationsPage.test.tsx), [CookingPage.test.tsx](../../src/frontend/src/CookingPage.test.tsx) |
-| 3. Bevásárlójavaslattól a listáig | [shopping-360.png](../assets/shopping-360.png) (P13) | [shopping.spec.ts](../../tests/e2e/shopping.spec.ts) (P13 a teljes úton: ugyanaz a hiány az ajánlásban, az előnézeten és a listán); [ShoppingListPage.test.tsx](../../src/frontend/src/ShoppingListPage.test.tsx) |
+| 1. Első indulás és bevásárlás rögzítése | Kézi ág: [pantry-360.png](../assets/pantry-360.png) (360 px), [pantry-1280.png](../assets/pantry-1280.png) (asztali); a mondatos ág a US-2-vel | Kézi ág: [pantry.spec.ts](../../tests/e2e/pantry.spec.ts) (rögzítés becsült lejárattal, csökkentés okkal, törlés, fókusz-visszaadás); a mondatos ág a 2. lépcsőben |
+| 2. „Mit főzzek?” – főzés | Ajánlás: [recommendations-360.png](../assets/recommendations-360.png) (P7), [recommendations-1280.png](../assets/recommendations-1280.png) (asztali, mindkét csoporttal); főzés: [cooking-360.png](../assets/cooking-360.png), [cooking-done-360.png](../assets/cooking-done-360.png) (P2) | [cooking.spec.ts](../../tests/e2e/cooking.spec.ts) (a fő flow a P2-vel, dupla kattintás); [RecommendationsPage.test.tsx](../../src/frontend/src/RecommendationsPage.test.tsx), [CookingPage.test.tsx](../../src/frontend/src/CookingPage.test.tsx) |
+| 3. Bevásárlójavaslattól a listáig | [shopping-360.png](../assets/shopping-360.png) (P13), [shopping-1280.png](../assets/shopping-1280.png) (asztali) | [shopping.spec.ts](../../tests/e2e/shopping.spec.ts) (P13 a teljes úton: ugyanaz a hiány az ajánlásban, az előnézeten és a listán); [ShoppingListPage.test.tsx](../../src/frontend/src/ShoppingListPage.test.tsx) |
 | 4. Saját recept és archiválás | [recipes-360.png](../assets/recipes-360.png), [recipes-form-360.png](../assets/recipes-form-360.png) | [recipes.spec.ts](../../tests/e2e/recipes.spec.ts) (saját recept saját hozzávalóval, a piszkozat túléli az újratöltést, ajánlásban megjelenik, archiválás után eltűnik); [RecipesPage.test.tsx](../../src/frontend/src/RecipesPage.test.tsx) |
 | Hibakezelés (H1, H3) | Screenshot a hibaüzenettel és a helyreállítással | Playwright: AI-kiesés mockkal, hálózati hiba |
 
@@ -115,5 +116,4 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 - Az „Új hozzávaló” csak a készlet- és a receptűrlapon érhető el, a bevásárlólistán és a minimumszintnél nem. A saját hozzávaló és a saját recept nem szerkeszthető, az archiválás nem vonható vissza (data_model, Ismert hiányosságok).
 - A „Hiány a bevásárlólistára” gomb (a „Mit főzzek?” oldalon és a főzés előnézetén) a sikeres felvétel után eltűnik az adott képernyőről. Ha az oldal újratöltése után újra megnyomod, a mennyiségek összeadódnak, a lista egy sor marad. Ha a főzés előnézetén a felvétel után módosítod a mennyiségeket, a különbséget kézzel veheted fel a listára.
 - A keresés a böngészőben szűr; az ékezet számít (a „lecso” nem találja a „Lecsó”-t), ahogy a készletnél.
-- A képernyőképek (`docs/assets`) a `v0.3.0` feliratait mutatják.
 - A szerkesztőablak bezárásakor a fókusz visszakerül a megnyitó „Módosítás” gombra ([V-28](../07_ai/verification_log.md)); törléskor a gomb megszűnik, ilyenkor a fókusz a lap elejére kerül.

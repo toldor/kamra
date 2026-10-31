@@ -122,7 +122,7 @@ export function RecipeForm({ onSaved, onSignedOut }: { onSaved: (notice: string)
   }
 
   return (
-    <main>
+    <main className="form-page">
       <h1 tabIndex={-1}>Új recept</h1>
       <p role="status" className="notice">{restoredNotice}</p>
       {catalog.status === 'loading' && <p>Betöltés…</p>}

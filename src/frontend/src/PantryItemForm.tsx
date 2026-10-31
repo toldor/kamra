@@ -65,7 +65,7 @@ export function PantryItemForm({ categories, ingredients, onAdded, onIngredientC
   }
 
   return (
-    <form aria-labelledby="new-item-heading" onSubmit={submit} noValidate>
+    <form aria-labelledby="new-item-heading" className="panel" onSubmit={submit} noValidate>
       <h2 id="new-item-heading">Új tétel</h2>
 
       <IngredientPicker
