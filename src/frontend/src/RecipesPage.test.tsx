@@ -133,6 +133,17 @@ describe('the search on the Receptek page', () => {
     expect(shown()).toEqual(['Zabtejes kakaó'])
   })
 
+  // D1: like the pantry search, accents count.
+  it('does not find a recipe without its accents', async () => {
+    backend()
+    render(<App />)
+    await screen.findByRole('article', { name: 'Lecsó' })
+
+    fireEvent.change(search(), { target: { value: 'lecso' } })
+
+    expect(shown()).toEqual([])
+  })
+
   it('finds a recipe by an ingredient, and says where it searches', async () => {
     backend()
     render(<App />)

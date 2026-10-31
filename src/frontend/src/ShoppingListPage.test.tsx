@@ -150,7 +150,10 @@ describe('the search on the list', () => {
     // The filtered row acts on its own item, and the search survives the reload after the write.
     fireEvent.click(screen.getByRole('checkbox', { name: 'tej' }))
     await waitFor(() => expect(count(calls, list)).toBe(2))
+    // The boxes are enabled again only once the reloaded list is shown.
+    await waitFor(() => expect((screen.getByRole('checkbox', { name: 'tej' }) as HTMLInputElement).disabled).toBe(false))
     expect(bodyOf(calls, 'PUT /api/v1/shopping-list/items/l-tej')).toEqual({ checked: true })
+    expect((search() as HTMLInputElement).value).toBe(' TEJ ')
     expect(screen.queryByRole('checkbox', { name: 'paprika – 500 g' })).toBeNull()
   })
 
