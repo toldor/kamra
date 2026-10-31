@@ -102,6 +102,16 @@ describe('pantry list', () => {
     expect(await screen.findByText('Nincs a szűrésnek megfelelő tétel.')).toBeTruthy()
   })
 
+  // v0.3.1: the minimum levels live on the shopping list page; the pantry points there.
+  it('tells where the minimum levels are set, with a link', async () => {
+    pantryBackend([pantry()])
+    render(<App />)
+
+    const hint = await screen.findByText(/^Minimumszintet a/)
+    expect(hint.textContent).toBe('Minimumszintet a Bevásárlólista oldalon állíthatsz be: ha a készlet az alá csökken, felveszem a bevásárlójavaslatok közé.')
+    expect(within(hint).getByRole('link', { name: 'Bevásárlólista' }).getAttribute('href')).toBe('#/bevasarlolista')
+  })
+
   it('shows an error with a retry button', async () => {
     pantryBackend([
       { status: 500, body: { code: 'INTERNAL_ERROR', title: 'Váratlan hiba történt. Próbáld újra később.' } },

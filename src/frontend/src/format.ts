@@ -55,3 +55,7 @@ const normalize = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase
 // ADR-0003: only an ingredient from the list can be chosen; undefined while the text matches none.
 export const findIngredient = (ingredients: Ingredient[], name: string) =>
   ingredients.find((i) => normalize(i.name) === normalize(name))
+
+// The Receptek and Bevásárlólista search: the query anywhere in one of the texts, by the same rule as
+// the backend's pantry search (case and extra spaces do not matter, accents do).
+export const matchesSearch = (query: string, ...texts: string[]) => texts.some((t) => normalize(t).includes(normalize(query)))

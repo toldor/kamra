@@ -129,6 +129,54 @@ describe('shopping list page', () => {
   })
 })
 
+// v0.3.1: the search filters the list in the browser (case and extra spaces do not matter).
+describe('the search on the list', () => {
+  const search = () => within(screen.getByRole('search')).getByLabelText('Keresés')
+  const threeItems = (extra: Record<string, Reply[]> = {}) =>
+    backend({ [list]: [ok([item('paprika', { value: 500, unit: 'g' }), item('tejföl', null, true), item('tej', null)])], ...extra })
+
+  it('shows only the matching items, and they can still be checked off', async () => {
+    const calls = threeItems({ 'PUT /api/v1/shopping-list/items/l-tej': [ok(item('tej', null, true))] })
+    render(<App />)
+    await screen.findByRole('checkbox', { name: 'paprika – 500 g' })
+
+    fireEvent.change(search(), { target: { value: ' TEJ ' } })
+
+    expect(screen.queryByRole('checkbox', { name: 'paprika – 500 g' })).toBeNull()
+    expect(screen.getByRole('checkbox', { name: 'tejföl' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Törlés: tej' })).toBeTruthy()
+    expect(count(calls, list)).toBe(1)
+
+    // The filtered row acts on its own item, and the search survives the reload after the write.
+    fireEvent.click(screen.getByRole('checkbox', { name: 'tej' }))
+    await waitFor(() => expect(count(calls, list)).toBe(2))
+    // The boxes are enabled again only once the reloaded list is shown.
+    await waitFor(() => expect((screen.getByRole('checkbox', { name: 'tej' }) as HTMLInputElement).disabled).toBe(false))
+    expect(bodyOf(calls, 'PUT /api/v1/shopping-list/items/l-tej')).toEqual({ checked: true })
+    expect((search() as HTMLInputElement).value).toBe(' TEJ ')
+    expect(screen.queryByRole('checkbox', { name: 'paprika – 500 g' })).toBeNull()
+  })
+
+  it('says so when nothing matches', async () => {
+    threeItems()
+    render(<App />)
+    await screen.findByRole('checkbox', { name: 'paprika – 500 g' })
+
+    fireEvent.change(search(), { target: { value: 'xyz' } })
+
+    expect(screen.getByText('Nincs a keresésnek megfelelő tétel a listádon.')).toBeTruthy()
+    expect(screen.queryAllByRole('checkbox')).toEqual([])
+  })
+
+  it('is not offered for an empty list', async () => {
+    backend()
+    render(<App />)
+
+    expect(await screen.findByText('A listád üres. Vegyél fel tételt alább.')).toBeTruthy()
+    expect(screen.queryByRole('search')).toBeNull()
+  })
+})
+
 describe('shopping suggestions', () => {
   it('explains a depleted suggestion and accepts it without an amount', async () => {
     const calls = backend({

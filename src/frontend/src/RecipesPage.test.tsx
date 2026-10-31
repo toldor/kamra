@@ -74,7 +74,7 @@ describe('the Receptek page (N9)', () => {
     expect(card('Lecsó').getByText('4 adag')).toBeTruthy()
     expect(card('Lecsó').queryByText('Saját recept')).toBeNull()
     expect(card('Lecsó').getByText('Hozzávalók: étolaj, paprika, paradicsom, só, vöröshagyma')).toBeTruthy()
-    expect(card('Lecsó').getByRole('link', { name: 'Megfőztem' }).getAttribute('href')).toBe('#/fozes/r-lecso')
+    expect(card('Lecsó').getByRole('link', { name: 'Recept megtekintése' }).getAttribute('href')).toBe('#/fozes/r-lecso')
     expect(card('Zabtejes kakaó').getByText('Saját recept')).toBeTruthy()
     expect(card('Zabtejes kakaó').getByText('1 adag')).toBeTruthy()
   })
@@ -115,6 +115,59 @@ describe('the Receptek page (N9)', () => {
     await waitFor(() => expect(screen.queryByRole('article', { name: 'Lecsó' })).toBeNull())
     await waitFor(() => expect(document.activeElement).toBe(notice))
     expect(calls.filter((c) => c.key === 'POST /api/v1/recipes/r-lecso/archive')).toHaveLength(1)
+  })
+})
+
+// v0.3.1: the search filters in the browser, like the pantry search (case and extra spaces do not matter).
+describe('the search on the Receptek page', () => {
+  const search = () => within(screen.getByRole('search')).getByLabelText('Keresés')
+  const shown = () => screen.queryAllByRole('article').map((a) => within(a).getByRole('heading').textContent)
+
+  it('finds a recipe by its name, whatever the case and the spaces', async () => {
+    backend()
+    render(<App />)
+    await screen.findByRole('article', { name: 'Lecsó' })
+
+    fireEvent.change(search(), { target: { value: '  ZABTEJES   kakaó ' } })
+
+    expect(shown()).toEqual(['Zabtejes kakaó'])
+  })
+
+  // D1: like the pantry search, accents count.
+  it('does not find a recipe without its accents', async () => {
+    backend()
+    render(<App />)
+    await screen.findByRole('article', { name: 'Lecsó' })
+
+    fireEvent.change(search(), { target: { value: 'lecso' } })
+
+    expect(shown()).toEqual([])
+  })
+
+  it('finds a recipe by an ingredient, and says where it searches', async () => {
+    backend()
+    render(<App />)
+    await screen.findByRole('article', { name: 'Lecsó' })
+
+    fireEvent.change(search(), { target: { value: 'paprika' } })
+
+    expect(shown()).toEqual(['Lecsó'])
+    expect(document.getElementById(search().getAttribute('aria-describedby')!)?.textContent)
+      .toBe('A recept nevében és a hozzávalóiban keresek.')
+  })
+
+  it('says so when nothing matches, and shows every recipe again when the field is emptied', async () => {
+    backend()
+    render(<App />)
+    await screen.findByRole('article', { name: 'Lecsó' })
+
+    fireEvent.change(search(), { target: { value: 'xyz' } })
+    expect(shown()).toEqual([])
+    expect(screen.getByText('Nincs a keresésnek megfelelő recept.')).toBeTruthy()
+
+    fireEvent.change(search(), { target: { value: '' } })
+    expect(shown()).toEqual(['Lecsó', 'Zabtejes kakaó'])
+    expect(screen.queryByText('Nincs a keresésnek megfelelő recept.')).toBeNull()
   })
 })
 

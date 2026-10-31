@@ -46,8 +46,9 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 *Felhasználóként látni akarom, mit főzhetek abból, ami otthon van, elöl azzal, ami hamarosan lejáró alapanyagot használ fel.*
 
 - Induló receptkészlet: 20–40 magyar hétköznapi recept, strukturált hozzávalókkal. Saját recept kézzel is felvihető (név, adagszám, hozzávalók mennyiséggel és egységgel, elkészítés). Bármely recept, az induló is, archiválható a saját háztartásban: az archivált recept nem jelenik meg az ajánlásban, és nem főzhető újra; a korábbi főzések megmaradnak, más háztartásban az induló recept változatlanul elérhető.
+- A receptlista kereshető a recept nevében és hozzávalóiban, kis- és nagybetűtől és fölös szóközöktől függetlenül (ahogy a készlet).
 - **Elkészíthető** a recept, ha minden hozzávaló megvan a szükséges mennyiségben. Rangsor: (1) a felhasznált hamarosan lejáró készlettételek száma szerint csökkenő, (2) a legkorábbi lejárat szerint, (3) név szerint.
-- **Majdnem elkészíthető** a recept, ha legfeljebb 2 hozzávaló hiányzik vagy kevés. Hozzávalónként látszik a hiányzó mennyiség, valamint az, hogy mennyi van és mennyi kell (például „tejföl: 50 g hiányzik (150 g van, 200 g kell)”); a hiány a recept alapértelmezett adagszámára számolódik. A „Bevásárlólistára” gomb egy kattintással a hiányzó mennyiségeket teszi a listára.
+- **Majdnem elkészíthető** a recept, ha legfeljebb 2 hozzávaló hiányzik vagy kevés. Hozzávalónként látszik a hiányzó mennyiség, valamint az, hogy mennyi van és mennyi kell (például „tejföl: 50 g hiányzik (150 g van, 200 g kell)”); a hiány a recept alapértelmezett adagszámára számolódik. A „Hiány a bevásárlólistára” gomb egy kattintással a hiányzó mennyiségeket teszi a listára.
 - Minden ajánlás mellett indoklás áll: elkészíthető receptnél a felhasznált hamarosan lejáró hozzávalók (például „2 hamarosan lejáró hozzávalót használ fel: tejföl, paradicsom”), ennek hiányában „Minden hozzávaló megvan.”; majdnem elkészíthető receptnél a hiányzó mennyiségek.
 - Az **alaphozzávalók** (víz, só, bors) nem számítanak bele az illesztésbe.
 - A lejárt készlettétel is a készlet része: beleszámít az illesztésbe, de nem hamarosan lejáró; az ajánlásban lejártként jelölt.
@@ -73,6 +74,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 - A bevásárlójavaslatok a bevásárlólista felületén jelennek meg, és ott elfogadhatók (felkerülnek a listára) vagy elutasíthatók. Minden javaslat megmutatja, miért keletkezett („Elfogyott”, illetve „A minimumszint (500 ml) alá csökkent: 400 ml van”), és a gombok megmondják, mi történik. Elfogadáskor a mennyiség megadható; minimumszintnél előre kitöltve azzal, ami a minimumig hiányzik, elfogyott hozzávalónál üresen, ilyenkor a tétel mennyiség nélkül kerül a listára.
 - Elutasított javaslat addig nem jelenik meg újra, amíg a hozzávaló a feltétel fölé nem kerül, majd újra alá nem esik.
 - A lista kézzel is bővíthető, és a „majdnem elkészíthető” receptből (US-3) és a főzés hiányából (US-4) is. A tételek kipipálhatók és törölhetők. Ugyanaz a hozzávaló nem szerepel kétszer: a mennyiségek összeadódnak, de a már kipipált (megvett) tétel újbóli felvételekor a pipa törlődik, és a mennyiség az új mennyiség lesz.
+- A lista tételei név szerint kereshetők, ugyanezzel a szabállyal.
 
 ### US-6 – Chat asszisztens
 

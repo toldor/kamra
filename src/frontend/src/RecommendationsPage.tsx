@@ -22,11 +22,11 @@ function RecipeCard({ recipe, onSignedOut }: { recipe: Recommendation; onSignedO
       {recipe.expiredIngredients.length > 0 && (
         <p className="warning">Lejárt tételt is felhasznál: {recipe.expiredIngredients.join(', ')}.</p>
       )}
-      <a href={cookingRoute(recipe.recipeId)} className="button-link">Megfőztem</a>
+      <a href={cookingRoute(recipe.recipeId)} className="button-link">Recept megtekintése</a>
       {/* Only an almost makeable recipe has shortages. */}
       {recipe.shortages.length > 0 && (
         <ShortageToList
-          label="Bevásárlólistára"
+          label="Hiány a bevásárlólistára"
           lines={recipe.shortages.map((s) => ({ ingredientId: s.ingredientId, ingredientName: s.ingredientName, amount: s.missing, unit: s.unit }))}
           showLink
           onSignedOut={onSignedOut}

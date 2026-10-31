@@ -3,6 +3,7 @@ import { api, failWith, noFilter, type Category, type CategoryInfo, type Ingredi
 import { categoryName, formatAmount, formatDate } from './format'
 import { PantryItemEditor } from './PantryItemEditor'
 import { PantryItemForm } from './PantryItemForm'
+import { routes } from './useHashRoute'
 
 type List = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; items: PantryItem[] }
 type Catalog =
@@ -119,6 +120,9 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
             Csak a hamarosan lejárók
           </label>
         </form>
+        <p className="hint">
+          Minimumszintet a <a href={routes.shopping}>Bevásárlólista</a> oldalon állíthatsz be: ha a készlet az alá csökken, felveszem a bevásárlójavaslatok közé.
+        </p>
 
         {list.status === 'loading' && <p role="status">Betöltés…</p>}
         {list.status === 'error' && (
