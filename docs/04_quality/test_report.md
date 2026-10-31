@@ -31,7 +31,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 ## Legutolsó futás eredménye
 
-- **2026-10-31 (`v0.3.1`, `feature/pre-uat-changes`):** PASS – .NET 563/563 helyben, a lefedettségi kapu fölött; Vitest 99/99; Playwright 18/18 futás elkülönített Docker Compose stack ellen (`-p kamra-e2e`, 8081-es port). 11 mutáció, mind elbukik; az M7 (üres levonássor), a K1 (ékezet) és a K7 (keresőszó az újratöltés után) elsőre túlélt, ezekre erősödtek a tesztek ([V-62](../07_ai/verification_log.md)).
+- **2026-10-31 (`v0.3.1`, `feature/pre-uat-changes`):** PASS – .NET 563/563 helyben, a lefedettségi kapu fölött; Vitest 99/99; Playwright 18/18 futás elkülönített Docker Compose stack ellen (`-p kamra-e2e`, 8081-es port). 11 mutáció, mind elbukik; az M7 (üres levonássor), a K1 (ékezet) és a K7 (keresőszó az újratöltés után) elsőre túlélt, ezekre erősödtek a tesztek ([V-62](../07_ai/verification_log.md)). CI: [run 41231148667](https://github.com/toldor/kamra/actions/runs/41231148667) (2026-10-31, `5871f69`): `secrets`, `backend`, `frontend` és `e2e` job zöld.
 - **Előző futás (`v0.3.0`):**
   - Dátum: 2026-10-23
   - Eredmény: PASS – .NET 563/563 helyben; Domain + Application sorlefedettség a kapu fölött (80%); Vitest 3 × 91/91; Playwright 18/18 futás (9 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen, a recept-teszt 5×, illetve 3× ismételve. Az új teszteket mutációval ellenőriztük (5 mutáció, mind elbukott); a review-javítások előtt a 7 regressziós teszt piros volt.

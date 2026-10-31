@@ -4,7 +4,7 @@ A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; 
 
 ## [0.3.1] – 2026-10-31 – Az UAT előtti javítások
 
-A fejlesztő UAT előtti kipróbálásából: érthetőbb feliratok és kereső. A backend és az API nem változott. Részletek: [P-23](../07_ai/prompt_log.md), [V-61](../07_ai/verification_log.md), [V-62](../07_ai/verification_log.md).
+A fejlesztő UAT előtti kipróbálásából: érthetőbb feliratok és kereső. A backend és az API nem változott. Részletek: [ADR-0012](../02_architecture/adr/0012-bongeszos-kereses.md), [P-23](../07_ai/prompt_log.md), [V-61](../07_ai/verification_log.md), [V-62](../07_ai/verification_log.md).
 
 ### Hozzáadva
 - Kereső a Receptek oldalon (a recept nevében és hozzávalóiban) és a Bevásárlólista oldalon (a tétel nevében), a készletkereső szabályával.

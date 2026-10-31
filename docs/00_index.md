@@ -37,6 +37,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [adr/0007-rest-api-hibamodell.md](02_architecture/adr/0007-rest-api-hibamodell.md) | REST + controllerek, /api/v1, kivétel-alapú ProblemDetails, generált OpenAPI | Accepted |
 | [adr/0008-konkurencia-es-idempotencia.md](02_architecture/adr/0008-konkurencia-es-idempotencia.md) | Optimista zárolás xmin-nel, főzés-idempotencia kérésazonosítóval, upsert és egyedi kényszerek | Accepted |
 | [adr/0011-serilog-strukturalt-naplozas.md](02_architecture/adr/0011-serilog-strukturalt-naplozas.md) | Serilog JSON-napló, szerver által generált correlationId | Accepted |
+| [adr/0012-bongeszos-kereses.md](02_architecture/adr/0012-bongeszos-kereses.md) | Böngészőben szűrő kereső a Receptek és a Bevásárlólista oldalon | Accepted |
 
 ---
 
@@ -107,7 +108,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 ## Hiányzó fájlok összesítve (teendők)
 
-- `docs/02_architecture/adr/0009-*.md`, `0010-*.md` (8 ADR megvan: 0002–0008 és 0011; kötelezően még: LLM-szolgáltató; tervezett: MCP-integráció)
+- `docs/02_architecture/adr/0009-*.md`, `0010-*.md` (9 ADR megvan: 0002–0008, 0011 és 0012; kötelezően még: LLM-szolgáltató; tervezett: MCP-integráció)
 - `docs/04_quality/performance.md`
 - `docs/06_release/demo_script.md`
 - `docs/06_release/self_assessment.md`
