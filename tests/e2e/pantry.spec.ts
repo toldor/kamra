@@ -94,3 +94,25 @@ test('loads the fonts for ő and ű and lays the pantry out for the screen width
   else expect(form!.x + form!.width).toBeLessThanOrEqual(list!.x)
   await expectNoHorizontalScroll(page)
 })
+
+// Regression (code review, 2026-10-31): on hover the logout text took the muted color, about 1.8:1 on the band.
+test('the logout button keeps its contrast on the band when hovered', async ({ page }) => {
+  await registerFreshHousehold(page)
+  const logout = page.getByRole('button', { name: 'Kijelentkezés' })
+  await logout.hover()
+
+  const ratio = await logout.evaluate((button) => {
+    const rgb = (value: string) => value.match(/\d+/g)!.slice(0, 3).map(Number)
+    const lum = (value: string) => {
+      const [r, g, b] = rgb(value).map((c) => {
+        const s = c / 255
+        return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+    const text = lum(getComputedStyle(button).color)
+    const band = lum(getComputedStyle(button.closest('header')!).backgroundColor)
+    return (Math.max(text, band) + 0.05) / (Math.min(text, band) + 0.05)
+  })
+  expect(ratio).toBeGreaterThanOrEqual(4.5)
+})
