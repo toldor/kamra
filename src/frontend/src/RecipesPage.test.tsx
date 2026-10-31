@@ -74,7 +74,7 @@ describe('the Receptek page (N9)', () => {
     expect(card('Lecsó').getByText('4 adag')).toBeTruthy()
     expect(card('Lecsó').queryByText('Saját recept')).toBeNull()
     expect(card('Lecsó').getByText('Hozzávalók: étolaj, paprika, paradicsom, só, vöröshagyma')).toBeTruthy()
-    expect(card('Lecsó').getByRole('link', { name: 'Recept megtekintése' }).getAttribute('href')).toBe('#/fozes/r-lecso')
+    expect(card('Lecsó').getByRole('link', { name: 'Megnyitás' }).getAttribute('href')).toBe('#/fozes/r-lecso')
     expect(card('Zabtejes kakaó').getByText('Saját recept')).toBeTruthy()
     expect(card('Zabtejes kakaó').getByText('1 adag')).toBeTruthy()
   })

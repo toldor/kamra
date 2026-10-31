@@ -59,9 +59,38 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
 
   return (
     <main>
-      <h1 tabIndex={-1}>Kamra</h1>
+      <h1 tabIndex={-1}>Készlet</h1>
       <p role="status" className="notice">{notice}</p>
 
+      {/* C3: the filters, the new item form and the hint beside the list; stacked on a phone (C2). */}
+      <div className="split">
+      <div className="side">
+        <form role="search" className="filters panel" onSubmit={(e) => e.preventDefault()}>
+          <label htmlFor="filter-search">Keresés</label>
+          <input
+            id="filter-search"
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          <label htmlFor="filter-category">Kategória</label>
+          <select
+            id="filter-category"
+            value={filter.category}
+            onChange={(e) => setFilter({ ...filter, category: e.target.value as Category | '' })}
+          >
+            <option value="">Mind</option>
+            {categories.map((c) => <option key={c.category} value={c.category}>{categoryName(c.category)}</option>)}
+          </select>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={filter.expiringSoon}
+              onChange={(e) => setFilter({ ...filter, expiringSoon: e.target.checked })}
+            />
+            Csak a hamarosan lejárók
+          </label>
+        </form>
       {catalog.status === 'loading' && <p role="status">Betöltés…</p>}
       {catalog.status === 'error' && (
         <div>
@@ -92,37 +121,15 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
         />
       )}
 
-      <section aria-labelledby="pantry-heading">
-        <h2 id="pantry-heading">Készlet</h2>
-        <form role="search" className="filters" onSubmit={(e) => e.preventDefault()}>
-          <label htmlFor="filter-search">Keresés</label>
-          <input
-            id="filter-search"
-            type="search"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-          <label htmlFor="filter-category">Kategória</label>
-          <select
-            id="filter-category"
-            value={filter.category}
-            onChange={(e) => setFilter({ ...filter, category: e.target.value as Category | '' })}
-          >
-            <option value="">Mind</option>
-            {categories.map((c) => <option key={c.category} value={c.category}>{categoryName(c.category)}</option>)}
-          </select>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={filter.expiringSoon}
-              onChange={(e) => setFilter({ ...filter, expiringSoon: e.target.checked })}
-            />
-            Csak a hamarosan lejárók
-          </label>
-        </form>
         <p className="hint">
           Minimumszintet a <a href={routes.shopping}>Bevásárlólista</a> oldalon állíthatsz be: ha a készlet az alá csökken, felveszem a bevásárlójavaslatok közé.
         </p>
+      </div>
+
+      <section aria-labelledby="pantry-heading" className="content">
+        <div className="panel">
+        <h2 id="pantry-heading">Tételek</h2>
+        <div className="panel-body">
 
         {list.status === 'loading' && <p role="status">Betöltés…</p>}
         {list.status === 'error' && (
@@ -147,18 +154,26 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
               <p>Rögzítsd az első tételt az »Új tétel« űrlappal.</p>
             </>
           ))}
+        </div>
         {list.status === 'ready' && list.items.length > 0 && (
           <ul className="items">
             {list.items.map((item) => (
-              <li key={item.id} aria-labelledby={`item-${item.id}`} className="item">
-                <span id={`item-${item.id}`} className="item-name">{item.ingredientName}</span>
-                <span>{formatAmount(item.amount, item.unit)}</span>
-                <span>
-                  {formatDate(item.expiryDate)}
-                  {item.expiryEstimated && ' (becsült)'}
+              <li key={item.id} aria-labelledby={`item-${item.id}`} className="item cols">
+                <span className="line">
+                  <span id={`item-${item.id}`} className="name">{item.ingredientName}</span>
+                  <span className="leader" aria-hidden="true" />
+                  <span className="qty">{formatAmount(item.amount, item.unit)}</span>
                 </span>
-                {item.expired && <span className="badge expired">Lejárt</span>}
-                {item.soonExpiring && <span className="badge soon">Hamarosan lejár</span>}
+                <span className="meta">
+                  <span>
+                    {formatDate(item.expiryDate)}
+                    {item.expiryEstimated && ' (becsült)'}
+                  </span>
+                  <span>
+                    {item.expired && <span className="badge expired">Lejárt</span>}
+                    {item.soonExpiring && <span className="badge soon">Hamarosan lejár</span>}
+                  </span>
+                </span>
                 <button
                   type="button"
                   className="secondary"
@@ -171,7 +186,9 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
             ))}
           </ul>
         )}
+        </div>
       </section>
+      </div>
 
       {editing && (
         <PantryItemEditor

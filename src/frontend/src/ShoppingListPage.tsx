@@ -285,17 +285,20 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
   const shown = items.filter((i) => matchesSearch(search, i.ingredientName))
 
   return (
-    <>
+    // C3: the suggestions and the list in the content column, the minimum levels beside them.
+    <div className="split">
+      <div className="content">
       {suggestions.length > 0 && (
-        <section aria-labelledby="suggestions-heading">
+        <section aria-labelledby="suggestions-heading" className="panel">
           <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
           {/* key: a new suggestion for the same ingredient starts with its own amount. */}
           {suggestions.map((s) => <SuggestionRow key={s.id} suggestion={s} busy={busy} write={write} />)}
         </section>
       )}
 
-      <section aria-labelledby="list-heading">
+      <section aria-labelledby="list-heading" className="panel">
         <h2 id="list-heading">A listád</h2>
+        <div className="panel-body">
         <p className="hint">Amíg egy hozzávaló pipa nélkül a listán van, nem javaslom újra.</p>
         {items.length > 0 && (
           <form role="search" className="filters" onSubmit={(e) => e.preventDefault()}>
@@ -303,18 +306,19 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
             <input id="list-search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>
         )}
-        {items.length === 0 ? (
+        {items.length === 0 && (
           <p className="empty">
             {suggestions.length > 0
               ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
               : 'A listád üres. Vegyél fel tételt alább.'}
           </p>
-        ) : shown.length === 0 ? (
-          <p className="empty">Nincs a keresésnek megfelelő tétel a listádon.</p>
-        ) : (
+        )}
+        {items.length > 0 && shown.length === 0 && <p className="empty">Nincs a keresésnek megfelelő tétel a listádon.</p>}
+        </div>
+        {shown.length > 0 && (
           <ul className="items">
             {shown.map((item) => (
-              <li key={item.id} className={item.checked ? 'item done' : 'item'}>
+              <li key={item.id} className={item.checked ? 'item text-row done' : 'item text-row'}>
                 <label className="check">
                   <input
                     type="checkbox"
@@ -324,6 +328,7 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
                   />
                   {item.amount ? `${item.ingredientName} – ${formatAmount(item.amount.value, item.amount.unit)}` : item.ingredientName}
                 </label>
+                <span className="leader" aria-hidden="true" />
                 <button
                   type="button"
                   className="secondary"
@@ -350,17 +355,20 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
             `Felvettem a listára: ${formatListLine(ingredient.name, amount.amount === null ? null : { value: amount.amount, unit: amount.unit })}.`)}
         />
       </section>
+      </div>
 
-      <section aria-labelledby="minimum-heading">
+      <section aria-labelledby="minimum-heading" className="panel side">
         <h2 id="minimum-heading">Minimumszintek</h2>
-        <p className="hint">Ha egy hozzávalóból a minimumszint alá csökken a készlet, felveszem a bevásárlójavaslatok közé.</p>
-        {minimums.length === 0 ? (
-          <p>Még nem adtál meg minimumszintet.</p>
-        ) : (
+        <div className="panel-body">
+          <p className="hint">Ha egy hozzávalóból a minimumszint alá csökken a készlet, felveszem a bevásárlójavaslatok közé.</p>
+          {minimums.length === 0 && <p>Még nem adtál meg minimumszintet.</p>}
+        </div>
+        {minimums.length > 0 && (
           <ul className="items">
             {minimums.map((i) => (
-              <li key={i.id} className="item">
+              <li key={i.id} className="item text-row">
                 <span>{i.name}: {formatAmount(i.minimum!.value, i.minimum!.unit)}</span>
+                <span className="leader" aria-hidden="true" />
                 <button
                   type="button"
                   className="secondary"
@@ -388,6 +396,6 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
             `Beállítottam a minimumszintet: ${ingredient.name}, ${formatAmount(amount.amount ?? 0, amount.unit)}.`)}
         />
       </section>
-    </>
+    </div>
   )
 }

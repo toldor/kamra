@@ -68,10 +68,10 @@ export default function App() {
 
   switch (state.screen) {
     case 'loading':
-      return <main aria-busy="true"><p>Betöltés…</p></main>
+      return <main className="narrow" aria-busy="true"><p>Betöltés…</p></main>
     case 'error':
       return (
-        <main>
+        <main className="narrow">
           <h1>Kamra</h1>
           <p role="alert">{state.message}</p>
           <button

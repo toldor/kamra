@@ -211,7 +211,7 @@ export function CookingPage({ recipeId, onSignedOut }: { recipeId: string; onSig
   }
 
   return (
-    <main>
+    <main className="form-page">
       <h1 tabIndex={-1}>{preview ? `${preview.name} főzése` : 'Főzés'}</h1>
       {load.status === 'loading' && <p role="status">Betöltés…</p>}
       {load.status === 'error' && (
