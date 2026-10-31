@@ -80,3 +80,19 @@ test('the shortage goes from the recipe to the list and the depleted item become
   await expect(page.getByRole('checkbox', { name: 'paradicsom – 100 g' })).toBeChecked()
   await expect(page.getByRole('checkbox', { name: 'paprika – 500 g' })).toBeVisible()
 })
+
+// Regression (2026-10-31): a long ingredient name pushed the minimum row's delete button out of its panel.
+test('a minimum level with a long name stays inside its panel', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await page.getByRole('navigation', { name: 'Oldalak' }).getByRole('link', { name: 'Bevásárlólista' }).click()
+  const form = page.getByRole('form', { name: 'Új minimumszint' })
+  await form.getByLabel('Hozzávaló').fill('fagyasztott hasábburgonya')
+  await form.getByLabel('Mennyiség').fill('200')
+  await form.getByLabel('Mértékegység').selectOption('g')
+  await form.getByRole('button', { name: 'Beállítom' }).click()
+
+  const panel = await page.getByRole('region', { name: 'Minimumszintek' }).boundingBox()
+  const button = await page.getByRole('button', { name: 'Minimumszint törlése: fagyasztott hasábburgonya' }).boundingBox()
+  expect(button!.x + button!.width).toBeLessThanOrEqual(panel!.x + panel!.width)
+  await expectNoHorizontalScroll(page)
+})

@@ -72,3 +72,25 @@ test('decreases with a reason and deletes an item', async ({ page }) => {
   await expect(page.getByText('Még üres a kamrád.')).toBeVisible()
   await expectNoHorizontalScroll(page)
 })
+
+// ADR-0013: the self-hosted fonts cover ő and ű (latin-ext), and the layout follows the designs:
+// on a desktop the new item form stands beside the list (C3), at 360 px above it (C2).
+test('loads the fonts for ő and ű and lays the pantry out for the screen width', async ({ page }, testInfo) => {
+  await registerFreshHousehold(page)
+  await addItem(page, 'tejföl', '20', 'dkg')
+  await expect(page.getByRole('listitem', { name: /tejföl/ })).toBeVisible()
+
+  const faces = await page.evaluate(async () => {
+    const load = async (font: string) =>
+      (await document.fonts.load(font, 'őű')).map((f) => `${f.family} ${f.unicodeRange}`).join(' | ')
+    return { slab: await load('700 16px "Zilla Slab"'), sans: await load('400 16px "IBM Plex Sans"') }
+  })
+  expect(faces.slab).toContain('U+100-2BA')
+  expect(faces.sans).toContain('U+100-2BA')
+
+  const form = await page.getByRole('form', { name: 'Új tétel' }).boundingBox()
+  const list = await page.getByRole('list').filter({ has: page.getByRole('listitem', { name: /tejföl/ }) }).boundingBox()
+  if (testInfo.project.name === 'mobile-360') expect(form!.y + form!.height).toBeLessThanOrEqual(list!.y)
+  else expect(form!.x + form!.width).toBeLessThanOrEqual(list!.x)
+  await expectNoHorizontalScroll(page)
+})
