@@ -31,7 +31,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 ## Legutolsó futás eredménye
 
-- **2026-11-01 (`v0.4.0`, `feature/design-system`):** PASS – Vitest 123/123 (ebből 24 kontrasztteszt), Playwright 24/24 futás (12 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen; a backend nem változott. 6 mutáció, mind elbukik: a két oszlop és a latin-ext betűk nélkül az új e2e, a két regressziós teszt a javítás előtt, és a tokenteszt a fejsáv fókuszszabálya nélkül ([V-63 – V-65](../07_ai/verification_log.md)).
+- **2026-11-01 (`v0.4.0`, `feature/design-system`):** PASS – Vitest 123/123 (ebből 24 kontrasztteszt), Playwright 24/24 futás (12 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen; a backend nem változott. 6 mutáció, mind elbukik: a két oszlop és a latin-ext betűk nélkül az új e2e, a két regressziós teszt a javítás előtt, és a tokenteszt a fejsáv fókuszszabálya nélkül ([V-63 – V-65](../07_ai/verification_log.md)). CI: [run 41251533463](https://github.com/toldor/kamra/actions/runs/41251533463) (2026-11-01, `41bb48a`): `secrets`, `backend`, `frontend` és `e2e` job zöld.
 - **2026-10-31 (`v0.3.1`, `feature/pre-uat-changes`):** PASS – .NET 563/563 helyben, a lefedettségi kapu fölött; Vitest 99/99; Playwright 18/18 futás elkülönített Docker Compose stack ellen (`-p kamra-e2e`, 8081-es port). 11 mutáció, mind elbukik; az M7 (üres levonássor), a K1 (ékezet) és a K7 (keresőszó az újratöltés után) elsőre túlélt, ezekre erősödtek a tesztek ([V-62](../07_ai/verification_log.md)). CI: [run 41231148667](https://github.com/toldor/kamra/actions/runs/41231148667) (2026-10-31, `5871f69`): `secrets`, `backend`, `frontend` és `e2e` job zöld.
 - **Előző futás (`v0.3.0`):**
   - Dátum: 2026-10-23
