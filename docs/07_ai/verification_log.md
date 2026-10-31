@@ -519,3 +519,17 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** `npm ls undici`, `npm audit --omit=dev`, az advisory adatai a GitHub Advisory API-ból (közzétéve 2026-10-23 22:13 UTC, javítva a 7.30.1-ben), `npm audit fix` után a frontend-kapuk helyben.
 - **Eredmény:** **PASS.** A lockfile-ban csak az `undici` változott; az audit 0, a lint és a build zöld. A Vitest 12 futásból egyszer 1 tesztet bukott (az első futás az `npm ci` után; a teszt nem azonosítva), a többi 11 futás 91/91.
 - **Következtetés:** A dependabot PR #21 (`jsdom` 30) külön átnézést kap. Ha a Vitest-bukás a CI-ban is előjön, a tesztet azonosítjuk és stabilizáljuk.
+
+### V-61 – Ékezet a készletkeresésben (téves MI-állítás)
+- **Állítás:** A Claude Code az ütközésvizsgálat közben azt írta, hogy a készlet keresője ékezet nélkül is talál („kenyer” → „kenyér”), és a Receptek- és a listakeresőt is így írta le a jóváhagyásra kínált A változatban.
+- **Kockázat:** Alacsony–közepes. A jóváhagyott változat leírása téves tényen alapult; a három kereső eltérően működhetett volna.
+- **Ellenőrzési módszer:** Kódolvasás a terv megírásakor: `PantryRepository.cs` (`NormalizedName.Contains`), `Ingredient.Normalize` (`Tidy` + `ToLowerInvariant`).
+- **Eredmény:** **FAIL.** A keresés csak a kis- és nagybetűt és a fölös szóközöket hagyja figyelmen kívül; az ékezet számít. A tévedést a Claude Code a tervben, a jóváhagyás előtt maga jelezte.
+- **Következtetés:** A két új kereső ugyanezt a szabályt követi (D1), és egy negatív teszt rögzíti („lecso” → nincs találat). Tanulság: viselkedésről csak a kód elolvasása után teszek állítást.
+
+### V-62 – A v0.3.1 független reviewja és a tesztek erőssége
+- **Állítás:** Az Antigravity (Gemini) 9 megállapítása, köztük: (#7) a bevásárlólista az újratöltés után újramountol, a keresőszó elvész, és a teszt csak véletlenül zöld; (#1) a `matchesSearch` szabálya nincs külön tesztelve; (#4) a főzés oldal átírt mennyiségű ágának szövege eltér a spectől.
+- **Kockázat:** Közepes. Egy zöld, de gyenge teszt hamis biztonságot ad.
+- **Ellenőrzési módszer:** Kódolvasás (`refresh` a `ShoppingListPage.tsx`-ben), a terv szövege, két mutáció: K7 (az újratöltés betöltő állapoton át, vagyis újramountolással), K1 (ékezet nélküli egyezés a `matchesSearch`-ben).
+- **Eredmény:** **Részben PASS.** #7: az indoklás téves (a `refresh` közvetlenül a kész állapotot állítja be, a keresőszó megmarad), de a K7 alatt a teszt zöld maradt, mert az utolsó ellenőrzés az újratöltés vége előtt futhatott. #1: a K1 alatt mind a 98 teszt zöld volt, az ékezetszabályt semmi sem rögzítette. #4 téves (a terv az átírt ágra a régi szöveget írja elő); a többi 6 téves vagy már eldöntött.
+- **Következtetés:** Két teszt erősödött (a frissítés végének megvárása és a keresőszó ellenőrzése; a „lecso” negatív eset); a K1 és a K7 most elbukik. Tanulság: a reviewer téves indoklása mögött is lehet valós gyengeség – kísérlettel ellenőrzöm, nem érveléssel.

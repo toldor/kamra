@@ -2,6 +2,17 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [0.3.1] – 2026-10-31 – Az UAT előtti javítások
+
+A fejlesztő UAT előtti kipróbálásából: érthetőbb feliratok és kereső. A backend és az API nem változott. Részletek: [P-23](../07_ai/prompt_log.md), [V-61](../07_ai/verification_log.md), [V-62](../07_ai/verification_log.md).
+
+### Hozzáadva
+- Kereső a Receptek oldalon (a recept nevében és hozzávalóiban) és a Bevásárlólista oldalon (a tétel nevében), a készletkereső szabályával.
+- A Készlet oldalon tájékoztató: a minimumszint a Bevásárlólista oldalon állítható be, linkkel.
+
+### Módosítva
+- „Megfőztem” → „Recept megtekintése”; „Bevásárlólistára” → „Hiány a bevásárlólistára”; a főzés oldalon „Levonás (lejárat – mennyiség): …”.
+
 ## [0.3.0] – 2026-10-24 – Bevásárlólista, saját recept és az első dokumentált telepítés
 
 Az 1. lépcső okt. 22-i mérföldköve: a készlettől a főzésen át a bevásárlólistáig végig működő folyamat, saját recepttel, 20 induló recepttel, és egy tiszta környezetben kipróbált telepítési leírás. Részletek és bizonyítékok: [test_report.md](../04_quality/test_report.md) (P11–P20), [manual_tests.md](../04_quality/manual_tests.md), [P-16 – P-20](../07_ai/prompt_log.md).

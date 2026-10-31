@@ -32,7 +32,7 @@ Más nem kell: a .NET és a Node.js a build-konténerben fut.
 
 1. `curl http://localhost:8080/health` → `Healthy` (a folyamat fut, az adatbázis elérhető).
 2. Böngészőben: http://localhost:8080 → *Regisztrálj* → e-mail-cím és legalább 15 karakteres jelszó → „Még üres a kamrád.”
-3. Rövid füstpróba (P13): rögzíts paprika 500 g (2 nap), paradicsom 200 g (1 nap), vöröshagyma 300 g, étolaj 1 l → „Mit főzzek?”: a Lecsónál „paradicsom: 100 g hiányzik (200 g van, 300 g kell)” → „Megfőztem” → „Hiány a bevásárlólistára” → „Főzés megerősítése” → *„Felvettem a bevásárlójavaslatok közé: paprika.”* → „Megnézem”: a paradicsom 100 g a listán, a paprika javaslatként.
+3. Rövid füstpróba (P13): rögzíts paprika 500 g (2 nap), paradicsom 200 g (1 nap), vöröshagyma 300 g, étolaj 1 l → „Mit főzzek?”: a Lecsónál „paradicsom: 100 g hiányzik (200 g van, 300 g kell)” → „Recept megtekintése” → „Hiány a bevásárlólistára” → „Főzés megerősítése” → *„Felvettem a bevásárlójavaslatok közé: paprika.”* → „Megnézem”: a paradicsom 100 g a listán, a paprika javaslatként.
 
 ## Napló és hibakeresés
 
