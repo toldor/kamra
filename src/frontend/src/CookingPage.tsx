@@ -88,7 +88,7 @@ function Summary({ cooking }: { cooking: Cooking }) {
 
   return (
     <section aria-labelledby="cooking-done">
-      <h2 id="cooking-done" ref={heading} tabIndex={-1}>Elkészült: {cooking.recipeName}, {cooking.servings} adag.</h2>
+      <h2 id="cooking-done" className="title" ref={heading} tabIndex={-1}>Elkészült: {cooking.recipeName}, {cooking.servings} adag.</h2>
       {deducted.length > 0 && <p>Levonva: {deducted.map((l) => `${l.ingredientName} ${formatAmount(l.used, l.unit)}`).join(', ')}.</p>}
       {cooking.depletedIngredients.length > 0 && <p>Elfogyott: {cooking.depletedIngredients.join(', ')}.</p>}
       {/* M5, M15: only what really became a suggestion is named. */}

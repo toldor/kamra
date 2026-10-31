@@ -792,6 +792,15 @@ form > button[type='submit'] {
   }
 }
 
+/* A heading that is a sentence (the cooking summary): the display face, not the section strip. */
+h2.title {
+  margin: 0;
+  font: 700 1.5rem/1.15 var(--font-display);
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--c-ink);
+}
+
 /* ---- Dialog ---- */
 
 dialog {
