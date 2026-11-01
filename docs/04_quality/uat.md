@@ -62,3 +62,12 @@ A feladatok célt adnak, nem lépéseket. Mindegyik a résztvevő saját fiókj�
 - Az 1. kör után (nov. 1.) az elakadások egy listába kerülnek súlyosság szerint: **blokkoló** (a feladat nem sikerült), **zavaró** (sikerült, de segítséggel vagy hosszú elakadással), **kozmetikai**.
 - A blokkoló és a zavaró elakadások a nov. 13-i változatig javulnak; mindegyikhez teszt készül, és a javítás a 2. körben vagy a dec. 4. előtti újrateszteléskor ugyanazzal a forgatókönyvvel ellenőrződik.
 - Az eredmények és a javítások ebbe a fájlba kerülnek („Eredmények – 1. kör”), és a dolgozat Értékelés fejezetébe. Ha valamelyik kör kevesebb résztvevővel zajlik, ezt itt jelezzük.
+
+## Eredmények – 1. kör
+
+- **Időpont, verzió:** 2026. nov. 1., `v0.4.0`, a fejlesztő laptopján, Docker Compose-zal.
+- **Résztvevők:** 4 fő (U1–U4), mind az öt forgatókönyv (S1–S5).
+- **Eredmény:** mind a 4 résztvevő mind az 5 forgatókönyvet önállóan, segítség nélkül teljesítette, résztvevőnként kb. 15 perc alatt (az öt forgatókönyv együtt). Elakadás nem volt, így blokkoló és zavaró elakadás sincs.
+- **Visszajelzés:** a felület tetszett. Kívánság (egy résztvevő): a Receptek oldalon kis címke mutassa, hogy minden hozzávaló megvan-e.
+- **Korlát:** résztvevőnkénti, forgatókönyvenkénti jegyzőkönyv (idő, elakadás, idézet) és a három záró kérdés válaszai nem készültek; az eredmény a moderátor összesítése. Az L1 és az L2 megfigyelését külön nem rögzítettük; mindkettő a nov. 13-i változatban javul, teszttel. A 2. körben a jegyzőkönyv résztvevőnként készül.
+- **Döntés a kívánságról:** nem elakadás, ezért nem kerül a nov. 13-i javítások közé; a „Csak az elkészíthetők” szűrővel együtt későbbi továbbfejlesztési lehetőség ([scope_contract.md](../01_product/scope_contract.md), Későbbi továbbfejlesztési lehetőségek).
