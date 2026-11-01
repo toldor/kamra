@@ -446,3 +446,15 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - docs: `02_architecture/adr/0013-vizualis-rendszer.md`, `00_index.md`, `scope_contract.md`, `ux_flows.md`, `privacy_licensing.md`, `test_report.md`, `uat.md`, `changelog.md`, `README.md`, `docs/assets/` (7 frissített és 3 új képernyőkép), `verification_log.md` (V-63 – V-65), `prompt_log.md` (P-24);
   - a repón kívül: `03_tervek\2026-10-31_design_system_terv.md`, a „Kamra stílusirányok” vászon (privát artifact).
 - **Mit változtattam / döntésem:** A C irányt választottam, és a vásznon C2 (mobil) és C3 (asztali) változattá fejlesztettem tovább (rózsa kiemelés, asztali elrendezés). Az ütközéseknél: a Receptek oldalon „Megnyitás”; a „Csak az elkészíthetők” szűrő és a listatétel forrása későbbi továbbfejlesztés; a többi a javaslat szerint. Két hibát én találtam a felületen (a hosszú nevű minimumszint kicsúszott; a kereső helye a Készlet oldalon). A verzió 0.4.0. A commitokat kérésemre a Claude Code végezte.
+
+### P-25 – Az UAT 1. köre (v0.4.0)
+- **Dátum:** 2026-11-01
+- **Cél:** A `v0.4.0` kiadásának ellenőrzése, az UAT 1. körének rögzítése.
+- **Eszköz:** Claude Code (claude-opus-5-5); a kört a fejlesztő vezette.
+- **Prompt összefoglaló:** „Az UAT meglesz még ma, prokat mergeltem” → „kész, mergeltem és feltettem a taget … Az UAT lezajlott mind a 4 részvevő végigcsinálta kb negyed óra alatt … hiányzott még valakinek a recepteknél ottlehetne hoyg minden van-e hozzá vagy nem kis címkeként.” → „B, nincs részletes jegyzőkönyv” → „A, commitolj és pusholj te”.
+- **AI javaslat (eredeti):**
+  - **A kiadás ellenőrzése:** a #28 (`develop` → `main`) a tag előtt még nyitva volt, a tag a merge után került fel (`66ddff0`); a 8080-as stack a `v0.4.0` buildjét szolgálja ki (azonos CSS-fájl).
+  - **A jegyzőkönyv:** két opció: A) a résztvevőnkénti jegyzetekből táblázat, B) összesítés a korláttal.
+  - **A kívánság (recept-címke):** A) későbbi továbbfejlesztés a „Csak az elkészíthetők” szűrővel (ajánlott, mert nem elakadás, és a nov. 6-i US-2 elsőbbséget kap), B) a nov. 13-i változatba, a vállalás bővítésével.
+- **Érintett fájlok:** `04_quality/uat.md` („Eredmények – 1. kör”), `01_product/scope_contract.md` (Későbbi továbbfejlesztési lehetőségek), `07_ai/prompt_log.md` (P-25).
+- **Mit változtattam / döntésem:** Részletes jegyzőkönyv nem készült, ezért az összesítést rögzítettük a korláttal (B). A recept-címke a „Csak az elkészíthetők” szűrővel együtt későbbi továbbfejlesztés (A). A commitot és a pusht kérésemre a Claude Code végezte.
