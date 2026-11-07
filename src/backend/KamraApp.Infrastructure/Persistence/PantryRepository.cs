@@ -34,6 +34,9 @@ public sealed class PantryRepository(KamraDbContext db) : IPantryRepository
         return [.. rows.Select(x => new PantryEntry(x.Item, x.Name))];
     }
 
+    public Task<PantryEntry?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>
+        throw new NotImplementedException(); // T1
+
     public async Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken)
     {
         var row = await (from item in db.PantryItems

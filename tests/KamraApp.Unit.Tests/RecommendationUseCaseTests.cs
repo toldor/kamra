@@ -65,6 +65,11 @@ public class RecommendationUseCaseTests
         public Task<IReadOnlyList<PantryEntry>> ListAsync(Guid householdId, PantryFilter filter, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<PantryEntry>>(householdId == HouseholdId ? stock : []);
 
+        public Task<PantryEntry?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>
+
+            throw new NotSupportedException();
+
+
         public Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 

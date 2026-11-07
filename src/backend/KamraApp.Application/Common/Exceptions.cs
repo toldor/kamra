@@ -22,3 +22,15 @@ public sealed class ConflictException(string code, string message)
 
 public sealed class RateLimitedException(string code, string message)
     : AppException(ErrorCategory.RateLimited, code, message);
+
+// A request-level 400 with its own code (e.g. ITEM_PROPOSAL_NO_ITEMS), when no single field is wrong.
+public sealed class InvalidInputException(string code, string message)
+    : AppException(ErrorCategory.Validation, code, message);
+
+// ADR-0007: the external service (the LLM) answered something unusable.
+public sealed class BadGatewayException(string code, string message)
+    : AppException(ErrorCategory.BadGateway, code, message);
+
+// ADR-0007: the external service (the LLM) is down, timed out or switched off.
+public sealed class UnavailableException(string code, string message)
+    : AppException(ErrorCategory.Unavailable, code, message);
