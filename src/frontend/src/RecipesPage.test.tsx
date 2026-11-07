@@ -71,6 +71,8 @@ describe('the Receptek page (N9)', () => {
     expect(await screen.findByRole('heading', { name: 'Receptek' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Receptek' }).getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('link', { name: 'Új recept' }).getAttribute('href')).toBe('#/receptek/uj')
+    // The heading shows while the recipes load; the cards come after them.
+    await screen.findByRole('article', { name: 'Lecsó' })
     expect(card('Lecsó').getByText('4 adag')).toBeTruthy()
     expect(card('Lecsó').queryByText('Saját recept')).toBeNull()
     expect(card('Lecsó').getByText('Hozzávalók: étolaj, paprika, paradicsom, só, vöröshagyma')).toBeTruthy()
@@ -193,7 +195,8 @@ describe('the Új recept form (N10)', () => {
     render(<App />)
 
     expect(await screen.findByRole('heading', { name: 'Új recept' })).toBeTruthy()
-    expect((screen.getByLabelText('Adagszám') as HTMLInputElement).value).toBe('4')
+    // The heading shows while the ingredients load; the form (and the field) comes after them.
+    expect(((await screen.findByLabelText('Adagszám')) as HTMLInputElement).value).toBe('4')
     await fillKakao()
     fireEvent.click(screen.getByRole('button', { name: 'Újabb hozzávaló' }))
     fireEvent.click(screen.getByRole('button', { name: 'Sor törlése: 3. hozzávaló' }))

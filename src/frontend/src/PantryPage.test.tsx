@@ -409,7 +409,8 @@ describe('item editor', () => {
 
     expect(await screen.findByText('Ez a tétel már nincs a kamrádban. Frissítettem a listát.')).toBeTruthy()
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(calls.filter((c) => c.url === '/api/v1/pantry-items')).toHaveLength(2)
+    // The notice shows first; the list reload starts right after it.
+    await waitFor(() => expect(calls.filter((c) => c.url === '/api/v1/pantry-items')).toHaveLength(2))
   })
 })
 
