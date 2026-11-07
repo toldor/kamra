@@ -7,13 +7,15 @@ public interface IItemProposalRepository
 {
     void AddRange(IEnumerable<ItemProposal> proposals);
 
+    // Tracked: the Domain decides on it, and the save checks that nobody decided since the read (xmin, ADR-0008).
     Task<ItemProposal?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken);
 
-    // ADR-0008 4.: Pending -> Approved / Rejected as one conditional update in the current transaction
-    // (WHERE State = 'Pending'); false when another request decided first.
-    Task<bool> TryApproveAsync(Guid householdId, Guid id, Guid pantryItemId, DateTimeOffset now, CancellationToken cancellationToken);
+    // From the database again, not the tracked copy: after a lost race, to see the other request's decision.
+    Task<ItemProposal?> ReloadAsync(Guid householdId, Guid id, CancellationToken cancellationToken);
 
-    Task<bool> TryRejectAsync(Guid householdId, Guid id, DateTimeOffset now, CancellationToken cancellationToken);
+    // Saves every change of the request (an approval's new pantry item too) and commits. False, with nothing saved,
+    // when another request decided the proposal since it was read.
+    Task<bool> TrySaveAsync(CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -24,7 +24,7 @@ public class ItemProposalTests
     [InlineData("holnaputanig", "2026-11-09")]
     [InlineData("Holnapután", "2026-11-09")]
     public void Relative_days_count_from_the_day_of_submission(string text, string expected) =>
-        ExpiryText.Resolve(text, Today).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
+        ExpiryWords.Resolve(text, Today).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
 
     [Theory]
     [InlineData("szombat", "2026-11-07")]      // today is Saturday: today
@@ -38,7 +38,7 @@ public class ItemProposalTests
     [InlineData("péntekig", "2026-11-13")]
     [InlineData("Pénteken", "2026-11-13")]
     public void A_weekday_is_the_next_such_day_or_today(string text, string expected) =>
-        ExpiryText.Resolve(text, Today).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
+        ExpiryWords.Resolve(text, Today).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
 
     [Theory]
     [InlineData("nov. 20.", "2026-11-20")]
@@ -59,8 +59,11 @@ public class ItemProposalTests
     [InlineData("2026.11.15.", "2026-11-15")]
     [InlineData("2026.11.15-ig", "2026-11-15")]
     [InlineData("2025.11.15.", "2025-11-15")]   // a year is taken as written, even in the past
+    [InlineData("nov. 20an", "2026-11-20")]      // the case ending without the hyphen (code review, spec axis)
+    [InlineData("11.08ig", "2026-11-08")]
+    [InlineData("2026.11.15ig", "2026-11-15")]
     public void An_absolute_date_without_a_year_is_the_nearest_one_from_today(string text, string expected) =>
-        ExpiryText.Resolve(text, Today).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
+        ExpiryWords.Resolve(text, Today).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
 
     [Theory]
     [InlineData(null)]
@@ -76,7 +79,7 @@ public class ItemProposalTests
     [InlineData("nov. 31.")]
     [InlineData("2026.02.30.")]
     public void Anything_else_is_not_recognised_so_the_expiry_is_estimated(string? text) =>
-        ExpiryText.Resolve(text, Today).Should().BeNull();
+        ExpiryWords.Resolve(text, Today).Should().BeNull();
 
     [Theory]
     [InlineData("g", Unit.G)]
@@ -164,6 +167,38 @@ public class ItemProposalTests
         var proposal = ItemProposal.Create(HouseholdId, new string('a', 250), null, null, null, null, false, null, Now);
 
         proposal.Text.Should().HaveLength(ItemProposal.TextMaxLength);
+    }
+
+    [Fact]
+    public void Long_unrecognised_expiry_words_are_cut_to_the_column_length()
+    {
+        var proposal = ItemProposal.Create(HouseholdId, "tej", null, null, null, null, false, new string('x', 150), Now);
+
+        proposal.ExpiryText.Should().HaveLength(ItemProposal.ExpiryTextMaxLength);
+    }
+
+    [Theory]
+    [InlineData(ItemProposalState.Pending, ItemProposalState.Approved, ItemProposalTransition.Changed)]
+    [InlineData(ItemProposalState.Approved, ItemProposalState.Approved, ItemProposalTransition.Repeated)]
+    [InlineData(ItemProposalState.Rejected, ItemProposalState.Approved, ItemProposalTransition.Conflict)]
+    [InlineData(ItemProposalState.Pending, ItemProposalState.Rejected, ItemProposalTransition.Changed)]
+    [InlineData(ItemProposalState.Rejected, ItemProposalState.Rejected, ItemProposalTransition.Repeated)]
+    [InlineData(ItemProposalState.Approved, ItemProposalState.Rejected, ItemProposalTransition.Conflict)]
+    public void The_decision_is_known_before_anything_changes(ItemProposalState state, ItemProposalState target, ItemProposalTransition expected)
+    {
+        var proposal = NewProposal();
+        if (state == ItemProposalState.Approved)
+        {
+            proposal.Approve(Guid.CreateVersion7(), Now);
+        }
+        else if (state == ItemProposalState.Rejected)
+        {
+            proposal.Reject(Now);
+        }
+
+        proposal.TransitionTo(target).Should().Be(expected);
+
+        proposal.State.Should().Be(state);
     }
 
     [Theory]

@@ -162,6 +162,19 @@ public class ItemProposalUseCaseTests
         item.ExpiryEstimated.Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData("0.0004")]   // rounds to 0 in numeric(12,3)
+    [InlineData("1.2345")]   // more than 3 decimals (V-24)
+    [InlineData("100001")]
+    public async Task An_amount_the_manual_form_would_refuse_is_treated_as_missing(string amount)
+    {
+        _parser.Returns(new ParsedItem("tej", "tej", decimal.Parse(amount, System.Globalization.CultureInfo.InvariantCulture), "l", null));
+
+        var item = (await SubmitAsync("tej")).Items.Single();
+
+        item.Amount.Should().BeNull();
+    }
+
     [Fact]
     public async Task A_packaging_word_is_no_unit_but_the_amount_stays()
     {
@@ -249,7 +262,7 @@ public class ItemProposalUseCaseTests
         _pantry.Items.Should().ContainSingle(i => i.Id == result.Item.Id);
         proposal.State.Should().Be(ItemProposalState.Approved);
         proposal.PantryItemId.Should().Be(result.Item.Id);
-        _pantry.Saves.Should().Be(1);
+        _proposals.Saves.Should().Be(1);
     }
 
     [Fact]
@@ -293,25 +306,45 @@ public class ItemProposalUseCaseTests
     {
         var proposal = Pending(Tej);
         var theirs = Stock(Tej, 2m, Unit.L, Today.AddDays(7));
-        _proposals.BeforeTransition = () => proposal.Approve(theirs.Id, Now);
+        _proposals.LostRaceTo = Decided(proposal, p => p.Approve(theirs.Id, Now));
 
         var result = await ApproveAsync(proposal.Id, Request(Tej, 2m, "l"));
 
         result.Created.Should().BeFalse();
         result.Item.Id.Should().Be(theirs.Id);
-        _pantry.Saves.Should().Be(0);
+        _proposals.Saves.Should().Be(0);
     }
 
     [Fact]
     public async Task When_another_request_rejected_first_approving_is_a_conflict_and_nothing_is_saved()
     {
         var proposal = Pending(Tej);
-        _proposals.BeforeTransition = () => proposal.Reject(Now);
+        _proposals.LostRaceTo = Decided(proposal, p => p.Reject(Now));
 
         var error = await FluentActions.Awaiting(() => ApproveAsync(proposal.Id, Request(Tej, 2m, "l"))).Should().ThrowAsync<ConflictException>();
 
         error.Which.Code.Should().Be("ITEM_PROPOSAL_STATE_CONFLICT");
-        _pantry.Saves.Should().Be(0);
+        _proposals.Saves.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task When_another_request_approved_first_rejecting_is_a_conflict()
+    {
+        var proposal = Pending(Tej);
+        _proposals.LostRaceTo = Decided(proposal, p => p.Approve(Guid.CreateVersion7(), Now));
+
+        var error = await FluentActions.Awaiting(() => RejectAsync(proposal.Id)).Should().ThrowAsync<ConflictException>();
+
+        error.Which.Code.Should().Be("ITEM_PROPOSAL_STATE_CONFLICT");
+    }
+
+    [Fact]
+    public async Task When_another_request_rejected_first_rejecting_is_a_repeat()
+    {
+        var proposal = Pending(Tej);
+        _proposals.LostRaceTo = Decided(proposal, p => p.Reject(Now));
+
+        await FluentActions.Awaiting(() => RejectAsync(proposal.Id)).Should().NotThrowAsync();
     }
 
     [Fact]
@@ -457,6 +490,16 @@ public class ItemProposalUseCaseTests
         return proposal;
     }
 
+    // The proposal as another request left it in the database: same id, its decision made.
+    private static ItemProposal Decided(ItemProposal proposal, Action<ItemProposal> decide)
+    {
+        var copy = ItemProposal.Create(proposal.HouseholdId, proposal.Text, proposal.IngredientId, proposal.Amount, proposal.Unit,
+            proposal.ExpiryDate, proposal.ExpiryEstimated, proposal.ExpiryText, proposal.SubmittedAt);
+        typeof(ItemProposal).GetProperty(nameof(ItemProposal.Id))!.SetValue(copy, proposal.Id);
+        decide(copy);
+        return copy;
+    }
+
     private static AddPantryItemRequest Request(Ingredient ingredient, decimal amount, string unit, DateOnly? expiryDate = null) =>
         new() { IngredientId = ingredient.Id, Amount = amount, Unit = unit, ExpiryDate = expiryDate };
 
@@ -499,19 +542,30 @@ public class ItemProposalUseCaseTests
 
         public int Saves { get; private set; }
 
-        // Runs just before the conditional update: another request deciding first (ADR-0008 4.).
-        public Action? BeforeTransition { get; set; }
+        // Another request decided the proposal after it was read: the save fails its xmin check, and the reload
+        // returns this, the database's copy (ADR-0008).
+        public ItemProposal? LostRaceTo { get; set; }
 
         public void AddRange(IEnumerable<ItemProposal> proposals) => Items.AddRange(proposals);
 
         public Task<ItemProposal?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(Items.FirstOrDefault(p => p.Id == id && p.HouseholdId == householdId));
 
-        public Task<bool> TryApproveAsync(Guid householdId, Guid id, Guid pantryItemId, DateTimeOffset now, CancellationToken cancellationToken) =>
-            Transition(householdId, id, p => p.Approve(pantryItemId, now));
+        public Task<ItemProposal?> ReloadAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>
+            LostRaceTo is { } other && other.Id == id && other.HouseholdId == householdId
+                ? Task.FromResult<ItemProposal?>(other)
+                : FindAsync(householdId, id, cancellationToken);
 
-        public Task<bool> TryRejectAsync(Guid householdId, Guid id, DateTimeOffset now, CancellationToken cancellationToken) =>
-            Transition(householdId, id, p => p.Reject(now));
+        public Task<bool> TrySaveAsync(CancellationToken cancellationToken)
+        {
+            if (LostRaceTo is not null)
+            {
+                return Task.FromResult(false);
+            }
+
+            Saves++;
+            return Task.FromResult(true);
+        }
 
         public Task SaveChangesAsync(CancellationToken cancellationToken)
         {
@@ -519,12 +573,6 @@ public class ItemProposalUseCaseTests
             return Task.CompletedTask;
         }
 
-        private Task<bool> Transition(Guid householdId, Guid id, Func<ItemProposal, ItemProposalTransition> change)
-        {
-            BeforeTransition?.Invoke();
-            var proposal = Items.Single(p => p.Id == id && p.HouseholdId == householdId);
-            return Task.FromResult(proposal.State == ItemProposalState.Pending && change(proposal) == ItemProposalTransition.Changed);
-        }
     }
 
     private sealed class FakeIngredients(params Ingredient[] visible) : IIngredientRepository

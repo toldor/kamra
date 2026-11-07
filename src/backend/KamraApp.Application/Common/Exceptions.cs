@@ -1,6 +1,7 @@
 namespace KamraApp.Application.Common;
 
-// One general exception per ADR-0007 category in use; the stable code identifies the case.
+// General exceptions per ADR-0007 category; the stable code identifies the case. Validation has two: the
+// field-level VALIDATION_FAILED, and InvalidInputException for a request-level 400 with its own code.
 
 public sealed class ValidationException(IReadOnlyDictionary<string, string[]> errors)
     : AppException(ErrorCategory.Validation, "VALIDATION_FAILED", "Néhány mező hibás. Javítsd a jelölt mezőket, és próbáld újra.")
