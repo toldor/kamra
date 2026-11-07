@@ -245,6 +245,7 @@ public sealed class QuickEntryPocTests
         {
             items = JsonSerializer.Deserialize<LlmResult>(output, JsonSerializerOptions.Web)?.Items
                 ?? throw new JsonException("no items");
+            items = [.. items.Select(i => i.Ingredient == NoMatch ? i with { Ingredient = null } : i)];
         }
         catch (JsonException)
         {
@@ -301,6 +302,11 @@ public sealed class QuickEntryPocTests
         return string.Join(' ', plain.Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
+    // From v3 the ingredient is required and "-" means "not on the list": with an optional field, v2 still forced
+    // an off-list product onto a list entry ("pesztó" became "póréhagyma").
+    private const string NoMatch = "-";
+    private static readonly bool IngredientRequired = PromptVersion is not ("v1" or "v2");
+
     private static JsonObject Schema(string[] names) => new()
     {
         ["type"] = "object",
@@ -318,13 +324,15 @@ public sealed class QuickEntryPocTests
                         ["ingredient"] = new JsonObject
                         {
                             ["type"] = "string",
-                            ["enum"] = new JsonArray(names.Select(n => (JsonNode)n!).ToArray()),
+                            ["enum"] = new JsonArray(names.Concat(IngredientRequired ? [NoMatch] : []).Select(n => (JsonNode)n!).ToArray()),
                         },
                         ["amount"] = new JsonObject { ["type"] = new JsonArray("number", "null") },
                         ["unit"] = new JsonObject { ["type"] = new JsonArray("string", "null") },
                         ["expiry"] = new JsonObject { ["type"] = new JsonArray("string", "null") },
                     },
-                    ["required"] = new JsonArray("text", "amount", "unit", "expiry"),
+                    ["required"] = IngredientRequired
+                        ? new JsonArray("text", "ingredient", "amount", "unit", "expiry")
+                        : new JsonArray("text", "amount", "unit", "expiry"),
                 },
             },
         },
