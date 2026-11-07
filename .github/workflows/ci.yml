@@ -67,8 +67,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # LiveAI tests call the real LLM; they never run in CI (AGENTS.md 6.) and also skip without a key.
       - name: Integration tests (PostgreSQL in Testcontainers) with coverage
-        run: dotnet test --no-build --project tests/KamraApp.Integration.Tests --coverlet --coverlet-output-format cobertura
+        run: >-
+          dotnet test --no-build --project tests/KamraApp.Integration.Tests --coverlet --coverlet-output-format cobertura
+          --filter-not-trait "Category=LiveAI"
 
       - name: Vulnerable NuGet packages
         run: |
