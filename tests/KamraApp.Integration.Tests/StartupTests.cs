@@ -20,6 +20,24 @@ public class StartupTests
             .Which.Message.Should().Contain("ConnectionStrings:Default");
     }
 
+    // us2_minispec K10: the quick entry switched on without an API key stops the app at startup, not at the first sentence.
+    [Fact]
+    public void App_does_not_start_with_the_LLM_on_and_no_api_key()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseSetting("ConnectionStrings:Default", "Host=127.0.0.1;Port=1;Database=none;Username=none");
+                builder.UseSetting("Llm:Enabled", "true");
+                builder.UseSetting("Llm:ApiKey", "");
+            });
+
+        var start = () => factory.CreateClient();
+
+        start.Should().Throw<OptionsValidationException>()
+            .Which.Message.Should().Contain("Llm:ApiKey");
+    }
+
     // The local Docker Compose deployment is plain HTTP; the antiforgery token must still be issued (V-12).
     [Fact]
     public async Task Antiforgery_token_is_issued_over_plain_http()

@@ -34,8 +34,16 @@ public sealed class PantryRepository(KamraDbContext db) : IPantryRepository
         return [.. rows.Select(x => new PantryEntry(x.Item, x.Name))];
     }
 
-    public Task<PantryEntry?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>
-        throw new NotImplementedException(); // T1
+    // Also a used-up item: a repeated approval (US-2) returns the first one's item as it is now.
+    public async Task<PantryEntry?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken)
+    {
+        var row = await (from item in db.PantryItems.AsNoTracking()
+                         join ingredient in db.Ingredients on item.IngredientId equals ingredient.Id
+                         where item.Id == id && item.HouseholdId == householdId
+                         select new { Item = item, ingredient.Name })
+            .SingleOrDefaultAsync(cancellationToken);
+        return row is null ? null : new PantryEntry(row.Item, row.Name);
+    }
 
     public async Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken)
     {

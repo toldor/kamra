@@ -293,6 +293,22 @@ public class ItemProposalApiTests(KamraApiFactory factory)
         other.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
+    // Without a session there is no household to limit: the answer stays 401 (ADR-0007), never 429 (code review, T2).
+    [Fact]
+    public async Task Requests_without_a_session_are_401_even_beyond_the_limit()
+    {
+        using var app = WithLlm(new ScriptedParser(), builder => builder.UseSetting("RateLimiting:ItemProposals:PermitLimit", "1"));
+        var anonymous = await ApiClient.CreateAsync(app);
+
+        var statuses = new List<HttpStatusCode>();
+        for (var i = 0; i < 3; i++)
+        {
+            statuses.Add((await anonymous.PostAsync("/api/v1/item-proposals", new { text = "tej" })).StatusCode);
+        }
+
+        statuses.Should().OnlyContain(s => s == HttpStatusCode.Unauthorized);
+    }
+
     [Theory]
     [InlineData("GET", "/api/v1/item-proposals/availability")]
     [InlineData("POST", "/api/v1/item-proposals")]

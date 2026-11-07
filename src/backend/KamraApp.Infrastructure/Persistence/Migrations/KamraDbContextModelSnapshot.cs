@@ -1594,6 +1594,74 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("KamraApp.Domain.ItemProposals.ItemProposal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("numeric(12,3)");
+
+                    b.Property<DateOnly?>("ExpiryDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("ExpiryEstimated")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ExpiryText")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("PantryItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("text");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseholdId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("PantryItemId");
+
+                    b.ToTable("ItemProposals", t =>
+                        {
+                            t.HasCheckConstraint("CK_ItemProposals_Amount_Positive", "\"Amount\" > 0");
+
+                            t.HasCheckConstraint("CK_ItemProposals_Approved_HasPantryItem", "(\"State\" = 'Approved') = (\"PantryItemId\" IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("KamraApp.Domain.Pantry.PantryItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3309,6 +3377,25 @@ namespace KamraApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("IngredientId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("KamraApp.Domain.ItemProposals.ItemProposal", b =>
+                {
+                    b.HasOne("KamraApp.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KamraApp.Domain.Ingredients.Ingredient", null)
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("KamraApp.Domain.Pantry.PantryItem", null)
+                        .WithMany()
+                        .HasForeignKey("PantryItemId")
+                        .OnDelete(DeleteBehavior.NoAction);
                 });
 
             modelBuilder.Entity("KamraApp.Domain.Pantry.PantryItem", b =>

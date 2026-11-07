@@ -634,6 +634,175 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/item-proposals/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ItemProposalAvailability"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/item-proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["SubmitItemProposalsRequest"];
+                    "text/json": null | components["schemas"]["SubmitItemProposalsRequest"];
+                    "application/*+json": null | components["schemas"]["SubmitItemProposalsRequest"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SubmitItemProposalsResponse"];
+                        "application/json": components["schemas"]["SubmitItemProposalsResponse"];
+                        "text/json": components["schemas"]["SubmitItemProposalsResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/item-proposals/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["AddPantryItemRequest"];
+                    "text/json": null | components["schemas"]["AddPantryItemRequest"];
+                    "application/*+json": null | components["schemas"]["AddPantryItemRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PantryItemResponse"];
+                        "application/json": components["schemas"]["PantryItemResponse"];
+                        "text/json": components["schemas"]["PantryItemResponse"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PantryItemResponse"];
+                        "application/json": components["schemas"]["PantryItemResponse"];
+                        "text/json": components["schemas"]["PantryItemResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/item-proposals/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/recipes/{id}/cooking-preview": {
         parameters: {
             query?: never;
@@ -1038,6 +1207,32 @@ export interface components {
             defaultCategory: components["schemas"]["Category"];
             minimum: null | components["schemas"]["AmountResponse"];
         };
+        InStockResponse: {
+            amount: components["schemas"]["AmountResponse"];
+            /** Format: date */
+            earliestExpiry: string;
+        };
+        ItemProposalAvailability: {
+            enabled: boolean;
+        };
+        ItemProposalResponse: {
+            /** Format: uuid */
+            id: string;
+            text: string;
+            /** Format: uuid */
+            ingredientId: null | string;
+            ingredientName: null | string;
+            dimension: null | components["schemas"]["Dimension"];
+            /** Format: double */
+            amount: null | number;
+            unit: null | components["schemas"]["Unit"];
+            unitMismatch: boolean;
+            /** Format: date */
+            expiryDate: null | string;
+            expiryEstimated: boolean;
+            expiryText: null | string;
+            inStock: null | components["schemas"]["InStockResponse"];
+        };
         LoginRequest: {
             email: null | string;
             password: null | string;
@@ -1142,6 +1337,12 @@ export interface components {
             /** Format: double */
             required: number;
             unit: components["schemas"]["Unit"];
+        };
+        SubmitItemProposalsRequest: {
+            text: null | string;
+        };
+        SubmitItemProposalsResponse: {
+            items: components["schemas"]["ItemProposalResponse"][];
         };
         /** @enum {unknown} */
         SuggestionTrigger: "depleted" | "belowMinimum";

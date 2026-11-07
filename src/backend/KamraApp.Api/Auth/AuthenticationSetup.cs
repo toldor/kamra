@@ -12,6 +12,7 @@ namespace KamraApp.Api.Auth;
 public static class AuthenticationSetup
 {
     public const string AuthRateLimitPolicy = "auth";
+    public const string ItemProposalsRateLimitPolicy = "item-proposals";
     public const string UnauthenticatedCode = "UNAUTHENTICATED";
     public const string UnauthenticatedTitle = "Jelentkezz be a folytatáshoz.";
 
@@ -56,11 +57,20 @@ public static class AuthenticationSetup
         // ADR-0006: per-IP limit on login and registration (the v1.2 rate-limiting bonus item).
         var permitLimit = configuration.GetValue("RateLimiting:Auth:PermitLimit", 10);
         var window = TimeSpan.FromSeconds(configuration.GetValue("RateLimiting:Auth:WindowSeconds", 60));
+        // us2_minispec K11: sentences per household (from the session, not the IP), against LLM cost and abuse.
+        var proposalLimit = configuration.GetValue("RateLimiting:ItemProposals:PermitLimit", 20);
+        var proposalWindow = TimeSpan.FromSeconds(configuration.GetValue("RateLimiting:ItemProposals:WindowSeconds", 600));
         services.AddRateLimiter(options =>
         {
             options.AddPolicy(AuthRateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = window }));
+            // Without a session there is no household: no limit here, the authorization filter answers 401 (ADR-0007).
+            options.AddPolicy(ItemProposalsRateLimitPolicy, context =>
+                context.User.FindFirst(KamraClaimTypes.HouseholdId)?.Value is { } householdId
+                    ? RateLimitPartition.GetFixedWindowLimiter(householdId,
+                        _ => new FixedWindowRateLimiterOptions { PermitLimit = proposalLimit, Window = proposalWindow })
+                    : RateLimitPartition.GetNoLimiter("anonymous"));
             options.OnRejected = (context, _) => new ValueTask(AppExceptionHandler.WriteProblemAsync(
                 context.HttpContext, StatusCodes.Status429TooManyRequests, "RATE_LIMITED", "Túl sok kérés érkezett. Várj egy kicsit, és próbáld újra."));
         });

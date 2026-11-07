@@ -123,7 +123,7 @@ public sealed class QuickEntryPocTests
         var ct = TestContext.Current.CancellationToken;
 
         var root = RepoRoot();
-        var prompt = await File.ReadAllTextAsync(Path.Combine(root, "tests", "KamraApp.Integration.Tests", "LiveAI", $"quick-entry.{PromptVersion}.txt"), ct);
+        var prompt = await File.ReadAllTextAsync(Path.Combine(root, "src", "backend", "KamraApp.Infrastructure", "Llm", "Prompts", $"quick-entry.{PromptVersion}.txt"), ct);
         var seed = JsonNode.Parse(await File.ReadAllTextAsync(
             Path.Combine(root, "src", "backend", "KamraApp.Infrastructure", "Persistence", "Seed", "ingredients.json"), ct))!.AsArray();
         var names = seed.Select(i => (string)i!["name"]!).ToArray();
