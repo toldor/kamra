@@ -52,7 +52,7 @@ Elkészült az 1. lépcső, a determinisztikus mag, és a 2. lépcső, az egy mo
 
 Még **nincs kész**: chatasszisztens (nov. 18.). Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-Következő mérföldkő: **nov. 13.** – `v0.5.0` az egy mondatos bevitellel; **nov. 20.** – minden vállalt funkció és a teljes dolgozat. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+A `v0.5.0` (egy mondatos bevitel) nov. 8-án elkészült. Következő mérföldkő: **nov. 18.** – `v0.6.0` a chattel (US-6) és az UAT 1. kör javításaival (L1, L2); **nov. 20.** – minden vállalt funkció és a teljes dolgozat. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 

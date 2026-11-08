@@ -48,7 +48,7 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
 |---|---|---|
 | Alapok | okt. 4. | CAP-07, CAP-09 (bővül a teljes fejlesztés alatt) |
 | 1. lépcső – determinisztikus mag | okt. 22. (témavezetői: okt. 23.) | CAP-01, CAP-03, CAP-04, CAP-05, CAP-08, CAP-10 |
-| 2. lépcső – AI-bevitel | nov. 13. (átütemezve 2026-11-07; eredetileg nov. 3.) | CAP-02, CAP-11 |
+| 2. lépcső – AI-bevitel | nov. 13. (átütemezve 2026-11-07; eredetileg nov. 3.); kiadva nov. 8. (`v0.5.0`) | CAP-02, CAP-11 |
 | 3. lépcső – chat és mérés | nov. 18. (témavezetői: nov. 20.) | CAP-06, CAP-12 |
 
 - **Csúszás esetén** először a CAP-06 szűkül; az 1. és a 2. lépcső képességei védettek. (2026-11-07: a fejlesztő döntése szerint nem szűkül, az ütemezés csúszik – [scope_contract.md](scope_contract.md), Vágási szabály.)

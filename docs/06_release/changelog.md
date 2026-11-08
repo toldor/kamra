@@ -2,9 +2,9 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
-## [0.5.0] – 2026-11-13 – Egy mondatos bevitel
+## [0.5.0] – 2026-11-08 – Egy mondatos bevitel
 
-A 2. lépcső: a bevásárlás egy mondattal rögzíthető, az AI javaslatait a felhasználó hagyja jóvá. Részletek: [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md), [test_report.md](../04_quality/test_report.md) („LLM-mérés”), [P-26](../07_ai/prompt_log.md), [V-66 – V-75](../07_ai/verification_log.md).
+A 2. lépcső: a bevásárlás egy mondattal rögzíthető, az AI javaslatait a felhasználó hagyja jóvá. Részletek: [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md), [test_report.md](../04_quality/test_report.md) („LLM-mérés”), [P-26](../07_ai/prompt_log.md), [V-66 – V-76](../07_ai/verification_log.md).
 
 ### Hozzáadva
 - Mondatos bevitel (US-2) a Készlet oldalon: a mondatból szerkeszthető javaslatkártyák (hozzávaló, mennyiség, egység, lejárat; becsült jelöléssel), „Már van otthon” tájékoztató, „Kihagyom” kártyánként és „Jóváhagyom (n)”; jóváhagyás nélkül semmi nem kerül a készletbe.
@@ -12,6 +12,7 @@ A 2. lépcső: a bevásárlás egy mondattal rögzíthető, az AI javaslatait a 
 - Hibakezelés: kiesésnél és értelmezhetetlen válasznál a szöveg megmarad, a kézi űrlap egy kattintásra; rate limit háztartásonként.
 - Végpontok: `GET /item-proposals/availability`, `POST /item-proposals`, `…/{id}/approve`, `…/{id}/reject`; migráció: `AddItemProposals`.
 - `Llm:Enabled` kapcsoló (alapból kikapcsolva); e2e LLM-csonkkal (`docker-compose.e2e.yml`), valódi LLM-hívás a tesztekben nincs.
+- Fizetős Gemini-keret havi költéskorláttal (az EGT-szabály, [privacy_licensing.md](../05_security_ops/privacy_licensing.md)).
 
 ### Módosítva
 - A tételjavaslat döntése optimista zárolással (`xmin`), az ADR-0008 4. pontjának módosítása szerint.

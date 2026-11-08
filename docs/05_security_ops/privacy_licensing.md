@@ -35,7 +35,7 @@ Szolgáltató: Google Gemini API (`gemini-3.1-flash-lite`, [ADR-0009](../02_arch
 - **Mi megy ki:** a mondat (legfeljebb 500 karakter) és a háztartás által látható hozzávalók neve. E-mail, jelszó és készletadat nem.
 - **Napló:** a mondat és a modell válasza nem kerül a naplóba ([observability.md](observability.md)).
 - **Feltételek** ([Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms)): az EGT-ben elérhetővé tett alkalmazás csak a fizetős szolgáltatást használhatja. A fizetős szolgáltatásnál a Google a promptokat és a válaszokat nem használja a termékei fejlesztésére, adatfeldolgozási kiegészítés (DPA) szerint kezeli, és csak visszaélés-felderítésre naplózza, korlátozott ideig.
-- **Ezért:** valódi felhasználó (UAT 2. kör) előtt a fizetős keret kötelező, havi költéskorláttal; addig a funkció csak a fejlesztő saját, kitalált mondataival fut (T0-mérés).
+- **Fizetős keret (bekapcsolva 2026-11-08):** Tier 1, előre fizetett 5 dollár, automatikus újratöltés nélkül, havi költéskorlát 5 dollárral. A kérések a fizetős ár szerint díjkötelesek, és csak pozitív egyenleg mellett futnak ([Billing](https://aistudio.google.com/docs/billing), [Pricing](https://aistudio.google.com/docs/pricing), 2026-11-08). Ha az egyenleg elfogy, a Gemini HTTP 402-t ad; az alkalmazás ezt újrapróbálás nélkül `LLM_UNAVAILABLE`-ként adja vissza, a kézi űrlap működik ([V-76](../07_ai/verification_log.md)).
 - A CI-ban és a tesztekben valódi LLM-hívás nincs (AGENTS.md 7.): a tesztek hamis adaptert, az e2e egy LLM-csonkot használ.
 
 ## Licencek
