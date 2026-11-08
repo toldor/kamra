@@ -145,6 +145,8 @@ public sealed partial class GeminiIngredientParser(HttpClient http, IOptions<Llm
         }),
         ["generationConfig"] = new JsonObject
         {
+            // ResponseFormatConfig -> TextResponseFormat: mimeType is an enum (APPLICATION_JSON), not a MIME string
+            // (https://aistudio.google.com/api-reference/generate-content, checked 2026-11-08; measured in T0).
             ["responseFormat"] = new JsonObject
             {
                 ["text"] = new JsonObject { ["mimeType"] = "APPLICATION_JSON", ["schema"] = Schema(ingredientNames) },
