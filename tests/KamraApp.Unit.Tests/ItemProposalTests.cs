@@ -62,6 +62,7 @@ public class ItemProposalTests
     [InlineData("nov. 20an", "2026-11-20")]      // the case ending without the hyphen (code review, spec axis)
     [InlineData("11.08ig", "2026-11-08")]
     [InlineData("2026.11.15ig", "2026-11-15")]
+    [InlineData("2028.02.29.", "2028-02-29")]   // a leap day with its year (external review)
     public void An_absolute_date_without_a_year_is_the_nearest_one_from_today(string text, string expected) =>
         ExpiryWords.Resolve(text, Today).Should().Be(DateOnly.Parse(expected, CultureInfo.InvariantCulture));
 
@@ -78,6 +79,7 @@ public class ItemProposalTests
     [InlineData("13.08.")]   // no 13th month
     [InlineData("nov. 31.")]
     [InlineData("2026.02.30.")]
+    [InlineData("febr. 29.")]   // the nearest one would be in 2027, not a leap year (external review)
     public void Anything_else_is_not_recognised_so_the_expiry_is_estimated(string? text) =>
         ExpiryWords.Resolve(text, Today).Should().BeNull();
 

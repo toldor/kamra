@@ -132,6 +132,8 @@ public class ItemProposalApiTests(KamraApiFactory factory)
         var results = await Task.WhenAll(approve, reject);
 
         results.Count(r => r.StatusCode == HttpStatusCode.Conflict).Should().Be(1);
+        (await ApiClient.ProblemAsync(results.Single(r => r.StatusCode == HttpStatusCode.Conflict))).GetProperty("code").GetString()
+            .Should().Be("ITEM_PROPOSAL_STATE_CONFLICT");
         var pantryCount = (await client.GetJsonAsync("/api/v1/pantry-items")).GetArrayLength();
         pantryCount.Should().Be(results[0].IsSuccessStatusCode ? 1 : 0);
     }
@@ -358,7 +360,7 @@ public class ItemProposalApiTests(KamraApiFactory factory)
         await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
 
     // Answers by the exact sentence; an unscripted sentence fails the test loudly.
-    private sealed class ScriptedParser : IIngredientParser
+    internal sealed class ScriptedParser : IIngredientParser
     {
         private readonly ConcurrentDictionary<string, Func<IReadOnlyList<ParsedItem>>> _script = new();
 

@@ -38,6 +38,19 @@ test('turns a sentence into proposals and approves them into the pantry', async 
   await expectNoHorizontalScroll(page)
 })
 
+// S-1 / QA-3: an answer outside the schema (the stub sends no JSON): no retry, the text stays (external review).
+test('an invalid LLM answer keeps the sentence and asks to rephrase', async ({ page }) => {
+  await registerFreshHousehold(page)
+
+  await page.getByLabel('Mit vettél?').fill('HIBÁS: 2 liter tej')
+  await page.getByRole('button', { name: 'Feldolgozom' }).click()
+
+  await expect(page.getByRole('form', { name: 'Mondatos bevitel' }).getByRole('alert'))
+    .toHaveText('Nem sikerült értelmezni a mondatot. A szöveged megmaradt: próbáld újra, fogalmazd át, vagy rögzítsd tételenként.')
+  await expect(page.getByLabel('Mit vettél?')).toHaveValue('HIBÁS: 2 liter tej')
+  await expect(page.getByText('Még üres a kamrád.')).toBeVisible()
+})
+
 // S-1 / QA-3: the LLM is down (the stub answers 503 to the attempt and the retry); the text stays and the
 // manual form is one click away.
 test('an LLM outage keeps the sentence and offers the manual form', async ({ page }) => {
