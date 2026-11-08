@@ -140,6 +140,7 @@ public sealed class GeminiIngredientParserTests : IDisposable
     [Theory]
     [InlineData(HttpStatusCode.BadRequest)]
     [InlineData(HttpStatusCode.Unauthorized)]
+    [InlineData(HttpStatusCode.PaymentRequired)]
     [InlineData(HttpStatusCode.Forbidden)]
     public async Task A_refused_request_is_LLM_UNAVAILABLE_without_a_retry(HttpStatusCode status)
     {
