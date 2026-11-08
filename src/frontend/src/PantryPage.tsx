@@ -78,9 +78,21 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
       <h1 tabIndex={-1}>Készlet</h1>
       <p role="status" className="notice">{notice}</p>
 
-      {/* C3: the filters, the new item form and the hint beside the list; stacked on a phone (C2). */}
+      {/* C3: the sentence panel, the filters, the new item form and the hint beside the list; stacked on a phone (C2). */}
       <div className="split">
         <div className="side">
+          {/* us2_minispec K13: at the top of the side column. */}
+          {quickEntry && (
+            <QuickEntryForm
+              onProposed={(items) => {
+                setNotice(null)
+                setProposals(items)
+                setBatch((n) => n + 1)
+              }}
+              onManual={() => document.getElementById('new-ingredientId')?.focus()}
+              onSignedOut={onSignedOut}
+            />
+          )}
           <form role="search" className="filters panel" onSubmit={(e) => e.preventDefault()}>
             <label htmlFor="filter-search">Keresés</label>
             <input
@@ -122,17 +134,6 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
                 Újra
               </button>
             </div>
-          )}
-          {quickEntry && (
-            <QuickEntryForm
-              onProposed={(items) => {
-                setNotice(null)
-                setProposals(items)
-                setBatch((n) => n + 1)
-              }}
-              onManual={() => document.getElementById('new-ingredientId')?.focus()}
-              onSignedOut={onSignedOut}
-            />
           )}
           {catalog.status === 'ready' && (
             <PantryItemForm

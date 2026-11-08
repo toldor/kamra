@@ -138,20 +138,54 @@ describe('the quick entry panel', () => {
   })
 
   it('explains an estimated date from unrecognised words, a unit that does not fit, and the stock at home', async () => {
-    const withStock = { ...milk, inStock: { amount: { value: 0.5, unit: 'l' }, earliestExpiry: '2026-11-12' } }
-    backend(true, { 'POST /api/v1/item-proposals': [{ status: 201, body: { items: [withStock, pepper] } }] })
+    const withStock = { ...milk, inStock: { amount: { value: 0.5, unit: 'l' }, earliestExpiry: '2026-11-12', itemCount: 1 } }
+    const severalAtHome = { ...milk, id: 'ip-tej2', text: '1 liter tejet', inStock: { amount: { value: 1.5, unit: 'l' }, earliestExpiry: '2026-11-12', itemCount: 2 } }
+    backend(true, { 'POST /api/v1/item-proposals': [{ status: 201, body: { items: [withStock, severalAtHome, pepper] } }] })
     render(<App />)
 
     await submit()
 
-    await screen.findByRole('heading', { name: 'Javaslatok (2)' })
+    await screen.findByRole('heading', { name: 'Javaslatok (3)' })
     expect(card('2 liter tejet').getByText('Már van otthon: tej 0,5 l, nov. 12-én jár le.')).toBeTruthy()
+    expect(card('1 liter tejet').getByText('Már van otthon: tej 1,5 l, a legkorábbi nov. 12-én jár le.')).toBeTruthy()
     expect(card('3 darab paprika').getByText('becsült')).toBeTruthy()
     expect(card('3 darab paprika').getByText('»jövő hétfőig«: ezt nem tudtam dátummá alakítani, ezért becsült lejáratot adtam. Javítsd, ha kell.'))
       .toBeTruthy()
     // The manual form's wording (PantryInput.UnitForMessage): an accusative of any ingredient name cannot be formed.
     expect(card('3 darab paprika').getByText('A(z) paprika tömegben mérhető: g, dkg vagy kg. Add meg így a mennyiséget.')).toBeTruthy()
     expect((card('3 darab paprika').getByLabelText('Mértékegység') as HTMLSelectElement).value).toBe('')
+  })
+
+  it('sits at the top of the side column, above the filters', async () => {
+    backend(true)
+    render(<App />)
+
+    const quick = await screen.findByRole('form', { name: 'Mondatos bevitel' })
+    expect(quick.compareDocumentPosition(screen.getByRole('search')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('links the hints to their fields and drops them once the card is fixed', async () => {
+    backend(true, { 'POST /api/v1/item-proposals': [{ status: 201, body: { items: [{ ...pesto, amount: null }, pepper] } }] })
+    render(<App />)
+    await submit()
+    await screen.findByRole('heading', { name: 'Javaslatok (2)' })
+
+    const describedBy = (field: HTMLElement) => document.getElementById(field.getAttribute('aria-describedby') ?? '')?.textContent
+    const pestoName = card('egy üveg pesztó').getByLabelText('Hozzávaló')
+    const pestoAmount = card('egy üveg pesztó').getByLabelText('Mennyiség')
+    const pepperUnit = card('3 darab paprika').getByLabelText('Mértékegység')
+    expect(describedBy(pestoName)).toBe('Nem találtam a hozzávalók között: »egy üveg pesztó«. Válassz egyet, vagy vegyél fel újat.')
+    expect(describedBy(pestoAmount)).toBe('Add meg a mennyiséget.')
+    expect(describedBy(card('egy üveg pesztó').getByLabelText('Mértékegység'))).toBe('Add meg a mértékegységet.')
+    expect(describedBy(pepperUnit)).toBe('A(z) paprika tömegben mérhető: g, dkg vagy kg. Add meg így a mennyiséget.')
+    expect(describedBy(card('3 darab paprika').getByLabelText(/Lejárat/)))
+      .toBe('»jövő hétfőig«: ezt nem tudtam dátummá alakítani, ezért becsült lejáratot adtam. Javítsd, ha kell.')
+
+    fireEvent.change(pestoName, { target: { value: 'tej' } })
+    fireEvent.change(pepperUnit, { target: { value: 'dkg' } })
+
+    expect(card('egy üveg pesztó').queryByText(/Nem találtam a hozzávalók között/)).toBeNull()
+    expect(card('3 darab paprika').queryByText(/tömegben mérhető/)).toBeNull()
   })
 
   it('shows the busy state while the sentence is processed', async () => {
@@ -231,6 +265,70 @@ describe('approving and skipping', () => {
     expect(calls.some((c) => c.key.endsWith('/approve'))).toBe(false)
   })
 
+  it('moves the focus to the first card that needs a fix', async () => {
+    const olives = { ...pesto, id: 'ip-oliva', text: 'egy doboz olívabogyó' }
+    backend(true, { 'POST /api/v1/item-proposals': [{ status: 201, body: { items: [pesto, olives] } }] })
+    render(<App />)
+    await submit()
+    await screen.findByRole('heading', { name: 'Javaslatok (2)' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jóváhagyom (2)' }))
+
+    await card('egy doboz olívabogyó').findByText('Válassz hozzávalót a listából.')
+    await waitFor(() => expect(document.activeElement).toBe(card('egy üveg pesztó').getByLabelText('Hozzávaló')))
+  })
+
+  it('shows the busy state while approving and holds back "Kihagyom"', async () => {
+    let answer: (value: Response) => void = () => {}
+    backend(true, { 'POST /api/v1/item-proposals': [{ status: 201, body: { items: [milk] } }] })
+    const original = globalThis.fetch
+    vi.stubGlobal('fetch', vi.fn((url: string, init: RequestInit = {}) =>
+      `${init.method ?? 'GET'} ${url}` === 'POST /api/v1/item-proposals/ip-tej/approve'
+        ? new Promise<Response>((resolve) => { answer = resolve })
+        : original(url, init)))
+    render(<App />)
+    await submit()
+    await screen.findByRole('heading', { name: 'Javaslatok (1)' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jóváhagyom (1)' }))
+
+    const button = await screen.findByRole('button', { name: 'Feldolgozás…' })
+    expect((button as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('button', { name: 'Kihagyom: tej' }) as HTMLButtonElement).disabled).toBe(true)
+    answer(new Response(JSON.stringify(pantryItem('tej', 2, 'l')), { status: 201 }))
+    expect(await screen.findByText('Felvettem a kamrádba: tej 2 l.')).toBeTruthy()
+  })
+
+  it('keeps a card that failed for another reason, with the message on it', async () => {
+    backend(true, {
+      'POST /api/v1/item-proposals': [{ status: 201, body: { items: [milk] } }],
+      'POST /api/v1/item-proposals/ip-tej/approve': [problem(500, 'INTERNAL_ERROR', 'Váratlan hiba történt.')],
+    })
+    render(<App />)
+    await submit()
+    await screen.findByRole('heading', { name: 'Javaslatok (1)' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jóváhagyom (1)' }))
+
+    expect((await card('2 liter tejet').findByRole('alert')).textContent).toBe('Váratlan hiba történt.')
+    expect(screen.getByRole('button', { name: 'Jóváhagyom (1)' })).toBeTruthy()
+  })
+
+  it('signs out when the session ends during the approval', async () => {
+    backend(true, {
+      'POST /api/v1/item-proposals': [{ status: 201, body: { items: [milk] } }],
+      'POST /api/v1/item-proposals/ip-tej/approve': [problem(401, 'UNAUTHENTICATED', 'Jelentkezz be a folytatáshoz.')],
+    })
+    render(<App />)
+    await submit()
+    await screen.findByRole('heading', { name: 'Javaslatok (1)' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jóváhagyom (1)' }))
+
+    expect(await screen.findByRole('heading', { name: 'Bejelentkezés' })).toBeTruthy()
+    expect(screen.getByText('Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.')).toBeTruthy()
+  })
+
   it('skips a card with "Kihagyom"', async () => {
     const calls = backend(true, {
       'POST /api/v1/item-proposals': [{ status: 201, body: { items: [milk, pesto] } }],
@@ -245,6 +343,25 @@ describe('approving and skipping', () => {
     expect(await screen.findByText('Kihagytam: tej.')).toBeTruthy()
     expect(calls.some((c) => c.key === 'POST /api/v1/item-proposals/ip-tej/reject')).toBe(true)
     expect(screen.queryByRole('group', { name: '»2 liter tejet«' })).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Javaslatok (1)' })).toBeTruthy()
+  })
+
+  it('removes a skipped card that is gone already, and keeps one whose skip failed', async () => {
+    backend(true, {
+      'POST /api/v1/item-proposals': [{ status: 201, body: { items: [milk, pepper] } }],
+      'POST /api/v1/item-proposals/ip-tej/reject': [problem(404, 'ITEM_PROPOSAL_NOT_FOUND', 'Nincs ilyen javaslat.')],
+      'POST /api/v1/item-proposals/ip-paprika/reject': [problem(500, 'INTERNAL_ERROR', 'Váratlan hiba történt.')],
+    })
+    render(<App />)
+    await submit()
+    await screen.findByRole('heading', { name: 'Javaslatok (2)' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kihagyom: tej' }))
+    expect(await screen.findByText('Ez a javaslat már nem érhető el. Levettem a listáról.')).toBeTruthy()
+    expect(screen.queryByRole('group', { name: '»2 liter tejet«' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kihagyom: paprika' }))
+    expect((await card('3 darab paprika').findByRole('alert')).textContent).toBe('Váratlan hiba történt.')
     expect(screen.getByRole('heading', { name: 'Javaslatok (1)' })).toBeTruthy()
   })
 

@@ -1,18 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { api, ApiError, failWith, type CategoryInfo, type Ingredient, type ItemProposal, type Unit } from './api/client'
+import { api, ApiError, errorMessage, failWith, type CategoryInfo, type Ingredient, type ItemProposal, type Unit } from './api/client'
 import { useFieldErrors } from './fieldErrors'
-import { findIngredient, formatAmount, formatOn, unitsOf } from './format'
+import { allUnits, findIngredient, formatAmount, formatOn, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
 
-// us2_minispec K15: the texts of the codes the sentence can fail with. RATE_LIMITED has its own text here
-// (the global one is about signing in); the backend title is shown for anything else.
-const sentenceErrors: Record<string, string> = {
-  LLM_UNAVAILABLE: 'Most nem tudom feldolgozni a mondatot, mert a szövegfeldolgozó nem válaszol. A szöveged megmaradt: próbáld újra pár perc múlva, vagy rögzítsd tételenként.',
-  LLM_INVALID_RESPONSE: 'Nem sikerült értelmezni a mondatot. A szöveged megmaradt: próbáld újra, fogalmazd át, vagy rögzítsd tételenként.',
-  ITEM_PROPOSAL_NO_ITEMS: 'Nem találtam élelmiszert a mondatban. Írd le, mit vettél és mennyit, például: »2 liter tej, 10 tojás«.',
-  RATE_LIMITED: 'Most túl sok mondatot küldtél egymás után. Várj néhány percet, vagy rögzítsd tételenként.',
-  LLM_DISABLED: 'A mondatos bevitel most ki van kapcsolva. Rögzítsd tételenként.',
-}
+// us2_minispec K15. The other codes of the sentence have their texts in messages.ts; this one only here,
+// because RATE_LIMITED of the sign-in has another text (the backend title).
+const sentenceRateLimited = 'Most túl sok mondatot küldtél egymás után. Várj néhány percet, vagy rögzítsd tételenként.'
+
+// K15: the card goes away after these, with a notice.
+const goneCodes = ['ITEM_PROPOSAL_NOT_FOUND', 'ITEM_PROPOSAL_STATE_CONFLICT']
 
 const textOrder = ['text'] as const
 
@@ -37,8 +34,8 @@ export function QuickEntryForm({ onProposed, onManual, onSignedOut }: {
     } catch (caught) {
       if (caught instanceof ApiError && caught.code === 'VALIDATION_FAILED') {
         fields.setErrors(caught.errors)
-      } else if (caught instanceof ApiError && sentenceErrors[caught.code]) {
-        setError(sentenceErrors[caught.code])
+      } else if (caught instanceof ApiError && caught.code === 'RATE_LIMITED') {
+        setError(sentenceRateLimited)
       } else {
         failWith(onSignedOut, setError)(caught)
       }
@@ -143,13 +140,13 @@ export function ProposalList({ proposals, ingredients, categories, onIngredientC
           return
         }
 
-        if (caught instanceof ApiError && (caught.code === 'ITEM_PROPOSAL_NOT_FOUND' || caught.code === 'ITEM_PROPOSAL_STATE_CONFLICT')) {
+        if (caught instanceof ApiError && goneCodes.includes(caught.code)) {
           gone.push(proposal.id)
           messages.push(caught.message)
         } else if (caught instanceof ApiError && caught.code === 'VALIDATION_FAILED') {
           nextErrors[proposal.id] = caught.errors
         } else {
-          nextCardErrors[proposal.id] = caught instanceof ApiError ? caught.message : 'Váratlan hiba történt. Próbáld újra később.'
+          nextCardErrors[proposal.id] = errorMessage(caught)
         }
       }
     }
@@ -177,7 +174,7 @@ export function ProposalList({ proposals, ingredients, categories, onIngredientC
       onNotice(`Kihagytam: ${nameOf(proposal, draft)}.`)
       remove([proposal.id])
     } catch (caught) {
-      if (caught instanceof ApiError && (caught.code === 'ITEM_PROPOSAL_NOT_FOUND' || caught.code === 'ITEM_PROPOSAL_STATE_CONFLICT')) {
+      if (caught instanceof ApiError && goneCodes.includes(caught.code)) {
         onNotice(caught.message)
         remove([proposal.id])
       } else {
@@ -187,6 +184,9 @@ export function ProposalList({ proposals, ingredients, categories, onIngredientC
   }
 
   if (cards.length === 0) return null
+
+  // Every card focuses its first invalid field; only the first card that needs a fix may do so.
+  const firstToFix = cards.find((c) => errors[c.proposal.id])?.proposal.id
 
   return (
     <form aria-labelledby="proposals-heading" className="panel" onSubmit={approveAll} noValidate>
@@ -198,7 +198,9 @@ export function ProposalList({ proposals, ingredients, categories, onIngredientC
           proposal={proposal}
           draft={draft}
           errors={errors[proposal.id]}
+          focusOnError={proposal.id === firstToFix}
           error={cardErrors[proposal.id]}
+          busy={busy}
           ingredients={ingredients}
           categories={categories}
           onChange={(change) => update(proposal.id, change)}
@@ -207,20 +209,21 @@ export function ProposalList({ proposals, ingredients, categories, onIngredientC
           onSignedOut={onSignedOut}
         />
       ))}
-      <button type="submit" disabled={busy}>{busy ? 'Kérlek, várj…' : `Jóváhagyom (${cards.length})`}</button>
+      <button type="submit" disabled={busy}>{busy ? 'Feldolgozás…' : `Jóváhagyom (${cards.length})`}</button>
     </form>
   )
 }
 
-const allUnits = Object.values(unitsOf).flat()
 const cardOrder = ['ingredientId', 'amount', 'unit', 'expiryDate'] as const
 const dimensionText = { mass: 'tömegben mérhető: g, dkg vagy kg', volume: 'térfogatban mérhető: ml, dl vagy l', count: 'darabban mérhető: db' }
 
-function ProposalCard({ proposal, draft, errors, error, ingredients, categories, onChange, onSkip, onIngredientCreated, onSignedOut }: {
+function ProposalCard({ proposal, draft, errors, focusOnError, error, busy, ingredients, categories, onChange, onSkip, onIngredientCreated, onSignedOut }: {
   proposal: ItemProposal
   draft: Draft
   errors: Errors | undefined
+  focusOnError: boolean
   error: string | undefined
+  busy: boolean
   ingredients: Ingredient[]
   categories: CategoryInfo[]
   onChange: (change: Partial<Draft>) => void
@@ -229,13 +232,20 @@ function ProposalCard({ proposal, draft, errors, error, ingredients, categories,
   onSignedOut: (notice: string) => void
 }) {
   const prefix = `proposal-${proposal.id}`
-  const fields = useFieldErrors(prefix, cardOrder)
+  const fields = useFieldErrors(prefix, cardOrder, focusOnError)
   const { setErrors } = fields
   useEffect(() => setErrors(errors ?? {}), [errors, setErrors])
 
   const ingredient = findIngredient(ingredients, draft.ingredientName)
   const units = ingredient ? unitsOf[ingredient.dimension] : allUnits
   const name = nameOf(proposal, draft)
+  // The hints are read with their field (ux_flows a11y) and go away once the field is fixed.
+  const hint = (field: string, shown: unknown) => (shown ? `${prefix}-${field}-hint` : undefined)
+  const notFound = hint('ingredientId', proposal.ingredientId === null && !ingredient)
+  const noAmount = hint('amount', draft.amount.trim() === '')
+  const noUnit = hint('unit', draft.unit === '')
+  const mismatch = proposal.unitMismatch && ingredient && noUnit
+  const unrecognised = hint('expiryDate', proposal.expiryText && !draft.expiryTouched)
 
   return (
     <fieldset className="proposal">
@@ -244,16 +254,17 @@ function ProposalCard({ proposal, draft, errors, error, ingredients, categories,
         ingredients={ingredients}
         value={draft.ingredientName}
         onChange={(value) => onChange({ ingredientName: value })}
-        field={fields.props('ingredientId')}
+        field={fields.props('ingredientId', notFound)}
         error={fields.error('ingredientId')}
         create={{ categories, onCreated: onIngredientCreated, onSignedOut }}
       />
-      {proposal.ingredientId === null && (
-        <p className="hint">Nem találtam a hozzávalók között: »{proposal.text}«. Válassz egyet, vagy vegyél fel újat.</p>
+      {notFound && (
+        <p id={notFound} className="hint">Nem találtam a hozzávalók között: »{proposal.text}«. Válassz egyet, vagy vegyél fel újat.</p>
       )}
       {proposal.inStock && (
         <p className="hint">
-          Már van otthon: {proposal.ingredientName} {formatAmount(proposal.inStock.amount.value, proposal.inStock.amount.unit)}, {formatOn(proposal.inStock.earliestExpiry)} jár le.
+          Már van otthon: {proposal.ingredientName} {formatAmount(proposal.inStock.amount.value, proposal.inStock.amount.unit)},
+          {proposal.inStock.itemCount > 1 && ' a legkorábbi'} {formatOn(proposal.inStock.earliestExpiry)} jár le.
         </p>
       )}
 
@@ -261,7 +272,7 @@ function ProposalCard({ proposal, draft, errors, error, ingredients, categories,
         <div className="field">
           <label htmlFor={`${prefix}-amount`}>Mennyiség</label>
           <input
-            {...fields.props('amount')}
+            {...fields.props('amount', noAmount)}
             type="number"
             inputMode="decimal"
             min="0"
@@ -272,32 +283,32 @@ function ProposalCard({ proposal, draft, errors, error, ingredients, categories,
         </div>
         <div className="field">
           <label htmlFor={`${prefix}-unit`}>Mértékegység</label>
-          <select {...fields.props('unit')} value={draft.unit} onChange={(e) => onChange({ unit: e.target.value as Unit | '' })}>
+          <select {...fields.props('unit', noUnit)} value={draft.unit} onChange={(e) => onChange({ unit: e.target.value as Unit | '' })}>
             {(draft.unit === '' || !units.includes(draft.unit)) && <option value="">Válassz</option>}
             {units.map((u) => <option key={u} value={u}>{u}</option>)}
           </select>
         </div>
       </div>
-      {fields.error('amount') || (draft.amount.trim() === '' && <p className="hint">Add meg a mennyiséget.</p>)}
-      {fields.error('unit') || (proposal.unitMismatch && ingredient
-        ? <p className="hint">A(z) {ingredient.name} {dimensionText[ingredient.dimension]}. Add meg így a mennyiséget.</p>
-        : draft.unit === '' && <p className="hint">Add meg a mértékegységet.</p>)}
+      {fields.error('amount') || (noAmount && <p id={noAmount} className="hint">Add meg a mennyiséget.</p>)}
+      {fields.error('unit') || (mismatch
+        ? <p id={noUnit} className="hint">A(z) {ingredient.name} {dimensionText[ingredient.dimension]}. Add meg így a mennyiséget.</p>
+        : noUnit && <p id={noUnit} className="hint">Add meg a mértékegységet.</p>)}
 
       <label htmlFor={`${prefix}-expiryDate`}>
         Lejárat{proposal.expiryEstimated && !draft.expiryTouched && <> <span className="badge">becsült</span></>}
       </label>
       <input
-        {...fields.props('expiryDate')}
+        {...fields.props('expiryDate', unrecognised)}
         type="date"
         value={draft.expiryDate}
         onChange={(e) => onChange({ expiryDate: e.target.value, expiryTouched: true })}
       />
-      {fields.error('expiryDate') || (proposal.expiryText && !draft.expiryTouched && (
-        <p className="hint">»{proposal.expiryText}«: ezt nem tudtam dátummá alakítani, ezért becsült lejáratot adtam. Javítsd, ha kell.</p>
+      {fields.error('expiryDate') || (unrecognised && (
+        <p id={unrecognised} className="hint">»{proposal.expiryText}«: ezt nem tudtam dátummá alakítani, ezért becsült lejáratot adtam. Javítsd, ha kell.</p>
       ))}
 
       {error && <p role="alert" className="form-error">{error}</p>}
-      <button type="button" className="secondary" aria-label={`Kihagyom: ${name}`} onClick={onSkip}>Kihagyom</button>
+      <button type="button" className="secondary" aria-label={`Kihagyom: ${name}`} onClick={onSkip} disabled={busy}>Kihagyom</button>
     </fieldset>
   )
 }

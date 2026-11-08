@@ -22,6 +22,7 @@ export const categoryName = (category: Category) => categoryNames[category]
 
 // ADR-0002: the units of each dimension and their factor to the base unit (g, ml, db).
 export const unitsOf: Record<Dimension, Unit[]> = { mass: ['g', 'dkg', 'kg'], volume: ['ml', 'dl', 'l'], count: ['db'] }
+export const allUnits = Object.values(unitsOf).flat()
 
 const factors: Record<Unit, number> = { g: 1, dkg: 10, kg: 1000, ml: 1, dl: 100, l: 1000, db: 1 }
 

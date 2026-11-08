@@ -6,15 +6,16 @@ export type FieldProps = ReturnType<ReturnType<typeof useFieldErrors>['props']>
 
 // ux_flows a11y, shared by the pantry form and editor (the AuthForm pattern): each field gets its
 // label id, aria-invalid and aria-describedby, its error text under it, and the first invalid
-// field receives the focus so a screen reader reads its label and error.
-export function useFieldErrors(prefix: string, order: readonly string[]) {
+// field receives the focus so a screen reader reads its label and error. Of several forms on one page
+// (the proposal cards) only the first with errors takes the focus: focusOnError is false for the rest.
+export function useFieldErrors(prefix: string, order: readonly string[], focusOnError = true) {
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const fields = useRef<Record<string, Field | null>>({})
 
   useEffect(() => {
     const first = order.find((field) => errors[field])
-    if (first) fields.current[first]?.focus()
-  }, [errors, order])
+    if (first && focusOnError) fields.current[first]?.focus()
+  }, [errors, order, focusOnError])
 
   const text = (field: string) => errors[field]?.join(' ')
   const focus = useCallback((field: string) => fields.current[field]?.focus(), [])

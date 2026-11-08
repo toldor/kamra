@@ -10,6 +10,11 @@ const overrides: Record<string, string> = {
   // us2_minispec K15: the card goes away after these.
   ITEM_PROPOSAL_NOT_FOUND: 'Ez a javaslat már nem érhető el. Levettem a listáról.',
   ITEM_PROPOSAL_STATE_CONFLICT: 'Ezt a javaslatot közben máshol már kihagytad vagy jóváhagytad. Levettem a listáról.',
+  // us2_minispec K15: the sentence fails; the text stays, the manual form is offered.
+  LLM_UNAVAILABLE: 'Most nem tudom feldolgozni a mondatot, mert a szövegfeldolgozó nem válaszol. A szöveged megmaradt: próbáld újra pár perc múlva, vagy rögzítsd tételenként.',
+  LLM_INVALID_RESPONSE: 'Nem sikerült értelmezni a mondatot. A szöveged megmaradt: próbáld újra, fogalmazd át, vagy rögzítsd tételenként.',
+  ITEM_PROPOSAL_NO_ITEMS: 'Nem találtam élelmiszert a mondatban. Írd le, mit vettél és mennyit, például: »2 liter tej, 10 tojás«.',
+  LLM_DISABLED: 'A mondatos bevitel most ki van kapcsolva. Rögzítsd tételenként.',
 }
 
 export const NETWORK_MESSAGE =
