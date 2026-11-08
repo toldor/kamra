@@ -86,6 +86,7 @@ public class ItemProposalApiTests(KamraApiFactory factory)
         var stock = item.GetProperty("inStock");
         stock.GetProperty("amount").GetProperty("value").GetDecimal().Should().Be(500m);
         stock.GetProperty("amount").GetProperty("unit").GetString().Should().Be("ml");
+        stock.GetProperty("itemCount").GetInt32().Should().Be(1);
         stock.GetProperty("earliestExpiry").GetString().Should().Be(Today.AddDays(3).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
     }
 

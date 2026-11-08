@@ -1211,6 +1211,8 @@ export interface components {
             amount: components["schemas"]["AmountResponse"];
             /** Format: date */
             earliestExpiry: string;
+            /** Format: int32 */
+            itemCount: number;
         };
         ItemProposalAvailability: {
             enabled: boolean;

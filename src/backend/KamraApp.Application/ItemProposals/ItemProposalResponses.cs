@@ -20,8 +20,9 @@ public sealed record ItemProposalResponse(
     string? ExpiryText,
     InStockResponse? InStock);
 
-// The total in the unit of the earliest expiring item, and that item's expiry date.
-public sealed record InStockResponse(AmountResponse Amount, DateOnly EarliestExpiry);
+// The total in the unit of the earliest expiring item, that item's expiry date, and the number of items
+// (the card says "a legkorábbi" when there are several).
+public sealed record InStockResponse(AmountResponse Amount, DateOnly EarliestExpiry, int ItemCount);
 
 public sealed record SubmitItemProposalsResponse(IReadOnlyList<ItemProposalResponse> Items);
 

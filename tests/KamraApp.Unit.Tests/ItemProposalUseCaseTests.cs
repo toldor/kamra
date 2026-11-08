@@ -211,6 +211,7 @@ public class ItemProposalUseCaseTests
         var stock = items[0].InStock!;
         stock.Amount.Should().Be(new AmountResponse(1500m, Unit.Ml)); // the total, in the unit of the earliest expiring item
         stock.EarliestExpiry.Should().Be(Today.AddDays(5));
+        stock.ItemCount.Should().Be(2);
         items[1].InStock.Should().BeNull();
     }
 

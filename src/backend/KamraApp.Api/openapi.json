@@ -1767,7 +1767,8 @@
       "InStockResponse": {
         "required": [
           "amount",
-          "earliestExpiry"
+          "earliestExpiry",
+          "itemCount"
         ],
         "type": "object",
         "properties": {
@@ -1777,6 +1778,10 @@
           "earliestExpiry": {
             "type": "string",
             "format": "date"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

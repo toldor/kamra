@@ -85,6 +85,6 @@ public sealed class SubmitItemProposals(IIngredientParser parser, IItemProposalR
         }
 
         var earliest = items.MinBy(i => i.ExpiryDate)!;
-        return new InStockResponse(AmountResponse.Of(items.Sum(i => i.Quantity), earliest.EnteredUnit)!, earliest.ExpiryDate);
+        return new InStockResponse(AmountResponse.Of(items.Sum(i => i.Quantity), earliest.EnteredUnit)!, earliest.ExpiryDate, items.Count);
     }
 }
