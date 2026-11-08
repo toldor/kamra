@@ -554,3 +554,83 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** Minden állítás a kódon: CSS-specificitás, a `tokens.test.ts` tömbjei, grep a nem használt osztályokra, a terv szövege; a hover-hiba e2e-mérése (1,82:1).
 - **Eredmény:** **Részben PASS.** `/code-review`: 1 valós hiba (a fejsáv hover-kontrasztja), 4 takarítás (nem használt CSS és betű, egy hiányzó tokenpár, a kommentek, a behúzás), a többi mérlegelés vagy már eldöntött. Antigravity: 8 megállapítás, valós hiba nincs; a közepesnek jelölt #2 téves (a pár a szöveges tömbben van, 4,5:1-re ellenőrizve), a #5 téves (a kereső már panelben van), egy doksi-teendő (#8: asztali képernyőkép mindkét ajánlási csoporttal).
 - **Következtetés:** A valós hibát a specificitást végigkövető review találta, nem a tesztek; a súlyosság itt sem bizonyíték, minden megállapítást a kódon ellenőrzök.
+
+### V-66 – A T0 első promptja (v1) elég pontos-e
+- **Dátum:** 2026-11-01
+- **Állítás:** A `quick-entry.v1` prompt kötött sémával a mondatok mezőinek nagy részét helyesen nyeri ki.
+- **Kockázat:** Magas. Pontatlan kinyerésnél a felhasználó minden kártyát javít, a funkció értelmét veszti.
+- **Ellenőrzési módszer:** PoC-mérés ([QuickEntryPocTests.cs](../../tests/KamraApp.Integration.Tests/LiveAI/QuickEntryPocTests.cs)), A készlet, 3 futás/mondat ([test_report.md](../04_quality/test_report.md) „LLM-mérés”).
+- **Eredmény:** **FAIL.** 67,7% mezőhelyesség, a tételek 18,8%-a hibátlan, 11 fölös tétel.
+- **Következtetés:** a prompt hangolása (v2): 93,8% az A készleten. A hangolt szám nem torzítatlan, ezért külön készlet kellett (V-67).
+
+### V-67 – A pontosság a hangolástól független mondatokon
+- **Dátum:** 2026-11-07
+- **Állítás:** A v2 prompt az A készleten mért pontosságot új mondatokon is hozza.
+- **Kockázat:** Magas. A hangolás után mért szám túlbecsülheti a valódi pontosságot.
+- **Ellenőrzési módszer:** B készlet (B1–B10, a fejlesztő kérésére, a v2 hangolásában nem szerepelt), 3 futás/mondat.
+- **Eredmény:** **PASS.** 94,2% (226/240). A v3 (mindkét készleten hangolva) A 97,9%, B 100% – ez nem torzítatlan.
+- **Következtetés:** az ADR-0009 a 94,2%-ot közli torzítatlan számként, a v3 eredményét hangolás utániként.
+
+### V-68 – A válaszidő és a modellválasztás
+- **Dátum:** 2026-11-07
+- **Állítás:** A Flash-Lite válaszideje a QA-5 céljánál (p95 ≤ 10 mp) marad; a 3.6 Flash pontosabb, de megbízhatatlanabb.
+- **Kockázat:** Közepes. Lassú válasznál a felhasználó vár, vagy hibaüzenetet kap.
+- **Ellenőrzési módszer:** a T0-futások időmérése (150 Flash-Lite-hívás, nov. 1-jén és 7-én); a 3.6 Flash két futása (nov. 1. és 2.).
+- **Eredmény:** **Részben PASS.** A Flash-Lite p50-je minden futásban 1,3 mp alatt, de nov. 7-én 19:20–19:28 között p95 44 mp (6/30 hívás 15 mp felett), húsz perccel később 1,9 mp; 2 hívás 60 mp-ig lógott. A 3.6 Flash: 3 HTTP 503, p95 17,2 mp, ingyenes keret napi 20 kérés.
+- **Következtetés:** Flash-Lite, 15 mp-es korláttal és egy újrapróbálással (S-1); a QA-5 nem teljesül minden időszakban, ez ismert korlát (capability_map, test_report).
+
+### V-69 – A költségbecslés
+- **Dátum:** 2026-11-07
+- **Állítás:** Egy hívás kb. 0,1 cent (a terv becslése, kb. 2000 bemenő token).
+- **Kockázat:** Alacsony. A havi keret 10 000 Ft.
+- **Ellenőrzési módszer:** a mért tokenszámok (átlag kb. 580 be, 110 ki) a hivatalos árlistával ([Gemini pricing](https://ai.google.dev/gemini-api/docs/pricing), 2026-10-30: $0.25 / $1.50 per 1M token).
+- **Eredmény:** **FAIL (a becslés felfelé tévedett).** Mérve kb. 0,03 cent hívásonként.
+- **Következtetés:** a költség nem korlát; a fizetős kereten havi költéskorlát véd a visszaélés ellen (T-13).
+
+### V-70 – A Gemini-feltételek EGT-szabálya
+- **Dátum:** 2026-11-01
+- **Állítás:** Az EGT-ben elérhetővé tett alkalmazás csak a fizetős Gemini-szolgáltatást használhatja.
+- **Kockázat:** Magas. Ingyenes kerettel a UAT 2. köre szerződésszegő lenne, és a promptok a termékfejlesztésbe kerülhetnek.
+- **Ellenőrzési módszer:** forrás: [Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms) (2026-11-01).
+- **Eredmény:** **PASS.** A feltételek ezt mondják; a fizetős szolgáltatásnál a promptok nem kerülnek a termékfejlesztésbe (DPA).
+- **Következtetés:** fizetős keret havi költéskorláttal a UAT 2. köre előtt (nov. 13.); [privacy_licensing.md](../05_security_ops/privacy_licensing.md).
+
+### V-71 – A CI-ban nincs valódi LLM-hívás
+- **Dátum:** 2026-11-08
+- **Állítás:** A `LiveAI` mérőteszt a CI-ban nem fut, az e2e nem hív valódi LLM-et.
+- **Kockázat:** Magas. Egy valódi hívás a CI-ban kulcsot igényelne, költséget és nem determinisztikus eredményt okozna (AGENTS.md 6.).
+- **Ellenőrzési módszer:** a [ci.yml](../../.github/workflows/ci.yml) integrációs lépése (`--filter-not-trait "Category=LiveAI"`); a teszt kulcs nélkül kihagyja magát; az e2e a `docker-compose.e2e.yml`-lel az LLM-csonkra mutat (a csonk 403-at ad, ha a kulcs nem a fejlécben jön).
+- **Eredmény:** **PASS.** A CI-futásokban a `LiveAI` nem szerepel; az e2e a csonkkal zöld ([run 42500324628](https://github.com/toldor/kamra/actions/runs/42500324628)).
+- **Következtetés:** a szabály két szinten is teljesül (szűrő és kulcs nélküli kihagyás).
+
+### V-72 – A T1 `/code-review`: a jóváhagyás idegenkulcs-sorrendje
+- **Dátum:** 2026-11-07
+- **Állítás:** A reviewer (spec-tengely) szerint a feltételes frissítés a készlettétel beszúrása előtt fut, így a `PantryItemId` idegen kulcsa sérülne.
+- **Kockázat:** Magas. A jóváhagyás a valódi adatbázison elbukhatott volna.
+- **Ellenőrzési módszer:** a terv és az EF Core mentési sorrendjének átnézése a kódon.
+- **Eredmény:** **PASS (a review állítása igaz).**
+- **Következtetés:** `xmin`-es optimista zárolás, a Domain dönt, egy mentés; az ADR-0008 4. pontja módosítva; integrációs tesztek az egyidejű esetekre.
+
+### V-73 – A T3 `/code-review`
+- **Dátum:** 2026-11-08
+- **Állítás:** A két tengely (standards, spec) megállapításai a T3 felületére.
+- **Kockázat:** Közepes. Akadálymentességi és spec-eltérések maradhattak volna.
+- **Ellenőrzési módszer:** minden megállapítás a kódon; a javítások tesztjei a javítás előtt pirosak voltak; mutáció 6/6.
+- **Eredmény:** **Részben PASS.** 11 valós lelet (J1–J11: a „Már van otthon” két alakja, a panel helye, a gomb felirata, a „Kihagyom” letiltása, a tippek, a fókusz, az `aria-describedby`, közös segédfüggvények, 4 negatív teszt); 5 ítélet nem javítva indoklással; 1 döntés (K16).
+- **Következtetés:** a hibák fele akadálymentességi és állapotkezelési volt, amit a meglévő tesztek nem fogtak meg.
+
+### V-74 – A külső review és az ellenséges teszt (US-2)
+- **Dátum:** 2026-11-08
+- **Állítás:** Az Antigravity (Claude Sonnet 4.6) 23 megállapítása és 8 ellenséges tesztje a teljes US-2 ágra.
+- **Kockázat:** Közepes. A téves megállapítás felesleges változtatáshoz, az elmulasztott valós hiba biztonsági hibához vezet.
+- **Ellenőrzési módszer:** minden állítás a kódon, a teszteken és a Gemini API-referenciában; az ellenséges tesztek lefuttatva, a megtartottakra mutáció 3/3.
+- **Eredmény:** **Részben PASS.** Téves: 5 (az availability végpont bejelentkezés nélkül; „ma” = a hét adott napja nincs tesztelve; a hibás JSON-törzs; az elvetés utáni jóváhagyás tesztje; az `APPLICATION_JSON`). Részben valós: 1 (a `responseFormat` forrás nélkül). Valós: 2 kicsi (febr. 29., e2e a hibás válaszra). Ellenséges tesztek: mind zöld, 3 új, 4 ismétlés, 1 nem azt méri, amit a neve állít.
+- **Következtetés:** kritikus hiba nincs; a reviewer egy hamis premisszát (a promptomban) is átvett, ezért a promptba írt tényt is ellenőrizni kell (V-75).
+
+### V-75 – Saját MI-hibák a US-2 alatt
+- **Dátum:** 2026-11-01 – 2026-11-08
+- **Állítás:** Az MI (Claude Code) állításai és vállalásai a US-2 alatt.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** utólagos összevetés a forrásokkal (T0-riportok, tervek, kód).
+- **Eredmény:** **FAIL, öt esetben.** (1) A nov. 3-i jelzés elmaradt: a levéltervezetet az MI kétszer a mérés mögé sorolta. (2) A mutációs szkript egy mutációt bennhagyott, mert visszaállításkor nem frissítette a fájl időbélyegét (a build a mutált változatot használta). (3) A T3-ban három felhasználói szöveg jóváhagyás nélkül tért el a jóváhagyottól. (4) A külső review promptja „responseJsonSchema”-t írt a kódban használt `responseFormat` helyett. (5) Az ADR-0009 tervezete „délután”-ra tette a lassú mérést, holott az 19:20–19:28 között futott.
+- **Következtetés:** korai jelzés szabálya; a mutációs szkript `os.utime`-mal állít vissza; szövegeltérést csak jóváhagyással; a promptba és a doksiba írt tényt a forrással vetem össze (riport, kód).

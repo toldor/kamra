@@ -22,12 +22,12 @@ Az akadálymentesség a [ux_flows.md](../01_product/ux_flows.md), a naplózás �
 | Elem | Leírás |
 |---|---|
 | Forrás | Külső LLM-szolgáltató |
-| Stimulus | 15 mp-en belül nem válaszol, hálózati vagy 5xx hibát ad, vagy a válasza nem felel meg a sémának |
+| Stimulus | 15 mp-en belül nem válaszol, hálózati, 5xx vagy 429-es hibát ad, elutasítja a kérést (400, 401, 403), vagy a válasza nem felel meg a sémának |
 | Környezet | Degradált üzem: az LLM elérhetetlen, a többi komponens működik |
 | Artefakt | A tételjavaslat-készítés use case-e és az LLM-adapter |
-| Válasz | Próbálkozásonként 15 mp időkorlát; időtúllépésnél vagy kiesésnél egy azonnali újrapróbálás, sémahibánál nincs. Ezután magyar nyelvű hibaüzenet, a beírt szöveg megmarad, a kézi form egy kattintással elérhető, és semmi nem mentődik. |
+| Válasz | Próbálkozásonként 15 mp időkorlát; időtúllépésnél, hálózati hibánál, 5xx-nél vagy 429-nél egy azonnali újrapróbálás, sémahibánál és elutasított kérésnél nincs. Ezután magyar nyelvű hibaüzenet, a beírt szöveg megmarad, a kézi form egy kattintással elérhető, és semmi nem mentődik. |
 | Mérőszám | A hibaüzenet a beküldéstől számítva legkésőbb 31 mp alatt (2 × 15 mp próbálkozás + 1 mp feldolgozás) megjelenik; 0 készlettétel mentődik; a kiesés alatt a készletlista- és az ajánláskérések 100%-a sikeres. |
-| Igazolás | Integrációs teszt mockolt LLM-adapterrel és hamis órával, valamint e2e teszt a megmaradó szövegre és a kézi form elérésére; a 2. lépcsőben (US-2) készül. |
+| Igazolás | *Megvalósítva.* Az adapter unit tesztjei hamis `HttpMessageHandler`-rel (időtúllépés 1 mp-es korláttal, kiesés, hálózati hiba, elutasított kérés, sémahiba; a 15 mp alapértelmezés külön teszt): [GeminiIngredientParserTests.cs](../../tests/KamraApp.Unit.Tests/GeminiIngredientParserTests.cs); integrációs teszt: 503 és 502, semmi nem mentődik, közben a kézi rögzítés működik: [ItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/ItemProposalApiTests.cs) (`S1_…`); e2e az LLM-csonkkal: a szöveg megmarad, a kézi form egy kattintással elérhető: [quick-entry.spec.ts](../../tests/e2e/quick-entry.spec.ts). |
 
 ### S-2 – Más háztartás adatának lekérése (QA-1)
 

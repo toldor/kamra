@@ -34,10 +34,10 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 *Felhasználóként egy mondattal akarom rögzíteni a bevásárlásomat, hogy ne kelljen tételenként kitöltenem a formot.*
 
 - A beküldött szövegből a rendszer **tételjavaslatokat** készít, amelyek szerkeszthető formában jelennek meg. Jóváhagyás nélkül semmi nem kerül a készletbe.
-- Relatív dátumok a beküldés napjához képest: „ma”, „holnap”, „holnapután”; a hét napja a következő ilyen napot jelenti, és ha ma van, a mait. Abszolút dátum („okt. 3.”, „10.03”) is elfogadott. Minden más kifejezésnél becsült lejárat jön, becsültként jelölve.
-- Nem átváltható egység („egy csomag tejföl”) esetén a tételjavaslatból hiányzik az egység, és jóváhagyás előtt meg kell adni.
+- Relatív dátumok a beküldés napjához képest: „ma”, „holnap”, „holnapután”; a hét napja a következő ilyen napot jelenti, és ha ma van, a mait. Abszolút dátum is elfogadott: év nélkül („okt. 3.”, „10.03”) a legközelebbi ilyen nap ma vagy később, évszámmal („2026.10.03.”) szó szerint. Minden más kifejezésnél becsült lejárat jön, becsültként jelölve.
+- Nem átváltható egység („egy csomag tejföl”) vagy a hozzávalóhoz nem illő egység („3 darab paprika”, a paprikát tömegben tartjuk nyilván) esetén a tételjavaslatból hiányzik az egység, a mennyiség megmarad, és jóváhagyás előtt meg kell adni.
 - LLM-időtúllépés (15 mp próbálkozásonként) vagy kiesés esetén egy automatikus újrapróbálás történik. Ha az is sikertelen, vagy a válasz nem felel meg a sémának, vagy egyetlen tétel sem nyerhető ki: magyar nyelvű hibaüzenet jelenik meg, a beírt szöveg megmarad, egy kattintással elérhető a kézi form, és semmi nem mentődik.
-- Ha egy hozzávalóból már van készlet, a tételjavaslat tájékoztat róla („Már van otthon: tej 0,5 l, okt. 2-án jár le”), és jóváhagyáskor mindig új készlettétel jön létre (nincs összevonás).
+- Ha egy hozzávalóból már van készlet, a tételjavaslat tájékoztat róla („Már van otthon: tej 0,5 l, okt. 2-án jár le”; több tételnél az összeg és a legkorábbi lejárat), és jóváhagyáskor mindig új készlettétel jön létre (nincs összevonás).
 - A jóváhagyás egy tételjavaslatra csak egyszer fut le (idempotens): dupla kattintás vagy a kérés újraküldése nem hoz létre duplikált készletet, hanem az első jóváhagyás eredményét adja vissza.
 - A tételjavaslat beküldési és jóváhagyási időpontja tárolódik (G3 metrika, [metrics.md](metrics.md)).
 
@@ -103,17 +103,17 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 | szept. 28 – okt. 4. | Alapok: repo, Docker Compose, CI, regisztráció és bejelentkezés, tervezési dokumentumok | Kész: v0.1.0 |
 | okt. 5 – okt. 16. | Az 1. lépcső tervezési dokumentumai; US-1; ajánlás és főzés 3–5 recepttel (US-3, US-4 alapútja) | okt. 16.: működő készletkezelés és bemutatható ajánlás–főzés folyamat, kézzel ellenőrzött mennyiségekkel |
 | okt. 17 – okt. 22. | US-5; US-3 és US-4 hibás esetei; saját recept és hozzávaló; az induló lista bővítése; az első dokumentált telepítés; a dolgozat 1–4. fejezete és az 5. fejezet első része | okt. 22. (témavezetői: okt. 23.): a készlet–recept–főzés–bevásárlás teljes útja (1. lépcső kész) |
-| okt. 23 – nov. 3. | 2. lépcső: LLM-mérés (PoC), US-2; felhasználói kipróbálás 1. köre (okt. 26. – nov. 1., 4 fő) és javítások | nov. 3. (témavezetői: nov. 6.): stabil szakmai mag és kipróbálható MI-bevitel |
-| nov. 4 – nov. 13. | 3. lépcső: US-6 (nov. 10-ig); mérések; a dolgozat teljes első változata | nov. 13. (témavezetői: nov. 20.): a vállalt funkciók lezárása, a teljes dolgozat és projektcsomag |
-| nov. 14 – dec. 4. | Hibajavítás; felhasználói kipróbálás 2. köre (nov. 16–27., 3–4 fő); javítás utáni újratesztelés; ellenőrzött telepítés másik gépen; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás |
+| okt. 23 – nov. 13. | 2. lépcső: felhasználói kipróbálás 1. köre (okt. 26. – nov. 1., 4 fő) és javítások; LLM-mérés (PoC, nov. 2–7.); US-2 | nov. 13.: kipróbálható MI-bevitel (`v0.5.0`); az eredeti nov. 3-i céldátum csúszott (2026-11-07-i átütemezés) |
+| nov. 14 – nov. 20. | 3. lépcső: US-6 (nov. 18-ig, `v0.6.0`); mérések; a dolgozat teljes első változata | nov. 20. (témavezetői határidő): a vállalt funkciók lezárása, a teljes dolgozat és projektcsomag |
+| nov. 21 – dec. 4. | Hibajavítás; felhasználói kipróbálás 2. köre (nov. 21–27., 3–4 fő); javítás utáni újratesztelés; ellenőrzött telepítés másik gépen; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás |
 | dec. 5 – dec. 11. | Végső ellenőrzés | dec. 11.: végső belső ellenőrzési csomag |
 
-- **Feature freeze: nov. 10.** (a témavezetői határidő nov. 20.; a különbség tartalék). Utána csak javítás és dokumentáció kerül be.
+- **Feature freeze: nov. 18.** (a 2026-11-07-i átütemezés óta; a témavezetői határidő nov. 20.). Utána csak javítás és dokumentáció kerül be.
 - **Hivatalos határidők** (a témavezető tájékoztatása szerint a TTIK kari naptára alapján, egyedileg ellenőrizendő): jelentkezés a januári záróvizsgára okt. 31., dolgozatbeadás dec. 19.
 - **Döntési pont – okt. 22–23.:** az 1. lépcső eredménye alapján a témavezetővel döntünk a januári záróvizsga tarthatóságáról; csúszás esetén későbbi záróvizsga.
 - A dolgozat a fejlesztéssel párhuzamosan készül: minden lépcső végén a hozzá tartozó fejezet.
 - Stretch csak akkor, ha a 3. lépcső a freeze előtt kész és zöld. A jelenlegi ütemezés alapján valószínűleg nem fér bele.
-- **Vágási szabály:** ha a US-2 nov. 3-ig nem kész, a US-6 szűkül (például kevesebb MCP-toollal), **előzetesen egyeztetve a témavezetővel**. Az 1. és a 2. lépcső védett.
+- **Vágási szabály:** ha a US-2 nov. 3-ig nem kész, a US-6 szűkül (például kevesebb MCP-toollal), **előzetesen egyeztetve a témavezetővel**. Az 1. és a 2. lépcső védett. *Alkalmazás (2026-11-07):* a US-2 nov. 3-ig nem készült el. A fejlesztő döntése: a US-6 nem szűkül, az ütemezés csúszik (US-2: nov. 13., US-6: nov. 18., minden vállalt funkció és a teljes első dolgozat: nov. 20.); a témavezető levélben tájékoztatva (nov. 7.). A nov. 3-i jelzés elmaradt ([P-26](../07_ai/prompt_log.md)).
 
 ### Adat
 
@@ -131,9 +131,9 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 
 ### Külső API
 
-- Egy külső LLM-szolgáltató, az Application rétegben definiált interfész mögött, cserélhetően. A szolgáltató kiválasztása és indoklása külön ADR-ben szerepel.
+- Egy külső LLM-szolgáltató, az Application rétegben definiált interfész mögött, cserélhetően. A szolgáltató kiválasztása és indoklása: [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md) (Google Gemini API).
 - CI-ban és automatizált tesztekben soha nincs valódi LLM-hívás (mock).
-- Az LLM csak a felhasználó beírt szövegét és a válaszhoz szükséges készletadatot kapja meg; fiókadatot (e-mail, jelszó) soha.
+- Az LLM csak a felhasználó beírt szövegét és a háztartás által látható hozzávalók nevét kapja meg; készletadatot és fiókadatot (e-mail, jelszó) soha. A „Már van otthon” tájékoztatót a backend számolja az adatbázisból.
 - Havi költségkeret a fejlesztés alatt: legfeljebb 10 000 Ft. Átlépés esetén az AI-funkciók kikapcsolhatók, a kézi form és a determinisztikus funkciók működnek tovább.
 - Időtúllépés: 15 mp próbálkozásonként, egy újrapróbálással (US-2).
 

@@ -7,6 +7,7 @@
 | E-mail-cím | Igen | Bejelentkezés, egy fiók = egy háztartás | `AspNetUsers` |
 | Jelszó | Igen (titok) | Bejelentkezés; csak az ASP.NET Core Identity hash-e tárolódik, a jelszó soha | `AspNetUsers` |
 | A háztartás adatai: készlet, receptek, főzések, bevásárlólista, minimumszintek | Közvetve (étkezési szokások) | A szolgáltatás maga | az üzleti táblák, háztartás-azonosítóval |
+| Tételjavaslatok: a mondat tételhez tartozó részei, a javasolt értékek, a beküldés és a döntés ideje | Közvetve (vásárlási szokások) | A mondatos bevitel és a G3 metrika; a teljes mondat nem tárolódik | `ItemProposals` |
 | Napló | Nem: kérésazonosító, útvonal, státusz, időtartam, hibakód | Hibakeresés | a konténer kimenete |
 | Cookie-kulcsok | Nem (titok) | A bejelentkezési süti titkosítása | `dpkeys` volume |
 
@@ -14,7 +15,7 @@ A tesztekben és a dokumentációban csak kitalált adat szerepel (`@example.com
 
 ## Adatáramlás
 
-Böngésző → API (`/api/v1`, session-cookie) → PostgreSQL ugyanazon a gépen. Harmadik félhez jelenleg semmi nem megy. A felület sem tölt be külső erőforrást: a betűk is az alkalmazás saját címéről jönnek ([ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md)). A tervezett MI-funkciók (US-2, US-6) a beírt szöveget és a válaszhoz szükséges készletadatot küldik egy LLM-szolgáltatónak, fiókadatot (e-mail, jelszó) soha ([scope_contract.md](../01_product/scope_contract.md), 3. Korlátok); a szolgáltató és az adatküldés részletei a megfelelő ADR-ben.
+Böngésző → API (`/api/v1`, session-cookie) → PostgreSQL ugyanazon a gépen. A mondatos bevitel (US-2, csak bekapcsolt `Llm:Enabled` mellett) a beírt mondatot és a háztartás által látható hozzávalók nevét elküldi a Google Gemini API-nak ([ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)); készlet- és fiókadatot nem. Más harmadik félhez semmi nem megy. A felület sem tölt be külső erőforrást: a betűk is az alkalmazás saját címéről jönnek ([ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md)). A US-6 adatküldése az MCP-ADR-ben kerül leírásra.
 
 ## Megőrzés és törlés
 
@@ -29,7 +30,13 @@ Böngésző → API (`/api/v1`, session-cookie) → PostgreSQL ugyanazon a gépe
 
 ## MI és adatok
 
-Jelenleg nincs MI-hívás. A szabály a tervezett funkciókra: személyes adat (e-mail, jelszó) az LLM-hez nem kerül; a CI-ban és a tesztekben valódi LLM-hívás nincs (AGENTS.md 7.).
+Szolgáltató: Google Gemini API (`gemini-3.1-flash-lite`, [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)).
+
+- **Mi megy ki:** a mondat (legfeljebb 500 karakter) és a háztartás által látható hozzávalók neve. E-mail, jelszó és készletadat nem.
+- **Napló:** a mondat és a modell válasza nem kerül a naplóba ([observability.md](observability.md)).
+- **Feltételek** ([Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms)): az EGT-ben elérhetővé tett alkalmazás csak a fizetős szolgáltatást használhatja. A fizetős szolgáltatásnál a Google a promptokat és a válaszokat nem használja a termékei fejlesztésére, adatfeldolgozási kiegészítés (DPA) szerint kezeli, és csak visszaélés-felderítésre naplózza, korlátozott ideig.
+- **Ezért:** valódi felhasználó (UAT 2. kör) előtt a fizetős keret kötelező, havi költéskorláttal; addig a funkció csak a fejlesztő saját, kitalált mondataival fut (T0-mérés).
+- A CI-ban és a tesztekben valódi LLM-hívás nincs (AGENTS.md 7.): a tesztek hamis adaptert, az e2e egy LLM-csonkot használ.
 
 ## Licencek
 
@@ -53,6 +60,6 @@ A projekt licence: MIT ([LICENSE](../../LICENSE)) (D2).
 | @playwright/test | 1.63.0 | Apache-2.0 | e2e |
 | Zilla Slab 700, IBM Plex Sans (betűtípus, woff2, latin + latin-ext) | Google Fonts, 2026-10-31 (Zilla Slab v12, IBM Plex Sans v23) | SIL OFL 1.1 (`src/frontend/public/fonts/OFL-*.txt`) | frontend, saját tárhelyről |
 
-Mind megengedő licenc, egymással és az MIT-tel kompatibilis. A Docker-alapképek: `postgres:18` (PostgreSQL License), `mcr.microsoft.com/dotnet/*` (MIT), `node:24-alpine` (MIT).
+Mind megengedő licenc, egymással és az MIT-tel kompatibilis. A US-2 nem hozott új függőséget: a Gemini-hívás `HttpClient`-tel megy, az e2e LLM-csonkja csak beépített Node-modulokat használ. A Docker-alapképek: `postgres:18` (PostgreSQL License), `mcr.microsoft.com/dotnet/*` (MIT), `node:24-alpine` (MIT).
 
 **Adat és tartalom:** az induló receptek saját szövegűek ([V-43](../07_ai/verification_log.md)); a kategóriák eltarthatósági értékei a USDA FoodKeeper adatain alapulnak (CC0, [data_model.md](../03_design/data_model.md)).

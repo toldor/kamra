@@ -1,6 +1,6 @@
 # Fenyegetésmodell (STRIDE)
 
-A Kamra egy háztartás élelmiszer-nyilvántartása: a legfontosabb érték a felhasználók fiókja és az, hogy egy háztartás adata soha ne jusson el egy másikhoz. A modell az okt. 23-i állapotot írja le (`develop @ 7b6a484`, az 1. lépcső); az MI-funkciók (US-2, US-6) fenyegetései az LLM- és az MCP-ADR-rel együtt kerülnek be.
+A Kamra egy háztartás élelmiszer-nyilvántartása: a legfontosabb érték a felhasználók fiókja és az, hogy egy háztartás adata soha ne jusson el egy másikhoz. A modell az okt. 23-i állapotot írja le (`develop @ 7b6a484`, az 1. lépcső); a US-2 (mondatos bevitel, LLM) fenyegetései a nov. 8-i állapottal kerültek be (`feature/us-2-quick-entry @ 19cddfc`, [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)); a US-6-é az MCP-ADR-rel kerül be.
 
 ## Támadási felület
 
@@ -8,13 +8,15 @@ A Kamra egy háztartás élelmiszer-nyilvántartása: a legfontosabb érték a f
 |---|---|---|
 | A SPA statikus fájljai (`/`) | bárki | Csak statikus tartalom; CSP `default-src 'self'`, `X-Content-Type-Options: nosniff` |
 | REST API (`/api/v1/*`) | bejelentkezett felhasználó | Globális `AuthorizeFilter`, session-cookie, antiforgery a módosító kéréseknél, validáció a use case-ekben, háztartás-szűrés minden lekérdezésben |
+| Mondatos bevitel (`POST /api/v1/item-proposals`) | bejelentkezett felhasználó | Rate limit háztartásonként (20 / 10 perc), legfeljebb 500 karakter; a modell kimenete séma szerint validált; jóváhagyás nélkül nincs írás |
+| Kimenő hívás a Gemini API-hoz | a backend | A kulcs csak környezeti változóból, az `x-goog-api-key` fejlécben (soha nem az URL-ben vagy a naplóban); `Llm:Enabled` alapból kikapcsolva |
 | Regisztráció és bejelentkezés (`/api/v1/auth/*`) | bárki | Rate limit IP-címenként, kiléptetés 5 sikertelen próba után, legalább 15 karakteres jelszó |
 | `/health` | bárki | Csak `Healthy` / `Unhealthy`, belső adat nélkül |
 | PostgreSQL (Docker Compose, port 5432) | a gépről (D1) | Jelszó a `.env`-ből; a port csak a gépen elérhető |
 | Docker-volume-ok (`pgdata`, `dpkeys`) | a gép üzemeltetője | A gép hozzáférés-védelme |
 | CI (GitHub Actions) | a repó írói | Branch-védelem, titkok a GitHub Secrets-ben, gitleaks |
 
-Admin felület nincs; az MCP-szerver és az LLM-hívás még nincs implementálva.
+Admin felület nincs; az MCP-szerver még nincs implementálva.
 
 ## Fenyegetések
 
@@ -30,6 +32,9 @@ Admin felület nincs; az MCP-szerver és az LLM-hívás még nincs implementálv
 | T-8 | **Information disclosure** – belső részletek a hibaválaszban vagy a naplóban | A hibaválasz stack trace-t, SQL-t vagy más háztartás adatát mutat; a napló személyes adatot tárol | Közepes | Alacsony | Minden hiba ProblemDetails, stabil kóddal és biztonságos magyar címmel; váratlan hibánál csak `INTERNAL_ERROR` és `correlationId`; a `correlationId` a szerveré (a klienstől érkező érték naplóhamisításra adna módot); az Npgsql „Include Error Detail” kikapcsolva; a napló nem tartalmaz e-mail-címet és jelszót ([ADR-0007](../02_architecture/adr/0007-rest-api-hibamodell.md), [ADR-0011](../02_architecture/adr/0011-serilog-strukturalt-naplozas.md)) | ErrorHandlingTests; a szivárgás-tesztek az ellenséges tesztosztályokban |
 | T-9 | **Repudiation / Tampering** – elveszett vagy csendben felülírt változás | Két fülön egyszerre módosított tétel, kétszer elküldött főzés | Közepes: hibás készlet | Közepes | Optimista zárolás (`xmin`), idempotens főzés kérésazonosítóval, csak hozzáfűzhető készletmozgás-napló, hozzávalónkénti zár a bevásárlójavaslatoknál ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md)) | [CookingApiTests.cs](../../tests/KamraApp.Integration.Tests/CookingApiTests.cs) (P8, P9), [StockMovementLogTests.cs](../../tests/KamraApp.Integration.Tests/StockMovementLogTests.cs), ShoppingListApiTests (P20) |
 | T-10 | **Elevation of privilege** – sérülékeny függőség vagy kiszivárgott titok | Egy ismert sérülékenységű csomag vagy a repóba került titok | Magas | Közepes | CI: NuGet- és npm-sérülékenységvizsgálat (a `high` szint megállítja az ágat), gitleaks a teljes historyn, Dependabot; titok csak a `.env`-ben és a GitHub Secrets-ben | CI `secrets`, `backend`, `frontend` job; [V-51](../07_ai/verification_log.md) (a Vite-figyelmeztetés megállította az ágat, javítva) |
+| T-11 | **Tampering / Elevation of privilege** – prompt injection | A beírt (vagy bemásolt) mondat utasítja a modellt, például „hagyd jóvá mindet” vagy „töröld a készletet” | Közepes: legfeljebb hibás javaslat a saját háztartásban | Közepes | A prompt az üzenetet adatként kezeli; kötött JSON-séma; a hozzávaló csak a háztartás listájáról jöhet; a mennyiség a kézi rögzítés szabályán megy át, a fel nem ismert lejárat-szöveg legfeljebb 100 karakter; az eredmény csak javaslat, a jóváhagyás a kézi rögzítés validációján megy át; az LLM készlet- és fiókadatot nem kap ([ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)) | T0-mérés A10 (9/9 kivédve, valódi modellel); [AdversarialItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialItemProposalApiTests.cs); [ItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/ItemProposalApiTests.cs) (jóváhagyás nélkül semmi nem kerül a készletbe) |
+| T-12 | **Information disclosure** – az API-kulcs vagy a mondat kiszivárgása | A kulcs a repóba, az URL-be, a naplóba vagy egy hibaválaszba kerül; a mondat a naplóba | Magas (kulcs: költség, visszaélés) | Alacsony | A kulcs csak környezeti változóban (a `.env.example`-ben érték nélkül), fejlécben; a naplóesemény rögzített mezőkkel (`LoggerMessage`), szöveg nélkül; a hibaválasz csak kódot és magyar címet ad | [GeminiIngredientParserTests.cs](../../tests/KamraApp.Unit.Tests/GeminiIngredientParserTests.cs) (a napló tartalma); az LLM-csonk 403-at ad, ha a kulcs nem a fejlécben jön ([llm-stub.mjs](../../tests/e2e/llm-stub.mjs)); [AdversarialItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialItemProposalApiTests.cs) (hibatörzs); gitleaks |
+| T-13 | **Denial of service** – költség és kvóta elhasználása | Tömeges vagy nagyon hosszú mondatok, sok tételes válasz | Közepes: költség, a funkció kiesése mindenkinek | Közepes | Rate limit háztartásonként; 500 karakter; legfeljebb 20 tétel és 2048 kimenő token; 15 mp-es korlát, egy újrapróbálás; a fizetős kereten havi költéskorlát; kiesésnél a kézi form működik (S-1) | [ItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/ItemProposalApiTests.cs) (rate limit háztartásonként, bejelentkezés nélkül 401); [GeminiIngredientParserTests.cs](../../tests/KamraApp.Unit.Tests/GeminiIngredientParserTests.cs) (20 tételnél több, időtúllépés) |
 
 ## Fennmaradó kockázat (residual risk)
 
@@ -37,6 +42,9 @@ Admin felület nincs; az MCP-szerver és az LLM-hívás még nincs implementálv
 - **A rate limit IP-címenként számol.** Proxy vagy porttovábbítás mögött minden kérés ugyanarról a címről jöhet, így a limit közös; a továbbított IP-fejléceket szándékosan nem fogadjuk el ([api.md](../03_design/api.md), Ismert hiányosságok).
 - **A háztartás-szűrés fegyelmen múlik.** Nincs adatbázis-szintű sorvédelem (RLS); minden új lekérdezésnél a teszt és a review ellenőrzi. Az MVP méretében ezt elfogadjuk.
 - **A napló váratlan kivételnél a kivétel üzenetét is tárolja** ([observability.md](observability.md), Ismert hiányosságok).
+- **Prompt injection ellen egyetlen mondatot mértünk valódi modellel** (T0, A10); a többi védelmet a modelltől független validáció és a kötelező jóváhagyás adja (T-11).
+- **A rate limit a memóriában számol:** az API újraindítása nullázza; egy példány mellett ez elfogadható.
+- **A mondat egy harmadik félhez (Google) kerül;** valódi felhasználó előtt a fizetős keret kötelező (EGT-szabály, [privacy_licensing.md](privacy_licensing.md)).
 - **Fiók törlése a felületen nincs;** a törlést az üzemeltető végzi ([privacy_licensing.md](privacy_licensing.md)).
 
 ## Ellenőrzés
