@@ -7,6 +7,9 @@ const overrides: Record<string, string> = {
   SHOPPING_LIST_ITEM_NOT_FOUND: 'Ez a tétel már nincs a bevásárlólistán. Frissítettem a listát.',
   SHOPPING_SUGGESTION_NOT_FOUND: 'Ez a javaslat már nem érhető el. Frissítettem a listát.',
   SHOPPING_SUGGESTION_STATE_CONFLICT: 'Erről a javaslatról már másképp döntöttél, például egy másik ablakban. Frissítettem a listát.',
+  // us2_minispec K15: the card goes away after these.
+  ITEM_PROPOSAL_NOT_FOUND: 'Ez a javaslat már nem érhető el. Levettem a listáról.',
+  ITEM_PROPOSAL_STATE_CONFLICT: 'Ezt a javaslatot közben máshol már kihagytad vagy jóváhagytad. Levettem a listáról.',
 }
 
 export const NETWORK_MESSAGE =
