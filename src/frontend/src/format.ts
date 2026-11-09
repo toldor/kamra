@@ -22,6 +22,7 @@ export const categoryName = (category: Category) => categoryNames[category]
 
 // ADR-0002: the units of each dimension and their factor to the base unit (g, ml, db).
 export const unitsOf: Record<Dimension, Unit[]> = { mass: ['g', 'dkg', 'kg'], volume: ['ml', 'dl', 'l'], count: ['db'] }
+export const allUnits = Object.values(unitsOf).flat()
 
 const factors: Record<Unit, number> = { g: 1, dkg: 10, kg: 1000, ml: 1, dl: 100, l: 1000, db: 1 }
 
@@ -59,3 +60,13 @@ export const findIngredient = (ingredients: Ingredient[], name: string) =>
 // The Receptek and Bevásárlólista search: the query anywhere in one of the texts, by the same rule as
 // the backend's pantry search (case and extra spaces do not matter, accents do).
 export const matchesSearch = (query: string, ...texts: string[]) => texts.some((t) => normalize(t).includes(normalize(query)))
+
+// US-2: a date with its case ending, "nov. 12-én" (ux_flows 1. flow: "Már van otthon: …, okt. 2-án jár le").
+// The ending follows the spoken ordinal: elsején, másodikán, harmadikán, tizedikén, huszadikán, harmincadikán...
+const lastDigitEnding = ['én', 'én', 'én', 'án', 'én', 'én', 'án', 'én', 'án', 'én']
+
+export const formatOn = (isoDate: string): string => {
+  const day = Number(isoDate.slice(8, 10))
+  const ending = day === 1 ? 'jén' : day === 2 ? 'án' : day === 20 || day === 30 ? 'án' : lastDigitEnding[day % 10]
+  return `${formatDate(isoDate).replace(/\.$/, '')}-${ending}`
+}

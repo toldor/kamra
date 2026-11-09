@@ -1,0 +1,19 @@
+# e2e only, on top of docker-compose.yml (us2_minispec K16): the quick entry is switched on against a local stub
+# of the LLM (tests/e2e/llm-stub.mjs), so the real adapter, backend and SPA run without a real LLM call (AGENTS.md 6.).
+# Start: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
+services:
+  llm-stub:
+    image: node:24-alpine
+    command: ["node", "/stub/llm-stub.mjs"]
+    volumes:
+      - ./tests/e2e/llm-stub.mjs:/stub/llm-stub.mjs:ro
+    networks: [kamra-network]
+
+  api:
+    environment:
+      Llm__Enabled: "true"
+      Llm__ApiKey: e2e-stub-key-not-a-secret
+      Llm__BaseUrl: http://llm-stub:8089/
+    depends_on:
+      llm-stub:
+        condition: service_started

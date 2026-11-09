@@ -3,7 +3,7 @@ import {
   api, ApiError, failWith, type AmountRequest, type Ingredient, type ShoppingListItem, type ShoppingSuggestion, type Unit,
 } from './api/client'
 import { useFieldErrors } from './fieldErrors'
-import { findIngredient, formatAmount, formatDay, formatListLine, matchesSearch, unitsOf } from './format'
+import { allUnits, findIngredient, formatAmount, formatDay, formatListLine, matchesSearch, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
 
 type Data = { suggestions: ShoppingSuggestion[]; items: ShoppingListItem[]; ingredients: Ingredient[] }
@@ -20,7 +20,6 @@ type Write = (action: () => Promise<unknown>, success: string) => Promise<Record
 // K5: the row is gone or was decided elsewhere; the page reloads, and the message says so.
 const reloadOn = ['SHOPPING_LIST_ITEM_NOT_FOUND', 'SHOPPING_SUGGESTION_NOT_FOUND', 'SHOPPING_SUGGESTION_STATE_CONFLICT']
 
-const allUnits = Object.values(unitsOf).flat()
 const amountFields = ['amount', 'unit'] as const
 
 // An empty amount field: no amount at all.

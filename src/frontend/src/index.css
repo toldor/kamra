@@ -490,7 +490,8 @@ fieldset {
 
 .recipe-row,
 .new-ingredient,
-.cooking-line {
+.cooking-line,
+.proposal {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -503,7 +504,8 @@ fieldset {
 
 .recipe-row legend,
 .new-ingredient legend,
-.cooking-line legend {
+.cooking-line legend,
+.proposal legend {
   padding: 0 var(--space-1);
   font: 700 1.25rem/1.1 var(--font-display);
 }

@@ -1,10 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { api, ApiError, failWith, type Category, type CategoryInfo, type Ingredient, type Unit } from './api/client'
 import { useFieldErrors } from './fieldErrors'
-import { categoryName, findIngredient, unitsOf } from './format'
+import { allUnits, categoryName, findIngredient, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
 
-const allUnits = Object.values(unitsOf).flat()
 
 const fieldOrder = ['ingredientId', 'amount', 'unit', 'category', 'expiryDate'] as const
 

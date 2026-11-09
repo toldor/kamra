@@ -26,7 +26,13 @@ Rövidítések a tesztoszlopban – Unit: `tests/KamraApp.Unit.Tests`, Int.: `te
 
 | # | Követelmény | Flow | Végpont | Képernyő | Teszt | Állapot |
 |---|---|---|---|---|---|---|
-| US-2/1–7 | Tételjavaslat egy mondatból, relatív dátumok, nem átváltható egység, LLM-kiesés, meglévő készlet jelzése, idempotens jóváhagyás, időpontok | 1. (mondatos ág) | tervezett (a 2. lépcső API-ja) | Kamra – mondatos bevitel | – | Tervezett – a 2. lépcső (nov. 6.) |
+| US-2/1 | Tételjavaslatok szerkeszthető formában; jóváhagyás nélkül semmi nem kerül a készletbe | 1. (mondatos ág) | `POST /item-proposals`, `…/approve`, `…/reject` | Kamra – mondatos bevitel, javaslatkártyák | Unit: [ItemProposalUseCaseTests.cs](../../tests/KamraApp.Unit.Tests/ItemProposalUseCaseTests.cs); Int.: [ItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/ItemProposalApiTests.cs), [AdversarialItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialItemProposalApiTests.cs); Vitest: [QuickEntry.test.tsx](../../src/frontend/src/QuickEntry.test.tsx); E2E: [quick-entry.spec.ts](../../tests/e2e/quick-entry.spec.ts) | Megvalósítva |
+| US-2/2 | Relatív és abszolút dátumok, egyébként becsült lejárat, jelölve | 1. | `POST /item-proposals` (`expiryDate`, `expiryEstimated`, `expiryText`) | kártya – Lejárat, „becsült” | Unit: [ItemProposalTests.cs](../../tests/KamraApp.Unit.Tests/ItemProposalTests.cs), ItemProposalUseCaseTests; Vitest: QuickEntry.test.tsx | Megvalósítva |
+| US-2/3 | Nem átváltható vagy nem illő egység: az egység hiányzik, jóváhagyás előtt meg kell adni | 1., H2 | `POST /item-proposals` (`unit: null`, `unitMismatch`) | kártya – Mértékegység | Unit: ItemProposalTests, ItemProposalUseCaseTests; Vitest: QuickEntry.test.tsx | Megvalósítva |
+| US-2/4 | LLM-időtúllépés vagy kiesés: egy újrapróbálás, magyar hibaüzenet, a szöveg megmarad, kézi form, semmi nem mentődik | 1., H1 | `POST /item-proposals` (`LLM_UNAVAILABLE`, `LLM_INVALID_RESPONSE`, `ITEM_PROPOSAL_NO_ITEMS`) | panel – hibaüzenet, „Inkább tételenként rögzítem” | Unit: [GeminiIngredientParserTests.cs](../../tests/KamraApp.Unit.Tests/GeminiIngredientParserTests.cs); Int.: ItemProposalApiTests (`S1_…`); Vitest: QuickEntry.test.tsx; E2E: quick-entry.spec.ts | Megvalósítva |
+| US-2/5 | Meglévő készlet jelzése; jóváhagyáskor mindig új készlettétel | 1. (3. lépés) | `POST /item-proposals` (`inStock`), `…/approve` | kártya – „Már van otthon” | Unit: ItemProposalUseCaseTests; Int.: ItemProposalApiTests; Vitest: QuickEntry.test.tsx | Megvalósítva |
+| US-2/6 | Idempotens jóváhagyás | 1. (edge case) | `…/approve` (ismétlés 200, ütközés 409) | „Jóváhagyom (n)” és „Kihagyom” letiltva kérés közben | Unit: ItemProposalTests, ItemProposalUseCaseTests; Int.: ItemProposalApiTests (öt egyidejű jóváhagyás; jóváhagyás és elvetés egyszerre); Vitest: QuickEntry.test.tsx | Megvalósítva |
+| US-2/7 | A beküldés és a döntés időpontja tárolódik (G3) | – | – | – | Unit: ItemProposalTests (`Approving_records_the_pantry_item_and_the_time`) | Megvalósítva |
 
 ## US-3 – Receptek és ajánlás
 
@@ -74,9 +80,9 @@ Rövidítések a tesztoszlopban – Unit: `tests/KamraApp.Unit.Tests`, Int.: `te
 
 | # | Követelmény | Bizonyíték | Állapot |
 |---|---|---|---|
-| NF-1 | 360 px-es szélesség vízszintes görgetés nélkül; az e2e asztali Chrome-on és 360 px-en fut | Mind a 9 e2e teszt mindkét nézetben, a görgetés-ellenőrzéssel; képernyőképek: `docs/assets/*-360.png` | Megvalósítva |
+| NF-1 | 360 px-es szélesség vízszintes görgetés nélkül; az e2e asztali Chrome-on és 360 px-en fut | Mind a 15 e2e teszt mindkét nézetben, a görgetés-ellenőrzéssel; képernyőképek: `docs/assets/*-360.png` | Megvalósítva |
 | NF-2 | A felület nyelve magyar | Vitest-tesztek a pontos szövegekre; ux_flows | Megvalósítva |
 | NF-3 | Indítás `docker compose up`-pal 15 percen belül tiszta gépen | [manual_tests.md](manual_tests.md) MT-02: 1 p 26 mp; [deploy_runbook.md](../05_security_ops/deploy_runbook.md) | Megvalósítva |
 | NF-4 | Domain + Application sorlefedettség ≥ 80%, CI-ban mérve | CI `backend` job, a lefedettségi kapu | Megvalósítva |
 | NF-5 | Nincs secret a repóban; függőség-sérülékenységi vizsgálat a CI-ban | CI `secrets` (gitleaks), NuGet- és npm-audit ([V-51](../07_ai/verification_log.md)) | Megvalósítva |
-| NF-6 | Felhasználói kipróbálás a célcsoporttal | [uat.md](uat.md) | Tervezett – 1. kör okt. 26. – nov. 1. |
+| NF-6 | Felhasználói kipróbálás a célcsoporttal | [uat.md](uat.md) | Részben – az 1. kör kész ([uat.md](uat.md), „Eredmények – 1. kör”); a 2. kör nov. 21–27. |

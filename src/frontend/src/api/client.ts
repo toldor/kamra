@@ -29,6 +29,7 @@ export type ShoppingSuggestion = components['schemas']['ShoppingSuggestionRespon
 export type AddShoppingListItemRequest = components['schemas']['AddShoppingListItemRequest']
 export type Recipe = components['schemas']['RecipeResponse']
 export type CreateRecipeRequest = components['schemas']['CreateRecipeRequest']
+export type ItemProposal = components['schemas']['ItemProposalResponse']
 // The request's fields are strings in the OpenAPI document (validated by the backend); the page sends the enums.
 export type CreateIngredientRequest = { name: string; dimension: Dimension; defaultCategory: Category }
 // The `available` extension of INSUFFICIENT_STOCK (error_handling.md); ProblemDetails are not in the OpenAPI.
@@ -213,6 +214,19 @@ export const api = {
 
   async rejectSuggestion(id: string): Promise<void> {
     await post(`/shopping-suggestions/${id}/reject`)
+  },
+
+  // US-2 (us2_minispec K3): the quick entry shows only when the switch is on.
+  itemProposalAvailability: () => json<{ enabled: boolean }>(send('GET', '/item-proposals/availability')),
+
+  submitItemProposals: (text: string) => json<{ items: ItemProposal[] }>(write('POST', '/item-proposals', { text })),
+
+  // ADR-0007: a repeat returns the first approval's pantry item.
+  approveItemProposal: (id: string, request: AddPantryItemRequest) =>
+    json<PantryItem>(write('POST', `/item-proposals/${id}/approve`, request)),
+
+  async rejectItemProposal(id: string): Promise<void> {
+    await post(`/item-proposals/${id}/reject`)
   },
 
   // null removes the minimum level.

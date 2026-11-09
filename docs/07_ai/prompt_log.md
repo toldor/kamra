@@ -458,3 +458,26 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **A kívánság (recept-címke):** A) későbbi továbbfejlesztés a „Csak az elkészíthetők” szűrővel (ajánlott, mert nem elakadás, és a nov. 6-i US-2 elsőbbséget kap), B) a nov. 13-i változatba, a vállalás bővítésével.
 - **Érintett fájlok:** `04_quality/uat.md` („Eredmények – 1. kör”), `01_product/scope_contract.md` (Későbbi továbbfejlesztési lehetőségek), `07_ai/prompt_log.md` (P-25).
 - **Mit változtattam / döntésem:** Részletes jegyzőkönyv nem készült, ezért az összesítést rögzítettük a korláttal (B). A recept-címke a „Csak az elkészíthetők” szűrővel együtt későbbi továbbfejlesztés (A). A commitot és a pusht kérésemre a Claude Code végezte.
+
+### P-26 – US-2: egy mondatos bevitel (v0.5.0)
+- **Dátum:** 2026-11-01 – 2026-11-08
+- **Cél:** A 2. lépcső: LLM-szolgáltató választása méréssel, a US-2 megvalósítása (T0–T3), a reviewk és a dokumentáció.
+- **Eszköz:** Claude Code (claude-opus-5-5) – terv, mérőteszt, implementáció, `/code-review`; Antigravity (Gemini, majd Claude Sonnet 4.6) – vak trianguláció, külső review és ellenséges teszt.
+- **Prompt összefoglaló:** a nov. 6-i terv („Terv: nov. 6. – US-2”), a T0-mérés, a mini-spec (K1–K16), a T1–T3 szakaszok; nov. 8.: „menjen a következő lépés”, a három szövegeltérés és a reviewk szétválogatása, a doksi-lépés.
+- **AI javaslat (eredeti):**
+  - **Szolgáltató:** A) két szolgáltató összevetése a T0-ban; tartalék: Anthropic Haiku 5.5, ha egyik modell sem elég pontos.
+  - **e2e:** A) LLM-csonk az e2e-stackben.
+  - **`chore/frontend-container` (Q8):** elhagyás (C), mert egyik elfogadási kritérium sem kéri.
+  - **D1–D10:** a dátumot és az egységet a Domain számolja; a hozzávaló a háztartás listájáról; nincs új NuGet; rate limit háztartásonként; `Llm:Enabled` alapból ki; verziózott prompt; T0 `LiveAI` tesztként; nov. 3-án rövid tájékoztatás a témavezetőnek.
+  - **Jóváhagyás konkurenciája:** feltételes frissítés (`ExecuteUpdateAsync`), az ADR-0008 eredeti 4. pontja szerint.
+  - **T3-szövegek:** a jóváhagyott szövegtől három helyen eltérő megvalósítás (a nem illő egység, a „Már van otthon” egytételes alakja, a több hibás kártya).
+- **Érintett fájlok:** `src/backend` (Domain, Application, Infrastructure/Llm, Api, migráció `AddItemProposals`), `src/frontend/src/QuickEntry.tsx` és társai, `tests/` (unit, integrációs, `LiveAI`, e2e és LLM-csonk), `docker-compose.e2e.yml`, `.env.example`, `ci.yml`; `docs/`: ADR-0009, ADR-0008, api, data_model, error_handling, ux_flows, scope_contract, capability_map, quality_attributes, metrics, observability, threat_model, privacy_licensing, traceability, test_report, README, changelog, `assets/quick-entry-*.png`.
+- **Mit változtattam / döntésem:**
+  - **Egy szolgáltató (B)** a javasolt két szolgáltatós összevetés (A) helyett; a T0 egy kulccsal két Gemini-modellt mért. A szolgáltatóválasztásban kértem az Azure for Students elemzését (mérlegelve, nem mérve). A modell `gemini-3.1-flash-lite` (a 3.6 Flash 503-ai és napi 20-as kerete miatt).
+  - **A B mondatkészletet én kértem** a hangolástól független méréshez (a torzítatlan szám innen jön: 94,2%).
+  - **Q8 elhagyva:** az okt. 10-i saját döntésemet módosítottam.
+  - **Csúszás:** a nov. 6-i mérföldkő csúszott, a nov. 3-i jelzés elmaradt (a levéltervezetet az MI ígérte, kétszer a mérés mögé sorolta). Új céldátum nov. 13.; a US-6 nem szűkül, a nov. 7-i levélből az egyeztetési bekezdést töröltem. A tanulság: a korai jelzés szabálya (ha a lemaradás fél napnál több, aznap levél).
+  - **Konkurencia:** a T1 `/code-review` után az `xmin`-es A változatot választottam a feltételes frissítés helyett (idegenkulcs-sorrend; ADR-0008 módosítása).
+  - **Szövegek:** a nem illő egységre a kézi űrlap mondata marad; a „Már van otthon” két alakja marad, ehhez az API megkapta a tételszámot; a több hibás kártya szövegét jóváhagytam. A K16 kikapcsolt-kapcsoló e2e esete kikerült (az integrációs és a Vitest-teszt fedi).
+  - **Reviewk:** a T3 `/code-review` 11 javítását és a külső review 4 javítását jóváhagytam; az ellenséges tesztekből a nem ismétlődő hármat vettük fel.
+  - **Commit:** a T3 két commitját és az utána következő négy commitot (`b2bc1ed`, `7f1788b`, `d2c381e`, `19cddfc`) és a pushokat kérésemre a Claude Code végezte, trailer nélkül.

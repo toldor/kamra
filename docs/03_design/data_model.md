@@ -225,6 +225,28 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 - Összevonás azonos hozzávalónál, pipa nélküli tételnél: két ismert mennyiség összeadódik; ismeretlen (null) és ismert találkozásakor az ismert marad (és az egysége); két ismeretlenből ismeretlen lesz. Kipipált tételnél a pipa törlődik, és a mennyiség az új mennyiség lesz. Az összeg sem lehet több 100 000-nél (a bemeneti korlát). Az összevonást a Domain végzi a hozzávalónkénti zár alatt ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 5–6. pont); mindkét beszúrási sorrend tesztelve (P16). A módosítás (kipipálás) mennyiség nélkül a meglévő mennyiséget megtartja.
 - **Megvalósítás:** domain-entitás: [ShoppingListItem.cs](../../src/backend/KamraApp.Domain/ShoppingList/ShoppingListItem.cs); kényszerek: `CK_ShoppingListItems_Quantity_Positive`, `CK_ShoppingListItems_Quantity_WithUnit` (mennyiség és egység együtt vagy egyik sem); egyedi index (`HouseholdId`, `IngredientId`).
 
+### ItemProposals (Tételjavaslat)
+
+| Mező | Típus | Leírás |
+|---|---|---|
+| Id | uuid (PK) | GUID v7 |
+| HouseholdId | uuid (FK) | A tulajdonos háztartás (`CASCADE`) |
+| Text | varchar(200) | A mondat tételhez tartozó része („2 liter tejet”); a teljes mondat nem tárolódik |
+| IngredientId | uuid (FK), null | Az illesztett hozzávaló; null, ha nincs a háztartás listáján (`NO ACTION`) |
+| Amount | numeric(12,3), null | A javasolt mennyiség a javasolt egységben (nem alapegységben), > 0 |
+| Unit | text, null | A javasolt egység; null, ha nincs, nem átváltható, vagy nem illik a hozzávaló dimenziójához |
+| ExpiryDate | date, null | Felismert vagy becsült lejárat; null, ha nincs hozzávaló és nem ismerhető fel |
+| ExpiryEstimated | boolean | A lejárat becsült |
+| ExpiryText | varchar(100), null | A fel nem ismert lejárat-kifejezés |
+| State | text | `Pending` / `Approved` / `Rejected` |
+| SubmittedAt, ResolvedAt | timestamptz | Beküldés; jóváhagyás vagy elvetés |
+| PantryItemId | uuid (FK → PantryItem.Id), null | A jóváhagyáskor létrejött készlettétel; az ismételt jóváhagyás ezt adja vissza (`NO ACTION`) |
+| Version (`xmin`) | xid (rendszeroszlop) | Optimista zárolás a döntéshez ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 4. pont) |
+
+- Egy beküldött mondat tételenként egy sort ad, `Pending` állapotban; a készletbe semmi nem kerül. Az LLM-től jövő szövegrészeket a Domain levágja (200, illetve 100 karakter), nem utasítja el a mondatot.
+- Jóváhagyáskor a (javított) adatokból a kézi rögzítés szabályaival új készlettétel jön létre (`Added` mozgás), alapegységre váltva; a készlettétel és a döntés egy tranzakcióban mentődik. Az átmeneteket a Domain dönti el (azonos célállapot → ismétlés, ellentétes → ütközés).
+- **Megvalósítás:** domain-entitás: [ItemProposal.cs](../../src/backend/KamraApp.Domain/ItemProposals/ItemProposal.cs); kényszerek: `CK_ItemProposals_Amount_Positive`, `CK_ItemProposals_Approved_HasPantryItem` (`Approved` állapot pontosan akkor, ha van készlettétel); a `Version` árnyék-tulajdonság, a Domain nem látja.
+
 ## Mennyiségek ([ADR-0002](../02_architecture/adr/0002-fix-atvalthato-mertekegysegek.md))
 
 - Minden hozzávalónak fix **dimenziója** van: tömeg, térfogat vagy darab. A készlettétel és a recepthozzávaló egysége csak a hozzávaló dimenziójából választható (tömeg: g, dkg, kg; térfogat: ml, dl, l; darab: db), így a készlet és a recept mennyisége mindig összevethető.
@@ -242,10 +264,11 @@ Domain-entitás: [Cooking.cs](../../src/backend/KamraApp.Domain/Cookings/Cooking
 | `AddShoppingList` | `IngredientMinimums`, `ShoppingSuggestions` (részleges egyedi index, `CookingId`), `ShoppingListItems`, `CookingLines.Suggested` | Megvalósítva |
 | `ExpandSeedData` | 121 hozzávaló, 15 recept és hozzávalóik (csak beszúrás) | Megvalósítva |
 | `AddRecipeArchives` | `RecipeArchives` (PK háztartás + recept, CASCADE a háztartásra) | Megvalósítva |
+| `AddItemProposals` | `ItemProposals` (két CHECK-kényszer, `xmin`-es verzió) | Megvalósítva |
 
 ## Ismert hiányosságok
 
-- Csak az 1. lépcső táblái szerepelnek; a tételjavaslat (US-2) a 2. lépcső előtt kerül be.
+- A döntés nélkül hagyott tételjavaslatok megmaradnak `Pending` állapotban (nincs lejáratuk és takarításuk); a felület csak a beküldés válaszát mutatja, régi javaslatot nem listáz újra.
 - Két recept hiánya egymástól függetlenül, ugyanabból a készletből számolódik, és a listán összeadódik; ha mindkettőt megfőznék, a valódi hiány ennél nagyobb is lehet (például 1 tojás mellett a rántotta 2, a palacsinta 1 hiányát adja, összesen 3, holott a kettőhöz 4 kellene).
 - Az archivált recept nem állítható vissza.
 - A nulla szélességű szóköz (U+200B) nem szóköz, ezért a „zab​tej” és a „zabtej” két külön saját hozzávaló lehet, bár egyformán néz ki. Csak a saját háztartást érinti ([V-50](../07_ai/verification_log.md)).
