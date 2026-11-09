@@ -781,6 +781,217 @@
         }
       }
     },
+    "/api/v1/item-proposals/availability": {
+      "get": {
+        "tags": [
+          "ItemProposals"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemProposalAvailability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/item-proposals": {
+      "post": {
+        "tags": [
+          "ItemProposals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SubmitItemProposalsRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SubmitItemProposalsRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SubmitItemProposalsRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitItemProposalsResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitItemProposalsResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitItemProposalsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/item-proposals/{id}/approve": {
+      "post": {
+        "tags": [
+          "ItemProposals"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddPantryItemRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddPantryItemRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddPantryItemRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PantryItemResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/item-proposals/{id}/reject": {
+      "post": {
+        "tags": [
+          "ItemProposals"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/v1/recipes/{id}/cooking-preview": {
       "get": {
         "tags": [
@@ -1553,6 +1764,133 @@
           }
         }
       },
+      "InStockResponse": {
+        "required": [
+          "amount",
+          "earliestExpiry",
+          "itemCount"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/AmountResponse"
+          },
+          "earliestExpiry": {
+            "type": "string",
+            "format": "date"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ItemProposalAvailability": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ItemProposalResponse": {
+        "required": [
+          "id",
+          "text",
+          "ingredientId",
+          "ingredientName",
+          "dimension",
+          "amount",
+          "unit",
+          "unitMismatch",
+          "expiryDate",
+          "expiryEstimated",
+          "expiryText",
+          "inStock"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string"
+          },
+          "ingredientId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ingredientName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dimension": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Dimension"
+              }
+            ]
+          },
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Unit"
+              }
+            ]
+          },
+          "unitMismatch": {
+            "type": "boolean"
+          },
+          "expiryDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "expiryEstimated": {
+            "type": "boolean"
+          },
+          "expiryText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "inStock": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InStockResponse"
+              }
+            ]
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -1963,6 +2301,34 @@
           }
         }
       },
+      "SubmitItemProposalsRequest": {
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitItemProposalsResponse": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemProposalResponse"
+            }
+          }
+        }
+      },
       "SuggestionTrigger": {
         "enum": [
           "depleted",
@@ -2099,6 +2465,9 @@
     },
     {
       "name": "PantryItems"
+    },
+    {
+      "name": "ItemProposals"
     },
     {
       "name": "Cookings"

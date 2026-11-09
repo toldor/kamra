@@ -33,7 +33,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | 429 | Rate limit | Túl sok kérés |
 | 500 | Belső hiba | Váratlan szerverhiba |
 | 502 | Hibás külső válasz | Az LLM válasza nem felel meg a sémának |
-| 503 | Külső szolgáltatás nem elérhető | Az LLM nem válaszolt az újrapróbálás után sem |
+| 503 | Külső szolgáltatás nem elérhető | Az LLM nem válaszolt az újrapróbálás után sem, elutasította a kérést, vagy a mondatos bevitel ki van kapcsolva |
 
 ## Hibakódok
 
@@ -47,7 +47,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `INVALID_CREDENTIALS` | 401 | Hibás e-mail-cím vagy jelszó (a kettő megkülönböztethetetlen, ux_flows H4) | Megvalósítva |
 | `FORBIDDEN` | 403 | Bejelentkezett, de nincs jogosultsága | Megvalósítva |
 | `EMAIL_ALREADY_REGISTERED` | 409 | A regisztrációs e-mail-cím foglalt (kis- és nagybetűtől függetlenül) | Megvalósítva |
-| `RATE_LIMITED` | 429 | Túl sok kérés ugyanarról az IP-címről a bejelentkezésnél vagy a regisztrációnál | Megvalósítva |
+| `RATE_LIMITED` | 429 | Túl sok kérés ugyanarról az IP-címről a bejelentkezésnél vagy a regisztrációnál, illetve ugyanabból a háztartásból a mondatos bevitelnél (US-2) | Megvalósítva |
 | `LOGIN_LOCKED_OUT` | 429 | A fiók 5 sikertelen bejelentkezés után 5 percre zárolva (ux_flows H5) | Megvalósítva |
 | `METHOD_NOT_ALLOWED` | 405 | A végpont nem támogatja a HTTP-metódust | Megvalósítva |
 | `REQUEST_REJECTED` | 4xx | Egyéb, a keretrendszer által elutasított kérés (pl. 415, vagy `BadHttpRequestException` saját 4xx státusszal), saját kód nélkül | Megvalósítva |
@@ -62,10 +62,12 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `SHOPPING_LIST_ITEM_NOT_FOUND` | 404 | Bevásárlólista-tétel nem létezik vagy más háztartásé (a válasz azonos) | Megvalósítva |
 | `SHOPPING_SUGGESTION_NOT_FOUND` | 404 | Bevásárlójavaslat nem létezik vagy más háztartásé (a válasz azonos) | Megvalósítva |
 | `SHOPPING_SUGGESTION_STATE_CONFLICT` | 409 | Elutasított bevásárlójavaslat elfogadása vagy elfogadott elutasítása ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 4. pont); az azonos döntés ismétlése nem hiba | Megvalósítva |
-| `ITEM_PROPOSAL_STATE_CONFLICT` | 409 | Elvetett tételjavaslat jóváhagyása vagy jóváhagyott elvetése (ADR-0007, ADR-0008) | Tervezett |
-| `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el (időtúllépés vagy kiesés újrapróbálás után) | Tervezett |
-| `LLM_INVALID_RESPONSE` | 502 | Az LLM válasza nem felel meg a sémának | Tervezett |
-| `ITEM_PROPOSAL_NO_ITEMS` | 400 | A szövegből egyetlen tétel sem nyerhető ki | Tervezett |
+| `ITEM_PROPOSAL_NOT_FOUND` | 404 | Nem létező vagy más háztartás tételjavaslata, azonos válasszal (QA-1) | Megvalósítva |
+| `ITEM_PROPOSAL_STATE_CONFLICT` | 409 | Elvetett tételjavaslat jóváhagyása vagy jóváhagyott elvetése (ADR-0007, ADR-0008) | Megvalósítva |
+| `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el: időtúllépés, hálózati hiba, 5xx vagy 429 egy újrapróbálás után, vagy az LLM elutasította a kérést (újrapróbálás nélkül; [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)) | Megvalósítva |
+| `LLM_INVALID_RESPONSE` | 502 | Az LLM válasza nem felel meg a sémának (újrapróbálás nélkül) | Megvalósítva |
+| `LLM_DISABLED` | 503 | A mondatos bevitel ki van kapcsolva (`Llm:Enabled = false`) | Megvalósítva |
+| `ITEM_PROPOSAL_NO_ITEMS` | 400 | A szövegből egyetlen tétel sem nyerhető ki | Megvalósítva |
 
 ## Felhasználói üzenetek
 

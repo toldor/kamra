@@ -467,6 +467,11 @@ public class CookingUseCaseTests
             Task.FromResult<IReadOnlyList<PantryItem>>([.. Items.Where(i => i.HouseholdId == householdId && i.Quantity > 0
                 && ingredientIds.Contains(i.IngredientId))]);
 
+        public Task<PantryEntry?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>
+
+            throw new NotSupportedException();
+
+
         public Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 

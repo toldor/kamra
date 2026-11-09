@@ -1,6 +1,7 @@
 namespace KamraApp.Application.Common;
 
-// One general exception per ADR-0007 category in use; the stable code identifies the case.
+// General exceptions per ADR-0007 category; the stable code identifies the case. Validation has two: the
+// field-level VALIDATION_FAILED, and InvalidInputException for a request-level 400 with its own code.
 
 public sealed class ValidationException(IReadOnlyDictionary<string, string[]> errors)
     : AppException(ErrorCategory.Validation, "VALIDATION_FAILED", "Néhány mező hibás. Javítsd a jelölt mezőket, és próbáld újra.")
@@ -22,3 +23,15 @@ public sealed class ConflictException(string code, string message)
 
 public sealed class RateLimitedException(string code, string message)
     : AppException(ErrorCategory.RateLimited, code, message);
+
+// A request-level 400 with its own code (e.g. ITEM_PROPOSAL_NO_ITEMS), when no single field is wrong.
+public sealed class InvalidInputException(string code, string message)
+    : AppException(ErrorCategory.Validation, code, message);
+
+// ADR-0007: the external service (the LLM) answered something unusable.
+public sealed class BadGatewayException(string code, string message)
+    : AppException(ErrorCategory.BadGateway, code, message);
+
+// ADR-0007: the external service (the LLM) is down, timed out or switched off.
+public sealed class UnavailableException(string code, string message)
+    : AppException(ErrorCategory.Unavailable, code, message);

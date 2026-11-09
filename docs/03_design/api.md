@@ -10,7 +10,7 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 
 - **Alapértelmezetten minden végpont bejelentkezést követel** (globális `AuthorizeFilter`); a nyilvános végpontok kifejezetten jelöltek. Bejelentkezés nélkül: 401 `UNAUTHENTICATED`.
 - **Antiforgery:** minden nem biztonságos (POST, PUT, DELETE) kéréshez az `X-XSRF-TOKEN` fejlécben kell a `GET /auth/antiforgery` által adott token. A token a bejelentkezett felhasználóhoz kötött, ezért bejelentkezés, regisztráció és kijelentkezés után újat kell kérni. Hiányzó vagy hibás token: 400 `ANTIFORGERY_TOKEN_INVALID`.
-- **Rate limit:** a `register` és a `login` végpont IP-címenként alapértelmezetten 10 kérés / 60 mp (`RateLimiting:Auth:PermitLimit`, `RateLimiting:Auth:WindowSeconds`); túllépésnél 429 `RATE_LIMITED`.
+- **Rate limit:** a `register` és a `login` végpont IP-címenként alapértelmezetten 10 kérés / 60 mp (`RateLimiting:Auth:PermitLimit`, `RateLimiting:Auth:WindowSeconds`); túllépésnél 429 `RATE_LIMITED`. A mondatos bevitel (`POST /item-proposals`) háztartásonként alapértelmezetten 20 kérés / 600 mp (`RateLimiting:ItemProposals:PermitLimit`, `RateLimiting:ItemProposals:WindowSeconds`); bejelentkezés nélkül nincs limit, a válasz 401.
 
 ### Auth (`/auth`)
 
@@ -48,8 +48,22 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | POST | `/shopping-suggestions/{id}/accept` | Elfogadás `{ amount?, unit? }` → 204; ismétlés → 204 | US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND`, `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Megvalósítva |
 | POST | `/shopping-suggestions/{id}/reject` | Elutasítás → 204; ismétlés → 204 | US-5 | `SHOPPING_SUGGESTION_NOT_FOUND`, `SHOPPING_SUGGESTION_STATE_CONFLICT` | Megvalósítva |
 | PUT | `/ingredients/{id}/minimum` | Minimumszint beállítása `{ amount, unit }` vagy törlése `{}` → 204 | US-5 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND` | Megvalósítva |
+| GET | `/item-proposals/availability` | Be van-e kapcsolva a mondatos bevitel: `{ enabled }` (`Llm:Enabled`) | US-2 | – | Megvalósítva |
+| POST | `/item-proposals` | Mondat → tételjavaslatok (LLM) → 201 `{ items }`; a készletbe semmi nem kerül; rate limit | US-2 | `VALIDATION_FAILED`, `ITEM_PROPOSAL_NO_ITEMS`, `LLM_UNAVAILABLE`, `LLM_INVALID_RESPONSE`, `LLM_DISABLED`, `RATE_LIMITED` | Megvalósítva |
+| POST | `/item-proposals/{id}/approve` | Jóváhagyás a (javított) adatokkal → 201 az új készlettétellel; ismétlés → 200 ugyanazzal | US-2 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND`, `ITEM_PROPOSAL_NOT_FOUND`, `ITEM_PROPOSAL_STATE_CONFLICT` | Megvalósítva |
+| POST | `/item-proposals/{id}/reject` | Elvetés → 204; ismétlés → 204 | US-2 | `ITEM_PROPOSAL_NOT_FOUND`, `ITEM_PROPOSAL_STATE_CONFLICT` | Megvalósítva |
 
-A tételjavaslat (`/item-proposals`, US-2) és a chat (US-6) végpontjai a 2. és a 3. lépcső előtt kerülnek be.
+A chat (US-6) végpontjai a 3. lépcső előtt kerülnek be.
+
+### Tételjavaslat (US-2) – a megvalósított szerződés
+
+- **Beküldés** (`POST /item-proposals`): `{ text }`, 1–500 karakter (a szélek levágva). Az LLM a szöveget és a háztartás látható hozzávalóinak nevét kapja ([ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)), készlet- és fiókadatot nem. Válasz 201: `{ items: [{ id, text, ingredientId, ingredientName, dimension, amount, unit, unitMismatch, expiryDate, expiryEstimated, expiryText, inStock }] }`, legfeljebb 20 tétel; a javaslatok mentve, döntésre várnak.
+- **Mezők:** `text` a mondat tételhez tartozó része („2 liter tejet”). `ingredientId`, `ingredientName` és `dimension` null, ha a hozzávaló nincs a háztartás listáján. `amount` a mondat mennyisége, null, ha nincs, vagy a kézi rögzítés szabályán kívül esik. `unit` a 7 egység egyike; null, ha nincs, ha nem átváltható („csomag”), vagy ha nem illik a hozzávaló dimenziójához – ilyenkor `unitMismatch: true`, és a mennyiség megmarad. `expiryDate` a felismert lejárat, különben a kategória szerinti becslés (`expiryEstimated: true`). `expiryText` a fel nem ismert lejárat-kifejezés (legfeljebb 100 karakter) vagy null. `inStock`: `{ amount: { value, unit }, earliestExpiry, itemCount }` – a háztartás meglévő készlete az adatbázisból (az összeg a legkorábban lejáró tétel egységében, a legkorábbi lejárat és a tételek száma), vagy null.
+- **Dátumszabály** ([scope_contract.md](../01_product/scope_contract.md) US-2): „ma”, „holnap”, „holnapután” a beküldés napjától; a hét napja a következő ilyen nap (ha ma van, a mai); az év nélküli dátum („nov. 20.”, „11.08”) a legközelebbi ilyen nap ma vagy később; évszámmal („2026.11.15.”) szó szerint; minden más becslés.
+- **Jóváhagyás** (`POST /item-proposals/{id}/approve`): a törzs és a validálás a kézi rögzítésé (`POST /pantry-items`); mindig új készlettétel (`Added` mozgás), összevonás nélkül. 201 a készlettétellel; ismétlés 200 ugyanazzal a tétellel (a mostani állapotában); elvetett javaslat jóváhagyása 409.
+- **Elvetés** (`POST /item-proposals/{id}/reject`): 204, az ismétlés is; jóváhagyott javaslat elvetése 409.
+- **Konkurencia:** optimista zárolás `xmin`-nel ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 4. pont). Más háztartás javaslata 404, a nem létezővel azonos válasszal.
+- **Hibák:** az LLM kiesése (időtúllépés, hálózati hiba, 5xx vagy 429 egy újrapróbálás után) és az LLM által elutasított kérés (újrapróbálás nélkül) 503 `LLM_UNAVAILABLE`; sémán kívüli válasz 502 `LLM_INVALID_RESPONSE`; egy tétel sem 400 `ITEM_PROPOSAL_NO_ITEMS`; kikapcsolt kapcsolónál 503 `LLM_DISABLED`. Hibánál semmi nem mentődik.
 
 ### Ajánlás (US-3) – a megvalósított szerződés
 

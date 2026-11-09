@@ -337,6 +337,11 @@ public class PantryUseCaseTests
         public Task<IReadOnlyList<PantryEntry>> ListAsync(Guid householdId, PantryFilter filter, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<PantryEntry>>([.. Items.Select(i => new PantryEntry(i, Names.GetValueOrDefault(i.Id, SourCream.Name)))]);
 
+        public Task<PantryEntry?> FindAsync(Guid householdId, Guid id, CancellationToken cancellationToken) =>
+
+            throw new NotSupportedException();
+
+
         public Task<PantryEntry?> FindForUpdateAsync(Guid householdId, Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
             Task.FromResult(Items.FirstOrDefault(i => i.Id == id && i.HouseholdId == householdId && i.Quantity > 0) is { } item
                 ? new PantryEntry(item, SourCream.Name)

@@ -67,8 +67,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # LiveAI tests call the real LLM; they never run in CI (AGENTS.md 6.) and also skip without a key.
       - name: Integration tests (PostgreSQL in Testcontainers) with coverage
-        run: dotnet test --no-build --project tests/KamraApp.Integration.Tests --coverlet --coverlet-output-format cobertura
+        run: >-
+          dotnet test --no-build --project tests/KamraApp.Integration.Tests --coverlet --coverlet-output-format cobertura
+          --filter-not-trait "Category=LiveAI"
 
       - name: Vulnerable NuGet packages
         run: |
@@ -128,7 +131,8 @@ jobs:
           RateLimiting__Auth__PermitLimit: '1000'
         run: |
           cp .env.example .env
-          docker compose up -d --build
+          # docker-compose.e2e.yml: the quick entry on, against the LLM stub (never a real LLM call, AGENTS.md 6.).
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build
           for i in $(seq 1 90); do curl -fs http://localhost:8080/health && break; sleep 2; done
           curl -fs http://localhost:8080/health
 

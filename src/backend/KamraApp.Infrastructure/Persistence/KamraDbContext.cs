@@ -1,6 +1,7 @@
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Households;
 using KamraApp.Domain.Ingredients;
+using KamraApp.Domain.ItemProposals;
 using KamraApp.Domain.Pantry;
 using KamraApp.Domain.Recipes;
 using KamraApp.Domain.ShoppingList;
@@ -35,6 +36,8 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
     public DbSet<ShoppingSuggestion> ShoppingSuggestions => Set<ShoppingSuggestion>();
 
     public DbSet<ShoppingListItem> ShoppingListItems => Set<ShoppingListItem>();
+
+    public DbSet<ItemProposal> ItemProposals => Set<ItemProposal>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -171,6 +174,29 @@ public sealed class KamraDbContext(DbContextOptions<KamraDbContext> options)
             // At most one blocking suggestion per household and ingredient (data_model.md).
             suggestion.HasIndex(s => new { s.HouseholdId, s.IngredientId }).IsUnique()
                 .HasFilter("\"State\" = 'Open' OR (\"State\" = 'Rejected' AND \"ClearedAt\" IS NULL)");
+        });
+
+        // US-2 (us2_minispec K2): one row per proposed item. The sentence itself is not stored.
+        builder.Entity<ItemProposal>(proposal =>
+        {
+            proposal.HasKey(p => p.Id);
+            proposal.Property(p => p.Id).ValueGeneratedNever();
+            proposal.Property(p => p.Text).HasMaxLength(ItemProposal.TextMaxLength);
+            proposal.Property(p => p.ExpiryText).HasMaxLength(ItemProposal.ExpiryTextMaxLength);
+            proposal.Property(p => p.Amount).HasPrecision(12, 3);
+            proposal.Property(p => p.Unit).HasConversion<string>();
+            proposal.Property(p => p.State).HasConversion<string>();
+            // ADR-0008 (Módosítás, 2026-11-07): the decision is saved with an xmin check, as the pantry items are; a
+            // shadow property keeps the Domain free of it.
+            proposal.Property<uint>("Version").IsRowVersion();
+            proposal.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_ItemProposals_Amount_Positive", "\"Amount\" > 0");
+                t.HasCheckConstraint("CK_ItemProposals_Approved_HasPantryItem", "(\"State\" = 'Approved') = (\"PantryItemId\" IS NOT NULL)");
+            });
+            proposal.HasOne<Household>().WithMany().HasForeignKey(p => p.HouseholdId).OnDelete(DeleteBehavior.Cascade);
+            proposal.HasOne<Ingredient>().WithMany().HasForeignKey(p => p.IngredientId).OnDelete(DeleteBehavior.NoAction);
+            proposal.HasOne<PantryItem>().WithMany().HasForeignKey(p => p.PantryItemId).OnDelete(DeleteBehavior.NoAction);
         });
 
         builder.Entity<ShoppingListItem>(item =>

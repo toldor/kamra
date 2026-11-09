@@ -20,4 +20,9 @@
     <ProjectReference Include="..\KamraApp.Domain\KamraApp.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- AGENTS.md 5.: versioned prompt files; v1 and v2 stay as the measured baselines of ADR-0009. -->
+    <EmbeddedResource Include="Llm\Prompts\quick-entry.v3.txt" LogicalName="quick-entry.v3.txt" />
+  </ItemGroup>
+
 </Project>

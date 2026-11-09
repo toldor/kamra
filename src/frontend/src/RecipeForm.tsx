@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { api, ApiError, failWith, type CategoryInfo, type Ingredient, type Unit } from './api/client'
 import { useFieldErrors } from './fieldErrors'
-import { findIngredient, unitsOf } from './format'
+import { allUnits, findIngredient, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
 import { routes } from './useHashRoute'
 
@@ -11,7 +11,6 @@ type Catalog = { status: 'loading' } | { status: 'error'; message: string } | { 
 
 // M14: the draft survives a reload or signing in again in this tab; it is forgotten after saving or Mégse.
 const draftKey = 'kamra:recipe-draft'
-const allUnits = Object.values(unitsOf).flat()
 const newRow = (): Row => ({ key: crypto.randomUUID(), ingredient: '', amount: '', unit: 'g' })
 const newDraft = (): Draft => ({ name: '', servings: '4', instructions: '', rows: [newRow()] })
 const rowField = (index: number, field: string) => `ingredients[${index}].${field}`

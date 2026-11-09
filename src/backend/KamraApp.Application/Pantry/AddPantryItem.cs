@@ -13,6 +13,16 @@ public sealed class AddPantryItem(IPantryRepository pantry, IIngredientRepositor
 {
     public async Task<PantryItemResponse> ExecuteAsync(AddPantryItemRequest? request, CancellationToken cancellationToken)
     {
+        var (item, ingredientName) = await PrepareAsync(request, cancellationToken);
+        await pantry.SaveChangesAsync(cancellationToken);
+
+        return PantryItemResponse.From(item, ingredientName, Today.Of(item.CreatedAt));
+    }
+
+    // Everything but the save, so an item proposal's approval (US-2) saves the new item and its own state change
+    // in one transaction (ADR-0008 4.). The ingredient lock is held until that save.
+    public async Task<(PantryItem Item, string IngredientName)> PrepareAsync(AddPantryItemRequest? request, CancellationToken cancellationToken)
+    {
         var valid = RequestValidator.Validate(request);
         var unit = PantryInput.Parse<Unit>(valid.Unit!);
         var ingredient = await ingredients.FindVisibleAsync(household.HouseholdId, valid.IngredientId!.Value, cancellationToken)
@@ -30,8 +40,7 @@ public sealed class AddPantryItem(IPantryRepository pantry, IIngredientRepositor
         pantry.Add(item, movement);
         await suggestions.AfterQuantityChangeAsync(household.HouseholdId, ingredient.Id, before, before + item.Quantity, movement.Reason, now,
             cancellationToken);
-        await pantry.SaveChangesAsync(cancellationToken);
 
-        return PantryItemResponse.From(item, ingredient.Name, today);
+        return (item, ingredient.Name);
     }
 }

@@ -2,11 +2,13 @@ using KamraApp.Application.Auth;
 using KamraApp.Application.Common;
 using KamraApp.Application.Cookings;
 using KamraApp.Application.Ingredients;
+using KamraApp.Application.ItemProposals;
 using KamraApp.Application.Pantry;
 using KamraApp.Application.Recipes;
 using KamraApp.Application.Recommendations;
 using KamraApp.Application.ShoppingList;
 using KamraApp.Infrastructure.Identity;
+using KamraApp.Infrastructure.Llm;
 using KamraApp.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
@@ -43,6 +45,22 @@ public static class DependencyInjection
         services.AddScoped<ICookingRepository, CookingRepository>();
         services.AddScoped<IShoppingListRepository, ShoppingListRepository>();
         services.AddScoped<IIngredientLocks, IngredientLocks>();
+        services.AddScoped<IItemProposalRepository, ItemProposalRepository>();
+
+        // us2_minispec K10, ADR-0009: off by default; when on, a missing key stops the app at startup.
+        services.AddOptions<LlmOptions>()
+            .Bind(configuration.GetSection(LlmOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        if (configuration.GetValue<bool>($"{LlmOptions.Section}:{nameof(LlmOptions.Enabled)}"))
+        {
+            // The adapter has its own per-attempt timeout (QA-3); the client's own one is only a backstop.
+            services.AddHttpClient<IIngredientParser, GeminiIngredientParser>(client => client.Timeout = TimeSpan.FromMinutes(1));
+        }
+        else
+        {
+            services.AddSingleton<IIngredientParser, DisabledIngredientParser>();
+        }
 
         // ADR-0006: NIST SP 800-63B-4 password length without composition rules; lockout after 5
         // failures for 5 minutes; one account per e-mail (the e-mail is also the user name).

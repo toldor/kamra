@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { api, failWith, noFilter, type Category, type CategoryInfo, type Ingredient, type PantryItem } from './api/client'
+import { api, failWith, noFilter, type Category, type CategoryInfo, type Ingredient, type ItemProposal, type PantryItem } from './api/client'
 import { categoryName, formatAmount, formatDate } from './format'
 import { PantryItemEditor } from './PantryItemEditor'
 import { PantryItemForm } from './PantryItemForm'
+import { ProposalList, QuickEntryForm } from './QuickEntry'
 import { routes } from './useHashRoute'
 
 type List = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; items: PantryItem[] }
@@ -22,8 +23,23 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
   const [catalogTries, setCatalogTries] = useState(0)
   const [editing, setEditing] = useState<PantryItem | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  // US-2: the quick entry shows only when the backend says it is on; any failure keeps it hidden (the manual
+  // form always works). Each sentence gets a new proposal list (batch), so its heading takes the focus again.
+  const [quickEntry, setQuickEntry] = useState(false)
+  const [proposals, setProposals] = useState<ItemProposal[]>([])
+  const [batch, setBatch] = useState(0)
 
   const reload = () => setReloads((n) => n + 1)
+
+  useEffect(() => {
+    let active = true
+    api.itemProposalAvailability()
+      .then((availability) => active && setQuickEntry(availability.enabled))
+      .catch(() => active && setQuickEntry(false))
+    return () => {
+      active = false
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -62,9 +78,21 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
       <h1 tabIndex={-1}>Készlet</h1>
       <p role="status" className="notice">{notice}</p>
 
-      {/* C3: the filters, the new item form and the hint beside the list; stacked on a phone (C2). */}
+      {/* C3: the sentence panel, the filters, the new item form and the hint beside the list; stacked on a phone (C2). */}
       <div className="split">
         <div className="side">
+          {/* us2_minispec K13: at the top of the side column. */}
+          {quickEntry && (
+            <QuickEntryForm
+              onProposed={(items) => {
+                setNotice(null)
+                setProposals(items)
+                setBatch((n) => n + 1)
+              }}
+              onManual={() => document.getElementById('new-ingredientId')?.focus()}
+              onSignedOut={onSignedOut}
+            />
+          )}
           <form role="search" className="filters panel" onSubmit={(e) => e.preventDefault()}>
             <label htmlFor="filter-search">Keresés</label>
             <input
@@ -127,6 +155,19 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
         </div>
 
         <section aria-labelledby="pantry-heading" className="content">
+          {catalog.status === 'ready' && proposals.length > 0 && (
+            <ProposalList
+              key={batch}
+              proposals={proposals}
+              ingredients={catalog.ingredients}
+              categories={catalog.categories}
+              onIngredientCreated={(ingredient) =>
+                setCatalog((current) => (current.status === 'ready' ? { ...current, ingredients: [...current.ingredients, ingredient] } : current))}
+              onApproved={reload}
+              onNotice={setNotice}
+              onSignedOut={onSignedOut}
+            />
+          )}
           <div className="panel">
             <h2 id="pantry-heading">Tételek</h2>
             <div className="panel-body">
@@ -150,7 +191,11 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
                 : (
                   <>
                     <p className="empty">Még üres a kamrád.</p>
-                    <p>Rögzítsd az első tételt az »Új tétel« űrlappal.</p>
+                    <p>
+                      {quickEntry
+                        ? 'Írd le egy mondatban, mit vettél – például: »vettem 2 liter tejet, 10 tojást és fél kiló paradicsomot, a tej pénteken jár le«.'
+                        : 'Rögzítsd az első tételt az »Új tétel« űrlappal.'}
+                    </p>
                   </>
                 ))}
             </div>
