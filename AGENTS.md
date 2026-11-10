@@ -31,7 +31,7 @@ A web-based pantry and recipe management app with AI-assisted inventory tracking
 |---|---|
 | Backend | C# / .NET (LTS), ASP.NET Core Web API, Clean Architecture |
 | Database | PostgreSQL, EF Core with migrations |
-| AI | ChatCompletion API (text parsing), separate MCP server (tool calls) |
+| AI | Gemini API (text parsing, function calling), MCP server project `KamraApp.McpServer` hosted in the API process (ADR-0010) |
 | Frontend | React + TypeScript (Vite), responsive, mobile-friendly |
 | Tests | xUnit, FluentAssertions, Testcontainers (Postgres), Playwright (e2e), Vitest (frontend) |
 | Infra | Docker Compose, GitHub Actions |

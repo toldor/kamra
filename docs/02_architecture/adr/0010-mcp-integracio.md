@@ -1,0 +1,54 @@
+# 0010 - MCP-integráció: az MCP-szerver az API folyamatában, memóriabeli szállítással; a Gemini eszközhívási körét az API vezérli
+
+Dátum: 2026-11-09
+Státusz: Accepted
+
+## Context
+
+- A US-6 ([scope_contract.md](../../01_product/scope_contract.md)) csak olvasó chatet kér négy MCP-eszközzel (készlet, hamarosan lejáró tételek, ajánlás, bevásárlólista); a chat semmit nem módosít, és csak a bejelentkezett felhasználó háztartásának adatát éri el. A tématerv „dedikált MCP szervert” vállal; az [ADR-0004](0004-clean-architecture-retegek.md) külön MCP-hostot rögzített, a [C4](../c4_context_container.md) „Nyitott kérdések” pontja szerint az MCP-ADR a toolokat az API folyamatába is teheti.
+- Kényszerek: egy gép, Docker Compose, kívülről csak az API portja; session-cookie, a háztartás a cookie claimjéből, soha nem az LLM-től ([ADR-0006](0006-cookie-auth-identity.md)); az LLM ugyanaz, mint a US-2-ben ([ADR-0009](0009-llm-szolgaltato.md): Gemini `gemini-3.1-flash-lite`, REST, fizetős keret); új NuGet csak jóváhagyással; a CI-ban nincs valódi LLM-hívás; a teljes US-6-ra 3 munkanap.
+- Tények (2026-11-09): a Gemini REST API az MCP-t nem ismeri – a `generateContent` függvényhívást ad (`tools[].functionDeclarations`, a válaszban `functionCall` `name`, `args`, `id`; visszaküldés `functionResponse`), a gondolkodó modellek `thoughtSignature`-t tesznek a részekbe, hiánya `MISSING_THOUGHT_SIGNATURE` befejezési okot adhat ([API-referencia](https://aistudio.google.com/api-reference/generate-content)), a modell lépéseit „exactly as received” kell visszaküldeni ([function calling](https://aistudio.google.com/docs/function-calling)). A hivatalos MCP C# SDK (`ModelContextProtocol.Core`, Apache-2.0) memóriabeli streamen is futtatja a protokollt (`StreamServerTransport`, `StreamClientTransport`), és a szerverpéldány egy megadott `IServiceProvider`-rel jön létre (`McpServer.Create`).
+- Érintett minőségi attribútumok: adatelkülönítés ([QA-1](../quality_attributes.md)), hibatűrés (QA-3), teljesítmény (QA-5: LLM p95 ≤ 10 mp), biztonság (prompt injection, [threat_model.md](../../05_security_ops/threat_model.md)), adatvédelem ([privacy_licensing.md](../../05_security_ops/privacy_licensing.md)).
+
+## Decision
+
+1. **MCP-szerver az API folyamatában.** A négy eszköz a `KamraApp.McpServer` projektben van (osztálykönyvtár, csak az Applicationre hivatkozik); mindegyik ugyanazt a használati esetet hívja, mint a REST API (`ListPantryItems`, `ListPantryItems` a „hamarosan lejáró” szűrővel, `GetRecommendations`, `ListShoppingList`). Minden chat-kérésnél az API egy MCP-szerverpéldányt hoz létre a kérés `IServiceProvider`-ével, és egy MCP-klienst köt hozzá memóriabeli streampárral (`ModelContextProtocol.Core`, `StreamServerTransport` / `StreamClientTransport`, a specifikáció 2026-07-28-i változata). Hálózati port, külön konténer és belső hitelesítés nincs.
+2. **Háztartás:** az eszközök az `ICurrentHousehold`-ot a kérés hatóköréből kapják (a cookie claimje, ADR-0006); egyik eszköz sémájában sincs háztartás-azonosító, és egyik paraméter sem választ háztartást.
+3. **Az eszközhívási kört az API vezérli:** az Application `AskChat` használati esete az `IChatModel` portot (Infrastructure: Gemini-adapter, `generateContent` függvényhívással, `HttpClient`, SDK nélkül) és az `IChatTools` portot (az MCP-kliens: `tools/list`, `tools/call`) hívja. Az eszközök leírása és sémája az MCP `tools/list`-ből lesz függvénydeklaráció.
+4. **Korlátok:** kérdésenként legfeljebb 3 modellhívás (legfeljebb 2 eszközkör + a válasz), körönként legfeljebb 4 eszközhívás; modellhívásonként 15 mp és egy újrapróbálás időtúllépésre, hálózati hibára, 5xx-re és 429-re (QA-3, a US-2 szabálya); elutasított kérés (4xx) → `LLM_UNAVAILABLE` újrapróbálás nélkül; ismeretlen eszköz, érvénytelen argumentum vagy a 3. hívás után is eszközhívás → a kör leáll, `LLM_INVALID_RESPONSE`, újrapróbálás nélkül. A modell válaszának részeit (`thoughtSignature`-rel együtt) a körön belül változatlanul küldjük vissza.
+5. **Beszélgetés:** a szerver nem tárolja; a kliens a memóriájában tartja, és kérdésenként legfeljebb 10 korábbi üzenetet küld (csak szöveg, üzenetenként legfeljebb 500 karakter); a korábbi körök eszközrészei nem mennek vissza. A napló a modell nevét, a prompt változatát, a modellhívások és az eszközhívások számát, a válaszidőt és a tokenszámot rögzíti, szöveget nem.
+6. **A modellhez kerülő adat:** a kérdés, a korábbi üzenetek és az eszközök eredménye – a saját háztartás tételei (hozzávaló, mennyiség, egység, lejárat), ajánlott receptjei és bevásárlólistája, tömör DTO-ként; fiókadat (e-mail, jelszó) és belső azonosító soha. A scope_contract „Külső API” pontja ennek megfelelően módosul.
+7. **Ugyanaz a szolgáltató, modell és kulcs, mint az ADR-0009-ben;** az `Llm:Enabled` a chatet is kapcsolja; rate limit háztartásonként (a mini-spec rögzíti). Rendszerprompt verziózott fájlban (`chat.v1`): csak olvasó asszisztens, módosítás kérésére a felületre utal, az eszközök eredménye adat, nem utasítás. A válasz a felületen sima szövegként jelenik meg (ADR-0006).
+8. **Új függőség:** `ModelContextProtocol.Core` **2.3.1** (Apache-2.0; net10.0 alatt csak a `Microsoft.Extensions.AI.Abstractions` és a `Microsoft.Extensions.Logging.Abstractions` csomagot hozza, mindkettő MIT). A `ModelContextProtocol.AspNetCore` nem kell, mert nincs HTTP-szállítás.
+
+## Alternatives
+
+1) **Külön MCP-konténer Streamable HTTP-vel, aláírt háztartás-tokennel** (a Claude Code előzetes javaslata, és az ADR-0004 eredeti terve) – előny: önálló folyamat, külső MCP-kliens is csatlakozhatna; hátrány: egy gépen, kívülről elzárva csak egy belső hitelesítési rést hoz (a háztartást a hálózaton kell átvinni, tokennel védeni), plusz host, Compose-szolgáltatás (az e2e-stackben is) és tesztek – kb. fél nap. Az eszközkód és az orchestrátor ugyanaz marad, a váltás csak a szállítás cseréje.
+2) **Külön konténer, sima `X-Household-Id` fejléccel** – előny: a legkevesebb kód a külön folyamatok közül; hátrány: az MCP-szerver hitelesítés nélküli adatvégpont lenne minden háztartásra, a védelem csak a hálózati elzártság (a reviewer is maradó kockázatként jelölte).
+3) **Eszközök MCP nélkül, közvetlen függvényhívással** (a reviewer 5b pontja) – előny: nincs új függőség; hátrány: nem teljesül a US-6 („MCP toolt használhat”) és a tématerv vállalása.
+4) **A böngésző mint orchestrátor** – hátrány: a modellkulcs vagy egy proxy a kliensre kerülne, a háztartás-kontextus a böngészőtől függene.
+5) **Külön AI-gateway szolgáltatás** – hátrány: egy felhasználási esetre újabb futtatható egység és határidő-kockázat.
+6) **Kézi JSON-RPC az SDK helyett** – előny: nincs új függőség; hátrány: a protokoll a 2026-07-28-i változattal is változott, a hivatalos SDK ezt követi; a kézi változat több száz sor tesztelendő kód.
+7) **`ModelContextProtocol.Core` 2.4.0** (a reviewer javaslata) – hátrány: 2026-11-07-én jelent meg; a 2.3.1 egy hete kint lévő javítókiadás ugyanabból a főváltozatból.
+8) **A beszélgetés tárolása a szerveren** – hátrány: új tábla, megőrzési és törlési szabály, több adat; a csak olvasó kérdés-válaszhoz nem kell.
+
+## Consequences
+
+- **Pozitív:** a háztartás nem utazik hálózaton, és nem a modelltől jön; az MCP-protokoll valódi (lista, hívás, séma), a REST API-val azonos használati esetekkel; nincs új konténer; a szállítás később cserélhető (Streamable HTTP) az eszközök és az orchestrátor módosítása nélkül.
+- **Negatív / kockázatok:**
+  - **Az ADR-0004 módosul:** a „külön MCP-host” helyett külön MCP-projekt az API folyamatában; az AGENTS.md és a C4 ezt követi.
+  - **Adatvédelem:** a chatnél a saját készlet, ajánlás és lista a modellhez kerül (a US-2-nél nem); a fizetős Gemini-szolgáltatásnál a prompt nem kerül a termékfejlesztésbe (ADR-0009), a scope_contract és a privacy_licensing ezt rögzíti.
+  - **Prompt injection az eszközök eredményén át:** a hozzávaló nevét a felhasználó is megadhatja; a kár a saját háztartásban egy félrevezető válasz, mert minden eszköz csak olvas és háztartáshoz kötött; ellenséges teszttel és egy `LiveAI`-esettel mérve (új fenyegetés-sor).
+  - **Válaszidő:** két-három modellhívás kérdésenként; a QA-5 a `LiveAI`-mérésből derül ki; a legrosszabb eset a 15 mp-es korlátok összege.
+  - **A Flash-Lite eszközválasztási pontossága magyar kérdéseken nem mért** → rövid mérés az implementáció elején.
+- **Figyelni kell a megvalósítás során:** a szerverpéldány a kérés `IServiceProvider`-ét kapja (különben az `ICurrentHousehold` nem a bejelentkezett háztartást adja); a szerver és a kliens a kérés végén lezárul; a függvénydeklaráció sémája a Gemini által támogatott JSON-séma-részhalmaz; az eszközök eredménye tételszám-korlátos.
+
+## Verification
+
+- **Tervezési validáció:** vak trianguláció (Antigravity, Gemini – az érintettséget jelezte; `P-27`). Egyezés: az orchestrátor az API-ban, háztartás-azonosító nélküli sémák, SDK az MCP-re és kézi REST a Geminire, tesztelési terv. Eltérés: a topológia – a Claude Code külön konténert javasolt, a fejlesztő a reviewer folyamaton belüli változatát választotta, a mechanizmust (memóriabeli szállítás, a kérés `IServiceProvider`-e) a Claude Code igazolta az SDK dokumentációjából; a körök száma (4 / 2 → 3); az SDK változata (2.3.1). Téves vagy részben téves reviewer-állítások: 7 (`V-77`), köztük a `MISSING_THOUGHT_SIGNATURE` hiánya az API-referenciából. Új lelet: a scope_contract „készletadatot soha” pontja ütközik a US-6-tal.
+- **Megvalósítási evidence (a US-6-ban):**
+  - integrációs teszt (Testcontainers): mind a négy eszköz csak a saját háztartás adatát adja (QA-1, a paraméterezett S-2 kiterjesztése), bejelentkezés nélkül 401;
+  - reflexiós teszt: egyik eszköz sémájában sincs háztartás-azonosító; architektúrateszt: a `KamraApp.McpServer` csak az Applicationre hivatkozik;
+  - unit teszt hamis modellel: a 3 hívásos korlát, ismeretlen eszköz és érvénytelen argumentum → `LLM_INVALID_RESPONSE`, a `thoughtSignature` változatlan visszaküldése, időtúllépés és újrapróbálás;
+  - e2e az LLM-csonkkal (`functionCall`-válasz): siker, kiesés, módosítást kérő kérdés;
+  - `LiveAI`-mérés 10–15 magyar kérdéssel (helyes eszközválasztás, helyes válasz, p95), köztük egy prompt injection jellegű hozzávalónévvel.

@@ -133,7 +133,7 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 
 - Egy külső LLM-szolgáltató, az Application rétegben definiált interfész mögött, cserélhetően. A szolgáltató kiválasztása és indoklása: [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md) (Google Gemini API).
 - CI-ban és automatizált tesztekben soha nincs valódi LLM-hívás (mock).
-- Az LLM csak a felhasználó beírt szövegét és a háztartás által látható hozzávalók nevét kapja meg; készletadatot és fiókadatot (e-mail, jelszó) soha. A „Már van otthon” tájékoztatót a backend számolja az adatbázisból.
+- Az LLM a mondatos bevitelnél (US-2) csak a felhasználó beírt szövegét és a háztartás által látható hozzávalók nevét kapja meg; a „Már van otthon” tájékoztatót a backend számolja az adatbázisból. A chatnél (US-6) a kérdést, a korábbi üzeneteket és az MCP-eszközök eredményét kapja: a saját háztartás készletét, ajánlását és bevásárlólistáját ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)). Fiókadatot (e-mail, jelszó) és belső azonosítót egyik funkció sem küld.
 - Havi költségkeret a fejlesztés alatt: legfeljebb 10 000 Ft. Átlépés esetén az AI-funkciók kikapcsolhatók, a kézi form és a determinisztikus funkciók működnek tovább.
 - Időtúllépés: 15 mp próbálkozásonként, egy újrapróbálással (US-2).
 
