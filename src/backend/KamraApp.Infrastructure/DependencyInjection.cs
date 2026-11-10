@@ -1,4 +1,5 @@
 using KamraApp.Application.Auth;
+using KamraApp.Application.Chat;
 using KamraApp.Application.Common;
 using KamraApp.Application.Cookings;
 using KamraApp.Application.Ingredients;
@@ -61,6 +62,9 @@ public static class DependencyInjection
         {
             services.AddSingleton<IIngredientParser, DisabledIngredientParser>();
         }
+
+        // US-6: the Gemini chat adapter comes in T2 (us6_minispec K6); until then the chat answers LLM_DISABLED.
+        services.AddSingleton<IChatModel, DisabledChatModel>();
 
         // ADR-0006: NIST SP 800-63B-4 password length without composition rules; lockout after 5
         // failures for 5 minutes; one account per e-mail (the e-mail is also the user name).

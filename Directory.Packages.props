@@ -8,6 +8,8 @@
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.12" />
+    <!-- ADR-0010: MCP server and client in the API process (in-memory transport); 2.4.0 was two days old. -->
+    <PackageVersion Include="ModelContextProtocol.Core" Version="2.3.1" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <!-- Developer decision (2026-10-10, ADR-0007): API reference UI, mapped in Development only. -->
     <PackageVersion Include="Scalar.AspNetCore" Version="2.17.14" />

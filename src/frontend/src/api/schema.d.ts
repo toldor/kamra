@@ -896,6 +896,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/chat/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChatAvailability"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["AskChatRequest"];
+                    "text/json": null | components["schemas"]["AskChatRequest"];
+                    "application/*+json": null | components["schemas"]["AskChatRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AskChatResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -1111,6 +1187,14 @@ export interface components {
         AntiforgeryTokenResponse: {
             requestToken: string;
         };
+        AskChatRequest: {
+            question: null | string;
+            history?: null | components["schemas"]["ChatHistoryMessage"][];
+        };
+        AskChatResponse: {
+            answer: string;
+            toolsUsed: string[];
+        };
         /** @enum {unknown} */
         Category: "dairy" | "cheese" | "eggs" | "freshMeatFish" | "processedMeat" | "vegetables" | "fruit" | "bakery" | "dryGoods" | "cannedAndSauces" | "frozen" | "beverages" | "preparedFood" | "other";
         CategoryResponse: {
@@ -1118,6 +1202,15 @@ export interface components {
             /** Format: int32 */
             shelfLifeDays: null | number;
         };
+        ChatAvailability: {
+            enabled: boolean;
+        };
+        ChatHistoryMessage: {
+            role?: null | components["schemas"]["ChatRole"];
+            text?: null | string;
+        };
+        /** @enum {unknown} */
+        ChatRole: "user" | "assistant" | null;
         ConfirmCookingRequest: {
             /** Format: uuid */
             requestId: null | string;

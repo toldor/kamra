@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\KamraApp.Application\KamraApp.Application.csproj" />
     <ProjectReference Include="..\KamraApp.Infrastructure\KamraApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\KamraApp.McpServer\KamraApp.McpServer.csproj" />
   </ItemGroup>
 
 </Project>

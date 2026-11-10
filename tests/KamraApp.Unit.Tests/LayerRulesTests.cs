@@ -47,6 +47,28 @@ public class LayerRulesTests
         ItemIncludes(project, ExternalReferenceItems).Should().BeEmpty("ADR-0004: the Application depends only on the Domain");
     }
 
+    // ADR-0004, ADR-0010: the MCP server project depends on the Application (and the MCP SDK), never on the Api
+    // or the Infrastructure; its tools call the same use cases as the REST API.
+    [Fact]
+    public void McpServer_project_declares_only_the_application_project_and_the_mcp_sdk()
+    {
+        var project = LoadProject("KamraApp.McpServer");
+
+        ItemIncludes(project, "ProjectReference")
+            .Select(include => Path.GetFileNameWithoutExtension(include.Replace('\\', '/')))
+            .Should().Equal(["KamraApp.Application"], "ADR-0004: the MCP server depends on the Application");
+        ItemIncludes(project, ExternalReferenceItems).Should().Equal(["ModelContextProtocol.Core"], "ADR-0010: the only new package");
+    }
+
+    [Fact]
+    public void McpServer_does_not_reference_the_api_or_the_infrastructure()
+    {
+        var references = ReferencedAssemblyNames("KamraApp.McpServer");
+
+        references.Should().Contain("KamraApp.Application")
+            .And.NotContain(["KamraApp.Api", "KamraApp.Infrastructure"], "ADR-0004: the MCP server depends on the Application");
+    }
+
     private static bool IsSystemAssembly(string name) =>
         name == "netstandard" || name.StartsWith("System", StringComparison.Ordinal);
 
