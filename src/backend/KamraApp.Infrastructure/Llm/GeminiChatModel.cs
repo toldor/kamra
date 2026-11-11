@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -14,20 +13,14 @@ namespace KamraApp.Infrastructure.Llm;
 // step goes back unchanged (thought signatures, https://aistudio.google.com/docs/function-calling); the versioned
 // prompt chat.v2 (v1 + plain text only, after the LiveAI run of 2026-11-11; v1 stays as the measured baseline) gets
 // today's Budapest date. The US-2 retry rules (QA-3) and a log without any text (K10).
-public sealed partial class GeminiChatModel(HttpClient http, IOptions<LlmOptions> options, ILogger<GeminiChatModel> logger) : IChatModel
+public sealed class GeminiChatModel(HttpClient http, IOptions<LlmOptions> options, ILogger<GeminiChatModel> logger) : IChatModel
 {
     public const string PromptVersion = "chat.v2";
 
     // A short answer of a few sentences; a runaway answer is cut and refused (MAX_TOKENS).
     private const int MaxOutputTokens = 1024;
 
-    private static readonly Lazy<string> Prompt = new(() =>
-    {
-        using var stream = typeof(GeminiChatModel).Assembly.GetManifestResourceStream("chat.v2.txt")
-            ?? throw new InvalidOperationException("The embedded prompt chat.v2.txt is missing.");
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return reader.ReadToEnd();
-    });
+    private static readonly Lazy<string> Prompt = new(() => GeminiHttp.LoadPrompt("chat.v2.txt"));
 
     public bool Enabled => true;
 
@@ -35,12 +28,13 @@ public sealed partial class GeminiChatModel(HttpClient http, IOptions<LlmOptions
         CancellationToken cancellationToken)
     {
         var settings = options.Value;
-        var model = settings.ChatModel ?? settings.Model;
-        var answer = await GeminiHttp.GenerateAsync(http, settings, model, Body(today, turns, tools).ToJsonString(),
-            (attempt, started, failure) => LogAttempt(model, attempt, started, failure, null), ChatErrors.LlmUnavailable, cancellationToken);
+        // K8: Llm:ChatModel, or the quick entry's model when it is not set (Docker Compose passes an unset one as "").
+        var model = string.IsNullOrWhiteSpace(settings.ChatModel) ? settings.Model : settings.ChatModel;
+        var answer = await GeminiHttp.GenerateAsync(http, settings, model, PromptVersion, Body(today, turns, tools).ToJsonString(), logger,
+            ChatErrors.LlmUnavailable, cancellationToken);
 
         var (reply, tokens) = Read(answer.Body);
-        LogAttempt(model, answer.Attempt, answer.Started, reply is null ? "invalid" : "ok", tokens);
+        GeminiHttp.Log(logger, model, PromptVersion, answer.Attempt, answer.Started, reply is null ? "invalid" : "ok", tokens);
         return reply ?? throw ChatErrors.LlmInvalidResponse();
     }
 
@@ -172,15 +166,4 @@ public sealed partial class GeminiChatModel(HttpClient http, IOptions<LlmOptions
         return new JsonObject { ["functionResponse"] = response };
     }
 
-    private void LogAttempt(string model, int attempt, long started, string outcome, (int Input, int Output)? tokens)
-    {
-        var durationMs = (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds;
-        LlmCall(logger, model, PromptVersion, attempt, outcome, durationMs, tokens?.Input, tokens?.Output);
-    }
-
-    // observability.md: one event per attempt; no question, no answer, no tool result, no key.
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "LLM call {Model} {PromptVersion} attempt {Attempt}: {Outcome} in {DurationMs} ms, tokens {InputTokens}/{OutputTokens}")]
-    private static partial void LlmCall(ILogger logger, string model, string promptVersion, int attempt, string outcome, long durationMs,
-        int? inputTokens, int? outputTokens);
 }

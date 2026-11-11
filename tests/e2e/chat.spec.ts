@@ -74,3 +74,15 @@ test('a request to change something is answered with the page where it can be do
   await expect(log.getByText('Itt nem tudom törölni a tételeket. Ezt a Készlet oldalon teheted meg.')).toBeVisible()
   await expect(log.getByText(/^Megnéztem:/)).toHaveCount(0)
 })
+
+// ADR-0010 4.: a call of a tool that does not exist (the stub asks for delete_pantry_items) ends the question.
+test('a call of an unknown tool is refused and nothing changes', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await openChat(page)
+
+  await ask(page, 'HIBÁS: mi van?')
+
+  await expect(page.getByRole('alert')).toHaveText(
+    'Erre most nem sikerült válaszolnom. Kérdezd meg másképp, vagy nézd meg közvetlenül a Készlet, a Mit főzzek? vagy a Bevásárlólista oldalon.')
+  await expect(page.getByLabel('Kérdésed')).toHaveValue('HIBÁS: mi van?')
+})

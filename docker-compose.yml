@@ -46,6 +46,7 @@ services:
       RateLimiting__Auth__WindowSeconds: ${RateLimiting__Auth__WindowSeconds:-60}
       Llm__Enabled: ${Llm__Enabled:-false}
       Llm__ApiKey: ${Llm__ApiKey:-}
+      Llm__ChatModel: ${Llm__ChatModel:-}
       RateLimiting__ItemProposals__PermitLimit: ${RateLimiting__ItemProposals__PermitLimit:-20}
       RateLimiting__ItemProposals__WindowSeconds: ${RateLimiting__ItemProposals__WindowSeconds:-600}
       RateLimiting__Chat__PermitLimit: ${RateLimiting__Chat__PermitLimit:-30}

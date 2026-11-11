@@ -25,12 +25,15 @@ const chatErrors: Record<string, string> = {
 
 const questionMax = 500
 const historyMax = 10
+// ADR-0010 5.: an earlier message goes back with at most 2000 characters (an answer can be longer: review R1).
+const historyTextMax = 2000
 
 type Message = ChatMessage & { toolsUsed?: string[] }
 
 // "Megnéztem: a készletet, az ajánlást és a bevásárlólistát." - or nothing when no tool was used.
 function toolsLine(tools: string[] = []): string | null {
-  const names = tools.map((tool) => toolNames[tool] ?? tool)
+  // An unknown name is left out: the user never sees a technical name (review R5).
+  const names = tools.filter((tool) => tool in toolNames).map((tool) => toolNames[tool])
   if (names.length === 0) return null
   const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} és ${names[names.length - 1]}`
   return `Megnéztem: ${list}.`
@@ -66,12 +69,13 @@ export function ChatPage({ onSignedOut }: { onSignedOut: (notice: string) => voi
 
     setError(null)
     setPending(trimmed)
-    const history = messages.slice(-historyMax).map(({ role, text: said }) => ({ role, text: said }))
+    const history = messages.slice(-historyMax).map(({ role, text: said }) => ({ role, text: said.slice(0, historyTextMax) }))
     try {
       const reply = await api.askChat(trimmed, history)
       setMessages((previous) => [...previous, { role: 'user', text: trimmed },
         { role: 'assistant', text: reply.answer, toolsUsed: reply.toolsUsed }])
-      setQuestion('')
+      // What was typed while waiting stays (review R3).
+      setQuestion((current) => (current.trim() === trimmed ? '' : current))
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 401) {
         onSignedOut(caught.message)
@@ -124,8 +128,10 @@ export function ChatPage({ onSignedOut }: { onSignedOut: (notice: string) => voi
 
       <section className="panel" aria-label="Beszélgetés">
         <div role="log" aria-live="polite" className="panel-body chat-log">
-          {messages.map((message, index) => <Bubble key={index} message={message} />)}
-          {pending !== null && <Bubble message={{ role: 'user', text: pending }} />}
+          {/* One list with the waiting question last: it stays the same element when the answer comes, so a screen
+              reader reads it out once (review R4). */}
+          {[...messages, ...(pending !== null ? [{ role: 'user' as const, text: pending }] : [])]
+            .map((message, index) => <Bubble key={index} message={message} />)}
         </div>
         {messages.length === 0 && !busy && (
           <div className="chat-examples">

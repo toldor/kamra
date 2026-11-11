@@ -238,6 +238,60 @@ describe('the Kérdezz page', () => {
     expect(screen.queryByText(text)).toBeNull()
   })
 
+  // T2+T3 review R1 (ADR-0010 5.): an earlier message goes back with at most 2000 characters, so one long answer
+  // cannot make every later question fail.
+  it('sends a long earlier answer cut to 2000 characters', async () => {
+    const calls = backend(true, [answer('a'.repeat(2500)), answer('Rendben.')])
+    render(<App />)
+
+    await ask('Mesélj!')
+    await log().findByText('a'.repeat(2500))
+    await ask('És még?')
+    await log().findByText('Rendben.')
+
+    const history = (chatPosts(calls)[1] as { history: { text: string }[] }).history
+    expect(history[1].text).toHaveLength(2000)
+  })
+
+  // R3: what the user types while the answer is on its way is not lost.
+  it('keeps what was typed while the answer was on its way', async () => {
+    let release: (reply: Reply) => void = () => {}
+    backend(true, [() => new Promise<Reply>((resolve) => { release = resolve })])
+    render(<App />)
+
+    await ask('Mi jár le?')
+    await screen.findByRole('button', { name: 'Gondolkodom…' })
+    fireEvent.change(screen.getByLabelText('Kérdésed'), { target: { value: 'És a tej?' } })
+    release(answer('A tej.'))
+
+    await log().findByText('A tej.')
+    expect((screen.getByLabelText('Kérdésed') as HTMLTextAreaElement).value).toBe('És a tej?')
+  })
+
+  // R4: the waiting question stays the same element, so a screen reader does not read it out twice.
+  it('keeps the waiting question as the same element when the answer comes', async () => {
+    let release: (reply: Reply) => void = () => {}
+    backend(true, [() => new Promise<Reply>((resolve) => { release = resolve })])
+    render(<App />)
+
+    await ask('Mi jár le?')
+    const waiting = await log().findByText('Mi jár le?')
+    release(answer('A tej.'))
+
+    await log().findByText('A tej.')
+    expect(log().getByText('Mi jár le?')).toBe(waiting)
+  })
+
+  // R5 (AGENTS.md: no technical text for the user): an unknown tool name is left out of the line.
+  it('leaves an unknown tool name out of the line', async () => {
+    backend(true, [answer('A tej.', ['get_expiring_items', 'get_something_new'])])
+    render(<App />)
+
+    await ask('Mi jár le?')
+
+    expect(await log().findByText('Megnéztem: a hamarosan lejáró tételeket.')).toBeTruthy()
+  })
+
   it('starts a new conversation', async () => {
     const calls = backend(true, [answer('A tej.'), answer('Szia!')])
     render(<App />)

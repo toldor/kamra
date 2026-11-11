@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using KamraApp.Application.ItemProposals;
@@ -12,7 +10,7 @@ namespace KamraApp.Infrastructure.Llm;
 // versioned prompt quick-entry.v3. QA-3: 15 s per attempt and one immediate retry on a timeout, 5xx, 429 or a network
 // error; an answer outside the schema is not retried. The log has the model, the prompt version, the time and the
 // token counts, never the sentence or the answer (AGENTS.md 5.).
-public sealed partial class GeminiIngredientParser(HttpClient http, IOptions<LlmOptions> options, ILogger<GeminiIngredientParser> logger)
+public sealed class GeminiIngredientParser(HttpClient http, IOptions<LlmOptions> options, ILogger<GeminiIngredientParser> logger)
     : IIngredientParser
 {
     public const string PromptVersion = "quick-entry.v3";
@@ -22,13 +20,7 @@ public sealed partial class GeminiIngredientParser(HttpClient http, IOptions<Llm
     // A ceiling on the answer: 20 items fit easily; a runaway answer (seen in T0 on another model) is cut and refused.
     private const int MaxOutputTokens = 2048;
 
-    private static readonly Lazy<string> Prompt = new(() =>
-    {
-        using var stream = typeof(GeminiIngredientParser).Assembly.GetManifestResourceStream("quick-entry.v3.txt")
-            ?? throw new InvalidOperationException("The embedded prompt quick-entry.v3.txt is missing.");
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return reader.ReadToEnd();
-    });
+    private static readonly Lazy<string> Prompt = new(() => GeminiHttp.LoadPrompt("quick-entry.v3.txt"));
 
     // Strict numbers: "2" is not an amount (General, unlike Web, does not read numbers from strings).
     private static readonly JsonSerializerOptions AnswerJson = new(JsonSerializerDefaults.General) { PropertyNameCaseInsensitive = true };
@@ -38,12 +30,11 @@ public sealed partial class GeminiIngredientParser(HttpClient http, IOptions<Llm
     public async Task<IReadOnlyList<ParsedItem>> ParseAsync(string text, IReadOnlyList<string> ingredientNames, CancellationToken cancellationToken)
     {
         var settings = options.Value;
-        var answer = await GeminiHttp.GenerateAsync(http, settings, settings.Model, Body(text, ingredientNames).ToJsonString(),
-            (attempt, started, failure) => LogAttempt(settings.Model, attempt, started, failure, null), ItemProposalErrors.LlmUnavailable,
-            cancellationToken);
+        var answer = await GeminiHttp.GenerateAsync(http, settings, settings.Model, PromptVersion, Body(text, ingredientNames).ToJsonString(),
+            logger, ItemProposalErrors.LlmUnavailable, cancellationToken);
 
         var (items, tokens) = Read(answer.Body, ingredientNames);
-        LogAttempt(settings.Model, answer.Attempt, answer.Started, items is null ? "invalid" : "ok", tokens);
+        GeminiHttp.Log(logger, settings.Model, PromptVersion, answer.Attempt, answer.Started, items is null ? "invalid" : "ok", tokens);
         return items ?? throw ItemProposalErrors.LlmInvalidResponse();
     }
 
@@ -143,17 +134,6 @@ public sealed partial class GeminiIngredientParser(HttpClient http, IOptions<Llm
         ["required"] = new JsonArray("items"),
     };
 
-    private void LogAttempt(string model, int attempt, long started, string outcome, (int Input, int Output)? tokens)
-    {
-        var durationMs = (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds;
-        LlmCall(logger, model, PromptVersion, attempt, outcome, durationMs, tokens?.Input, tokens?.Output);
-    }
-
-    // observability.md: one event per attempt; no sentence, no answer, no key.
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "LLM call {Model} {PromptVersion} attempt {Attempt}: {Outcome} in {DurationMs} ms, tokens {InputTokens}/{OutputTokens}")]
-    private static partial void LlmCall(ILogger logger, string model, string promptVersion, int attempt, string outcome, long durationMs,
-        int? inputTokens, int? outputTokens);
 
     private sealed record Answer(List<AnswerItem>? Items);
 

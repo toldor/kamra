@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 namespace KamraApp.Unit.Tests;
 
 // US-6 (us6_minispec K6-K8, K10; ADR-0010 4.): the Gemini chat adapter against a scripted HTTP handler (never the
-// real API, AGENTS.md 6.). The request it sends (prompt chat.v1 with today's date, the conversation, the MCP tools
+// real API, AGENTS.md 6.). The request it sends (prompt chat.v2 with today's date, the conversation, the MCP tools
 // as function declarations), the model's step sent back unchanged, the function calls it reads, the US-2 retry rules
 // (QA-3) and a log without any text.
 public sealed class GeminiChatModelTests : IDisposable
@@ -67,6 +67,19 @@ public sealed class GeminiChatModelTests : IDisposable
         await Model(chatModel: "gemini-3.6-flash").CompleteAsync(Today, [new UserTurn("Szia")], [], CancellationToken.None);
 
         _handler.Requests.Single().Url.Should().Be("https://llm.test/v1beta/models/gemini-3.6-flash:generateContent");
+    }
+
+    // T2+T3 review R2: Docker Compose passes an unset Llm__ChatModel as an empty string.
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public async Task An_empty_chat_model_setting_falls_back_to_the_model(string chatModel)
+    {
+        _handler.Answer(Ok(Text("Szia!")));
+
+        await Model(chatModel: chatModel).CompleteAsync(Today, [new UserTurn("Szia")], [], CancellationToken.None);
+
+        _handler.Requests.Single().Url.Should().Be("https://llm.test/v1beta/models/gemini-3.1-flash-lite:generateContent");
     }
 
     [Fact]
