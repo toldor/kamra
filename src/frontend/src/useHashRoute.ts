@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-// Q9: hash routes (#/, #/mit-fozzek, #/receptek, #/receptek/uj, #/bevasarlolista, #/fozes/{receptId}) need no server fallback and no router dependency.
+// Q9: hash routes (#/, #/mit-fozzek, #/receptek, #/receptek/uj, #/bevasarlolista, #/kerdezz, #/fozes/{receptId}) need no server fallback and no router dependency.
 // The route lives in the URL, so after signing in again the user is back on the same page (ux_flows,
 // Lejárt munkamenet).
 export const routes = {
@@ -9,6 +9,7 @@ export const routes = {
   recipes: '#/receptek',
   newRecipe: '#/receptek/uj',
   shopping: '#/bevasarlolista',
+  chat: '#/kerdezz',
 } as const
 
 const cookingPrefix = '#/fozes/'

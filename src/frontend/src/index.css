@@ -397,6 +397,73 @@ main.form-page {
   padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
+/* ---- Kérdezz (US-6) ---- */
+
+/* One readable column: the conversation, the examples and the question field. */
+main.chat-page {
+  max-width: 48rem;
+}
+
+.chat-log {
+  gap: var(--space-3);
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 85%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--c-rule);
+  background: var(--c-surface);
+}
+
+/* The own question on the right, on the page ground; the answer on the left, on white. */
+.chat-message.user {
+  align-self: flex-end;
+  background: var(--c-ground);
+}
+
+.chat-message.assistant {
+  align-self: flex-start;
+}
+
+/* ADR-0006: the answer is plain text; its line breaks are kept. */
+.chat-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.chat-form {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border-top: 1px solid var(--c-rule);
+}
+
+.chat-form button[type='submit'] {
+  align-self: flex-start;
+}
+
+/* Text only for a screen reader (the "Te:" / "Kamra:" labels of the conversation). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---- Forms ---- */
 
 form {

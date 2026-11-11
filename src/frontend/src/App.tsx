@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, errorMessage, type Me } from './api/client'
 import { AuthForm } from './AuthForm'
+import { ChatPage } from './ChatPage'
 import { CookingPage } from './CookingPage'
 import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
@@ -38,6 +39,7 @@ function Page({ route, onSignedOut, recipeNotice, onRecipeSaved }: {
   if (recipeId) return <CookingPage key={recipeId} recipeId={recipeId} onSignedOut={onSignedOut} />
   if (route === routes.recommendations) return <RecommendationsPage onSignedOut={onSignedOut} />
   if (route === routes.shopping) return <ShoppingListPage onSignedOut={onSignedOut} />
+  if (route === routes.chat) return <ChatPage onSignedOut={onSignedOut} />
   if (route === routes.recipes) return <RecipesPage notice={recipeNotice} onSignedOut={onSignedOut} />
   if (route === routes.newRecipe) return <RecipeForm onSaved={onRecipeSaved} onSignedOut={onSignedOut} />
   return <PantryPage onSignedOut={onSignedOut} />
