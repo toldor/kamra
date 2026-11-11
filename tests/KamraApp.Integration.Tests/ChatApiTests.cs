@@ -2,9 +2,11 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using KamraApp.Application.Chat;
+using KamraApp.Application.ShoppingList;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -125,6 +127,7 @@ public partial class ChatApiTests(KamraApiFactory factory)
 
         result.Should().Contain(tool == "get_shopping_list" ? "cukor" : "vaj")
             .And.NotContain("tejföl").And.NotContain("finomliszt");
+        GuidPattern().IsMatch(result).Should().BeFalse("us6_minispec K5: no ids go to the model");
     }
 
     [Fact]
@@ -229,6 +232,125 @@ public partial class ChatApiTests(KamraApiFactory factory)
         (makeable + almost).Should().BeGreaterThan(0, "the seed recipes use these ingredients");
     }
 
+    // T1 review J1: the tool keeps the use case's order (expiry, then the Hungarian alphabet, V-33).
+    [Fact]
+    public async Task The_pantry_tool_keeps_the_hungarian_order_of_the_pantry_list()
+    {
+        var model = new ScriptedChatModel();
+        using var app = WithChat(model);
+        var client = await ApiClient.SignedInAsync(app);
+        await AddPantryItemAsync(client, "zabpehely", 500, "g", Today.AddDays(5));
+        await AddPantryItemAsync(client, "őszibarack", 3, "db", Today.AddDays(5));
+        await AddPantryItemAsync(client, "vaj", 100, "g", Today.AddDays(1));
+
+        var result = Parse(await ToolResultAsync(model, client, "get_pantry_items", "{}"));
+
+        result.GetProperty("items").EnumerateArray().Select(i => i.GetProperty("name").GetString())
+            .Should().Equal("vaj", "őszibarack", "zabpehely");
+    }
+
+    // T1 review J5 (us6_minispec K5): at most 100 rows, and the model is told that more exist.
+    [Fact]
+    public async Task The_pantry_tool_returns_at_most_100_rows_and_says_so()
+    {
+        var model = new ScriptedChatModel();
+        using var app = WithChat(model);
+        var client = await ApiClient.SignedInAsync(app);
+        for (var i = 0; i < 101; i++)
+        {
+            await AddPantryItemAsync(client, "vaj", 10, "g", Today.AddDays(5 + (i % 3)));
+        }
+
+        var result = Parse(await ToolResultAsync(model, client, "get_pantry_items", "{}"));
+
+        result.GetProperty("items").GetArrayLength().Should().Be(KamraApp.McpServer.KamraTools.MaxRows);
+        result.GetProperty("truncated").GetBoolean().Should().BeTrue();
+    }
+
+    // T1 review J5 (K5): makeable recipes without shortages, almost makeable ones with them; no ids.
+    [Fact]
+    public async Task The_recommendation_tool_result_is_compact_and_without_ids()
+    {
+        var model = new ScriptedChatModel();
+        using var app = WithChat(model);
+        var client = await ApiClient.SignedInAsync(app);
+        await AddPantryItemAsync(client, "tojás", 10, "db", Today.AddDays(5));
+        await AddPantryItemAsync(client, "vaj", 100, "g", Today.AddDays(5));
+        await AddPantryItemAsync(client, "tej", 1, "l", Today.AddDays(5));
+
+        var json = await ToolResultAsync(model, client, "get_recommendations", "{}");
+
+        var result = Parse(json);
+        var makeable = result.GetProperty("makeable").EnumerateArray().Single(r => r.GetProperty("name").GetString() == "Rántotta");
+        makeable.EnumerateObject().Select(p => p.Name).Should().BeEquivalentTo(
+            "name", "servings", "soonExpiringIngredients", "expiredIngredients");
+        var almost = result.GetProperty("almostMakeable").EnumerateArray().Single(r => r.GetProperty("name").GetString() == "Palacsinta");
+        almost.EnumerateObject().Select(p => p.Name).Should().BeEquivalentTo(
+            "name", "servings", "soonExpiringIngredients", "expiredIngredients", "shortages");
+        almost.GetProperty("shortages").EnumerateArray().First().EnumerateObject().Select(p => p.Name).Should().BeEquivalentTo(
+            "name", "missing", "available", "required", "unit");
+        GuidPattern().IsMatch(json).Should().BeFalse("us6_minispec K5: no ids go to the model");
+    }
+
+    // T1 review J5 (K5): a list row is the name, the amount and unit when given, and the tick.
+    [Fact]
+    public async Task The_shopping_list_tool_result_is_compact()
+    {
+        var model = new ScriptedChatModel();
+        using var app = WithChat(model);
+        var client = await ApiClient.SignedInAsync(app);
+        await AddShoppingItemAsync(client, "cukor", 50, "dkg");
+        await AddShoppingItemAsync(client, "vaj");
+
+        var result = Parse(await ToolResultAsync(model, client, "get_shopping_list", "{}"));
+
+        var rows = result.GetProperty("items").EnumerateArray().ToDictionary(r => r.GetProperty("name").GetString()!);
+        rows["cukor"].EnumerateObject().Select(p => p.Name).Should().BeEquivalentTo("name", "amount", "unit", "checked");
+        rows["cukor"].GetProperty("unit").GetString().Should().Be("dkg");
+        rows["vaj"].EnumerateObject().Select(p => p.Name).Should().BeEquivalentTo("name", "checked");
+        result.GetProperty("truncated").GetBoolean().Should().BeFalse();
+    }
+
+    // T1 review J3: a failure inside a tool (here the database) is the app's own error (500, logged), not the
+    // model's (502); only refused arguments are LLM_INVALID_RESPONSE.
+    [Fact]
+    public async Task A_failing_tool_is_an_INTERNAL_ERROR_and_not_blamed_on_the_model()
+    {
+        var model = new ScriptedChatModel().CallThenAnswer("get_shopping_list", "{}", "-");
+        using var app = WithChat(model, builder => builder.ConfigureTestServices(services =>
+            services.AddScoped(_ => DispatchProxy.Create<IShoppingListRepository, FailingRepository>())));
+        var client = await ApiClient.SignedInAsync(app);
+
+        var response = await client.PostAsync("/api/v1/chat", new { question = "Mi van a listán?" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        (await ApiClient.ProblemAsync(response)).GetProperty("code").GetString().Should().Be("INTERNAL_ERROR");
+        model.Calls.Should().ContainSingle("the model is not asked again after a failed tool");
+    }
+
+    // T1 review J8 (K9): without configuration, 30 questions per household in the window.
+    [Fact]
+    public async Task By_default_the_chat_allows_30_questions_per_household()
+    {
+        var model = new ScriptedChatModel().AnswerWith("Szia!");
+        using var app = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Llm:Enabled", "true");
+            builder.UseSetting("Llm:ApiKey", "test-key-not-used");
+            builder.ConfigureTestServices(services => services.AddSingleton<IChatModel>(model));
+        });
+        var client = await ApiClient.SignedInAsync(app);
+
+        var statuses = new List<HttpStatusCode>();
+        for (var i = 0; i < 31; i++)
+        {
+            statuses.Add((await client.PostAsync("/api/v1/chat", new { question = "Szia" })).StatusCode);
+        }
+
+        statuses.Take(30).Should().OnlyContain(s => s == HttpStatusCode.OK);
+        statuses[30].Should().Be(HttpStatusCode.TooManyRequests);
+    }
+
     [Fact]
     public async Task The_chat_is_limited_per_household()
     {
@@ -282,9 +404,11 @@ public partial class ChatApiTests(KamraApiFactory factory)
         response.StatusCode.Should().Be(HttpStatusCode.Created, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
-    private static async Task AddShoppingItemAsync(ApiClient client, string name)
+    private static async Task AddShoppingItemAsync(ApiClient client, string name, decimal? amount = null, string? unit = null)
     {
-        var response = await client.PostAsync("/api/v1/shopping-list/items", new { ingredientId = await IngredientIdAsync(client, name) });
+        var ingredientId = await IngredientIdAsync(client, name);
+        var response = await client.PostAsync("/api/v1/shopping-list/items",
+            amount is null ? new { ingredientId } : (object)new { ingredientId, amount, unit });
         response.IsSuccessStatusCode.Should().BeTrue(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
@@ -296,6 +420,13 @@ public partial class ChatApiTests(KamraApiFactory factory)
 
     [GeneratedRegex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")]
     private static partial Regex GuidPattern();
+
+    // A shopping list repository whose database is down: every call fails.
+    public class FailingRepository : DispatchProxy
+    {
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
+            throw new InvalidOperationException("The database is not reachable.");
+    }
 
     // A model that answers at once, or first calls one tool and then answers; it records what it got for the
     // last question. The script is set per question, so one signed-in client can ask several.

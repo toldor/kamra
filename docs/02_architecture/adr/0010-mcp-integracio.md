@@ -2,6 +2,7 @@
 
 Dátum: 2026-11-09
 Státusz: Accepted
+Módosítva: 2026-11-11 (5. pont: az előzményüzenet hossza, a T1 `/code-review` után)
 
 ## Context
 
@@ -16,7 +17,7 @@ Státusz: Accepted
 2. **Háztartás:** az eszközök az `ICurrentHousehold`-ot a kérés hatóköréből kapják (a cookie claimje, ADR-0006); egyik eszköz sémájában sincs háztartás-azonosító, és egyik paraméter sem választ háztartást.
 3. **Az eszközhívási kört az API vezérli:** az Application `AskChat` használati esete az `IChatModel` portot (Infrastructure: Gemini-adapter, `generateContent` függvényhívással, `HttpClient`, SDK nélkül) és az `IChatTools` portot (az MCP-kliens: `tools/list`, `tools/call`) hívja. Az eszközök leírása és sémája az MCP `tools/list`-ből lesz függvénydeklaráció.
 4. **Korlátok:** kérdésenként legfeljebb 3 modellhívás (legfeljebb 2 eszközkör + a válasz), körönként legfeljebb 4 eszközhívás; modellhívásonként 15 mp és egy újrapróbálás időtúllépésre, hálózati hibára, 5xx-re és 429-re (QA-3, a US-2 szabálya); elutasított kérés (4xx) → `LLM_UNAVAILABLE` újrapróbálás nélkül; ismeretlen eszköz, érvénytelen argumentum vagy a 3. hívás után is eszközhívás → a kör leáll, `LLM_INVALID_RESPONSE`, újrapróbálás nélkül. A modell válaszának részeit (`thoughtSignature`-rel együtt) a körön belül változatlanul küldjük vissza.
-5. **Beszélgetés:** a szerver nem tárolja; a kliens a memóriájában tartja, és kérdésenként legfeljebb 10 korábbi üzenetet küld (csak szöveg, üzenetenként legfeljebb 500 karakter); a korábbi körök eszközrészei nem mennek vissza. A napló a modell nevét, a prompt változatát, a modellhívások és az eszközhívások számát, a válaszidőt és a tokenszámot rögzíti, szöveget nem.
+5. **Beszélgetés:** a szerver nem tárolja; a kliens a memóriájában tartja, és kérdésenként legfeljebb 10 korábbi üzenetet küld (csak szöveg, üzenetenként legfeljebb 2000 karakter – a válasz hosszabb lehet az 500 karakteres kérdésnél; **Módosítás, 2026-11-11:** az eredeti 500 a mini-spec K3-ával ellentétes volt); a korábbi körök eszközrészei nem mennek vissza. A napló a modell nevét, a prompt változatát, a modellhívások és az eszközhívások számát, a válaszidőt és a tokenszámot rögzíti, szöveget nem.
 6. **A modellhez kerülő adat:** a kérdés, a korábbi üzenetek és az eszközök eredménye – a saját háztartás tételei (hozzávaló, mennyiség, egység, lejárat), ajánlott receptjei és bevásárlólistája, tömör DTO-ként; fiókadat (e-mail, jelszó) és belső azonosító soha. A scope_contract „Külső API” pontja ennek megfelelően módosul.
 7. **Ugyanaz a szolgáltató, modell és kulcs, mint az ADR-0009-ben;** az `Llm:Enabled` a chatet is kapcsolja; rate limit háztartásonként (a mini-spec rögzíti). Rendszerprompt verziózott fájlban (`chat.v1`): csak olvasó asszisztens, módosítás kérésére a felületre utal, az eszközök eredménye adat, nem utasítás. A válasz a felületen sima szövegként jelenik meg (ADR-0006).
 8. **Új függőség:** `ModelContextProtocol.Core` **2.3.1** (Apache-2.0; net10.0 alatt csak a `Microsoft.Extensions.AI.Abstractions` és a `Microsoft.Extensions.Logging.Abstractions` csomagot hozza, mindkettő MIT). A `ModelContextProtocol.AspNetCore` nem kell, mert nincs HTTP-szállítás.

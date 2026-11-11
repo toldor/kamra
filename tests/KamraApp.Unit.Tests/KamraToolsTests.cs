@@ -8,7 +8,7 @@ namespace KamraApp.Unit.Tests;
 // read-only tools; no argument can name a household; the category uses the REST API's codes.
 public class KamraToolsTests
 {
-    private static readonly IReadOnlyList<McpServerTool> Tools = KamraToolCatalog.Create(new KamraTools(null!, null!, null!));
+    private static readonly IReadOnlyList<McpServerTool> Tools = KamraToolCatalog.Create(new KamraTools(null!, null!, null!, new ToolFailures()));
 
     [Fact]
     public void The_server_has_exactly_the_four_tools_of_mcp_tools_md()
@@ -54,6 +54,16 @@ public class KamraToolsTests
         Properties(tool).Should().Equal("max_results");
         Required(tool).Should().BeEmpty();
         tool.ProtocolTool.InputSchema.GetProperty("properties").GetProperty("max_results").GetRawText().Should().Contain("integer");
+    }
+
+    // T1 review J6 (us6_minispec K4, mcp_tools.md "JSON-sémával validált"): the range is in the schema, not only in code.
+    [Fact]
+    public void The_schema_limits_max_results_to_1_to_10()
+    {
+        var maxResults = Tool("get_recommendations").ProtocolTool.InputSchema.GetProperty("properties").GetProperty("max_results");
+
+        maxResults.GetProperty("minimum").GetInt32().Should().Be(1);
+        maxResults.GetProperty("maximum").GetInt32().Should().Be(10);
     }
 
     [Theory]

@@ -1,4 +1,5 @@
 using System.IO.Pipelines;
+using System.Runtime.ExceptionServices;
 using System.Text.Json;
 using KamraApp.Application.Chat;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,12 +16,9 @@ namespace KamraApp.McpServer;
 // this request's services; nothing goes over the network. Disposed (both ends closed) with the request scope.
 public sealed class McpChatTools(IServiceProvider services) : IChatTools, IAsyncDisposable
 {
-    private readonly Pipe _toServer = new();
-    private readonly Pipe _toClient = new();
-    private readonly CancellationTokenSource _stop = new();
-    private McpClient? _client;
-    private SdkMcpServer? _server;
-    private Task? _serverRun;
+    private readonly ToolFailures _failures = new();
+    private Connection? _connection;
+    private bool _disposed;
 
     public async Task<IReadOnlyList<ChatTool>> ListAsync(CancellationToken cancellationToken)
     {
@@ -42,57 +40,50 @@ public sealed class McpChatTools(IServiceProvider services) : IChatTools, IAsync
         }
 
         var client = await ClientAsync(cancellationToken);
+        CallToolResult result;
         try
         {
-            var result = await client.CallToolAsync(name, arguments, cancellationToken: cancellationToken);
-            return new ChatToolOutcome(result.IsError == true, string.Concat(result.Content.OfType<TextContentBlock>().Select(c => c.Text)));
+            result = await client.CallToolAsync(name, arguments, cancellationToken: cancellationToken);
         }
         catch (McpException)
         {
             // An unknown tool or a protocol-level refusal: the same as a refused call.
             return new ChatToolOutcome(true, $"The tool '{name}' cannot be called.");
         }
+
+        // T1 review J3: the tool failed on its own (not on its arguments): the app's error, not the model's.
+        if (result.IsError == true && _failures.Take() is { } failure)
+        {
+            ExceptionDispatchInfo.Throw(failure);
+        }
+
+        return new ChatToolOutcome(result.IsError == true, string.Concat(result.Content.OfType<TextContentBlock>().Select(c => c.Text)));
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_client is not null)
+        if (_disposed)
         {
-            await _client.DisposeAsync();
+            return;
         }
 
-        await _stop.CancelAsync();
-        await _toServer.Writer.CompleteAsync();
-        await _toClient.Writer.CompleteAsync();
-        if (_serverRun is not null)
+        _disposed = true;
+        if (_connection is { } connection)
         {
-            try
-            {
-                await _serverRun;
-            }
-            catch (OperationCanceledException)
-            {
-                // The server stops with the request.
-            }
+            await connection.DisposeAsync();
         }
-
-        if (_server is not null)
-        {
-            await _server.DisposeAsync();
-        }
-
-        _stop.Dispose();
     }
 
     private async Task<McpClient> ClientAsync(CancellationToken cancellationToken)
     {
-        if (_client is not null)
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_connection is not null)
         {
-            return _client;
+            return _connection.Client;
         }
 
         var toolCollection = new McpServerPrimitiveCollection<McpServerTool>();
-        foreach (var tool in KamraToolCatalog.Create(ActivatorUtilities.CreateInstance<KamraTools>(services)))
+        foreach (var tool in KamraToolCatalog.Create(ActivatorUtilities.CreateInstance<KamraTools>(services, _failures)))
         {
             toolCollection.Add(tool);
         }
@@ -104,10 +95,71 @@ public sealed class McpChatTools(IServiceProvider services) : IChatTools, IAsync
             // The tools already hold this request's use cases; a new scope would lose the signed-in household.
             ScopeRequests = false,
         };
-        _server = SdkMcpServer.Create(new StreamServerTransport(_toServer.Reader.AsStream(), _toClient.Writer.AsStream()), options, null, services);
-        _serverRun = _server.RunAsync(_stop.Token);
-        _client = await McpClient.CreateAsync(new StreamClientTransport(_toServer.Writer.AsStream(), _toClient.Reader.AsStream()),
-            cancellationToken: cancellationToken);
-        return _client;
+        // T1 review J4: the connection is kept only when both ends are up; a failed start is closed at once.
+        var connection = new Connection();
+        try
+        {
+            connection.Server = SdkMcpServer.Create(
+                new StreamServerTransport(connection.ToServer.Reader.AsStream(), connection.ToClient.Writer.AsStream()), options, null, services);
+            connection.ServerRun = connection.Server.RunAsync(connection.Stop.Token);
+            connection.Client = await McpClient.CreateAsync(
+                new StreamClientTransport(connection.ToServer.Writer.AsStream(), connection.ToClient.Reader.AsStream()),
+                cancellationToken: cancellationToken);
+        }
+        catch
+        {
+            await connection.DisposeAsync();
+            throw;
+        }
+
+        _connection = connection;
+        return connection.Client;
+    }
+
+    // Both ends of one in-memory MCP connection.
+    private sealed class Connection : IAsyncDisposable
+    {
+        public Pipe ToServer { get; } = new();
+
+        public Pipe ToClient { get; } = new();
+
+        public CancellationTokenSource Stop { get; } = new();
+
+        public SdkMcpServer? Server { get; set; }
+
+        public Task? ServerRun { get; set; }
+
+        public McpClient Client { get; set; } = null!;
+
+        // Closing never fails the request: the server stops with it, whatever state it is in.
+        public async ValueTask DisposeAsync()
+        {
+            if (Client is not null)
+            {
+                await Client.DisposeAsync();
+            }
+
+            await Stop.CancelAsync();
+            await ToServer.Writer.CompleteAsync();
+            await ToClient.Writer.CompleteAsync();
+            if (ServerRun is not null)
+            {
+                try
+                {
+                    await ServerRun;
+                }
+                catch (Exception error) when (error is OperationCanceledException or IOException or InvalidOperationException)
+                {
+                    // The server stops with the request.
+                }
+            }
+
+            if (Server is not null)
+            {
+                await Server.DisposeAsync();
+            }
+
+            Stop.Dispose();
+        }
     }
 }

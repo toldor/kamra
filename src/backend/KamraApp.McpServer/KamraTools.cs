@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using KamraApp.Application.Pantry;
 using KamraApp.Application.Recommendations;
@@ -13,7 +14,8 @@ namespace KamraApp.McpServer;
 // REST API (AGENTS.md 3.); the household comes from the request scope, never from an argument (ADR-0010 2.).
 // The results are compact: no ids, no versions, at most 100 rows.
 [McpServerToolType]
-public sealed class KamraTools(ListPantryItems listPantryItems, GetRecommendations getRecommendations, ListShoppingList listShoppingList)
+public sealed class KamraTools(ListPantryItems listPantryItems, GetRecommendations getRecommendations, ListShoppingList listShoppingList,
+    ToolFailures failures)
 {
     public const int MaxRows = 100;
     public const int DefaultRecipes = 5;
@@ -28,19 +30,20 @@ public sealed class KamraTools(ListPantryItems listPantryItems, GetRecommendatio
     public async Task<PantryToolResult> GetPantryItems(
         [Description("Only this category (optional).")] Category? category = null,
         CancellationToken cancellationToken = default) =>
-        Pantry(await listPantryItems.ExecuteAsync(new ListPantryItemsQuery { Category = category?.ToString() }, cancellationToken));
+        await Guarded(async () => Pantry(await listPantryItems.ExecuteAsync(new ListPantryItemsQuery { Category = category?.ToString() },
+            cancellationToken)));
 
     [McpServerTool(Name = "get_expiring_items", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("A ma, holnap vagy holnapután lejáró tételek (Items that expire today, tomorrow or the day after).")]
     public async Task<PantryToolResult> GetExpiringItems(CancellationToken cancellationToken = default) =>
-        Pantry(await listPantryItems.ExecuteAsync(new ListPantryItemsQuery { ExpiringSoon = true }, cancellationToken));
+        await Guarded(async () => Pantry(await listPantryItems.ExecuteAsync(new ListPantryItemsQuery { ExpiringSoon = true }, cancellationToken)));
 
     [McpServerTool(Name = "get_recommendations", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("Az ajánlás: a készletből elkészíthető és majdnem elkészíthető receptek, elöl a hamarosan lejáró " +
         "tételeket felhasználókkal (Recipes that can be made or almost made from the pantry, ranked).")]
     [SuppressMessage("Naming", "CA1707", Justification = "The parameter name is the MCP argument name of mcp_tools.md.")]
     public async Task<RecommendationsToolResult> GetRecommendations(
-        [Description("At most this many recipes per group, 1-10 (default 5).")] int? max_results = null,
+        [Description("At most this many recipes per group, 1-10 (default 5)."), Range(1, MaxRecipes)] int? max_results = null,
         CancellationToken cancellationToken = default)
     {
         // A refused argument makes the call fail (MCP isError), which ends the question (ADR-0010 4.).
@@ -48,24 +51,44 @@ public sealed class KamraTools(ListPantryItems listPantryItems, GetRecommendatio
         ArgumentOutOfRangeException.ThrowIfLessThan(take, 1, nameof(max_results));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(take, MaxRecipes, nameof(max_results));
 
-        var recommendations = await getRecommendations.ExecuteAsync(cancellationToken);
-        return new RecommendationsToolResult(recommendations.PantryIsEmpty,
-            [.. recommendations.Makeable.Take(take).Select(r => Recipe(r, withShortages: false))],
-            [.. recommendations.AlmostMakeable.Take(take).Select(r => Recipe(r, withShortages: true))]);
+        return await Guarded(async () =>
+        {
+            var recommendations = await getRecommendations.ExecuteAsync(cancellationToken);
+            return new RecommendationsToolResult(recommendations.PantryIsEmpty,
+                [.. recommendations.Makeable.Take(take).Select(r => Recipe(r, withShortages: false))],
+                [.. recommendations.AlmostMakeable.Take(take).Select(r => Recipe(r, withShortages: true))]);
+        });
     }
 
     [McpServerTool(Name = "get_shopping_list", ReadOnly = true, Destructive = false, Idempotent = true, OpenWorld = false)]
     [Description("A bevásárlólista (The shopping list).")]
-    public async Task<ShoppingListToolResult> GetShoppingList(CancellationToken cancellationToken = default)
+    public async Task<ShoppingListToolResult> GetShoppingList(CancellationToken cancellationToken = default) =>
+        await Guarded(async () =>
+        {
+            var items = await listShoppingList.ExecuteAsync(cancellationToken);
+            return new ShoppingListToolResult(
+                [.. items.Take(MaxRows).Select(i => new ShoppingListToolItem(i.IngredientName, i.Amount?.Value, i.Amount?.Unit, i.Checked))],
+                items.Count > MaxRows);
+        });
+
+    // T1 review J3: a refused argument stays the model's fault; any other failure of the use case (the database, a
+    // bug) is recorded, so the chat reports it as the app's own error instead of blaming the model.
+    private async Task<T> Guarded<T>(Func<Task<T>> body)
     {
-        var items = await listShoppingList.ExecuteAsync(cancellationToken);
-        return new ShoppingListToolResult(
-            [.. items.Take(MaxRows).Select(i => new ShoppingListToolItem(i.IngredientName, i.Amount?.Value, i.Amount?.Unit, i.Checked))],
-            items.Count > MaxRows);
+        try
+        {
+            return await body();
+        }
+        catch (Exception failure) when (failure is not ArgumentException)
+        {
+            failures.Record(failure);
+            throw;
+        }
     }
 
+    // The use case's order is kept: earliest expiry first, then the Hungarian alphabet (V-33).
     private static PantryToolResult Pantry(IReadOnlyList<PantryItemResponse> items) =>
-        new([.. items.OrderBy(i => i.ExpiryDate).ThenBy(i => i.IngredientName, StringComparer.Ordinal).Take(MaxRows)
+        new([.. items.Take(MaxRows)
                 .Select(i => new PantryToolItem(i.IngredientName, i.Amount, i.Unit, i.Category, i.ExpiryDate, i.ExpiryEstimated,
                     i.Expired, i.SoonExpiring))],
             items.Count > MaxRows);
