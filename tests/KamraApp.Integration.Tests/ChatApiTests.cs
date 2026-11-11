@@ -46,6 +46,24 @@ public partial class ChatApiTests(KamraApiFactory factory)
         availability.GetProperty("enabled").GetBoolean().Should().BeTrue();
     }
 
+    // K8, ADR-0010 7.: the switch of US-2 turns the chat on too, with the real Gemini adapter (not called here).
+    [Fact]
+    public async Task The_switch_wires_the_gemini_chat_adapter()
+    {
+        using var app = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Llm:Enabled", "true");
+            builder.UseSetting("Llm:ApiKey", "test-key-not-used");
+        });
+        var client = await ApiClient.SignedInAsync(app);
+
+        var availability = await client.GetJsonAsync("/api/v1/chat/availability");
+
+        availability.GetProperty("enabled").GetBoolean().Should().BeTrue();
+        using var scope = app.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<IChatModel>().Should().BeOfType<KamraApp.Infrastructure.Llm.GeminiChatModel>();
+    }
+
     [Fact]
     public async Task Without_a_session_the_chat_is_401_and_the_model_is_not_called()
     {

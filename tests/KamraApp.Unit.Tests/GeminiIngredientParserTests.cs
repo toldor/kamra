@@ -19,7 +19,7 @@ public sealed class GeminiIngredientParserTests : IDisposable
     private static readonly string[] Names = ["tej", "tejföl", "paprika"];
 
     private readonly ScriptedHandler _handler = new();
-    private readonly CapturingLogger _logger = new();
+    private readonly CapturingLogger<GeminiIngredientParser> _logger = new();
 
     [Fact]
     public void By_default_the_switch_is_off_and_an_attempt_has_15_seconds()
@@ -248,48 +248,5 @@ public sealed class GeminiIngredientParserTests : IDisposable
             ["usageMetadata"] = new JsonObject { ["promptTokenCount"] = 512, ["candidatesTokenCount"] = 64 },
         };
         return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json") };
-    }
-
-    private sealed record SentRequest(string Url, string? ApiKey, string Body);
-
-    // Answers in order: a response, a hang (until the attempt's timeout cancels it) or a network error.
-    private sealed class ScriptedHandler : HttpMessageHandler
-    {
-        private readonly Queue<Func<CancellationToken, Task<HttpResponseMessage>>> _script = new();
-
-        public List<SentRequest> Requests { get; } = [];
-
-        public void Answer(HttpResponseMessage response) => _script.Enqueue(_ => Task.FromResult(response));
-
-        public void Hang() => _script.Enqueue(async ct =>
-        {
-            await Task.Delay(Timeout.Infinite, ct);
-            throw new InvalidOperationException("unreachable");
-        });
-
-        public void Fail(Exception error) => _script.Enqueue(_ => Task.FromException<HttpResponseMessage>(error));
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            Requests.Add(new SentRequest(request.RequestUri!.ToString(),
-                request.Headers.TryGetValues("x-goog-api-key", out var keys) ? keys.Single() : null,
-                await request.Content!.ReadAsStringAsync(cancellationToken)));
-            return await _script.Dequeue()(cancellationToken);
-        }
-    }
-
-    private sealed class CapturingLogger : ILogger<GeminiIngredientParser>
-    {
-        public List<string> Entries { get; } = [];
-
-        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        {
-            var properties = state is IEnumerable<KeyValuePair<string, object?>> pairs ? string.Join(";", pairs.Select(p => $"{p.Key}={p.Value}")) : "";
-            Entries.Add($"{formatter(state, exception)} | {properties} | {exception}");
-        }
     }
 }
