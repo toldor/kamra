@@ -48,6 +48,8 @@ services:
       Llm__ApiKey: ${Llm__ApiKey:-}
       RateLimiting__ItemProposals__PermitLimit: ${RateLimiting__ItemProposals__PermitLimit:-20}
       RateLimiting__ItemProposals__WindowSeconds: ${RateLimiting__ItemProposals__WindowSeconds:-600}
+      RateLimiting__Chat__PermitLimit: ${RateLimiting__Chat__PermitLimit:-30}
+      RateLimiting__Chat__WindowSeconds: ${RateLimiting__Chat__WindowSeconds:-600}
     depends_on:
       # ADR-0005: the Api starts only after the migrations succeeded, and has no DDL step itself.
       migrator:
