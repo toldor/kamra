@@ -115,6 +115,19 @@ public class AskChatTests
             new ToolResult("c2", "get_recommendations", "{\"makeable\":[]}"));
     }
 
+    // External review X7: a reply with a text and calls is a tool round; its text is not the answer.
+    [Fact]
+    public async Task A_reply_with_text_and_calls_runs_the_calls_and_answers_with_the_next_reply()
+    {
+        _model.Reply(new ChatModelReply("Megnézem…", [Call("c1", "get_expiring_items", "{}")], "step-1"));
+        _model.Reply(Text("A tej holnap lejár."));
+
+        var answer = await AskAsync("Mi jár le?");
+
+        answer.Answer.Should().Be("A tej holnap lejár.");
+        _tools.Calls.Should().ContainSingle();
+    }
+
     [Fact]
     public async Task Two_tool_rounds_and_an_answer_are_allowed_and_each_tool_is_named_once()
     {

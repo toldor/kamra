@@ -143,8 +143,9 @@ public partial class ChatApiTests(KamraApiFactory factory)
 
         var result = await ToolResultAsync(model, own, tool, "{}");
 
-        result.Should().Contain(tool == "get_shopping_list" ? "cukor" : "vaj")
-            .And.NotContain("tejföl").And.NotContain("finomliszt");
+        // The names as the model reads them: the raw JSON escapes "ö" (external review X1), so a raw text search for
+        // "tejföl" would pass even if the item were there.
+        Names(result).Should().Equal(tool == "get_shopping_list" ? "cukor" : "vaj");
         GuidPattern().IsMatch(result).Should().BeFalse("us6_minispec K5: no ids go to the model");
     }
 
@@ -198,7 +199,7 @@ public partial class ChatApiTests(KamraApiFactory factory)
 
         var result = await ToolResultAsync(model, client, "get_expiring_items", "{}");
 
-        result.Should().Contain("vaj").And.NotContain("cukor");
+        Names(result).Should().Equal("vaj");
     }
 
     [Fact]
@@ -212,7 +213,7 @@ public partial class ChatApiTests(KamraApiFactory factory)
 
         var result = await ToolResultAsync(model, client, "get_pantry_items", "{\"category\":\"dairy\"}");
 
-        result.Should().Contain("vaj").And.NotContain("paradicsom");
+        Names(result).Should().Equal("vaj");
     }
 
     [Theory]
@@ -435,6 +436,10 @@ public partial class ChatApiTests(KamraApiFactory factory)
             .Single(i => i.GetProperty("name").GetString() == name).GetProperty("id").GetGuid();
 
     private static JsonElement Parse(string json) => JsonDocument.Parse(json).RootElement;
+
+    // The item names of a pantry or shopping list tool result, decoded from the JSON.
+    internal static string[] Names(string json) =>
+        [.. Parse(json).GetProperty("items").EnumerateArray().Select(item => item.GetProperty("name").GetString()!)];
 
     [GeneratedRegex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")]
     private static partial Regex GuidPattern();

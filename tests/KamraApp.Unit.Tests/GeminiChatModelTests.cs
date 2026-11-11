@@ -125,6 +125,25 @@ public sealed class GeminiChatModelTests : IDisposable
         ((string)JsonNode.Parse(reply.RawContent)!["parts"]![0]!["thoughtSignature"]!).Should().Be("c2lnbmF0dXJl");
     }
 
+    // External review X7: Gemini may send a text and a function call in one answer; both are read.
+    [Fact]
+    public async Task An_answer_with_text_and_a_function_call_gives_both()
+    {
+        var content = new JsonObject
+        {
+            ["role"] = "model",
+            ["parts"] = new JsonArray(
+                new JsonObject { ["text"] = "Megnézem a készletet." },
+                new JsonObject { ["functionCall"] = new JsonObject { ["id"] = "c1", ["name"] = "get_pantry_items", ["args"] = new JsonObject() } }),
+        };
+        _handler.Answer(Ok(content));
+
+        var reply = await Model().CompleteAsync(Today, [new UserTurn("Mi van?")], [Expiring], CancellationToken.None);
+
+        reply.Text.Should().Be("Megnézem a készletet.");
+        reply.Calls.Should().ContainSingle().Which.Name.Should().Be("get_pantry_items");
+    }
+
     [Fact]
     public async Task The_models_step_goes_back_unchanged_and_the_results_as_function_responses()
     {
