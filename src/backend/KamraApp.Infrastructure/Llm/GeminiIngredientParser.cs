@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -39,56 +38,13 @@ public sealed partial class GeminiIngredientParser(HttpClient http, IOptions<Llm
     public async Task<IReadOnlyList<ParsedItem>> ParseAsync(string text, IReadOnlyList<string> ingredientNames, CancellationToken cancellationToken)
     {
         var settings = options.Value;
-        var url = new Uri(settings.BaseUrl, $"v1beta/models/{settings.Model}:generateContent");
-        var body = Body(text, ingredientNames).ToJsonString();
+        var answer = await GeminiHttp.GenerateAsync(http, settings, settings.Model, Body(text, ingredientNames).ToJsonString(),
+            (attempt, started, failure) => LogAttempt(settings.Model, attempt, started, failure, null), ItemProposalErrors.LlmUnavailable,
+            cancellationToken);
 
-        for (var attempt = 1; ; attempt++)
-        {
-            var started = Stopwatch.GetTimestamp();
-            var (status, answer, failure) = await SendAsync(url, body, settings, cancellationToken);
-            // No answer (timeout, network) or an outage (5xx, 429): one retry. A refused request (key, quota, request
-            // shape) would fail again, so it is not retried.
-            failure ??= status is HttpStatusCode.TooManyRequests || (int)status >= 500 ? "unavailable"
-                : (int)status >= 400 ? "refused"
-                : null;
-            if (failure is not null)
-            {
-                LogAttempt(settings.Model, attempt, started, failure, null);
-                if (attempt == 1 && failure != "refused")
-                {
-                    continue;
-                }
-
-                throw ItemProposalErrors.LlmUnavailable();
-            }
-
-            var (items, tokens) = Read(answer!, ingredientNames);
-            LogAttempt(settings.Model, attempt, started, items is null ? "invalid" : "ok", tokens);
-            return items ?? throw ItemProposalErrors.LlmInvalidResponse();
-        }
-    }
-
-    // One attempt within its own timeout. Failure is set when no HTTP answer came (timeout, network error).
-    private async Task<(HttpStatusCode Status, string? Answer, string? Failure)> SendAsync(Uri url, string body, LlmOptions settings,
-        CancellationToken cancellationToken)
-    {
-        using var attempt = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        attempt.CancelAfter(TimeSpan.FromSeconds(settings.TimeoutSeconds));
-        try
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
-            request.Headers.Add("x-goog-api-key", settings.ApiKey);
-            using var response = await http.SendAsync(request, attempt.Token);
-            return (response.StatusCode, await response.Content.ReadAsStringAsync(attempt.Token), null);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            return (default, null, "timeout");
-        }
-        catch (HttpRequestException)
-        {
-            return (default, null, "unavailable");
-        }
+        var (items, tokens) = Read(answer.Body, ingredientNames);
+        LogAttempt(settings.Model, answer.Attempt, answer.Started, items is null ? "invalid" : "ok", tokens);
+        return items ?? throw ItemProposalErrors.LlmInvalidResponse();
     }
 
     // AGENTS.md 5.: the answer is checked against the schema before anything uses it. Null items: outside the schema.
