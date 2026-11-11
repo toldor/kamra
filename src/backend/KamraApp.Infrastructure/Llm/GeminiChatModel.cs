@@ -12,18 +12,19 @@ namespace KamraApp.Infrastructure.Llm;
 // US-6 (ADR-0010 3.-4., us6_minispec K6-K7): Gemini generateContent with function calling over plain HTTP (no SDK).
 // The MCP tools become function declarations (parametersJsonSchema takes their JSON Schema as it is); the model's
 // step goes back unchanged (thought signatures, https://aistudio.google.com/docs/function-calling); the versioned
-// prompt chat.v1 gets today's Budapest date. The US-2 retry rules (QA-3) and a log without any text (K10).
+// prompt chat.v2 (v1 + plain text only, after the LiveAI run of 2026-11-11; v1 stays as the measured baseline) gets
+// today's Budapest date. The US-2 retry rules (QA-3) and a log without any text (K10).
 public sealed partial class GeminiChatModel(HttpClient http, IOptions<LlmOptions> options, ILogger<GeminiChatModel> logger) : IChatModel
 {
-    public const string PromptVersion = "chat.v1";
+    public const string PromptVersion = "chat.v2";
 
     // A short answer of a few sentences; a runaway answer is cut and refused (MAX_TOKENS).
     private const int MaxOutputTokens = 1024;
 
     private static readonly Lazy<string> Prompt = new(() =>
     {
-        using var stream = typeof(GeminiChatModel).Assembly.GetManifestResourceStream("chat.v1.txt")
-            ?? throw new InvalidOperationException("The embedded prompt chat.v1.txt is missing.");
+        using var stream = typeof(GeminiChatModel).Assembly.GetManifestResourceStream("chat.v2.txt")
+            ?? throw new InvalidOperationException("The embedded prompt chat.v2.txt is missing.");
         using var reader = new StreamReader(stream, Encoding.UTF8);
         return reader.ReadToEnd();
     });

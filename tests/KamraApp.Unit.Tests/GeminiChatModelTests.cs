@@ -44,7 +44,8 @@ public sealed class GeminiChatModelTests : IDisposable
         var body = JsonNode.Parse(request.Body)!;
         var prompt = (string)body["system_instruction"]!["parts"]![0]!["text"]!;
         prompt.Should().StartWith("You are the read-only assistant of \"Kamra\"").And.Contain("Today is 2026-11-10 (Tuesday) in Budapest.")
-            .And.NotContain("{today}").And.NotContain("{weekday}");
+            .And.NotContain("{today}").And.NotContain("{weekday}")
+            .And.Contain("Write plain text only, without Markdown", "chat.v2: the page shows the answer as plain text (ADR-0006)");
         var contents = body["contents"]!.AsArray();
         contents.Select(c => (string)c!["role"]!).Should().Equal("user", "model", "user");
         contents.Select(c => (string)c!["parts"]![0]!["text"]!).Should().Equal("Mi jár le?", "A tej holnap.", "És még?");
