@@ -139,8 +139,9 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
             <PantryItemForm
               categories={catalog.categories}
               ingredients={catalog.ingredients}
-              onAdded={() => {
-                setNotice(null)
+              onAdded={(item) => {
+                // L1 (MT-03): the live region says what went in (the quick entry's text for one item).
+                setNotice(`Felvettem a kamrádba: ${item.ingredientName} ${formatAmount(item.amount, item.unit)}.`)
                 reload()
               }}
               onIngredientCreated={(ingredient) =>

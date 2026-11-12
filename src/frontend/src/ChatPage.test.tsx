@@ -58,7 +58,7 @@ afterEach(() => {
 
 describe('the Kérdezz menu item', () => {
   it('is in the menu when the switch is on', async () => {
-    window.location.hash = ''
+    // On the Kérdezz page itself: the fake backend answers only the chat, so no other page waits for data.
     backend(true)
     render(<App />)
 

@@ -243,6 +243,40 @@ describe('new item form', () => {
   })
 })
 
+// L1 (MT-03, l1_l2_minispec): after a saved item the focus is back on the ingredient field and the live region says
+// what went in, so a screen reader user can add the next item at once.
+describe('after adding an item (L1)', () => {
+  it('moves the focus to the ingredient field and says what went into the pantry', async () => {
+    pantryBackend([pantry(), pantry(sourCream)], { 'POST /api/v1/pantry-items': [{ status: 201, body: sourCream }] })
+    render(<App />)
+    await screen.findByText('Még üres a kamrád.')
+
+    fireEvent.change(form().getByLabelText('Hozzávaló'), { target: { value: 'tejföl' } })
+    fireEvent.change(form().getByLabelText('Mennyiség'), { target: { value: '20' } })
+    fireEvent.change(form().getByLabelText('Mértékegység'), { target: { value: 'dkg' } })
+    fireEvent.click(form().getByRole('button', { name: 'Hozzáadás' }))
+
+    const notice = await screen.findByText('Felvettem a kamrádba: tejföl 20 dkg.')
+    expect(notice.getAttribute('role')).toBe('status')
+    await waitFor(() => expect(document.activeElement).toBe(form().getByLabelText('Hozzávaló')))
+  })
+
+  it('says nothing when the item is not saved', async () => {
+    pantryBackend([pantry()], {
+      'POST /api/v1/pantry-items': [{ status: 400, body: { code: 'VALIDATION_FAILED', title: 'Néhány mező hibás.', errors: { amount: ['Hibás.'] } } }],
+    })
+    render(<App />)
+    await screen.findByText('Még üres a kamrád.')
+
+    fireEvent.change(form().getByLabelText('Hozzávaló'), { target: { value: 'tejföl' } })
+    fireEvent.change(form().getByLabelText('Mennyiség'), { target: { value: '0' } })
+    fireEvent.click(form().getByRole('button', { name: 'Hozzáadás' }))
+
+    await form().findByText('Hibás.')
+    expect(screen.queryByText(/Felvettem a kamrádba/)).toBeNull()
+  })
+})
+
 describe('item editor', () => {
   async function openEditor() {
     fireEvent.click(within(await screen.findByRole('listitem', { name: /tejföl/ })).getByRole('button', { name: /Módosítás/ }))
