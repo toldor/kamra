@@ -435,11 +435,12 @@ main.chat-page {
   overflow-wrap: anywhere;
 }
 
+/* The examples show only while the conversation is empty, when the log above them is hidden (l3_l5_minispec L4). */
 .chat-examples {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  padding: 0 var(--space-5) var(--space-4);
+  padding: var(--space-4) var(--space-5);
 }
 
 .chat-form {
@@ -510,6 +511,12 @@ textarea {
 
 textarea {
   padding: var(--space-2) var(--space-3);
+}
+
+/* The sentence and the question box keep their size (l3_l5_minispec L3). */
+#quick-text,
+#chat-question {
+  resize: none;
 }
 
 input[aria-invalid='true'],

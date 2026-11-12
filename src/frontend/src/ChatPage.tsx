@@ -1,9 +1,12 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
-import { api, ApiError, errorMessage, type ChatMessage } from './api/client'
+import { useRef, type Dispatch, type FormEvent, type KeyboardEvent, type SetStateAction } from 'react'
+import { api, ApiError, errorMessage } from './api/client'
+import { newConversation, type Conversation, type Message } from './conversation'
 
-// US-6 "Kérdezz" (us6_minispec K11-K12 and its texts): a read-only chat about the own household. The conversation
-// lives only here (ADR-0010 5.): the last 10 messages go with every question, a failed question is not kept.
-// The answer is plain text (ADR-0006); the line under it names the tools the model looked at (K2).
+// US-6 "Kérdezz" (us6_minispec K11-K12 and its texts): a read-only chat about the own household. The server keeps
+// nothing (ADR-0010 5.): the last 10 messages go with every question, a failed question is not kept. The conversation
+// lives in the app's memory (App), so it stays while the user visits other pages; signing out or reloading the page
+// starts a new one (l3_l5_minispec L5). The answer is plain text (ADR-0006); the line under it names the tools the
+// model looked at (K2).
 
 const examples = ['Mi jár le hamarosan?', 'Mit főzhetek abból, ami otthon van?', 'Mi van a bevásárlólistán?']
 
@@ -28,7 +31,6 @@ const historyMax = 10
 // ADR-0010 5.: an earlier message goes back with at most 2000 characters (an answer can be longer: review R1).
 const historyTextMax = 2000
 
-type Message = ChatMessage & { toolsUsed?: string[] }
 
 // "Megnéztem: a készletet, az ajánlást és a bevásárlólistát." - or nothing when no tool was used.
 function toolsLine(tools: string[] = []): string | null {
@@ -50,32 +52,43 @@ function Bubble({ message }: { message: Message }) {
   )
 }
 
-export function ChatPage({ onSignedOut }: { onSignedOut: (notice: string) => void }) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [pending, setPending] = useState<string | null>(null)
-  const [question, setQuestion] = useState('')
-  const [error, setError] = useState<string | null>(null)
+export function ChatPage({ conversation, onChange, onSignedOut }: {
+  conversation: Conversation
+  onChange: Dispatch<SetStateAction<Conversation>>
+  onSignedOut: (notice: string) => void
+}) {
+  const { messages, pending, question, error } = conversation
   const field = useRef<HTMLTextAreaElement>(null)
   const busy = pending !== null
 
+  // Changes only the conversation with this id: a late answer does not touch a newer one.
+  function update(id: number, change: (current: Conversation) => Partial<Conversation>) {
+    onChange((current) => (current.id === id ? { ...current, ...change(current) } : current))
+  }
+
+  const setQuestion = (text: string) => update(conversation.id, () => ({ question: text }))
+
   async function send(text: string) {
     const trimmed = text.trim()
+    const { id } = conversation
     if (busy) return
     if (!trimmed) {
-      setError('Írd le a kérdésed.')
+      update(id, () => ({ error: 'Írd le a kérdésed.' }))
       field.current?.focus()
       return
     }
 
-    setError(null)
-    setPending(trimmed)
+    update(id, () => ({ error: null, pending: trimmed }))
     const history = messages.slice(-historyMax).map(({ role, text: said }) => ({ role, text: said.slice(0, historyTextMax) }))
     try {
       const reply = await api.askChat(trimmed, history)
-      setMessages((previous) => [...previous, { role: 'user', text: trimmed },
-        { role: 'assistant', text: reply.answer, toolsUsed: reply.toolsUsed }])
-      // What was typed while waiting stays (review R3).
-      setQuestion((current) => (current.trim() === trimmed ? '' : current))
+      update(id, (current) => ({
+        pending: null,
+        messages: [...current.messages, { role: 'user', text: trimmed },
+          { role: 'assistant', text: reply.answer, toolsUsed: reply.toolsUsed }],
+        // What was typed while waiting stays (review R3).
+        question: current.question.trim() === trimmed ? '' : current.question,
+      }))
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 401) {
         onSignedOut(caught.message)
@@ -83,10 +96,11 @@ export function ChatPage({ onSignedOut }: { onSignedOut: (notice: string) => voi
       }
 
       // The question stays to be sent again; it does not go into the history.
-      setQuestion(trimmed)
-      setError(caught instanceof ApiError ? chatErrors[caught.code] ?? caught.errors.question?.[0] ?? caught.message : errorMessage(caught))
-    } finally {
-      setPending(null)
+      update(id, () => ({
+        pending: null,
+        question: trimmed,
+        error: caught instanceof ApiError ? chatErrors[caught.code] ?? caught.errors.question?.[0] ?? caught.message : errorMessage(caught),
+      }))
     }
 
     field.current?.focus()
@@ -105,10 +119,8 @@ export function ChatPage({ onSignedOut }: { onSignedOut: (notice: string) => voi
     }
   }
 
-  function newConversation() {
-    setMessages([])
-    setError(null)
-    setQuestion('')
+  function startOver() {
+    onChange(newConversation())
     field.current?.focus()
   }
 
@@ -116,7 +128,7 @@ export function ChatPage({ onSignedOut }: { onSignedOut: (notice: string) => voi
     <main className="chat-page">
       <div className="page-head">
         <h1 tabIndex={-1}>Kérdezz a kamrádról</h1>
-        <button type="button" className="secondary" onClick={newConversation} disabled={busy || messages.length === 0}>
+        <button type="button" className="secondary" onClick={startOver} disabled={busy || messages.length === 0}>
           Új beszélgetés
         </button>
       </div>
@@ -124,7 +136,9 @@ export function ChatPage({ onSignedOut }: { onSignedOut: (notice: string) => voi
         Kérdezd meg, mi van otthon, mi jár le hamarosan, mit főzhetsz, vagy mi van a bevásárlólistán. A válaszhoz csak a saját adataidat
         nézem meg, és semmit nem módosítok.
       </p>
-      <p className="hint">A beszélgetést nem mentjük: ha elhagyod az oldalt, újrakezdődik.</p>
+      <p className="hint">
+        A beszélgetést nem mentjük el: másik oldalra lépve megmarad, de az oldal újratöltésekor vagy kijelentkezéskor újrakezdődik.
+      </p>
 
       <section className="panel" aria-label="Beszélgetés">
         <div role="log" aria-live="polite" className="panel-body chat-log">

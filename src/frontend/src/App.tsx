@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react'
 import { api, errorMessage, type Me } from './api/client'
 import { AuthForm } from './AuthForm'
 import { ChatPage } from './ChatPage'
+import { newConversation, type Conversation } from './conversation'
 import { CookingPage } from './CookingPage'
 import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
@@ -27,9 +28,12 @@ async function loadSession(): Promise<State> {
   }
 }
 
-function Page({ route, onSignedOut, recipeNotice, onRecipeSaved }: {
+function Page({ route, onSignedOut, recipeNotice, onRecipeSaved, conversation, onConversationChange }: {
   route: Route
   onSignedOut: (notice: string) => void
+  // The Kérdezz conversation outlives the page (l3_l5_minispec L5).
+  conversation: Conversation
+  onConversationChange: Dispatch<SetStateAction<Conversation>>
   // The new recipe form's message, shown once on the Receptek page it opens.
   recipeNotice: string | null
   onRecipeSaved: (notice: string) => void
@@ -39,7 +43,7 @@ function Page({ route, onSignedOut, recipeNotice, onRecipeSaved }: {
   if (recipeId) return <CookingPage key={recipeId} recipeId={recipeId} onSignedOut={onSignedOut} />
   if (route === routes.recommendations) return <RecommendationsPage onSignedOut={onSignedOut} />
   if (route === routes.shopping) return <ShoppingListPage onSignedOut={onSignedOut} />
-  if (route === routes.chat) return <ChatPage onSignedOut={onSignedOut} />
+  if (route === routes.chat) return <ChatPage conversation={conversation} onChange={onConversationChange} onSignedOut={onSignedOut} />
   if (route === routes.recipes) return <RecipesPage notice={recipeNotice} onSignedOut={onSignedOut} />
   if (route === routes.newRecipe) return <RecipeForm onSaved={onRecipeSaved} onSignedOut={onSignedOut} />
   return <PantryPage onSignedOut={onSignedOut} />
@@ -48,8 +52,13 @@ function Page({ route, onSignedOut, recipeNotice, onRecipeSaved }: {
 export default function App() {
   const [state, setState] = useState<State>({ screen: 'loading' })
   const route = useHashRoute()
+  // In memory only; signing out (or an expired session) starts a new one, so the next user never sees it.
+  const [conversation, setConversation] = useState(newConversation)
   // Stable, so the pantry page does not reload its data whenever App renders.
-  const signOut = useCallback((notice?: string) => setState({ screen: 'login', notice }), [])
+  const signOut = useCallback((notice?: string) => {
+    setConversation(newConversation())
+    setState({ screen: 'login', notice })
+  }, [])
   const [recipeNotice, setRecipeNotice] = useState<string | null>(null)
   // Shown once: leaving the Receptek page drops it.
   const [noticeRoute, setNoticeRoute] = useState(route)
@@ -93,6 +102,8 @@ export default function App() {
           <Page
             route={route}
             onSignedOut={signOut}
+            conversation={conversation}
+            onConversationChange={setConversation}
             recipeNotice={recipeNotice}
             onRecipeSaved={(notice) => {
               setRecipeNotice(notice)
