@@ -24,13 +24,14 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 |---|---|---|---|
 | Unit | ≥ 18 | 583 | 583 |
 | Integrációs | ≥ 6 | 285 (+2 `LiveAI`, a CI-ban kiszűrve) | 285 |
-| Frontend (Vitest) | – | 184 | 184 |
-| E2E | ≥ 6 | 19 (×2 nézet) | 19 |
+| Frontend (Vitest) | – | 187 | 187 |
+| E2E | ≥ 6 | 21 (×2 nézet) | 21 |
 | Negatív esetek | ≥ 5 | ≥ 374 (a `v0.3.1` óta nem számoltuk újra; minden új modul negatív esetekkel bővült) | – |
-| **Összesen** | **≥ 30** | **1071** | **1071** |
+| **Összesen** | **≥ 30** | **1076** | **1076** |
 
 ## Legutolsó futás eredménye
 
+- **2026-11-12 (`v0.6.0`, L3–L5, `feature/us-6-chat`):** PASS – Vitest 187/187, Playwright 42/42 (21 teszt × asztali Chrome és 360 px); a backend nem változott; mutáció L3–L5 5/5. CI: a `feature/us-6-chat` → `develop` PR checkjei.
 - **2026-11-12 (`v0.6.0`, `feature/us-6-chat` @ `dd3b40b`):** PASS – .NET 583 unit + 285 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 184/184; Playwright 38/38 futás (19 teszt × asztali Chrome és 360 px) az LLM-csonkkal. Mutációs ellenőrzés: T1 13/13, T1-review 6/6, T2 10/10, T3 9/9 (két gyenge teszt erősítve), T2+T3-review 5/5, külső review 5/5, L1/L2 3/3. CI: [run 43280942836](https://github.com/toldor/kamra/actions/runs/43280942836) (#113), mind a négy job zöld.
 - **2026-11-08 (`v0.5.0`, `feature/us-2-quick-entry` @ `9d376c5`):** PASS – .NET 515 unit + 246 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; az új 402-es eset mutációval ellenőrizve (1/1 elbukott); a frontend és az e2e a `19cddfc` óta nem változott. CI: [run 42524059536](https://github.com/toldor/kamra/actions/runs/42524059536), mind a négy job zöld.
 - **2026-11-08 (US-2, `feature/us-2-quick-entry` @ `19cddfc`):** PASS – .NET 514 unit + 246 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 158/158; Playwright 30/30 futás (15 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen, az LLM-csonkkal. Mutációs ellenőrzés: T1 12/12, T2 9/9, T3 8/8, a T3-review javításai 6/6, a külső review tesztjei 5/5 – mind elbukott. CI: [run 42500324628](https://github.com/toldor/kamra/actions/runs/42500324628), mind a négy job zöld.

@@ -59,7 +59,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Cél:** Tomi egy kérdéssel megtudja, mi jár le, mit főzhet, vagy mi van a listán, anélkül hogy végignézné az oldalakat.
 - **Előfeltétel:** bejelentkezett felhasználó, bekapcsolt chat (a „Kérdezz” menüpont csak ekkor látszik).
 - **Lépések:**
-  1. A „Kérdezz” oldalon: *„Kérdezd meg, mi van otthon, mi jár le hamarosan, mit főzhetsz, vagy mi van a bevásárlólistán. A válaszhoz csak a saját adataidat nézem meg, és semmit nem módosítok.”* Alatta: *„A beszélgetést nem mentjük: ha elhagyod az oldalt, újrakezdődik.”* és három példakérdés.
+  1. A „Kérdezz” oldalon: *„Kérdezd meg, mi van otthon, mi jár le hamarosan, mit főzhetsz, vagy mi van a bevásárlólistán. A válaszhoz csak a saját adataidat nézem meg, és semmit nem módosítok.”* Alatta: *„A beszélgetést nem mentjük el: másik oldalra lépve megmarad, de az oldal újratöltésekor vagy kijelentkezéskor újrakezdődik.”* és három példakérdés.
   2. Tomi kérdez (Enter küld, Shift+Enter új sor); a kérdése azonnal látszik, a gomb „Gondolkodom…”.
   3. A válasz sima szövegként jelenik meg, alatta: *„Megnéztem: a hamarosan lejáró tételeket és az ajánlást.”* A következő kérdés az előzménnyel (legfeljebb 10 üzenet) megy; az „Új beszélgetés” gomb törli az előzményt.
   4. Ha módosítást kér („Töröld a joghurtot”), a válasz megmondja, melyik oldalon teheti meg; semmi nem módosul.

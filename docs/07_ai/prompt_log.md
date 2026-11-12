@@ -500,4 +500,5 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **Review-k:** a T1 J1–J8, a T2+T3 R1–R11, a külső review X1–X8 és az L1/L2 mini-spec – mind jóváhagyva; a mérést a valódi eszközleírásokkal újrafuttattam.
   - **Levelezés:** a nov. 7-i levél nem ment el (a fájl tévesen „elküldött” volt), és az okt. 28-i témavezetői válasz feldolgozatlan maradt – a nov. 13-i levél mindkettőt pótolja; a januári záróvizsgára jelentkeztem.
   - **UAT 2. kör:** új forgatókönyv a chatre (S6).
+  - **Kipróbálás a PR előtt (nov. 12.):** a valódi Geminivel kipróbáltam; négy kérést adtam. Az L3–L5 javítva (`l3_l5_minispec`). A receptötletet (recept kérése a chatben, átvétel az új recept űrlapjára, mentés előtt szerkeszthető) külön lépésben kértem, ötödik eszköz nélkül.
   - **Commit:** minden commitot és pusht én végeztem (a `v0.6.0` ágán az MI nem commitolt); a `v0.5.0` utolsó három commitját (`42fdf79`, `9d376c5`, `dd6d5fe`) kérésemre a Claude Code végezte, trailer nélkül.

@@ -14,6 +14,8 @@ A 3. lépcső: csak olvasó chat MCP-eszközökkel, és az UAT 1. kör két akad
 ### Javítva
 - A készlettétel mentése után a fókusz visszakerül a „Hozzávaló” mezőre, és az élő régió kimondja, mi került a kamrába (L1).
 - A főzés összegzésének címe felolvastatja a levonást, az elfogyott tételeket és a bevásárlójavaslatot (L2).
+- A mondatos bevitel és a Kérdezz szövegdoboza nem méretezhető kézzel, és a példakérdések nem érnek a doboz tetejéhez (L3, L4).
+- A Kérdezz beszélgetése megmarad, ha másik oldalra lépsz; kijelentkezéskor és az oldal újratöltésekor újrakezdődik (L5).
 
 ### Módosítva
 - ADR-0004: az MCP-szerver nem külön host, hanem az API folyamatában fut (ADR-0010); a két Gemini-adapter közös HTTP-segédet használ.
