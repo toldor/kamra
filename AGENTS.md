@@ -45,7 +45,7 @@ src/backend/KamraApp.Domain/          # entities, value objects, business rules 
 src/backend/KamraApp.Application/     # use cases, interfaces (ports), DTOs, validation
 src/backend/KamraApp.Infrastructure/  # EF Core, migrations, LLM client, external adapters
 src/backend/KamraApp.Api/             # REST /api/v1, error model, /health, logging
-src/backend/KamraApp.McpServer/       # MCP tools – calls the Application layer
+src/backend/KamraApp.McpServer/       # MCP server: the tools and the in-process client (ADR-0010) – calls the Application layer
 src/frontend/                         # React app
 tests/                                # *.Tests projects + e2e/
 docs/                                 # Docs-as-Code (00_index.md is the index)

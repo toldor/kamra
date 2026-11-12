@@ -52,8 +52,8 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | POST | `/item-proposals` | Mondat → tételjavaslatok (LLM) → 201 `{ items }`; a készletbe semmi nem kerül; rate limit | US-2 | `VALIDATION_FAILED`, `ITEM_PROPOSAL_NO_ITEMS`, `LLM_UNAVAILABLE`, `LLM_INVALID_RESPONSE`, `LLM_DISABLED`, `RATE_LIMITED` | Megvalósítva |
 | POST | `/item-proposals/{id}/approve` | Jóváhagyás a (javított) adatokkal → 201 az új készlettétellel; ismétlés → 200 ugyanazzal | US-2 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND`, `ITEM_PROPOSAL_NOT_FOUND`, `ITEM_PROPOSAL_STATE_CONFLICT` | Megvalósítva |
 | POST | `/item-proposals/{id}/reject` | Elvetés → 204; ismétlés → 204 | US-2 | `ITEM_PROPOSAL_NOT_FOUND`, `ITEM_PROPOSAL_STATE_CONFLICT` | Megvalósítva |
-
-A chat (US-6) végpontjai a 3. lépcső előtt kerülnek be.
+| GET | `/chat/availability` | Be van-e kapcsolva a chat: `{ enabled }` (`Llm:Enabled`) | US-6 | – | Megvalósítva |
+| POST | `/chat` | Kérdés → válasz: `{ question, history }` → 200 `{ answer, toolsUsed }`; semmi nem módosul; rate limit | US-6 | `VALIDATION_FAILED`, `LLM_UNAVAILABLE`, `LLM_INVALID_RESPONSE`, `LLM_DISABLED`, `RATE_LIMITED` | Megvalósítva |
 
 ### Tételjavaslat (US-2) – a megvalósított szerződés
 
@@ -64,6 +64,13 @@ A chat (US-6) végpontjai a 3. lépcső előtt kerülnek be.
 - **Elvetés** (`POST /item-proposals/{id}/reject`): 204, az ismétlés is; jóváhagyott javaslat elvetése 409.
 - **Konkurencia:** optimista zárolás `xmin`-nel ([ADR-0008](../02_architecture/adr/0008-konkurencia-es-idempotencia.md) 4. pont). Más háztartás javaslata 404, a nem létezővel azonos válasszal.
 - **Hibák:** az LLM kiesése (időtúllépés, hálózati hiba, 5xx vagy 429 egy újrapróbálás után) és az LLM által elutasított kérés (újrapróbálás nélkül) 503 `LLM_UNAVAILABLE`; sémán kívüli válasz 502 `LLM_INVALID_RESPONSE`; egy tétel sem 400 `ITEM_PROPOSAL_NO_ITEMS`; kikapcsolt kapcsolónál 503 `LLM_DISABLED`. Hibánál semmi nem mentődik.
+
+### Chat (US-6) – a megvalósított szerződés
+
+- **Kérés** (`POST /chat`): `{ question, history }`; `question` 1–500 karakter; `history` legfeljebb 10 korábbi üzenet `{ role: "user" | "assistant", text }`, üzenetenként 1–2000 karakter (a felület a hosszabb választ levágja). A szerver semmit nem tárol ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 5.).
+- **Válasz 200:** `{ answer, toolsUsed }` – a válasz sima szöveg; a `toolsUsed` a megnézett MCP-eszközök neve, sorrendben, ismétlés nélkül.
+- **Kör:** kérdésenként legfeljebb 3 modellhívás, körönként legfeljebb 4 eszközhívás; az eszközök: [mcp_tools.md](mcp_tools.md).
+- **Hibák:** kiesés vagy elutasított kérés 503 `LLM_UNAVAILABLE`; ismeretlen eszköz, hibás argumentum, a 3. hívás után is eszközhívás vagy a vártól eltérő válasz 502 `LLM_INVALID_RESPONSE`; az eszköz belső hibája 500 `INTERNAL_ERROR`; kikapcsolva 503 `LLM_DISABLED`; háztartásonként 30 kérdés / 10 perc fölött 429 `RATE_LIMITED`.
 
 ### Ajánlás (US-3) – a megvalósított szerződés
 

@@ -481,3 +481,23 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **Szövegek:** a nem illő egységre a kézi űrlap mondata marad; a „Már van otthon” két alakja marad, ehhez az API megkapta a tételszámot; a több hibás kártya szövegét jóváhagytam. A K16 kikapcsolt-kapcsoló e2e esete kikerült (az integrációs és a Vitest-teszt fedi).
   - **Reviewk:** a T3 `/code-review` 11 javítását és a külső review 4 javítását jóváhagytam; az ellenséges tesztekből a nem ismétlődő hármat vettük fel.
   - **Commit:** a T3 két commitját és az utána következő négy commitot (`b2bc1ed`, `7f1788b`, `d2c381e`, `19cddfc`) és a pushokat kérésemre a Claude Code végezte, trailer nélkül.
+
+### P-27 – US-6: csak olvasó chat MCP-vel (v0.6.0), gyorsított ütemezés
+- **Dátum:** 2026-11-09 – 2026-11-12
+- **Cél:** A 3. lépcső (US-6) és az UAT 1. kör két javítása (L1, L2) a gyorsított ütemezés szerint; az ADR-0010 vak triangulációval; a T1–T3, a review-k, a mérés és a dokumentáció.
+- **Eszköz:** Claude Code (claude-opus-5-5) – terv, ADR-tervezet, mini-specek, implementáció, `/code-review` (két tengely, sub-agentekkel), mérőteszt, ábrák; Antigravity (Gemini) – vak trianguláció; Antigravity (Claude Sonnet 4.6 Thinking) – külső review és ellenséges teszt.
+- **Prompt összefoglaló:** nov. 9.: „Amit nov 20-ig van tervezve mindent próbáljunk meg teljesen befejezni nov. 13-ig”; a feladatkiírás, az ADR-0010, a mini-spec (K1–K14); nov. 10–11.: T1–T3, három review-kör, két LiveAI-futás; nov. 12.: L1/L2, a gitleaks hamis riasztása, doksi.
+- **AI javaslat (eredeti):**
+  - **Topológia:** külön MCP-konténer Streamable HTTP-vel, aláírt (HMAC) háztartás-tokennel (`adr0010_claude_javaslat.md`, a trianguláció előtt rögzítve).
+  - **Körök:** legfeljebb 4 modellhívás; **SDK:** 2.3.1; beszélgetés a kliensnél, ≤ 10 üzenet.
+  - **Ütemezés:** a US-6 nov. 10–15. között, a dolgozat-ábrák nov. 16–17-én (a gyorsítás előtti javaslat).
+  - **Mérés:** 12 kérdés kézzel másolt eszközleírásokkal; prompt `chat.v1`.
+- **Érintett fájlok:** `src/backend` (Application/Chat, KamraApp.McpServer, Infrastructure/Llm, Api/Chat, rate limit), `src/frontend/src/ChatPage.tsx` és társai, `PantryItemForm.tsx`, `CookingPage.tsx`, `tests/` (unit, integrációs, ellenséges, `LiveAI`, e2e és LLM-csonk), `docker-compose.yml`, `.env.example`, `.gitleaksignore`, `docs/`.
+- **Mit változtattam / döntésem:**
+  - **Gyorsítás:** minden nov. 20-i munka nov. 13-ig, vágás nélkül (nov. 9.).
+  - **Topológia (A):** a trianguláció folyamaton belüli változatát választottam a javasolt külön konténer helyett (az ADR-0004 módosításával); a mechanizmust a Claude Code igazolta az SDK dokumentációjából.
+  - **K1 (A):** új „Kérdezz” oldal. **Markdown (A):** `chat.v2` a `chat.v1` mérése után. **Gitleaks (A):** `.gitleaksignore` + átnevezés, history-átírás nélkül.
+  - **Review-k:** a T1 J1–J8, a T2+T3 R1–R11, a külső review X1–X8 és az L1/L2 mini-spec – mind jóváhagyva; a mérést a valódi eszközleírásokkal újrafuttattam.
+  - **Levelezés:** a nov. 7-i levél nem ment el (a fájl tévesen „elküldött” volt), és az okt. 28-i témavezetői válasz feldolgozatlan maradt – a nov. 13-i levél mindkettőt pótolja; a januári záróvizsgára jelentkeztem.
+  - **UAT 2. kör:** új forgatókönyv a chatre (S6).
+  - **Commit:** minden commitot és pusht én végeztem (a `v0.6.0` ágán az MI nem commitolt); a `v0.5.0` utolsó három commitját (`42fdf79`, `9d376c5`, `dd6d5fe`) kérésemre a Claude Code végezte, trailer nélkül.

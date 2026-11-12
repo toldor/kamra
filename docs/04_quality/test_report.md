@@ -22,15 +22,16 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
-| Unit | ≥ 18 | 514 | 514 |
-| Integrációs | ≥ 6 | 246 (+1 `LiveAI`, a CI-ban kiszűrve) | 246 |
-| Frontend (Vitest) | – | 158 | 158 |
-| E2E | ≥ 6 | 15 (×2 nézet) | 15 |
+| Unit | ≥ 18 | 583 | 583 |
+| Integrációs | ≥ 6 | 285 (+2 `LiveAI`, a CI-ban kiszűrve) | 285 |
+| Frontend (Vitest) | – | 184 | 184 |
+| E2E | ≥ 6 | 19 (×2 nézet) | 19 |
 | Negatív esetek | ≥ 5 | ≥ 374 (a `v0.3.1` óta nem számoltuk újra; minden új modul negatív esetekkel bővült) | – |
-| **Összesen** | **≥ 30** | **933** | **933** |
+| **Összesen** | **≥ 30** | **1071** | **1071** |
 
 ## Legutolsó futás eredménye
 
+- **2026-11-12 (`v0.6.0`, `feature/us-6-chat` @ `dd3b40b`):** PASS – .NET 583 unit + 285 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 184/184; Playwright 38/38 futás (19 teszt × asztali Chrome és 360 px) az LLM-csonkkal. Mutációs ellenőrzés: T1 13/13, T1-review 6/6, T2 10/10, T3 9/9 (két gyenge teszt erősítve), T2+T3-review 5/5, külső review 5/5, L1/L2 3/3. CI: [run 43280942836](https://github.com/toldor/kamra/actions/runs/43280942836) (#113), mind a négy job zöld.
 - **2026-11-08 (`v0.5.0`, `feature/us-2-quick-entry` @ `9d376c5`):** PASS – .NET 515 unit + 246 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; az új 402-es eset mutációval ellenőrizve (1/1 elbukott); a frontend és az e2e a `19cddfc` óta nem változott. CI: [run 42524059536](https://github.com/toldor/kamra/actions/runs/42524059536), mind a négy job zöld.
 - **2026-11-08 (US-2, `feature/us-2-quick-entry` @ `19cddfc`):** PASS – .NET 514 unit + 246 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 158/158; Playwright 30/30 futás (15 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen, az LLM-csonkkal. Mutációs ellenőrzés: T1 12/12, T2 9/9, T3 8/8, a T3-review javításai 6/6, a külső review tesztjei 5/5 – mind elbukott. CI: [run 42500324628](https://github.com/toldor/kamra/actions/runs/42500324628), mind a négy job zöld.
 - **2026-11-01 (`v0.4.0`, `feature/design-system`):** PASS – Vitest 123/123 (ebből 24 kontrasztteszt), Playwright 24/24 futás (12 teszt × asztali Chrome és 360 px) elkülönített Docker Compose stack ellen; a backend nem változott. 6 mutáció, mind elbukik: a két oszlop és a latin-ext betűk nélkül az új e2e, a két regressziós teszt a javítás előtt, és a tokenteszt a fejsáv fókuszszabálya nélkül ([V-63 – V-65](../07_ai/verification_log.md)). CI: [run 41251533463](https://github.com/toldor/kamra/actions/runs/41251533463) (2026-11-01, `41bb48a`): `secrets`, `backend`, `frontend` és `e2e` job zöld.
@@ -122,6 +123,18 @@ A valódi modell pontosságát és válaszidejét nem az automatizált tesztek, 
 - A mondatlista és a részletes kimenetek: [llm_meres/](llm_meres/) (a hét riport).
 - Ellenőrzés: [V-66 – V-70](../07_ai/verification_log.md), [V-76](../07_ai/verification_log.md).
 
+## Chat-mérés (US-6)
+
+A chat valódi modellel mért pontossága ([ChatPocTests.cs](../../tests/KamraApp.Integration.Tests/LiveAI/ChatPocTests.cs), kézzel futtatva, a fejlesztő kulcsával): 12 magyar kérdés × 3 futás, rögzített eszközeredményekkel, a valódi `GeminiChatModel`-lel és `AskChat`-tel. Pontozás kérdésenként: a várt eszközt hívta-e, és a válasz tartalmazza-e a várt adatot (és nem tartalmazza-e a tiltottat).
+
+| Futás (helyi idő) | Prompt | Eszközleírás | Helyes eszköz | Helyes tartalom | Hiba | p50 | p95 | Token be / ki |
+|---|---|---|---|---|---|---|---|---|
+| nov. 11. 21:08 | chat.v1 | kézi másolat | 100% (36/36) | 97,2% (35/36)¹ | 0 | 1,5 mp | 2,1 mp | 1542 / 50 |
+| nov. 11. 21:21 | chat.v2 | kézi másolat | 100% (36/36) | 100% (36/36) | 0 | 1,1 mp | 1,9 mp | 1607 / 53 |
+| **nov. 11. 21:56** | **chat.v2** | **a szállított** | **100% (36/36)** | **100% (36/36)** | **0** | **1,2 mp** | **2,4 mp** | **1797 / 54** |
+
+¹ A C12-ben a modell a rejtett utasítású tételnevet adatként felsorolta, az utasítást nem követte; a pontozás a tiltott szöveget a névben is kereste – javítva ([V-79](../07_ai/verification_log.md)). A `chat.v1` válaszai Markdownt tartalmaztak, ezért lett `chat.v2`. Egy kérdés kb. 0,05 cent. Riportok: [llm_meres/](llm_meres/) (`chat-report-*`).
+
 ## Kézzel számolt ellenőrző példák
 
 A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt példák igazolják: az elvárt értéket a fejlesztő és az AI is kiszámolta az implementáció előtt, és mindegyik példához automatizált teszt tartozik (Q3). A P11–P20-at a fejlesztő a T1 előtt kézzel átszámolta (2026-10-17).
@@ -155,6 +168,7 @@ A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt
 
 ## Ismert hiányosságok
 
+- A chat valódi modellel mért pontossága rögzített eszközeredményeken alapul (12 kérdés); valódi felhasználói kérdéseken a UAT 2. köre méri.
 - A Domainben még csak a `Household`, az Applicationben csak a hibamodell és az auth-használati esetek vannak: az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
 - Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listájából a „más háztartás erőforrása 404” (S-2) pontot a [PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs) lefedi; a „session megmarad az api konténer újraindítása után” pontot a [V-14](../07_ai/verification_log.md) próbája igazolta (Docker Compose, kézi Playwright-szkript); a deploy runbookba az S6-ban kerül.
 - A ux_flows „Lejárt munkamenet” üzenete („Biztonsági okból kiléptettünk…”) az első adatlekérő végponttal (US-1, készlet betöltése) kap valódi kiváltó eseményt; a szöveg már az üzenetkatalógusban van.
@@ -171,4 +185,6 @@ A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt
 - **Javított e2e-verseny (2026-10-18):** a `shopping.spec.ts` újraépítés utáni első futásban kétszer elbukott: az újratöltés után a paradicsom pipa nélkül állt. Az optimista pipa miatt a teszt nem várt a mentésre, és a `page.reload()` megszakította a `PUT`-ot; a hideg szerver lassabban válaszolt. A teszt a `PUT` válaszát várja meg ([V-44](../07_ai/verification_log.md)). Utána az API hideg újraindítása után 3 teljes futás és 2×10 ismétlés zöld.
 - **Megfigyelés alatt (2026-10-23):** a `sends the rows, then opens the Receptek page…` Vitest-teszt egyszer elbukott, amikor két tesztfájl futott együtt. Önmagában, a saját fájljában és három teljes futásban nem jött elő; a CI-ban sem.
 - **Ismert instabil (2026-11-07):** a `ShoppingListPage.test.tsx` „checks an item off and deletes one” tesztje kb. 30 teljes Vitest-futásból egyszer elbukik; önmagában nem jön elő, a CI-ban sem. Javítás nov. 20. után.
+- **Terhelés alatt (2026-11-11):** a `RecipesPage` és a `RecommendationsPage` navigációs tesztje közvetlenül az e2e-stack építése után egyszer-egyszer elbukott, utána 4 tiszta futás; a „Kérdezz” menüpont tesztje a teljes csomagban egyszer – a Készlet oldalról indult, válasz nélküli kérésekkel; javítva (a „Kérdezz” oldalon marad).
+- **Vitest (2026-11-12):** párhuzamos futásban kétszer egymás után 2, majd 6 menünavigációs teszt bukott (mindig más, mind az 5 mp-es időkorlátnál); sorosan (`--no-file-parallelism`) 184/184. A menüs tesztek az egész alkalmazást renderelik, terhelt gépen lassúak; a CI-ban eddig nem fordult elő.
 - Egyéb ismert flaky teszt nincs. Az e2e első futtatásakor két teszt a bejelentkezési rate limit (10 kérés/perc/IP) miatt 429-et kapott, mert a futások egy percen belül követték egymást; ez a limit helyes működése, ezért a tesztelt Api emelt limittel fut (lásd fent), az éles alapértelmezés változatlan.

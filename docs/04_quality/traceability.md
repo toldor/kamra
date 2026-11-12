@@ -74,7 +74,10 @@ Rövidítések a tesztoszlopban – Unit: `tests/KamraApp.Unit.Tests`, Int.: `te
 
 | # | Követelmény | Flow | Végpont | Képernyő | Teszt | Állapot |
 |---|---|---|---|---|---|---|
-| US-6/1–4 | Négy csak olvasó MCP-tool, nem módosít, csak a saját háztartás, LLM-kiesésnél magyar hiba | – | tervezett | Chat | – | Tervezett – a 3. lépcső (nov. 10.) |
+| US-6/1 | Négy csak olvasó MCP-eszköz (készlet, hamarosan lejáró, ajánlás a US-3 logikájával, bevásárlólista) | 5. | `POST /chat` | Kérdezz | Unit: [KamraToolsTests.cs](../../tests/KamraApp.Unit.Tests/KamraToolsTests.cs); Int.: [ChatApiTests.cs](../../tests/KamraApp.Integration.Tests/ChatApiTests.cs) | Megvalósítva |
+| US-6/2 | A chat nem módosít; módosítás kérésére az oldalra utal | 5. | `POST /chat` | Kérdezz | Int.: [AdversarialChatApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialChatApiTests.cs) (író eszközök); E2E: [chat.spec.ts](../../tests/e2e/chat.spec.ts); LiveAI: C10 | Megvalósítva |
+| US-6/3 | Csak a saját háztartás adata | 5. | `POST /chat` | – | Int.: ChatApiTests, AdversarialChatApiTests | Megvalósítva |
+| US-6/4 | LLM-kiesésnél magyar hiba, a felület többi része működik | 5. | `POST /chat` | Kérdezz | Unit: [GeminiChatModelTests.cs](../../tests/KamraApp.Unit.Tests/GeminiChatModelTests.cs); Vitest: [ChatPage.test.tsx](../../src/frontend/src/ChatPage.test.tsx); E2E: chat.spec.ts | Megvalósítva |
 
 ## Nem funkcionális követelmények (a scope_contract 3–4. fejezetéből)
 

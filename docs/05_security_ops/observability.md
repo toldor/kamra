@@ -25,7 +25,7 @@ Egy kezelt üzleti hiba (409) és a kérés összefoglaló sora, ugyanazzal a `c
 | Esemény | Szint | Leírás |
 |---|---|---|
 | HTTP kérés/válasz | Information | Metódus, útvonal, státusz, időtartam |
-| LLM hívás | Information | Próbálkozásonként egy esemény: modell, promptverzió, a próbálkozás sorszáma, kimenet (`ok`, `invalid`, `timeout`, `unavailable`, `refused`), időtartam (ms), bemenő és kimenő token; a mondat, a válasz és a kulcs nélkül ([GeminiIngredientParser.cs](../../src/backend/KamraApp.Infrastructure/Llm/GeminiIngredientParser.cs)). A kimenet legfeljebb 2048 token; ha a modell nem fejezi be a választ (`finishReason` nem `STOP`, például elérte a korlátot), a kimenet `invalid`. |
+| LLM hívás | Information | Próbálkozásonként egy esemény: modell, promptverzió, a próbálkozás sorszáma, kimenet (`ok`, `invalid`, `timeout`, `unavailable`, `refused`), időtartam (ms), bemenő és kimenő token; a mondatos bevitelé és a chaté is (`quick-entry.v3`, `chat.v2`; [GeminiHttp.cs](../../src/backend/KamraApp.Infrastructure/Llm/GeminiHttp.cs)); a mondat, a kérdés, a válasz, az eszközeredmény és a kulcs nélkül. Egy chat-kérdés modellhívásait a `correlationId` köti össze. A kimenet legfeljebb 2048 token; ha a modell nem fejezi be a választ (`finishReason` nem `STOP`, például elérte a korlátot), a kimenet `invalid`. |
 | Validációs hiba | Warning | Hibakód, érintett mező |
 | Váratlan kivétel | Error | Kivétel típusa, correlationId |
 | Alkalmazás indulás | Information | Verzió, konfiguráció összegzés |

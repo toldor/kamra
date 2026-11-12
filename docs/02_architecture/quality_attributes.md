@@ -39,7 +39,7 @@ Az akadálymentesség a [ux_flows.md](../01_product/ux_flows.md), a naplózás �
 | Artefakt | Az API és az Application réteg háztartás-szerinti szűrése; a chat MCP-toolai |
 | Válasz | 404, ugyanazzal a hibaobjektummal és hibakóddal, mint egy nem létező azonosítóra; adat nem változik |
 | Mérőszám | Az [api.md](../03_design/api.md) és a [mcp_tools.md](../03_design/mcp_tools.md) szerinti, háztartáshoz kötött végpontok és toolok 100%-a 404-et ad; a válasz (státusz és hibakód) azonos a nem létező azonosítóra adott válasszal; 0 adatsor változik. |
-| Igazolás | Paraméterezett integrációs teszt valódi Postgresszel (Testcontainers), az 1. lépcsőtől; az MCP-toolok a 3. lépcsőben (US-6) kerülnek bele. |
+| Igazolás | Paraméterezett integrációs teszt valódi Postgresszel (Testcontainers), az 1. lépcsőtől; az MCP-eszközök a US-6 óta: ChatApiTests (mind a négy eszköz két háztartással, dekódolt nevekkel), AdversarialChatApiTests (egyidejű kérdések, háztartás-argumentum). |
 
 ### S-3 – Ajánlás lekérése párhuzamos terhelés alatt (QA-5)
 

@@ -2,6 +2,22 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [0.6.0] – 2026-11-12 – Kérdezz a kamráról
+
+A 3. lépcső: csak olvasó chat MCP-eszközökkel, és az UAT 1. kör két akadálymentességi javítása. Részletek: [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md), [mcp_tools.md](../03_design/mcp_tools.md), [test_report.md](../04_quality/test_report.md) („Chat-mérés”), [P-27](../07_ai/prompt_log.md), [V-77 – V-81](../07_ai/verification_log.md).
+
+### Hozzáadva
+- „Kérdezz” oldal (US-6): kérdés a saját készletről, a hamarosan lejáró tételekről, az ajánlásról és a bevásárlólistáról; példakérdések, „Megnéztem: …” sor, a beszélgetés nem tárolódik; módosítást nem végez.
+- MCP-szerver (`KamraApp.McpServer`) az API folyamatában, négy csak olvasó eszközzel (`ModelContextProtocol.Core` 2.3.1); Gemini-függvényhívás legfeljebb 3 modellhívással kérdésenként, `chat.v2` prompt.
+- Rate limit a chatre (háztartásonként 30 kérdés / 10 perc); `Llm__ChatModel` beállítás; e2e a chatre az LLM-csonk bővítésével.
+
+### Javítva
+- A készlettétel mentése után a fókusz visszakerül a „Hozzávaló” mezőre, és az élő régió kimondja, mi került a kamrába (L1).
+- A főzés összegzésének címe felolvastatja a levonást, az elfogyott tételeket és a bevásárlójavaslatot (L2).
+
+### Módosítva
+- ADR-0004: az MCP-szerver nem külön host, hanem az API folyamatában fut (ADR-0010); a két Gemini-adapter közös HTTP-segédet használ.
+
 ## [0.5.0] – 2026-11-08 – Egy mondatos bevitel
 
 A 2. lépcső: a bevásárlás egy mondattal rögzíthető, az AI javaslatait a felhasználó hagyja jóvá. Részletek: [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md), [test_report.md](../04_quality/test_report.md) („LLM-mérés”), [P-26](../07_ai/prompt_log.md), [V-66 – V-76](../07_ai/verification_log.md).

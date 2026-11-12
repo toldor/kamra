@@ -7,7 +7,7 @@ Azt vizsgálja, hogy a célcsoportba tartozó felhasználó a valós feladatát 
 | Kör | Időszak | Verzió | Tartalom | Résztvevők |
 |---|---|---|---|---|
 | 1. | 2026. okt. 26. – nov. 1. | `v0.4.0` | A determinisztikus út: készlet, „Mit főzzek?”, főzés, bevásárlólista, saját recept (US-1, US-3, US-4, US-5) | 4 fő (U1–U4) |
-| 2. | 2026. nov. 21–27. | a `v0.6.0` (nov. 18.) | Egy mondatos bevitel és a csak olvasó chat (US-2, US-6), az 1. kör javításai | 3–4 fő ugyanezek közül |
+| 2. | 2026. nov. 21–27. | a `v0.6.0` (nov. 12.) | Egy mondatos bevitel és a csak olvasó chat (US-2, US-6), az 1. kör javításai | 3–4 fő ugyanezek közül |
 | Újratesztelés | dec. 4. előtt | a javított változat | Az 1–2. körben talált elakadások javítása után ugyanazok a forgatókönyvek | aki vállalja |
 
 ## Résztvevők
@@ -42,6 +42,7 @@ A feladatok célt adnak, nem lépéseket. Mindegyik a résztvevő saját fiókj�
 | S3 | „Holnap vásárolsz. Rakd össze a bevásárlólistát: ami az előbb elfogyott, kell egy kenyér is, és a tej soha ne fogyjon el teljesen.” | Az S2 utáni állapot: ha a résztvevő a Rántottát főzte, a vaj elfogyott, és javaslat lett belőle | A kenyér a listán; a tejnek van minimumszintje; ha volt javaslat, döntött róla (elfogadta vagy elutasította) | US-5, 3. flow |
 | S4 | „A nagymamád zabtejes kakaóját szereted. Vedd fel receptként, hogy a Kamra is ajánlhassa.” Kártya: 1 adag – 250 ml zabtej, 1 dkg kakaópor, 1 teáskanál (5 g) cukor. | A zabtej nincs a listán | A recept mentve a zabtejjel mint saját hozzávalóval | US-3 saját recept, 4. flow |
 | S5 | Telefonnézetben: „Vegyél fel még egy receptet, a kedvenc szendvicsedet.” Félúton a moderátor: „Most hívtak, tedd le a telefont.” – frissíti az oldalt –, „Folytasd.” Utána: „Az egyik receptet sosem főznéd meg. Vedd ki, hogy ne ajánlja.” | 360 px; az S4 utáni állapot | A félbehagyott recept visszatöltve és mentve; egy recept archiválva | M14, US-3 archiválás, a 4. levél „mobil, megszakadt művelet” kérése |
+| S6 | Csak a 2. körben: „Kérdezd meg a Kamrát, mi jár le hamarosan, és mit főzhetsz belőle.” | Az S1–S3 utáni készlet, bekapcsolt chat | A válasz megnevez egy hamarosan lejáró tételt és egy receptet a saját adatokból; semmi nem módosul | US-6, [ux_flows.md](../01_product/ux_flows.md) 5. |
 
 ## Mérés
 
@@ -60,7 +61,7 @@ A feladatok célt adnak, nem lépéseket. Mindegyik a résztvevő saját fiókj�
 ## Eredmények, javítás és újratesztelés
 
 - Az 1. kör után (nov. 1.) az elakadások egy listába kerülnek súlyosság szerint: **blokkoló** (a feladat nem sikerült), **zavaró** (sikerült, de segítséggel vagy hosszú elakadással), **kozmetikai**.
-- A blokkoló és a zavaró elakadások a `v0.6.0`-ig (nov. 18.) javulnak; mindegyikhez teszt készül, és a javítás a 2. körben vagy a dec. 4. előtti újrateszteléskor ugyanazzal a forgatókönyvvel ellenőrződik.
+- A blokkoló és a zavaró elakadások a `v0.6.0`-ban (nov. 12.) javultak; mindegyikhez teszt készül, és a javítás a 2. körben vagy a dec. 4. előtti újrateszteléskor ugyanazzal a forgatókönyvvel ellenőrződik.
 - Az eredmények és a javítások ebbe a fájlba kerülnek („Eredmények – 1. kör”), és a dolgozat Értékelés fejezetébe. Ha valamelyik kör kevesebb résztvevővel zajlik, ezt itt jelezzük.
 
 ## Eredmények – 1. kör
@@ -69,5 +70,5 @@ A feladatok célt adnak, nem lépéseket. Mindegyik a résztvevő saját fiókj�
 - **Résztvevők:** 4 fő (U1–U4), mind az öt forgatókönyv (S1–S5).
 - **Eredmény:** mind a 4 résztvevő mind az 5 forgatókönyvet önállóan, segítség nélkül teljesítette, résztvevőnként kb. 15 perc alatt (az öt forgatókönyv együtt). Elakadás nem volt, így blokkoló és zavaró elakadás sincs.
 - **Visszajelzés:** a felület tetszett. Kívánság (egy résztvevő): a Receptek oldalon kis címke mutassa, hogy minden hozzávaló megvan-e.
-- **Korlát:** résztvevőnkénti, forgatókönyvenkénti jegyzőkönyv (idő, elakadás, idézet) és a három záró kérdés válaszai nem készültek; az eredmény a moderátor összesítése. Az L1 és az L2 megfigyelését külön nem rögzítettük; mindkettő a `v0.6.0`-ban (nov. 18.) javul, teszttel. A 2. körben a jegyzőkönyv résztvevőnként készül.
+- **Korlát:** résztvevőnkénti, forgatókönyvenkénti jegyzőkönyv (idő, elakadás, idézet) és a három záró kérdés válaszai nem készültek; az eredmény a moderátor összesítése. Az L1 és az L2 megfigyelését külön nem rögzítettük; mindkettő a `v0.6.0`-ban javult, teszttel. A 2. körben a jegyzőkönyv résztvevőnként készül.
 - **Döntés a kívánságról:** nem elakadás, ezért nem kerül a `v0.6.0` javításai közé; a „Csak az elkészíthetők” szűrővel együtt későbbi továbbfejlesztési lehetőség ([scope_contract.md](../01_product/scope_contract.md), Későbbi továbbfejlesztési lehetőségek).

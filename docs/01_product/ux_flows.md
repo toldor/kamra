@@ -54,6 +54,19 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Sikerkritérium:** a saját recept megjelenik az ajánlásban, ha a készlet kiadja; az archivált nem.
 - **Megvalósítva** ([recipes-360.png](../assets/recipes-360.png), [recipes-form-360.png](../assets/recipes-form-360.png), [recipes.spec.ts](../../tests/e2e/recipes.spec.ts), P17, P18).
 
+## 5. Kérdezz a kamráról (US-6)
+
+- **Cél:** Tomi egy kérdéssel megtudja, mi jár le, mit főzhet, vagy mi van a listán, anélkül hogy végignézné az oldalakat.
+- **Előfeltétel:** bejelentkezett felhasználó, bekapcsolt chat (a „Kérdezz” menüpont csak ekkor látszik).
+- **Lépések:**
+  1. A „Kérdezz” oldalon: *„Kérdezd meg, mi van otthon, mi jár le hamarosan, mit főzhetsz, vagy mi van a bevásárlólistán. A válaszhoz csak a saját adataidat nézem meg, és semmit nem módosítok.”* Alatta: *„A beszélgetést nem mentjük: ha elhagyod az oldalt, újrakezdődik.”* és három példakérdés.
+  2. Tomi kérdez (Enter küld, Shift+Enter új sor); a kérdése azonnal látszik, a gomb „Gondolkodom…”.
+  3. A válasz sima szövegként jelenik meg, alatta: *„Megnéztem: a hamarosan lejáró tételeket és az ajánlást.”* A következő kérdés az előzménnyel (legfeljebb 10 üzenet) megy; az „Új beszélgetés” gomb törli az előzményt.
+  4. Ha módosítást kér („Töröld a joghurtot”), a válasz megmondja, melyik oldalon teheti meg; semmi nem módosul.
+- **Sikerkritérium:** a válasz a saját, aktuális adatokból jön; egy hamarosan lejáró tétel a nevével és a dátumával szerepel.
+- **Hibák:** kiesésnél *„Most nem tudok válaszolni, mert a szövegfeldolgozó nem válaszol. A kérdésed megmaradt: próbáld újra pár perc múlva.”*; értelmezhetetlen válasznál *„Erre most nem sikerült válaszolnom. Kérdezd meg másképp, vagy nézd meg közvetlenül a Készlet, a Mit főzzek? vagy a Bevásárlólista oldalon.”*; túl sok kérdésnél *„Most túl sok kérdést küldtél egymás után. Várj néhány percet.”* A kérdés a mezőben marad, és nem kerül az előzménybe.
+- **Megvalósítva** ([ChatPage.test.tsx](../../src/frontend/src/ChatPage.test.tsx), [chat.spec.ts](../../tests/e2e/chat.spec.ts)).
+
 ## Üres állapotok
 
 | Hol | Helyzet | Amit a felhasználó lát | Következő lépés |
@@ -97,6 +110,8 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 - Az ikonos gomboknak szöveges neve van.
 - Mobilon legalább 16 px-es alap betűméret, és legalább 44×44 px-es érintési felület.
 - A színek kontrasztját teszt őrzi ([tokens.test.ts](../../src/frontend/src/tokens.test.ts)); a sötét fejsávon a fókuszkeret a fejsáv világos szövegszíne.
+- Készlettétel mentése után a fókusz a „Hozzávaló” mezőre kerül, és az élő régió kimondja: *„Felvettem a kamrádba: tejföl 20 dkg.”* (L1, [PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx)).
+- A főzés összegzésének fókuszt kapó címe leírásként a levonás, az elfogyott tételek és a bevásárlójavaslat mondatait is felolvastatja (L2, [CookingPage.test.tsx](../../src/frontend/src/CookingPage.test.tsx)); a chat üzenetlistája `role="log"`, a két oldal „Te:” / „Kamra:” rejtett címkével.
 
 **Ellenőrzés:** a Chrome Lighthouse akadálymentességi auditja a készlet, a „Mit főzzek?” és a bevásárlólista oldalon (legalább 90 pont), valamint egy kézi billentyűzetes bejárás. Opcionális bővítés: automatizált axe-core ellenőrzés az e2e tesztekben (új függőség, jóváhagyás kell).
 

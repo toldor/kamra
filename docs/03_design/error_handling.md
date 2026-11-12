@@ -33,13 +33,13 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | 429 | Rate limit | Túl sok kérés |
 | 500 | Belső hiba | Váratlan szerverhiba |
 | 502 | Hibás külső válasz | Az LLM válasza nem felel meg a sémának |
-| 503 | Külső szolgáltatás nem elérhető | Az LLM nem válaszolt az újrapróbálás után sem, elutasította a kérést, vagy a mondatos bevitel ki van kapcsolva |
+| 503 | Külső szolgáltatás nem elérhető | Az LLM nem válaszolt az újrapróbálás után sem, elutasította a kérést, vagy a mondatos bevitel, illetve a chat ki van kapcsolva |
 
 ## Hibakódok
 
 | Kód | Státusz | Leírás | Állapot |
 |---|---|---|---|
-| `INTERNAL_ERROR` | 500 | Váratlan hiba; a válasz nem tartalmaz belső részletet, a részletek a naplóba kerülnek | Megvalósítva |
+| `INTERNAL_ERROR` | 500 | Váratlan hiba; a válasz nem tartalmaz belső részletet, a részletek a naplóba kerülnek; a chatben az MCP-eszköz belső hibája is (nem a modell hibája) | Megvalósítva |
 | `NOT_FOUND` | 404 | Ismeretlen útvonal (keretrendszer által generált 404) | Megvalósítva |
 | `VALIDATION_FAILED` | 400 | Mezőnkénti validációs hiba; az `errors` mező magyar üzeneteket tartalmaz (kulcs: a JSON-mező neve) | Megvalósítva |
 | `ANTIFORGERY_TOKEN_INVALID` | 400 | Hiányzó vagy érvénytelen antiforgery token módosító kérésnél | Megvalósítva |
@@ -47,7 +47,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `INVALID_CREDENTIALS` | 401 | Hibás e-mail-cím vagy jelszó (a kettő megkülönböztethetetlen, ux_flows H4) | Megvalósítva |
 | `FORBIDDEN` | 403 | Bejelentkezett, de nincs jogosultsága | Megvalósítva |
 | `EMAIL_ALREADY_REGISTERED` | 409 | A regisztrációs e-mail-cím foglalt (kis- és nagybetűtől függetlenül) | Megvalósítva |
-| `RATE_LIMITED` | 429 | Túl sok kérés ugyanarról az IP-címről a bejelentkezésnél vagy a regisztrációnál, illetve ugyanabból a háztartásból a mondatos bevitelnél (US-2) | Megvalósítva |
+| `RATE_LIMITED` | 429 | Túl sok kérés ugyanarról az IP-címről a bejelentkezésnél vagy a regisztrációnál, illetve ugyanabból a háztartásból a mondatos bevitelnél (US-2) és a chatnél (US-6) | Megvalósítva |
 | `LOGIN_LOCKED_OUT` | 429 | A fiók 5 sikertelen bejelentkezés után 5 percre zárolva (ux_flows H5) | Megvalósítva |
 | `METHOD_NOT_ALLOWED` | 405 | A végpont nem támogatja a HTTP-metódust | Megvalósítva |
 | `REQUEST_REJECTED` | 4xx | Egyéb, a keretrendszer által elutasított kérés (pl. 415, vagy `BadHttpRequestException` saját 4xx státusszal), saját kód nélkül | Megvalósítva |
@@ -65,8 +65,8 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 | `ITEM_PROPOSAL_NOT_FOUND` | 404 | Nem létező vagy más háztartás tételjavaslata, azonos válasszal (QA-1) | Megvalósítva |
 | `ITEM_PROPOSAL_STATE_CONFLICT` | 409 | Elvetett tételjavaslat jóváhagyása vagy jóváhagyott elvetése (ADR-0007, ADR-0008) | Megvalósítva |
 | `LLM_UNAVAILABLE` | 503 | Az LLM nem érhető el: időtúllépés, hálózati hiba, 5xx vagy 429 egy újrapróbálás után, vagy az LLM elutasította a kérést (újrapróbálás nélkül; [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)) | Megvalósítva |
-| `LLM_INVALID_RESPONSE` | 502 | Az LLM válasza nem felel meg a sémának (újrapróbálás nélkül) | Megvalósítva |
-| `LLM_DISABLED` | 503 | A mondatos bevitel ki van kapcsolva (`Llm:Enabled = false`) | Megvalósítva |
+| `LLM_INVALID_RESPONSE` | 502 | Az LLM válasza nem felel meg a sémának, vagy a chatben nem létező eszközt, hibás argumentumot, túl sok eszközhívást kér (újrapróbálás nélkül; [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)) | Megvalósítva |
+| `LLM_DISABLED` | 503 | A mondatos bevitel és a chat ki van kapcsolva (`Llm:Enabled = false`) | Megvalósítva |
 | `ITEM_PROPOSAL_NO_ITEMS` | 400 | A szövegből egyetlen tétel sem nyerhető ki | Megvalósítva |
 
 ## Felhasználói üzenetek
