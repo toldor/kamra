@@ -39,6 +39,13 @@ test('turns a sentence into proposals and approves them into the pantry', async 
 })
 
 // S-1 / QA-3: an answer outside the schema (the stub sends no JSON): no retry, the text stays (external review).
+// l3_l5_minispec L3: the sentence box keeps its size.
+test('the sentence box cannot be resized', async ({ page }) => {
+  await registerFreshHousehold(page)
+
+  await expect(page.getByLabel('Mit vettél?')).toHaveCSS('resize', 'none')
+})
+
 test('an invalid LLM answer keeps the sentence and asks to rephrase', async ({ page }) => {
   await registerFreshHousehold(page)
 

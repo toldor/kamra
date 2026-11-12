@@ -49,6 +49,17 @@ test('answers what expires soon from the own pantry and names the tool it looked
   await expectNoHorizontalScroll(page)
 })
 
+// l3_l5_minispec L3, L4: the question box keeps its size, and the examples do not touch the top of their box.
+test('the question box cannot be resized and the examples have room above them', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await openChat(page)
+
+  await expect(page.getByLabel('Kérdésed')).toHaveCSS('resize', 'none')
+  const panel = await page.getByRole('region', { name: 'Beszélgetés' }).boundingBox()
+  const example = await page.getByRole('button', { name: 'Mi jár le hamarosan?' }).boundingBox()
+  expect(example!.y - panel!.y, 'space above the examples in px').toBeGreaterThanOrEqual(16)
+})
+
 // S-1 / QA-3 for the chat: an outage after the retry; the question stays, the rest of the app works.
 test('an outage keeps the question and says so', async ({ page }) => {
   await registerFreshHousehold(page)

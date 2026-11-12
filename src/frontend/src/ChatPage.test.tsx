@@ -28,13 +28,28 @@ const ok = (body: unknown): Reply => ({ status: 200, body })
 const problem = (status: number, code: string, title: string): Reply => ({ status, body: { code, title } })
 const answer = (text: string, toolsUsed: string[] = []) => ok({ answer: text, toolsUsed })
 
-function backend(enabled: boolean, chat: Answer[] = [answer('Szia!')]) {
-  return fakeBackend({
+function backendRoutes(enabled: boolean, chat: Answer[] = [answer('Szia!')]): Record<string, Answer[]> {
+  return {
     'GET /api/v1/auth/me': [ok({ email: 'tomi@example.com', householdId: 'h-1' })],
     'GET /api/v1/auth/antiforgery': [ok({ requestToken: 'token-1' })],
     'GET /api/v1/chat/availability': [ok({ enabled })],
     'POST /api/v1/chat': chat,
-  })
+  }
+}
+
+const backend = (enabled: boolean, chat?: Answer[]) => fakeBackend(backendRoutes(enabled, chat))
+
+// The Készlet page, empty: where the user goes between two questions (l3_l5_minispec L5).
+const emptyPantry: Record<string, Answer[]> = {
+  'GET /api/v1/pantry-items': [ok([])],
+  'GET /api/v1/categories': [ok([])],
+  'GET /api/v1/ingredients': [ok([])],
+  'GET /api/v1/item-proposals/availability': [ok({ enabled: false })],
+}
+
+async function goTo(hash: string, heading: string) {
+  window.location.hash = hash
+  await screen.findByRole('heading', { level: 1, name: heading })
 }
 
 const chatPosts = (calls: { key: string; body: unknown }[]) => calls.filter((c) => c.key === 'POST /api/v1/chat').map((c) => c.body)
@@ -92,7 +107,8 @@ describe('the Kérdezz page', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Kérdezz a kamrádról' })).toBeTruthy()
     expect(screen.getByText('Kérdezd meg, mi van otthon, mi jár le hamarosan, mit főzhetsz, vagy mi van a bevásárlólistán. ' +
       'A válaszhoz csak a saját adataidat nézem meg, és semmit nem módosítok.')).toBeTruthy()
-    expect(screen.getByText('A beszélgetést nem mentjük: ha elhagyod az oldalt, újrakezdődik.')).toBeTruthy()
+    expect(screen.getByText('A beszélgetést nem mentjük el: másik oldalra lépve megmarad, de az oldal újratöltésekor vagy ' +
+      'kijelentkezéskor újrakezdődik.')).toBeTruthy()
     for (const example of ['Mi jár le hamarosan?', 'Mit főzhetek abból, ami otthon van?', 'Mi van a bevásárlólistán?']) {
       expect(screen.getByRole('button', { name: example })).toBeTruthy()
     }
@@ -305,6 +321,64 @@ describe('the Kérdezz page', () => {
     await ask('Szia')
     await log().findByText('Szia!')
     expect(chatPosts(calls)[1]).toEqual({ question: 'Szia', history: [] })
+  })
+
+  // l3_l5_minispec L5: the conversation lives in the app's memory, not on the page.
+  it('keeps the conversation and the typed text when going to another page and back', async () => {
+    fakeBackend({ ...backendRoutes(true, [answer('A tej.')]), ...emptyPantry })
+    render(<App />)
+    await ask('Mi jár le?')
+    await log().findByText('A tej.')
+    fireEvent.change(screen.getByLabelText('Kérdésed'), { target: { value: 'És mit főzzek?' } })
+
+    await goTo('#/', 'Készlet')
+    await goTo('#/kerdezz', 'Kérdezz a kamrádról')
+
+    expect(log().getByText('Mi jár le?')).toBeTruthy()
+    expect(log().getByText('A tej.')).toBeTruthy()
+    expect((screen.getByLabelText('Kérdésed') as HTMLTextAreaElement).value).toBe('És mit főzzek?')
+  })
+
+  it('shows the answer that came while the user was on another page', async () => {
+    let release: (reply: Reply) => void = () => {}
+    fakeBackend({ ...backendRoutes(true, [() => new Promise<Reply>((resolve) => { release = resolve })]), ...emptyPantry })
+    render(<App />)
+    await ask('Mi jár le?')
+    await screen.findByRole('button', { name: 'Gondolkodom…' })
+
+    await goTo('#/', 'Készlet')
+    release(answer('A tej.'))
+    await goTo('#/kerdezz', 'Kérdezz a kamrádról')
+
+    expect(await log().findByText('A tej.')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Küldés' })).toBeTruthy()
+  })
+
+  it('starts a new conversation after signing out, and a late answer does not reach the next user', async () => {
+    let release: (reply: Reply) => void = () => {}
+    fakeBackend({
+      ...backendRoutes(true, [answer('A tej.'), () => new Promise<Reply>((resolve) => { release = resolve })]),
+      'POST /api/v1/auth/logout': [{ status: 204 }],
+      'POST /api/v1/auth/login': [{ status: 204 }],
+    })
+    render(<App />)
+    await ask('Mi jár le?')
+    await log().findByText('A tej.')
+    await ask('És mit főzzek?')
+    await screen.findByRole('button', { name: 'Gondolkodom…' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kijelentkezés' }))
+    await screen.findByRole('heading', { name: 'Bejelentkezés' })
+    release(answer('Lecsót.'))
+    fireEvent.change(screen.getByLabelText('E-mail-cím'), { target: { value: 'tomi@example.com' } })
+    fireEvent.change(screen.getByLabelText('Jelszó'), { target: { value: 'correct horse battery staple' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Bejelentkezés' }))
+    await screen.findByRole('heading', { level: 1, name: 'Kérdezz a kamrádról' })
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Küldés' })).toBeTruthy())
+    expect(screen.queryByText('A tej.')).toBeNull()
+    expect(screen.queryByText('Lecsót.')).toBeNull()
+    expect(screen.queryByText('És mit főzzek?')).toBeNull()
   })
 
   it('sends a signed-out user to the sign-in page with the notice', async () => {
