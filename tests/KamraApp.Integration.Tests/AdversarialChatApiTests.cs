@@ -247,12 +247,14 @@ public class AdversarialChatApiTests(KamraApiFactory factory)
     [Fact]
     public async Task Error_response_does_not_leak_internal_details()
     {
-        const string secretQuestion = "SECRETQUESTION-xK9z";
+        // A recognisable question text: it must not come back in the error body. ASCII only, because the JSON body would
+        // escape accents (external review X1); renamed after gitleaks took the old marker for a key.
+        const string questionMarker = "kamra question marker 42";
         var model = new ScriptedChatModel().CallThenAnswer("delete_everything", "{}", "-");
         using var app = WithChat(model);
         var client = await ApiClient.SignedInAsync(app);
 
-        var response = await client.PostAsync("/api/v1/chat", new { question = secretQuestion });
+        var response = await client.PostAsync("/api/v1/chat", new { question = questionMarker });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadGateway);
         var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
@@ -262,7 +264,7 @@ public class AdversarialChatApiTests(KamraApiFactory factory)
 
         body.Should().NotContainAny(
             [
-                secretQuestion,
+                questionMarker,
                 "raw-step",
                 "delete_everything",
                 "Exception",
