@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 namespace KamraApp.Unit.Tests;
 
 // US-6 (us6_minispec K6-K8, K10; ADR-0010 4.): the Gemini chat adapter against a scripted HTTP handler (never the
-// real API, AGENTS.md 6.). The request it sends (prompt chat.v5 with today's date, the conversation, the MCP tools
+// real API, AGENTS.md 6.). The request it sends (prompt chat.v4 with today's date, the conversation, the MCP tools
 // as function declarations), the model's step sent back unchanged, the function calls it reads, the US-2 retry rules
 // (QA-3) and a log without any text.
 public sealed class GeminiChatModelTests : IDisposable
@@ -50,11 +50,9 @@ public sealed class GeminiChatModelTests : IDisposable
             .And.Contain("only when the user explicitly asks for a new recipe or a recipe idea", "receptotlet_minispec Ü3: an idea only on request")
             .And.Contain("answer with propose_recipe", "receptotlet_minispec 2.: the idea comes as the function, not as text")
             .And.Contain("cannot suggest a substitute", "receptotlet_minispec Ü7: substitutes stay out of scope")
-            .And.Contain("what is missing for one of them) use get_recommendations", "chat.v4: C6 of the chat.v3 run went to the pantry")
-            .And.Contain("the missing ones too", "chat.v4: R2 of the chat.v3 run refused a recipe with too little stock")
-            .And.Contain("A dish that is not among the household's recipes", "chat.v5: R2 of the chat.v4 run went to the recommendations")
-            .And.Contain("never 0", "chat.v5: R1 of the chat.v4 run was refused, probably for a spice to taste");
-        GeminiChatModel.PromptVersion.Should().Be("chat.v5");
+            .And.Contain("what is missing for a recipe) use get_recommendations", "chat.v4: C6 of the chat.v3 run went to the pantry")
+            .And.Contain("the missing ones too", "chat.v4: R2 of the chat.v3 run refused a recipe with too little stock");
+        GeminiChatModel.PromptVersion.Should().Be("chat.v4");
         var contents = body["contents"]!.AsArray();
         contents.Select(c => (string)c!["role"]!).Should().Equal("user", "model", "user");
         contents.Select(c => (string)c!["parts"]![0]!["text"]!).Should().Equal("Mi jár le?", "A tej holnap.", "És még?");

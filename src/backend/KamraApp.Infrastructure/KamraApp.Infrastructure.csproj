@@ -21,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- AGENTS.md 5.: versioned prompt files; quick-entry v1 and v2 (ADR-0009), chat.v1-v4 (US-6) stay as measured baselines. -->
+    <!-- AGENTS.md 5.: versioned prompt files; quick-entry v1 and v2 (ADR-0009), chat.v1-v3 and chat.v5 (US-6; v5 measured worse than v4 on 2026-11-15, not shipped) stay as measured baselines. -->
     <EmbeddedResource Include="Llm\Prompts\quick-entry.v3.txt" LogicalName="quick-entry.v3.txt" />
-    <EmbeddedResource Include="Llm\Prompts\chat.v5.txt" LogicalName="chat.v5.txt" />
+    <EmbeddedResource Include="Llm\Prompts\chat.v4.txt" LogicalName="chat.v4.txt" />
   </ItemGroup>
 
 </Project>
