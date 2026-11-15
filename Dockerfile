@@ -18,6 +18,7 @@ COPY global.json Directory.Build.props Directory.Packages.props dotnet-tools.jso
 COPY src/backend/KamraApp.Domain/KamraApp.Domain.csproj src/backend/KamraApp.Domain/
 COPY src/backend/KamraApp.Application/KamraApp.Application.csproj src/backend/KamraApp.Application/
 COPY src/backend/KamraApp.Infrastructure/KamraApp.Infrastructure.csproj src/backend/KamraApp.Infrastructure/
+COPY src/backend/KamraApp.McpServer/KamraApp.McpServer.csproj src/backend/KamraApp.McpServer/
 COPY src/backend/KamraApp.Api/KamraApp.Api.csproj src/backend/KamraApp.Api/
 RUN dotnet restore src/backend/KamraApp.Api/KamraApp.Api.csproj && dotnet tool restore
 COPY src/backend/ src/backend/

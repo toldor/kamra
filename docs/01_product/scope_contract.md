@@ -104,7 +104,7 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 | okt. 5 – okt. 16. | Az 1. lépcső tervezési dokumentumai; US-1; ajánlás és főzés 3–5 recepttel (US-3, US-4 alapútja) | okt. 16.: működő készletkezelés és bemutatható ajánlás–főzés folyamat, kézzel ellenőrzött mennyiségekkel |
 | okt. 17 – okt. 22. | US-5; US-3 és US-4 hibás esetei; saját recept és hozzávaló; az induló lista bővítése; az első dokumentált telepítés; a dolgozat 1–4. fejezete és az 5. fejezet első része | okt. 22. (témavezetői: okt. 23.): a készlet–recept–főzés–bevásárlás teljes útja (1. lépcső kész) |
 | okt. 23 – nov. 13. | 2. lépcső: felhasználói kipróbálás 1. köre (okt. 26. – nov. 1., 4 fő) és javítások; LLM-mérés (PoC, nov. 2–7.); US-2 | nov. 13.: kipróbálható MI-bevitel (`v0.5.0`); az eredeti nov. 3-i céldátum csúszott (2026-11-07-i átütemezés) |
-| nov. 14 – nov. 20. | 3. lépcső: US-6 (nov. 18-ig, `v0.6.0`); mérések; a dolgozat teljes első változata | nov. 20. (témavezetői határidő): a vállalt funkciók lezárása, a teljes dolgozat és projektcsomag |
+| nov. 14 – nov. 20. | 3. lépcső: US-6 (`v0.6.0`, nov. 12. – a 2026-11-09-i gyorsítás szerint); mérések; a dolgozat teljes első változata | nov. 20. (témavezetői határidő): a vállalt funkciók lezárása, a teljes dolgozat és projektcsomag |
 | nov. 21 – dec. 4. | Hibajavítás; felhasználói kipróbálás 2. köre (nov. 21–27., 3–4 fő); javítás utáni újratesztelés; ellenőrzött telepítés másik gépen; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás |
 | dec. 5 – dec. 11. | Végső ellenőrzés | dec. 11.: végső belső ellenőrzési csomag |
 
@@ -133,7 +133,7 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 
 - Egy külső LLM-szolgáltató, az Application rétegben definiált interfész mögött, cserélhetően. A szolgáltató kiválasztása és indoklása: [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md) (Google Gemini API).
 - CI-ban és automatizált tesztekben soha nincs valódi LLM-hívás (mock).
-- Az LLM csak a felhasználó beírt szövegét és a háztartás által látható hozzávalók nevét kapja meg; készletadatot és fiókadatot (e-mail, jelszó) soha. A „Már van otthon” tájékoztatót a backend számolja az adatbázisból.
+- Az LLM a mondatos bevitelnél (US-2) csak a felhasználó beírt szövegét és a háztartás által látható hozzávalók nevét kapja meg; a „Már van otthon” tájékoztatót a backend számolja az adatbázisból. A chatnél (US-6) a kérdést, a korábbi üzeneteket és az MCP-eszközök eredményét kapja: a saját háztartás készletét, ajánlását és bevásárlólistáját ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)). Fiókadatot (e-mail, jelszó) és belső azonosítót egyik funkció sem küld.
 - Havi költségkeret a fejlesztés alatt: legfeljebb 10 000 Ft. Átlépés esetén az AI-funkciók kikapcsolhatók, a kézi form és a determinisztikus funkciók működnek tovább.
 - Időtúllépés: 15 mp próbálkozásonként, egy újrapróbálással (US-2).
 

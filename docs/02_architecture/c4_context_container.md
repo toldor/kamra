@@ -49,9 +49,8 @@ flowchart TB
     subgraph kamra["Kamra"]
         spa["SPA<br/>[React + TypeScript, böngészőben]<br/>Felhasználói felület"]
         subgraph server["Auth boundary: minden adatkérés hitelesített session-t igényel"]
-            api["API<br/>[ASP.NET Core, .NET 10]<br/>REST /api/v1, auth, antiforgery,<br/>a SPA kiszolgálása, LLM-hívások"]
+            api["API<br/>[ASP.NET Core, .NET 10]<br/>REST /api/v1, auth, antiforgery,<br/>a SPA kiszolgálása, LLM-hívások,<br/>MCP-szerver a folyamatban (4 csak olvasó eszköz)"]
             subgraph internal["Belső hálózat: kívülről nem érhető el"]
-                mcp["MCP-szerver<br/>[ASP.NET Core]<br/>4 csak olvasó tool a chathez"]
                 mig["Migrator<br/>[EF migration bundle, egyszer fut]<br/>Séma- és seed-migrációk"]
                 db[("Adatbázis<br/>[PostgreSQL 18]<br/>Üzleti adatok és Identity-táblák")]
             end
@@ -63,36 +62,31 @@ flowchart TB
     spa -- "JSON-kérések session-cookie-val<br/>és antiforgery fejléccel [HTTPS, /api/v1]" --> api
     api -- "Olvas és ír [EF Core, TCP]" --> db
     api -- "Szöveg, szükséges készletadat, tool-leírások;<br/>vissza: tételjavaslat, válasz, toolhívás-kérés [HTTPS]" --> llm
-    api -. "Toolhívás háztartás-kontextussal<br/>[MCP over HTTP] – tervezett" .-> mcp
-    mcp -- "Olvas [EF Core, TCP]" --> db
     mig -- "Séma és seed [TCP]" --> db
 
     classDef person fill:#08427b,color:#fff,stroke:#052e56
     classDef container fill:#438dd5,color:#fff,stroke:#2e6295
     classDef external fill:#8a8a8a,color:#fff,stroke:#5e5e5e
     class user person
-    class spa,api,mcp,mig,db container
+    class spa,api,mig,db container
     class llm external
 ```
 
 | Container | Technológia | Felelősség | Kódnév |
 |---|---|---|---|
 | SPA | React + TypeScript (Vite), a böngészőben | Felhasználói felület; minden API-hívás a közös kliensen át | `src/frontend` (`src/api/`) |
-| API | ASP.NET Core, .NET 10 | REST `/api/v1` controllerekkel, cookie-alapú auth és antiforgery, a SPA statikus kiszolgálása, LLM-hívások (tételjavaslat, chat) | `KamraApp.Api` |
-| MCP-szerver | ASP.NET Core host | Négy csak olvasó tool a chathez, az Application használati eseteken át | `KamraApp.McpServer` |
-| Migrator | EF migration bundle | Séma- és seed-migrációk az API és az MCP-szerver indulása előtt; rollback célmigrációval | `KamraApp.Infrastructure` migrációi |
+| API | ASP.NET Core, .NET 10 | REST `/api/v1` controllerekkel, cookie-alapú auth és antiforgery, a SPA statikus kiszolgálása, LLM-hívások (tételjavaslat, chat) és a chat MCP-szervere (`KamraApp.McpServer`, kérésenként, memóriabeli streamen – [ADR-0010](adr/0010-mcp-integracio.md)) | `KamraApp.Api`, `KamraApp.McpServer` |
+| Migrator | EF migration bundle | Séma- és seed-migrációk az API indulása előtt; rollback célmigrációval | `KamraApp.Infrastructure` migrációi |
 | Adatbázis | PostgreSQL 18 | Üzleti adatok és Identity-táblák | – |
 
-Az API és az MCP-szerver is a saját folyamatában tölti be az Application, a Domain és az Infrastructure réteget ([ADR-0004](adr/0004-clean-architecture-retegek.md)); a rétegek nem külön futtatható egységek, ezért a Container diagramon nem szerepelnek.
+Az API a saját folyamatában tölti be az Application, a Domain, az Infrastructure és az MCP-szerver projektet ([ADR-0004](adr/0004-clean-architecture-retegek.md)); a rétegek nem külön futtatható egységek, ezért a Container diagramon nem szerepelnek.
 
 | Honnan | Hová | Protokoll | Mi megy át | Hitelesítés |
 |---|---|---|---|---|
 | Felhasználó (böngésző) | API | HTTPS | A SPA statikus fájljai | – (nyilvános) |
 | SPA | API | HTTPS, JSON, `/api/v1` | Készlet-, recept-, bevásárlólista- és chat-kérések | Session-cookie (`HttpOnly`, `Secure`, `SameSite=Strict`) + antiforgery fejléc a módosító kéréseknél |
 | API | Adatbázis | TCP (Npgsql) | Lekérdezések és írások, háztartás szerint szűrve | Adatbázis-felhasználó, connection string környezeti változóból |
-| API | Külső LLM | HTTPS | A beírt szöveg, a válaszhoz szükséges készletadat és a tool-leírások; fiókadat soha. Vissza: strukturált tételjavaslat, chat-válasz vagy toolhívás-kérés; az LLM nem fér hozzá közvetlenül az adatbázishoz, a toolhívást az API hajtja végre. | API-kulcs környezeti változóból |
-| API | MCP-szerver | MCP over HTTP, belső hálózat (tervezett) | Toolhívások; a háztartás-azonosító a sessionből, soha nem az LLM-től | Az MCP-integráció ADR-jének döntése |
-| MCP-szerver | Adatbázis | TCP (Npgsql) | Csak olvasó lekérdezések, háztartás szerint szűrve | Adatbázis-felhasználó |
+| API | Külső LLM | HTTPS | A beírt szöveg (US-2) vagy a kérdés és az előzmény (US-6), a válaszhoz szükséges hozzávalónevek, illetve az MCP-eszközök eredménye (a saját háztartás adatai) és az eszközleírások; fiókadat és azonosító soha. Vissza: strukturált tételjavaslat, chat-válasz vagy toolhívás-kérés; az LLM nem fér hozzá közvetlenül az adatbázishoz, a toolhívást az API hajtja végre. | API-kulcs környezeti változóból |
 | Migrator | Adatbázis | TCP (Npgsql) | Séma- és seed-migrációk | Migrációs adatbázis-felhasználó |
 
 ## 3. Deployment view
@@ -113,7 +107,6 @@ flowchart TB
         subgraph compose["Docker Compose"]
             apic["api konténer<br/>KamraApp.Api + SPA (wwwroot)<br/>egyetlen publikált port"]
             subgraph net["Belső Docker-hálózat: kamra-network"]
-                mcpc["mcp konténer<br/>KamraApp.McpServer"]
                 migc["migrator konténer<br/>efbundle, egyszer fut"]
                 dbc["db konténer<br/>postgres:18"]
             end
@@ -131,8 +124,6 @@ flowchart TB
     operator -- "push, pull request" --> ci
     migc -- "migráció, utána kilép" --> dbc
     apic -- "indul, ha a migrator sikeres" --> dbc
-    apic -.-> mcpc
-    mcpc --> dbc
     dbc --- pg
     apic --- dp
     apic -- "HTTPS" --> llm
@@ -145,13 +136,13 @@ flowchart TB
 | Környezet | Mi fut | Hogyan indul | Konfiguráció |
 |---|---|---|---|
 | Fejlesztői | Az API `dotnet run`-nal, a SPA a Vite dev serverrel (az `/api` kéréseket az API-ra proxyzza), az adatbázis Compose-ban | `docker compose up -d db`, `dotnet ef database update`, `dotnet run`, `npm run dev` | `appsettings.Development.json` + környezeti változók |
-| Docker Compose (localhost) | api (SPA-val), mcp, migrator, db; volume-ok: `pgdata`, `dpkeys`; kívülről csak az api portja érhető el | `docker compose up --build`; a migrator a sikeres lefutás után engedi indulni az api-t és az mcp-t | `.env` (nincs a repóban) a [.env.example](../../.env.example) alapján; induláskor validálva (QA-7) |
+| Docker Compose (localhost) | api (SPA-val), migrator, db; volume-ok: `pgdata`, `dpkeys`; kívülről csak az api portja érhető el | `docker compose up --build`; a migrator a sikeres lefutás után engedi indulni az api-t | `.env` (nincs a repóban) a [.env.example](../../.env.example) alapján; induláskor validálva (QA-7) |
 | CI (GitHub Actions) | Build, formázás, lint, tesztek (Testcontainers, `postgres:18`), OpenAPI-diff | Push és pull request | CI secretek, valódi LLM-hívás nélkül |
 | Tervezett célkörnyezet | Ugyanaz a Compose egy Linux VM-en, TLS-proxy konténerrel | A deploy runbook szerint | A deploy runbook szerint |
 
 ## Ismert korlátok
 
-- **MCP-útvonal:** az API és az MCP-szerver közötti hívás mechanizmusa (és a háztartás-kontextus átadása) az MCP-integráció ADR-jében dől el; ha az a toolokat az API folyamatába helyezi, az MCP-szerver container megszűnik.
+- **MCP-útvonal (eldöntve, [ADR-0010](adr/0010-mcp-integracio.md)):** az MCP-szerver az API folyamatában fut, kérésenként, memóriabeli streamen; a háztartás a kérés hatóköréből jön. Külön konténerbe a szállítás cseréjével vihető.
 - **Nincs felhőkörnyezet:** a rendszer Docker Compose-zal, localhoston fut; a célkörnyezet a deploy runbookban dől el.
 - **HTTPS:** a session-cookie `Secure`, ezért nem localhost telepítéshez TLS-végződtetés kell (TLS-proxy vagy a platform szolgáltatása).
 - **LLM-szolgáltató:** a konkrét szolgáltató és modell külön ADR-ben dől el; a diagram általános külső rendszerként mutatja.

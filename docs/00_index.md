@@ -37,6 +37,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [adr/0007-rest-api-hibamodell.md](02_architecture/adr/0007-rest-api-hibamodell.md) | REST + controllerek, /api/v1, kivétel-alapú ProblemDetails, generált OpenAPI | Accepted |
 | [adr/0008-konkurencia-es-idempotencia.md](02_architecture/adr/0008-konkurencia-es-idempotencia.md) | Optimista zárolás xmin-nel, főzés-idempotencia kérésazonosítóval, upsert és egyedi kényszerek | Accepted |
 | [adr/0009-llm-szolgaltato.md](02_architecture/adr/0009-llm-szolgaltato.md) | LLM-szolgáltató: Gemini API (gemini-3.1-flash-lite), REST-hívás kötött JSON-sémával, PoC-méréssel | Accepted |
+| [adr/0010-mcp-integracio.md](02_architecture/adr/0010-mcp-integracio.md) | MCP-integráció: az MCP-szerver az API folyamatában, memóriabeli szállítással; a Gemini eszközhívási körét az API vezérli | Accepted |
 | [adr/0011-serilog-strukturalt-naplozas.md](02_architecture/adr/0011-serilog-strukturalt-naplozas.md) | Serilog JSON-napló, szerver által generált correlationId | Accepted |
 | [adr/0012-bongeszos-kereses.md](02_architecture/adr/0012-bongeszos-kereses.md) | Böngészőben szűrő kereső a Receptek és a Bevásárlólista oldalon | Accepted |
 | [adr/0013-vizualis-rendszer.md](02_architecture/adr/0013-vizualis-rendszer.md) | Saját vizuális rendszer: tokenek CSS-változókban, saját tárhelyű betűk | Accepted |

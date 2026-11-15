@@ -50,9 +50,9 @@ Elkészült az 1. lépcső, a determinisztikus mag, és a 2. lépcső, az egy mo
 - húsz előre, kézzel kiszámolt ellenőrző példa, mind egyezik ([test report](docs/04_quality/test_report.md)); az első telepítés tiszta környezetben 1,5 perc alatt elindult ([kézi tesztek](docs/04_quality/manual_tests.md));
 - az alapok a walking skeletonból: regisztráció és bejelentkezés, egységes hibamodell, strukturált napló, Docker Compose stack, GitHub Actions CI.
 
-Még **nincs kész**: chatasszisztens (nov. 18.). Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
+Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-A `v0.5.0` (egy mondatos bevitel) nov. 8-án elkészült. Következő mérföldkő: **nov. 18.** – `v0.6.0` a chattel (US-6) és az UAT 1. kör javításaival (L1, L2); **nov. 20.** – minden vállalt funkció és a teljes dolgozat. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én elkészült. Következő mérföldkő: **nov. 13.** – a dolgozat teljes első változata; az UAT 2. köre nov. 21–27. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 
@@ -73,14 +73,14 @@ A felhasználó természetes nyelvű mondatot írhat be, amelyből az AI struktu
 
 ### 3. Olvasási célú chatasszisztens
 
-A chatasszisztens a tervek szerint csak olvasási célú MCP-eszközöket használhat:
+A chatasszisztens („Kérdezz”) csak olvasási célú MCP-eszközöket használ:
 
 - készlet lekérdezése;
 - hamarosan lejáró tételek lekérdezése;
 - receptajánlás lekérdezése;
 - bevásárlólista megtekintése.
 
-A chat nem módosíthat közvetlenül adatot.
+A chat nem módosít adatot; a beszélgetést a szerver nem tárolja.
 
 ## Technológiai stack
 
@@ -92,13 +92,13 @@ A chat nem módosíthat közvetlenül adatot.
 | Adatkezelés | Entity Framework Core, migrációk |
 | Frontend | React, TypeScript, Vite |
 | AI | Google Gemini API (`gemini-3.1-flash-lite`), REST-hívás az Application rétegben definiált interfész mögött ([ADR-0009](docs/02_architecture/adr/0009-llm-szolgaltato.md)) |
-| Chat-integráció (tervezett, 3. lépcső) | MCP-eszközök közös Application use case-ekkel; a felépítésről az ADR-0010 dönt |
+| Chat (3. lépcső) | MCP-szerver az API folyamatában, a REST API-val közös use case-ekkel ([ADR-0010](docs/02_architecture/adr/0010-mcp-integracio.md)) |
 | Tesztelés | xUnit v3, FluentAssertions 7, Testcontainers, Vitest, Playwright |
 | Környezet | Docker Compose, GitHub Actions |
 
 ## Architektúra
 
-Megvalósult (v0.5.0): React-frontend, Web API, Application, Domain, Infrastructure (benne az LLM-adapter), PostgreSQL. Tervezett: MCP-szerver (3. lépcső).
+Megvalósult (v0.6.0): React-frontend, Web API, Application, Domain, Infrastructure (benne az LLM-adapter), PostgreSQL, MCP-szerver (az API folyamatában).
 
 ```text
 React + TypeScript frontend
@@ -182,6 +182,8 @@ Ezután nyisd meg: **http://localhost:8080** → *Regisztrálj* → e-mail-cím 
 | `Llm__Enabled` | A mondatos bevitel kapcsolója; bekapcsolva kulcs nélkül az alkalmazás nem indul | `false` |
 | `Llm__ApiKey` | Gemini API-kulcs; csak a `.env`-ben vagy a shell környezetében, soha nem a repóban | üres |
 | `RateLimiting__ItemProposals__PermitLimit`, `RateLimiting__ItemProposals__WindowSeconds` | Mondatos bevitel: kérések száma háztartásonként egy időablakban | `20`, `600` |
+| `Llm__ChatModel` | A chat modellje; üresen a `Llm__Model` értéke | üres |
+| `RateLimiting__Chat__PermitLimit`, `RateLimiting__Chat__WindowSeconds` | Chat: kérdések száma háztartásonként egy időablakban | `30`, `600` |
 
 Hiányzó kötelező beállítással az alkalmazás induláskor hibával leáll (fail-fast).
 
@@ -220,8 +222,8 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 |---|---|---|
 | Alapok | Repository, CI, architektúra, walking skeleton (autentikáció, Docker Compose) | Kész (2026-10-04) |
 | 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Kész (v0.3.0, 2026-10-24; az UAT előtti javítások: v0.3.1, 2026-10-31; új felület: v0.4.0, 2026-11-01); a felhasználói kipróbálás okt. 26-tól |
-| 2. lépcső | AI-alapú egy mondatos készletbevitel | Kész az ágon, kiadás: `v0.5.0`, nov. 13. (eredeti cél: nov. 3.) |
-| 3. lépcső | Olvasási célú chat és mérési funkciók | Tervezett (cél: nov. 18.; témavezetői: nov. 20.) |
+| 2. lépcső | AI-alapú egy mondatos készletbevitel | Kész (`v0.5.0`, nov. 8.; eredeti cél: nov. 3.) |
+| 3. lépcső | Olvasási célú chat és mérési funkciók | Kész (`v0.6.0`, nov. 12.) |
 | Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett (cél: dec. 4.) |
 
 ## Biztonsági és minőségi alapelvek

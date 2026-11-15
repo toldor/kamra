@@ -30,6 +30,9 @@ export type AddShoppingListItemRequest = components['schemas']['AddShoppingListI
 export type Recipe = components['schemas']['RecipeResponse']
 export type CreateRecipeRequest = components['schemas']['CreateRecipeRequest']
 export type ItemProposal = components['schemas']['ItemProposalResponse']
+// US-6 (us6_minispec K2-K3): the client keeps the conversation and sends its last messages as text.
+export type ChatMessage = { role: 'user' | 'assistant'; text: string }
+export type ChatAnswer = { answer: string; toolsUsed: string[] }
 // The request's fields are strings in the OpenAPI document (validated by the backend); the page sends the enums.
 export type CreateIngredientRequest = { name: string; dimension: Dimension; defaultCategory: Category }
 // The `available` extension of INSUFFICIENT_STOCK (error_handling.md); ProblemDetails are not in the OpenAPI.
@@ -228,6 +231,11 @@ export const api = {
   async rejectItemProposal(id: string): Promise<void> {
     await post(`/item-proposals/${id}/reject`)
   },
+
+  // US-6 (us6_minispec K2): the "Kérdezz" menu item shows only when the switch is on.
+  chatAvailability: () => json<{ enabled: boolean }>(send('GET', '/chat/availability')),
+
+  askChat: (question: string, history: ChatMessage[]) => json<ChatAnswer>(write('POST', '/chat', { question, history })),
 
   // null removes the minimum level.
   async setMinimum(ingredientId: string, minimum: AmountRequest | null): Promise<void> {

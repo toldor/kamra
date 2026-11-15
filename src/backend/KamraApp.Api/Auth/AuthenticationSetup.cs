@@ -13,6 +13,7 @@ public static class AuthenticationSetup
 {
     public const string AuthRateLimitPolicy = "auth";
     public const string ItemProposalsRateLimitPolicy = "item-proposals";
+    public const string ChatRateLimitPolicy = "chat";
     public const string UnauthenticatedCode = "UNAUTHENTICATED";
     public const string UnauthenticatedTitle = "Jelentkezz be a folytatáshoz.";
 
@@ -60,21 +61,28 @@ public static class AuthenticationSetup
         // us2_minispec K11: sentences per household (from the session, not the IP), against LLM cost and abuse.
         var proposalLimit = configuration.GetValue("RateLimiting:ItemProposals:PermitLimit", 20);
         var proposalWindow = TimeSpan.FromSeconds(configuration.GetValue("RateLimiting:ItemProposals:WindowSeconds", 600));
+        // us6_minispec K9: chat questions per household; one question is at most 3 model calls.
+        var chatLimit = configuration.GetValue("RateLimiting:Chat:PermitLimit", 30);
+        var chatWindow = TimeSpan.FromSeconds(configuration.GetValue("RateLimiting:Chat:WindowSeconds", 600));
         services.AddRateLimiter(options =>
         {
             options.AddPolicy(AuthRateLimitPolicy, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = window }));
-            // Without a session there is no household: no limit here, the authorization filter answers 401 (ADR-0007).
-            options.AddPolicy(ItemProposalsRateLimitPolicy, context =>
-                context.User.FindFirst(KamraClaimTypes.HouseholdId)?.Value is { } householdId
-                    ? RateLimitPartition.GetFixedWindowLimiter(householdId,
-                        _ => new FixedWindowRateLimiterOptions { PermitLimit = proposalLimit, Window = proposalWindow })
-                    : RateLimitPartition.GetNoLimiter("anonymous"));
+            options.AddPolicy(ItemProposalsRateLimitPolicy, context => PerHousehold(context, proposalLimit, proposalWindow));
+            options.AddPolicy(ChatRateLimitPolicy, context => PerHousehold(context, chatLimit, chatWindow));
             options.OnRejected = (context, _) => new ValueTask(AppExceptionHandler.WriteProblemAsync(
                 context.HttpContext, StatusCodes.Status429TooManyRequests, "RATE_LIMITED", "Túl sok kérés érkezett. Várj egy kicsit, és próbáld újra."));
         });
 
         return services;
     }
+
+    // Per household (from the session, not the IP). Without a session there is no household: no limit here, the
+    // authorization filter answers 401 (ADR-0007).
+    private static RateLimitPartition<string> PerHousehold(HttpContext context, int permitLimit, TimeSpan window) =>
+        context.User.FindFirst(KamraClaimTypes.HouseholdId)?.Value is { } householdId
+            ? RateLimitPartition.GetFixedWindowLimiter(householdId,
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = window })
+            : RateLimitPartition.GetNoLimiter("anonymous");
 }

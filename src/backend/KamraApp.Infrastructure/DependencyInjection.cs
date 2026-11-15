@@ -1,4 +1,5 @@
 using KamraApp.Application.Auth;
+using KamraApp.Application.Chat;
 using KamraApp.Application.Common;
 using KamraApp.Application.Cookings;
 using KamraApp.Application.Ingredients;
@@ -56,10 +57,13 @@ public static class DependencyInjection
         {
             // The adapter has its own per-attempt timeout (QA-3); the client's own one is only a backstop.
             services.AddHttpClient<IIngredientParser, GeminiIngredientParser>(client => client.Timeout = TimeSpan.FromMinutes(1));
+            // US-6 (us6_minispec K8): the same switch, provider and key (ADR-0010 7.).
+            services.AddHttpClient<IChatModel, GeminiChatModel>(client => client.Timeout = TimeSpan.FromMinutes(1));
         }
         else
         {
             services.AddSingleton<IIngredientParser, DisabledIngredientParser>();
+            services.AddSingleton<IChatModel, DisabledChatModel>();
         }
 
         // ADR-0006: NIST SP 800-63B-4 password length without composition rules; lockout after 5

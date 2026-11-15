@@ -642,3 +642,43 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** forrás: [Billing](https://aistudio.google.com/docs/billing) (2026-11-08: „Requests then fail with an HTTP 402 Payment Required error until you add credits”; a fizetős szolgáltatás csak pozitív egyenleg mellett szolgál ki) és [Pricing](https://aistudio.google.com/docs/pricing) (Flash-Lite, Paid Tier: $0.25 / $1.50 per 1M token); a 402 a [GeminiIngredientParserTests.cs](../../tests/KamraApp.Unit.Tests/GeminiIngredientParserTests.cs) elutasított kérései között; mérés a fizetős kulccsal (B készlet, v3, 1 futás, [riport](../04_quality/llm_meres/report-20261108-1932.md)).
 - **Eredmény:** **PASS.** 100% (80/80), 0 hiba, p50 0,96 mp, p95 1,13 mp, 10 hívás kb. 0,33 cent; a 402 újrapróbálás nélkül `LLM_UNAVAILABLE`. A források nem mondják ki szó szerint, hogy a fizetős szinten nincs ingyenes keret; az árlista külön fizetős ára és a pozitív egyenleg feltétele alapján minden kérést díjkötelesnek tekintünk (az MI nov. 8-i jegyzete ennél erősebben, forrásként fogalmazott).
 - **Következtetés:** a fizetős keret kész az UAT 2. köre előtt; a havi költéskorlát és a rate limit (T-13) együtt korlátozza a költséget.
+
+### V-77 – Az ADR-0010 vak triangulációja
+- **Dátum:** 2026-11-09
+- **Állítás:** Az Antigravity (Gemini) javaslata az MCP-integrációra.
+- **Kockázat:** Magas (a háztartás-elkülönítés és a vállalt MCP-architektúra).
+- **Ellenőrzési módszer:** minden állítás a kódon, az SDK 2.3.1 XML-dokumentációján, a Gemini API-referencián és az MCP-specifikáción.
+- **Eredmény:** **Részben PASS.** 7 téves vagy részben téves állítás (köztük: „a `MISSING_THOUGHT_SIGNATURE` nincs az API-referenciában” – benne van; „folyamaton belül az SDK elhagyható” – a US-6 MCP-t vállal; a folyamaton belüli háztartás-átadás mechanizmusa nem volt megadva). Új lelet: a scope_contract „készletadatot soha” pontja ütközött a US-6-tal.
+- **Következtetés:** a topológia a reviewer javaslata szerint, a mechanizmus forrással igazolva ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)).
+
+### V-78 – A T1, T2 és T3 `/code-review` (két tengely)
+- **Dátum:** 2026-11-10 – 2026-11-11
+- **Állítás:** A standards- és a spec-reviewer megállapításai.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** a kódon és a doksin; a javítások tesztjei előtte pirosak, mutáció.
+- **Eredmény:** **Részben PASS.** Valós: a magyar ábécérend felülírása az eszközben, az ADR-0010 500/2000 karakteres ellentmondása, az eszköz belső hibája modellhibának látszott, egy hosszú válasz után minden kérdés 400 lett volna, egy env-változó hiányzott a `.env.example`-ből, a mérés kézi eszközleírásokkal futott; elvetve indokkal: a többi.
+- **Következtetés:** J1–J8 és R1–R11 javítva, teszttel.
+
+### V-79 – A chat LiveAI-mérése
+- **Dátum:** 2026-11-11
+- **Állítás:** A `gemini-3.1-flash-lite` a 12 magyar kérdésen helyes eszközt hív és helyes választ ad.
+- **Kockázat:** Magas (a US-6 használhatósága).
+- **Ellenőrzési módszer:** `ChatPocTests` (a fejlesztő kulcsával), háromszor.
+- **Eredmény:** **PASS** a `chat.v2`-vel és a szállított eszközleírásokkal (36/36, 36/36, p95 2,4 mp). A `chat.v1` Markdownt adott; a C12 egy futásban „hibás” volt, de csak a pontozás miatt: a rejtett utasítású nevet adatként felsorolta, nem követte – a pontozás javítva, mindkét szám rögzítve ([test_report.md](../04_quality/test_report.md)).
+- **Következtetés:** a `chat.v2` marad; valódi felhasználói kérdéseken a UAT 2. köre méri.
+
+### V-80 – A külső review és az ellenséges teszt (US-6)
+- **Dátum:** 2026-11-11
+- **Állítás:** Az Antigravity (Claude Sonnet 4.6 Thinking) review-ja és 8 ellenséges tesztje (14 eset).
+- **Kockázat:** Magas (háztartás-elkülönítés).
+- **Ellenőrzési módszer:** a tesztek a legkisebb fordítási javítással betöltve és futtatva; minden állítás a kódon.
+- **Eredmény:** **Részben PASS.** 12/14 zöld; a két piros közül az egyik (T6) a nyers JSON ékezet-kódolása miatt bukott, és **megmutatta, hogy a saját elkülönítési tesztem a két készlet-eszköznél semmit nem bizonyított** (`NotContain("tejföl")` a `tejf\u00F6l` ellen); a másik (T8) téves elvárás (a CSRF-elutasított kérés keretet fogyaszt – nem rés). Három teszt nem azt mérte, amit állított (T2, T5, T6); javítva. A review döntést kérő két pontja téves (R-03, E-04).
+- **Következtetés:** dekódolt nevekkel ellenőrzünk; a háztartás-szűrő elhagyása most pirosat ad.
+
+### V-81 – Saját MI-hibák a US-6 alatt
+- **Dátum:** 2026-11-09 – 2026-11-12
+- **Állítás:** A Claude Code saját munkája a US-6 alatt.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** a fejlesztő jelzései, a CI, a külső review és a mutációs ellenőrzés.
+- **Eredmény:** **FAIL, hat esetben.** (1) Az okt. 28-i témavezetői levelet két hétig egyetlen állapotfájl sem dolgozta fel, és a nov. 7-i levelet „elküldöttnek” írtam. (2) Az állapotfájl a „fizetős szinten nincs ingyenes keret” állítást forrásként írta, holott a forrás nem mondja ki. (3) Az elkülönítési teszt a nyers JSON-ban kereste az ékezetes nevet (V-80). (4) A mutáció két gyenge felületi tesztet talált (előzménykorlát, Shift+Enter). (5) A CI-t 30 másodpercenként kérdeztem, és elfogyasztottam az API óránkénti keretét. (6) A tesztjelölőt `secretQuestion`-nek neveztem, a gitleaks kulcsnak vette.
+- **Következtetés:** a levelezés mappáját minden munkamenet elején átnézem; ékezetes szöveget csak dekódolva ellenőrzök; a CI-t legfeljebb 3 percenként kérdezem.

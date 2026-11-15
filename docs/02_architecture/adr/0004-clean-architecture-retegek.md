@@ -2,6 +2,7 @@
 
 Dátum: 2026-10-02
 Státusz: Accepted
+Módosítva: 2026-11-09 (az MCP-szerver helye, [ADR-0010](0010-mcp-integracio.md))
 
 ## Context
 
@@ -11,7 +12,7 @@ Státusz: Accepted
 
 ## Decision
 
-- A backend Clean Architecture szerint négy rétegre (Domain, Application, Infrastructure, Api) és egy külön MCP-hostra bomlik; az Application használati esetenként egy osztályból áll, az adatot aggregátumonkénti repository-interfészeken éri el, a háztartás azonosítója minden háztartáshoz kötött lekérdezés kötelező paramétere, az üzleti szabályok pedig a Domain entitásaiban és domain szolgáltatásaiban élnek.
+- A backend Clean Architecture szerint négy rétegre (Domain, Application, Infrastructure, Api) és egy külön MCP-szerver projektre bomlik (**Módosítás, 2026-11-09:** az MCP-szerver nem külön host, hanem az API folyamatában fut, memóriabeli szállítással – [ADR-0010](0010-mcp-integracio.md)); az Application használati esetenként egy osztályból áll, az adatot aggregátumonkénti repository-interfészeken éri el, a háztartás azonosítója minden háztartáshoz kötött lekérdezés kötelező paramétere, az üzleti szabályok pedig a Domain entitásaiban és domain szolgáltatásaiban élnek.
 
 ## Alternatives
 
@@ -39,7 +40,7 @@ Státusz: Accepted
 
 - **Pozitív:**
   - A függőségi irány (Domain → semmi; Application → Domain; Infrastructure → Application, Domain; Api és McpServer → Application, plusz Infrastructure a DI-hoz) projekthivatkozással kikényszerített.
-  - Az API és az MCP-host ugyanazt a használatieset-osztályt hívja.
+  - Az API és az MCP-szerver eszközei ugyanazt a használatieset-osztályt hívják.
   - A Domain szabályai és a használati esetek fake repositoryval, adatbázis nélkül unit-tesztelhetők.
   - A háztartás szerinti szűrés a metódus-szignatúrában látszik, paraméter nélkül nem lehet lekérdezni.
 - **Negatív / kockázatok:**

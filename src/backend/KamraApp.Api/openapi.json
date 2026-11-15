@@ -1119,6 +1119,84 @@
         }
       }
     },
+    "/api/v1/chat/availability": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatAvailability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/chat": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AskChatRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AskChatRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AskChatRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskChatResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/register": {
       "post": {
         "tags": [
@@ -1392,6 +1470,47 @@
           }
         }
       },
+      "AskChatRequest": {
+        "required": [
+          "question"
+        ],
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "history": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ChatHistoryMessage"
+            }
+          }
+        }
+      },
+      "AskChatResponse": {
+        "required": [
+          "answer",
+          "toolsUsed"
+        ],
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string"
+          },
+          "toolsUsed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "Category": {
         "enum": [
           "dairy",
@@ -1428,6 +1547,45 @@
             "format": "int32"
           }
         }
+      },
+      "ChatAvailability": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ChatHistoryMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ChatRole"
+              }
+            ]
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ChatRole": {
+        "enum": [
+          "user",
+          "assistant",
+          null
+        ]
       },
       "ConfirmCookingRequest": {
         "required": [
@@ -2471,6 +2629,9 @@
     },
     {
       "name": "Cookings"
+    },
+    {
+      "name": "Chat"
     },
     {
       "name": "Auth"

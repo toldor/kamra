@@ -12,6 +12,20 @@ export function Layout({ me, route, onSignedOut, children }: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const previousRoute = useRef(route)
+  // US-6 (us6_minispec K2, K8): the "Kérdezz" item only when the switch is on; if this cannot be read, it stays hidden.
+  const [chatEnabled, setChatEnabled] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    api.chatAvailability()
+      .then((availability) => {
+        if (active) setChatEnabled(availability.enabled)
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [])
 
   // After navigating, the focus goes to the new page's heading, so a screen reader announces it
   // (ux_flows a11y). Not on the first page load, where the browser keeps its own focus.
@@ -54,6 +68,7 @@ export function Layout({ me, route, onSignedOut, children }: {
             {link(routes.recommendations, 'Mit főzzek?')}
             {link(routes.recipes, 'Receptek')}
             {link(routes.shopping, 'Bevásárlólista')}
+            {chatEnabled && link(routes.chat, 'Kérdezz')}
           </nav>
           <div className="account">
             <span>{me.email}</span>

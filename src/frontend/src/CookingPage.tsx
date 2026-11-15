@@ -83,16 +83,27 @@ function Line({ line, value, onChange, field, error }: {
 
 function Summary({ cooking }: { cooking: Cooking }) {
   const heading = useRef<HTMLHeadingElement>(null)
+  const id = useId()
   useEffect(() => heading.current?.focus(), [])
   const deducted = cooking.lines.filter((l) => l.used > 0)
+  const described = [
+    deducted.length > 0 && `${id}-deducted`,
+    cooking.depletedIngredients.length > 0 && `${id}-depleted`,
+    cooking.suggestedIngredients.length > 0 && `${id}-suggested`,
+  ].filter(Boolean).join(' ')
 
   return (
     <section aria-labelledby="cooking-done">
-      <h2 id="cooking-done" className="title" ref={heading} tabIndex={-1}>Elkészült: {cooking.recipeName}, {cooking.servings} adag.</h2>
-      {deducted.length > 0 && <p>Levonva: {deducted.map((l) => `${l.ingredientName} ${formatAmount(l.used, l.unit)}`).join(', ')}.</p>}
-      {cooking.depletedIngredients.length > 0 && <p>Elfogyott: {cooking.depletedIngredients.join(', ')}.</p>}
+      {/* L2 (MT-03): the focused heading is described by the summary, so a screen reader reads it out with the heading. */}
+      <h2 id="cooking-done" className="title" ref={heading} tabIndex={-1} aria-describedby={described || undefined}>
+        Elkészült: {cooking.recipeName}, {cooking.servings} adag.
+      </h2>
+      {deducted.length > 0 && <p id={`${id}-deducted`}>Levonva: {deducted.map((l) => `${l.ingredientName} ${formatAmount(l.used, l.unit)}`).join(', ')}.</p>}
+      {cooking.depletedIngredients.length > 0 && <p id={`${id}-depleted`}>Elfogyott: {cooking.depletedIngredients.join(', ')}.</p>}
       {/* M5, M15: only what really became a suggestion is named. */}
-      {cooking.suggestedIngredients.length > 0 && <p>Felvettem a bevásárlójavaslatok közé: {cooking.suggestedIngredients.join(', ')}.</p>}
+      {cooking.suggestedIngredients.length > 0 && (
+        <p id={`${id}-suggested`}>Felvettem a bevásárlójavaslatok közé: {cooking.suggestedIngredients.join(', ')}.</p>
+      )}
       <p className="actions">
         {cooking.suggestedIngredients.length > 0 && <a href={routes.shopping} className="button-link">Megnézem</a>}
         <a href={routes.pantry} className="button-link">Vissza a készlethez</a>
