@@ -1,7 +1,14 @@
+using System.Text.Json.Nodes;
 using KamraApp.Application.Chat;
 using KamraApp.Application.Common;
+using KamraApp.Domain.Cookings;
+using KamraApp.Domain.Ingredients;
+using KamraApp.Domain.Recipes;
 
 namespace KamraApp.Unit.Tests;
+
+// The test namespace KamraApp.Unit would hide the Domain's Unit type.
+using Unit = KamraApp.Domain.Quantities.Unit;
 
 // US-6 AskChat with a scripted model and fake tools (the LLM is never called in tests, AGENTS.md 6.):
 // validation and the switch (us6_minispec K3, K8), the bounded tool loop (ADR-0010 4.: at most 3 model calls,
@@ -85,10 +92,12 @@ public class AskChatTests
 
         answer.Answer.Should().Be("Szia! Miben segíthetek?");
         answer.ToolsUsed.Should().BeEmpty();
+        answer.Recipe.Should().BeNull();
         var call = _model.Calls.Should().ContainSingle().Subject;
         call.Today.Should().Be(Today);
         call.Turns.Should().Equal(new UserTurn("Mi jár le?"), new AssistantTurn("A tej holnap."), new UserTurn("Szia"));
-        call.Tools.Should().Equal(_tools.Tools);
+        // receptotlet_minispec Ü4: the MCP tools, then propose_recipe of the chat round.
+        call.Tools.Should().Equal([.. _tools.Tools, ProposeRecipe.Tool]);
         _tools.Calls.Should().BeEmpty();
     }
 
@@ -231,6 +240,177 @@ public class AskChatTests
 
         error.Which.Code.Should().Be("LLM_UNAVAILABLE");
     }
+
+    // ---- receptotlet_minispec 2.-3.: propose_recipe ends the question with the answer and the recipe idea ----
+
+    [Fact]
+    public async Task A_proposed_recipe_is_the_answer_with_the_idea_and_it_never_reaches_the_tools()
+    {
+        _model.Reply(Step("step-1", Call("c1", "get_pantry_items", "{}")));
+        _model.Reply(Step("step-2", Call("c2", ProposeRecipe.Name, Idea().ToJsonString())));
+
+        var answer = await AskAsync("Adj egy receptet a cukkinihez.");
+
+        answer.Answer.Should().Be("Itt egy ötlet a cukkinihez.");
+        answer.ToolsUsed.Should().Equal("get_pantry_items");
+        answer.Recipe.Should().BeEquivalentTo(new RecipeIdea("Rakott cukkini", 4,
+            [new RecipeIdeaIngredient("cukkini", 1, Unit.Kg), new RecipeIdeaIngredient("tejföl", 2.5m, Unit.Dl)],
+            "Szeleteld fel a cukkinit, rétegezd a tejföllel, és süsd meg."));
+        _tools.Calls.Select(c => c.Name).Should().Equal("get_pantry_items");
+        _model.Calls.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task A_recipe_proposed_in_the_third_model_call_is_accepted_as_the_final_answer()
+    {
+        _model.Reply(Step("step-1", Call("c1", "get_pantry_items", "{}")));
+        _model.Reply(Step("step-2", Call("c2", "get_expiring_items", "{}")));
+        _model.Reply(Step("step-3", Call("c3", ProposeRecipe.Name, Idea().ToJsonString())));
+
+        var answer = await AskAsync("Mit főzzek a lejárókból?");
+
+        answer.Recipe.Should().NotBeNull();
+        answer.ToolsUsed.Should().Equal("get_pantry_items", "get_expiring_items");
+        _model.Calls.Should().HaveCount(AskChat.MaxModelCalls);
+    }
+
+    [Fact]
+    public async Task A_recipe_idea_at_the_limits_of_a_hand_written_recipe_is_accepted()
+    {
+        var idea = Idea(i =>
+        {
+            i["name"] = new string('n', Recipe.MaxNameLength);
+            i["servings"] = Cooking.MaxServings;
+            i["instructions"] = new string('e', Recipe.MaxInstructionsLength);
+            i["answer"] = new string('a', ProposeRecipe.AnswerMaxLength);
+            i["ingredients"] = new JsonArray([.. Enumerable.Range(1, Recipe.MaxIngredients).Select(n => (JsonNode)Row(
+                n == 1 ? new string('h', Ingredient.MaxNameLength) : $"hozzávaló {n}", n == 2 ? 0.001m : 100_000m, "db"))]);
+        });
+        _model.Reply(Step("step-1", Call("c1", ProposeRecipe.Name, idea.ToJsonString())));
+
+        var answer = await AskAsync("Adj egy nagy receptet.");
+
+        answer.Answer.Should().HaveLength(ProposeRecipe.AnswerMaxLength);
+        answer.Recipe!.Name.Should().HaveLength(Recipe.MaxNameLength);
+        answer.Recipe.Ingredients.Should().HaveCount(Recipe.MaxIngredients);
+        answer.Recipe.Ingredients[1].Amount.Should().Be(0.001m);
+    }
+
+    [Fact]
+    public async Task A_recipe_idea_without_instructions_text_is_accepted_like_a_hand_written_one()
+    {
+        _model.Reply(Step("step-1", Call("c1", ProposeRecipe.Name, Idea(i => i["instructions"] = "").ToJsonString())));
+
+        var answer = await AskAsync("Adj egy receptet.");
+
+        answer.Recipe!.Instructions.Should().BeEmpty();
+    }
+
+    public static TheoryData<string, string> InvalidIdeas => new()
+    {
+        { "not an object", "[]" },
+        { "not JSON", "{\"name\":" },
+        { "an unknown unit", Idea(i => i["ingredients"]![0]!["unit"] = "csipet").ToJsonString() },
+        { "a missing unit", Idea(i => i["ingredients"]![0]!.AsObject().Remove("unit")).ToJsonString() },
+        { "a name of 101 characters", Idea(i => i["name"] = new string('n', 101)).ToJsonString() },
+        { "a blank name", Idea(i => i["name"] = "   ").ToJsonString() },
+        { "a missing name", Idea(i => i.Remove("name")).ToJsonString() },
+        { "0 servings", Idea(i => i["servings"] = 0).ToJsonString() },
+        { "101 servings", Idea(i => i["servings"] = Cooking.MaxServings + 1).ToJsonString() },
+        { "servings as text", Idea(i => i["servings"] = "négy").ToJsonString() },
+        { "no ingredients", Idea(i => i["ingredients"] = new JsonArray()).ToJsonString() },
+        { "51 ingredients", Idea(i => i["ingredients"] = new JsonArray([.. Enumerable.Range(1, 51).Select(n => (JsonNode)Row($"h{n}", 1, "db"))])).ToJsonString() },
+        { "a missing ingredient row", Idea(i => i["ingredients"]!.AsArray().Add(null)).ToJsonString() },
+        { "a blank ingredient name", Idea(i => i["ingredients"]![0]!["name"] = " ").ToJsonString() },
+        { "an ingredient name of 101 characters", Idea(i => i["ingredients"]![0]!["name"] = new string('h', 101)).ToJsonString() },
+        { "an amount of 0", Idea(i => i["ingredients"]![0]!["amount"] = 0).ToJsonString() },
+        { "an amount with 4 decimals", Idea(i => i["ingredients"]![0]!["amount"] = 0.0005m).ToJsonString() },
+        { "an amount above 100 000", Idea(i => i["ingredients"]![0]!["amount"] = 100_001).ToJsonString() },
+        { "instructions of 4001 characters", Idea(i => i["instructions"] = new string('e', 4001)).ToJsonString() },
+        { "missing instructions", Idea(i => i.Remove("instructions")).ToJsonString() },
+        { "a missing answer", Idea(i => i.Remove("answer")).ToJsonString() },
+        { "a blank answer", Idea(i => i["answer"] = "  ").ToJsonString() },
+        { "an answer of 2001 characters", Idea(i => i["answer"] = new string('a', 2001)).ToJsonString() },
+    };
+
+    [Theory]
+    [MemberData(nameof(InvalidIdeas))]
+    public async Task A_recipe_idea_outside_the_schema_is_LLM_INVALID_RESPONSE(string because, string arguments)
+    {
+        _model.Reply(Step("step-1", Call("c1", ProposeRecipe.Name, arguments)));
+
+        var error = await FluentActions.Awaiting(() => AskAsync("Adj egy receptet.")).Should().ThrowAsync<BadGatewayException>(because);
+
+        error.Which.Code.Should().Be("LLM_INVALID_RESPONSE");
+        _model.Calls.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Propose_recipe_with_another_call_in_the_round_is_LLM_INVALID_RESPONSE_and_no_tool_runs()
+    {
+        _model.Reply(Step("step-1", Call("c1", "get_pantry_items", "{}"), Call("c2", ProposeRecipe.Name, Idea().ToJsonString())));
+
+        var error = await FluentActions.Awaiting(() => AskAsync("Adj egy receptet.")).Should().ThrowAsync<BadGatewayException>();
+
+        error.Which.Code.Should().Be("LLM_INVALID_RESPONSE");
+        _tools.Calls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Two_recipe_ideas_in_a_round_are_LLM_INVALID_RESPONSE()
+    {
+        _model.Reply(Step("step-1", Call("c1", ProposeRecipe.Name, Idea().ToJsonString()), Call("c2", ProposeRecipe.Name, Idea().ToJsonString())));
+
+        var error = await FluentActions.Awaiting(() => AskAsync("Adj két receptet.")).Should().ThrowAsync<BadGatewayException>();
+
+        error.Which.Code.Should().Be("LLM_INVALID_RESPONSE");
+    }
+
+    // The model sees the same limits that the server checks.
+    [Fact]
+    public void The_schema_of_propose_recipe_states_the_limits_of_the_check()
+    {
+        var tool = ProposeRecipe.Tool;
+        var schema = JsonNode.Parse(tool.InputSchemaJson)!;
+        var properties = schema["properties"]!;
+        var row = properties["ingredients"]!["items"]!;
+
+        tool.Name.Should().Be("propose_recipe");
+        tool.Description.Should().NotBeNullOrWhiteSpace();
+        Strings(schema["required"]).Should().BeEquivalentTo("name", "servings", "ingredients", "instructions", "answer");
+        ((int)properties["name"]!["maxLength"]!).Should().Be(Recipe.MaxNameLength);
+        ((int)properties["servings"]!["minimum"]!, (int)properties["servings"]!["maximum"]!).Should().Be((1, Cooking.MaxServings));
+        ((int)properties["ingredients"]!["minItems"]!, (int)properties["ingredients"]!["maxItems"]!).Should().Be((1, Recipe.MaxIngredients));
+        ((int)properties["instructions"]!["maxLength"]!).Should().Be(Recipe.MaxInstructionsLength);
+        ((int)properties["answer"]!["maxLength"]!).Should().Be(ProposeRecipe.AnswerMaxLength);
+        Strings(row["required"]).Should().BeEquivalentTo("name", "amount", "unit");
+        ((int)row["properties"]!["name"]!["maxLength"]!).Should().Be(Ingredient.MaxNameLength);
+        Strings(row["properties"]!["unit"]!["enum"]).Should().Equal("g", "dkg", "kg", "ml", "dl", "l", "db");
+    }
+
+    // A valid idea with untidy spaces; change transforms a copy.
+    private static JsonObject Idea(Action<JsonObject>? change = null)
+    {
+        var idea = new JsonObject
+        {
+            ["name"] = "  Rakott   cukkini ",
+            ["servings"] = 4,
+            ["ingredients"] = new JsonArray(Row(" cukkini ", 1, "kg"), Row("tejföl", 2.5m, "dl")),
+            ["instructions"] = "Szeleteld fel a cukkinit, rétegezd a tejföllel, és süsd meg.",
+            ["answer"] = " Itt egy ötlet a cukkinihez. ",
+        };
+        change?.Invoke(idea);
+        return idea;
+    }
+
+    private static JsonObject Row(string name, decimal amount, string unit) => new()
+    {
+        ["name"] = name,
+        ["amount"] = amount,
+        ["unit"] = unit,
+    };
+
+    private static string?[] Strings(JsonNode? array) => [.. array!.AsArray().Select(n => (string?)n)];
 
     private Task<AskChatResponse> AskAsync(string question, params ChatHistoryMessage[] history) =>
         Chat().ExecuteAsync(new AskChatRequest { Question = question, History = history }, CancellationToken.None);

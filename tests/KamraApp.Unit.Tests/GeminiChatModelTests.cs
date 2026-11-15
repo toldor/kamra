@@ -56,7 +56,8 @@ public sealed class GeminiChatModelTests : IDisposable
             "the MCP schema goes to the model unchanged (parametersJsonSchema accepts JSON Schema)");
         var config = body["generationConfig"]!;
         ((string)config["thinkingConfig"]!["thinkingLevel"]!).Should().Be("minimal");
-        ((int)config["maxOutputTokens"]!).Should().Be(1024);
+        // receptotlet_minispec: a recipe idea of up to 4000 characters of instructions and 50 ingredients fits.
+        ((int)config["maxOutputTokens"]!).Should().Be(4096);
     }
 
     [Fact]

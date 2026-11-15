@@ -53,7 +53,7 @@ public sealed class Recipe
     // M9: a household's own recipe with its ingredient lines. The use case checks every rule first, with a
     // message per field; these guards keep the invariants for any other caller (ADR-0004).
     public static (Recipe Recipe, IReadOnlyList<RecipeIngredient> Ingredients) CreateOwn(Guid householdId, string name, int servings,
-        string instructions, IReadOnlyList<RecipeLine> lines, DateTimeOffset createdAt)
+        string instructions, IReadOnlyList<RecipeLine> lines, DateTimeOffset createdAt, bool aiSuggested = false)
     {
         var tidy = Ingredient.Tidy(name);
         if (tidy.Length is 0 or > MaxNameLength)
@@ -113,6 +113,9 @@ public enum RecipeSource
 {
     Seed,
     User,
+
+    // receptotlet_minispec 6.: an own recipe saved from a recipe idea of the chat.
+    AiSuggested,
 }
 
 // One ingredient of a recipe, once per recipe; the quantity is for the recipe's default servings.
