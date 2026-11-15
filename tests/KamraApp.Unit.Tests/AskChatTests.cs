@@ -385,6 +385,7 @@ public class AskChatTests
         ((int)properties["answer"]!["maxLength"]!).Should().Be(ProposeRecipe.AnswerMaxLength);
         Strings(row["required"]).Should().BeEquivalentTo("name", "amount", "unit");
         ((int)row["properties"]!["name"]!["maxLength"]!).Should().Be(Ingredient.MaxNameLength);
+        ((string)row["properties"]!["amount"]!["description"]!).Should().Contain("at most 3 decimals");
         Strings(row["properties"]!["unit"]!["enum"]).Should().Equal("g", "dkg", "kg", "ml", "dl", "l", "db");
     }
 

@@ -80,7 +80,8 @@ public sealed class Recipe
             throw new ArgumentException("An own recipe needs at least one non-staple ingredient.", nameof(lines));
         }
 
-        var recipe = new Recipe(Guid.CreateVersion7(), householdId, tidy, servings, instructions, RecipeSource.User, seedKey: null, createdAt,
+        var source = aiSuggested ? RecipeSource.AiSuggested : RecipeSource.User;
+        var recipe = new Recipe(Guid.CreateVersion7(), householdId, tidy, servings, instructions, source, seedKey: null, createdAt,
             retiredAt: null);
         return (recipe, [.. lines.Select(l => RecipeIngredient.Create(recipe.Id, l.Ingredient, l.Amount, l.Unit))]);
     }

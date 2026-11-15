@@ -14,10 +14,10 @@ public sealed class RecipeRepository(KamraDbContext db) : IRecipeRepository, IRe
     public async Task<IReadOnlyList<RecipeResponse>> ListAsync(Guid householdId, CancellationToken cancellationToken)
     {
         var recipes = await Listed(householdId)
-            .Select(r => new { r.Id, r.Name, r.Servings, Own = r.HouseholdId != null })
+            .Select(r => new { r.Id, r.Name, r.Servings, Own = r.HouseholdId != null, AiSuggested = r.Source == RecipeSource.AiSuggested })
             .ToListAsync(cancellationToken);
         var needs = await NeedsAsync(householdId, [.. recipes.Select(r => r.Id)], cancellationToken);
-        return [.. recipes.Select(r => new RecipeResponse(r.Id, r.Name, r.Servings, r.Own, [.. needs[r.Id].Select(n => n.IngredientName)]))];
+        return [.. recipes.Select(r => new RecipeResponse(r.Id, r.Name, r.Servings, r.Own, [.. needs[r.Id].Select(n => n.IngredientName)], r.AiSuggested))];
     }
 
     public void Add(Recipe recipe, IReadOnlyList<RecipeIngredient> ingredients)

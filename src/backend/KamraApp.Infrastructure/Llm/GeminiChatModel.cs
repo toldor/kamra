@@ -17,8 +17,9 @@ public sealed class GeminiChatModel(HttpClient http, IOptions<LlmOptions> option
 {
     public const string PromptVersion = "chat.v2";
 
-    // A short answer of a few sentences; a runaway answer is cut and refused (MAX_TOKENS).
-    private const int MaxOutputTokens = 1024;
+    // A short answer, or a recipe idea of up to 4000 characters of instructions and 50 ingredients (receptotlet_minispec);
+    // a runaway answer is cut and refused (MAX_TOKENS).
+    private const int MaxOutputTokens = 4096;
 
     private static readonly Lazy<string> Prompt = new(() => GeminiHttp.LoadPrompt("chat.v2.txt"));
 
