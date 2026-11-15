@@ -67,7 +67,7 @@ public sealed class ChatPocTests
     ];
 
     private sealed record Run(string Id, int RunNo, string[] Tools, bool ToolsOk, bool ContentOk, long Ms, string? Error, string? Answer,
-        int InputTokens, int OutputTokens, int ModelCalls, RecipeIdea? Recipe, int MaxOutputTokens);
+        int InputTokens, int OutputTokens, int ModelCalls, RecipeIdea? Recipe, int MaxOutputTokens, string? RefusedIdea);
 
     [Fact]
     public async Task Measure_tool_choice_answers_and_latency()
@@ -89,7 +89,8 @@ public sealed class ChatPocTests
         {
             var tokens = new TokenLogger();
             var tools = new FixedTools(c.Injected);
-            var chat = new AskChat(new GeminiChatModel(http, Options.Create(settings), tokens), tools, TimeProvider.System);
+            var model = new RecordingModel(new GeminiChatModel(http, Options.Create(settings), tokens));
+            var chat = new AskChat(model, tools, TimeProvider.System);
             var watch = Stopwatch.StartNew();
             string? answer = null;
             RecipeIdea? recipe = null;
@@ -111,7 +112,7 @@ public sealed class ChatPocTests
             var text = (c.Injected is null ? answer ?? "" : (answer ?? "").Replace(c.Injected, "", StringComparison.OrdinalIgnoreCase)).ToLowerInvariant();
             var contentOk = error is null && c.AnyOf.All(group => group.Any(text.Contains)) && !c.Forbidden.Any(text.Contains) && RecipeOk(c, recipe);
             var run = new Run(c.Id, runNo, called, toolsOk, contentOk, watch.ElapsedMilliseconds, error, answer, tokens.Input, tokens.Output, tokens.Calls,
-                recipe, tokens.MaxOutput);
+                recipe, tokens.MaxOutput, error is null ? null : model.LastIdea);
             runs.Add(run);
             await File.AppendAllLinesAsync(rawPath, [JsonSerializer.Serialize(run)], ct); // survives Ctrl+C
         }
@@ -157,7 +158,7 @@ public sealed class ChatPocTests
             var recipe = r.Recipe is null ? "" : Cell($"{r.Recipe.Name} ({r.Recipe.Servings} adag): " + string.Join(", ", r.Recipe.Ingredients.Select(i =>
                 string.Create(CultureInfo.InvariantCulture, $"{i.Name} {i.Amount} {i.Unit.ToString().ToLowerInvariant()}"))));
             sb.Append(CultureInfo.InvariantCulture,
-                $"| {r.Id} | {r.RunNo} | {string.Join(", ", r.Tools)} | {(r.ToolsOk ? "ok" : "HIBA")} | {(r.ContentOk ? "ok" : "HIBA")} | {r.Ms} | {r.Error} | {answer} | {recipe} |\n");
+                $"| {r.Id} | {r.RunNo} | {string.Join(", ", r.Tools)} | {(r.ToolsOk ? "ok" : "HIBA")} | {(r.ContentOk ? "ok" : "HIBA")} | {r.Ms} | {r.Error}{(r.RefusedIdea is null ? "" : " " + Cell(r.RefusedIdea))} | {answer} | {recipe} |\n");
         }
 
         return sb.ToString();
@@ -237,6 +238,23 @@ public sealed class ChatPocTests
 
     private sealed record Item(string Name, decimal Amount, string Unit, string Category, DateOnly ExpiryDate, bool ExpiryEstimated,
         bool Expired, bool SoonExpiring);
+
+    // The arguments of the last propose_recipe call, so a refused idea can be read in the report (chat.v4 run, R1: the
+    // reason of a 502 was not visible). Measurement only, on the fixed synthetic household; the app logs no text (K10).
+    private sealed class RecordingModel(IChatModel inner) : IChatModel
+    {
+        public string? LastIdea { get; private set; }
+
+        public bool Enabled => inner.Enabled;
+
+        public async Task<ChatModelReply> CompleteAsync(DateOnly today, IReadOnlyList<ChatTurn> turns, IReadOnlyList<ChatTool> tools,
+            CancellationToken cancellationToken)
+        {
+            var reply = await inner.CompleteAsync(today, turns, tools, cancellationToken);
+            LastIdea = reply.Calls.FirstOrDefault(c => c.Name == ProposeRecipe.Name)?.ArgumentsJson ?? LastIdea;
+            return reply;
+        }
+    }
 
     // Reads the token counts from the adapter's own log event (it logs no text).
     private sealed class TokenLogger : ILogger<GeminiChatModel>
