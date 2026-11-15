@@ -299,6 +299,22 @@ describe('cooking and the shopping list', () => {
     expect(screen.getByText('Felvettem a listára: paradicsom 50 g, vöröshagyma 150 g.')).toBeTruthy()
   })
 
+  // L2 (MT-03, l1_l2_minispec): the focused summary heading is described by the summary sentences, so a screen reader
+  // reads the new shopping suggestions out with it.
+  it('describes the focused summary heading with what was deducted and suggested (L2)', async () => {
+    backend({ [confirm]: [{ status: 201, body: { ...cooked, suggestedIngredients: ['paprika'] } }] })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Főzés megerősítése' }))
+
+    const heading = await screen.findByRole('heading', { name: 'Elkészült: Lecsó, 4 adag.' })
+    await waitFor(() => expect(document.activeElement).toBe(heading))
+    const description = (heading.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean)
+      .map((id) => document.getElementById(id)?.textContent).join(' ')
+    expect(description).toContain('Felvettem a bevásárlójavaslatok közé: paprika.')
+    expect(description).toContain('Levonva:')
+  })
+
   it('names the new shopping suggestions in the summary, and only when there are some (M5)', async () => {
     backend({ [confirm]: [{ status: 201, body: { ...cooked, suggestedIngredients: ['paprika'] } }] })
     render(<App />)

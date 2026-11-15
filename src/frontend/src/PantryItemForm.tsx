@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { api, ApiError, failWith, type Category, type CategoryInfo, type Ingredient, type Unit } from './api/client'
+import { api, ApiError, failWith, type Category, type CategoryInfo, type Ingredient, type PantryItem, type Unit } from './api/client'
 import { useFieldErrors } from './fieldErrors'
 import { allUnits, categoryName, findIngredient, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
@@ -12,7 +12,8 @@ const fieldOrder = ['ingredientId', 'amount', 'unit', 'category', 'expiryDate'] 
 export function PantryItemForm({ categories, ingredients, onAdded, onIngredientCreated, onSignedOut }: {
   categories: CategoryInfo[]
   ingredients: Ingredient[]
-  onAdded: () => void
+  // L1: the saved item, so the page can say what went in.
+  onAdded: (item: PantryItem) => void
   // N11: a new own ingredient from the picker.
   onIngredientCreated: (ingredient: Ingredient) => void
   onSignedOut: (notice: string) => void
@@ -42,7 +43,7 @@ export function PantryItemForm({ categories, ingredients, onAdded, onIngredientC
     setBusy(true)
     fields.setErrors({})
     try {
-      await api.addPantryItem({
+      const added = await api.addPantryItem({
         ingredientId: ingredient.id,
         amount: amount.trim() === '' ? null : Number(amount),
         unit: chosenUnit,
@@ -54,7 +55,9 @@ export function PantryItemForm({ categories, ingredients, onAdded, onIngredientC
       setUnit('g')
       setCategory('')
       setExpiryDate('')
-      onAdded()
+      onAdded(added)
+      // L1 (MT-03): the disabled button lost the focus; it goes back to the field of the next item.
+      fields.focus('ingredientId')
     } catch (caught) {
       failWith(onSignedOut, setError)(caught)
       if (caught instanceof ApiError && caught.status !== 401) fields.setErrors(caught.errors)

@@ -15,6 +15,9 @@ public sealed class LlmOptions : IValidatableObject
 
     public string Model { get; set; } = "gemini-3.1-flash-lite";
 
+    // us6_minispec K8: the chat's model; null means the same as Model.
+    public string? ChatModel { get; set; }
+
     // The e2e stack points this at the LLM stub (us2_minispec K16).
     public Uri BaseUrl { get; set; } = new("https://generativelanguage.googleapis.com/");
 

@@ -4,6 +4,7 @@
     <Project Path="src/backend/KamraApp.Application/KamraApp.Application.csproj" />
     <Project Path="src/backend/KamraApp.Domain/KamraApp.Domain.csproj" />
     <Project Path="src/backend/KamraApp.Infrastructure/KamraApp.Infrastructure.csproj" />
+    <Project Path="src/backend/KamraApp.McpServer/KamraApp.McpServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/KamraApp.Integration.Tests/KamraApp.Integration.Tests.csproj" />

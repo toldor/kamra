@@ -1,0 +1,4 @@
+# False positive (2026-11-12, developer decision): the generic-api-key rule took a test question marker
+# ("SECRETQUESTION-…" in AdversarialChatApiTests, commit 4bea5c7) for a key. It is not a secret; the constant was renamed
+# in the next commit, and this line only ignores the old commit's finding.
+4bea5c75bc68a4d1de128ed7e2901f2eab8c4278:tests/KamraApp.Integration.Tests/AdversarialChatApiTests.cs:generic-api-key:250
