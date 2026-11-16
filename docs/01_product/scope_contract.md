@@ -89,7 +89,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 
 Sorrendben, az MVP Definition of Done teljesülése után:
 
-1. **AI-receptötlet mentése:** az AI által generált recept szerkeszthető űrlapon jelenik meg, és jóváhagyás után „AI-javasolt” forrásjelöléssel a receptek közé menthető. Mentés után az ajánlásban ugyanúgy szerepel, mint bármely más recept.
+1. **AI-receptötlet mentése:** az AI által generált recept szerkeszthető űrlapon jelenik meg, és jóváhagyás után „AI-javasolt” forrásjelöléssel a receptek közé menthető. Mentés után az ajánlásban ugyanúgy szerepel, mint bármely más recept. **Megvalósítva (`v0.7.0`, 2026-11-16):** a receptötletet a Kérdezz oldalon lehet kérni; a modell a `propose_recipe` függvénnyel adja (nem MCP-eszköz, nem olvas, nem ír), a „Szerkesztés és mentés” gomb az „Új recept” űrlapra viszi, a mentett recept „AI-javasolt” címkét kap ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 9., [P-28](../07_ai/prompt_log.md)).
 2. **Kipipált tételből készletbevitel:** a bevásárlólistán kipipált tétel előre kitöltött készletbeviteli formot nyit (hozzávaló, mennyiség, egység), amit a felhasználó lejárattal kiegészítve ment.
 
 ## 3. Korlátok
@@ -113,7 +113,7 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 - **Döntési pont – okt. 22–23.:** az 1. lépcső eredménye alapján a témavezetővel döntünk a januári záróvizsga tarthatóságáról; csúszás esetén későbbi záróvizsga.
 - A dolgozat a fejlesztéssel párhuzamosan készül: minden lépcső végén a hozzá tartozó fejezet.
 - Stretch csak akkor, ha a 3. lépcső a freeze előtt kész és zöld. A jelenlegi ütemezés alapján valószínűleg nem fér bele.
-- **Vágási szabály:** ha a US-2 nov. 3-ig nem kész, a US-6 szűkül (például kevesebb MCP-toollal), **előzetesen egyeztetve a témavezetővel**. Az 1. és a 2. lépcső védett. *Alkalmazás (2026-11-07):* a US-2 nov. 3-ig nem készült el. A fejlesztő döntése: a US-6 nem szűkül, az ütemezés csúszik (US-2: nov. 13., US-6: nov. 18., minden vállalt funkció és a teljes első dolgozat: nov. 20.); a témavezető levélben tájékoztatva (nov. 7.). A nov. 3-i jelzés elmaradt ([P-26](../07_ai/prompt_log.md)).
+- **Vágási szabály:** ha a US-2 nov. 3-ig nem kész, a US-6 szűkül (például kevesebb MCP-toollal), **előzetesen egyeztetve a témavezetővel**. Az 1. és a 2. lépcső védett. *Alkalmazás (2026-11-07):* a US-2 nov. 3-ig nem készült el. A fejlesztő döntése: a US-6 nem szűkül, az ütemezés csúszik (US-2: nov. 13., US-6: nov. 18., minden vállalt funkció és a teljes első dolgozat: nov. 20.); a témavezetőt a fejlesztő a nov. 20-i levélben tájékoztatja. A nov. 3-i jelzés elmaradt ([P-26](../07_ai/prompt_log.md)).
 
 ### Adat
 
@@ -185,7 +185,7 @@ A projekt akkor leadható, ha az alábbiak **mind** teljesülnek:
 - Gépi tanulású saját modell betanítása
 - E-mail / push értesítések
 - Jelszó-visszaállítás és e-mail-megerősítés
-- A chat asszisztens nem kezdeményez adatmódosítást (sem közvetlenül, sem javaslatként)
+- A chat asszisztens nem módosít adatot; receptötletet adhat, amelyet a felhasználó az új recept űrlapján átnéz, és ő ment el (Stretch 1, a fejlesztő kérésére, 2026-11-12)
 - Szerepkör-alapú hozzáférés-kezelés (RBAC) több felhasználó részére
 - Táplálkozás- és kalóriakövetés
 - Egyéni ízlés- és allergiaprofilok

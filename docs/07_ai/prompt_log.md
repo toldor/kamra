@@ -502,3 +502,19 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **UAT 2. kör:** új forgatókönyv a chatre (S6).
   - **Kipróbálás a PR előtt (nov. 12.):** a valódi Geminivel kipróbáltam; négy kérést adtam. Az L3–L5 javítva (`l3_l5_minispec`). A receptötletet (recept kérése a chatben, átvétel az új recept űrlapjára, mentés előtt szerkeszthető) külön lépésben kértem, ötödik eszköz nélkül.
   - **Commit:** minden commitot és pusht én végeztem (a `v0.6.0` ágán az MI nem commitolt); a `v0.5.0` utolsó három commitját (`42fdf79`, `9d376c5`, `dd6d5fe`) kérésemre a Claude Code végezte, trailer nélkül.
+
+### P-28 – Receptötlet a Kérdezz oldalon (v0.7.0, Stretch 1)
+- **Dátum:** 2026-11-12 (mini-spec) – 2026-11-16
+- **Cél:** a receptötlet a chatből: T1 backend (`propose_recipe` a chat körében, „AI-javasolt” forrás), T2 prompt és mérés (`chat.v3`–`v5`), T3 felület (összefoglaló, átvétel az „Új recept” űrlapra, címke).
+- **Eszköz:** Claude Code (claude-opus-5-5) – terv, piros tesztek, implementáció, mutációs ellenőrzés, `/code-review` (két tengely, sub-agentekkel), mérőteszt; a LiveAI-mérést a fejlesztő futtatta.
+- **Prompt összefoglaló:** a jóváhagyott mini-spec (`receptotlet_minispec.md`, 2026-11-12); a T1–T3 terve; nyolc egyedi kérdés (tokenkorlát, R3, ötlet csak kérésre, `chat.v4`, utolsó kör, szállított prompt, megerősítés, nem illő mértékegység); két review-szétválogatás; négy mérés.
+- **AI javaslat (eredeti):**
+  - **T1:** a `propose_recipe` nem MCP-eszköz, a kör egyetlen hívása, a 3. modellhívásban is elfogadva; ellenőrzés a kézi recept korlátaival, az `answer` 1–2000 karakter; `AiSuggested` bool jelző migráció nélkül; `MaxOutputTokens` 1024 → 4096; a review-ból az R3 javítása (a 3 tizedesjegy a sémaleírásban), az R4–R7 elvetése.
+  - **T2:** `chat.v3` – ötlet csak kifejezett receptkérésre, a helyettesítést elhárítja (Ü7); 5 új mérési eset (R1–R4, S1); a `v3` mérése után `chat.v4` két pontosítással; a `v4` után egy utolsó kör rögzített határral (`chat.v5`) és az elutasított argumentumok rögzítése a mérésben; a `v5` után visszaállás a `v4`-re, a maradék hibák ismert korlátként.
+  - **T3:** összefoglaló a válasz alatt (név, adag, hozzávalók), „Szerkesztés és mentés”; az M14 piszkozat `aiSuggested` jelzővel; megerősítés, ha már van piszkozat; a piszkozatkód `recipeDraft.ts`-be (lint szabály); a review-ból U1 (mezőhiba), U3, S2–S4 javítása, U2 és U4 ismert korlát / meglévő M14-működés.
+- **Érintett fájlok:** `Application/Chat/RecipeIdea.cs` (új), `AskChat.cs`, `ChatResponses.cs`; `Domain/Recipes/Recipe.cs`; `Application/Recipes/*`; `Infrastructure/Persistence/RecipeRepository.cs`; `Infrastructure/Llm/GeminiChatModel.cs`, `Prompts/chat.v3–v5.txt`, `KamraApp.Infrastructure.csproj`; `openapi.json`, `schema.d.ts`; `src/frontend/src/` (`ChatPage.tsx`, `conversation.ts`, `recipeDraft.ts` – új, `RecipeForm.tsx`, `RecipesPage.tsx`, `index.css`, `api/client.ts`); `tests/` (unit, integrációs, `LiveAI/ChatPocTests.cs`, Vitest, e2e és LLM-csonk); `docs/`.
+- **Mit változtattam / döntésem:**
+  - **T1:** a tervet jóváhagytam; tokenkorlát: A (4096); R3: A (sémaleírás, kerekítés nélkül); a szétválogatás jóváhagyva.
+  - **T2:** 3. kérdés: A; 4.: A; 5.: A; 6.: A (`v4`). A négy mérést én futtattam a saját ablakomban (a kulcs nem került a chatbe).
+  - **T3:** 7. kérdés: A; 8. kérdés: A; a szétválogatás jóváhagyva; az U1 szövegében „a(z)” a jóváhagyott „a” helyett (a repó mintája) – elfogadva.
+  - **Commit:** minden commitot én végeztem.
