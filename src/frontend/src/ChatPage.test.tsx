@@ -161,6 +161,19 @@ describe('a recipe idea in the chat', () => {
     expect(window.location.hash).toBe('#/kerdezz')
   })
 
+  // Review U3: an earlier idea that was taken over is not "your half-filled recipe".
+  it('asks with its own text before replacing an earlier recipe idea', async () => {
+    backend(true, [withIdea])
+    sessionStorage.setItem(draftKey, JSON.stringify({ name: 'Kakaó', servings: '2', instructions: '', rows: [], aiSuggested: true }))
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<App />)
+    await ask('Adj egy palacsintareceptet.')
+
+    fireEvent.click((await findIdea()).getByRole('button', { name: 'Szerkesztés és mentés' }))
+
+    expect(confirm).toHaveBeenCalledWith('A korábban átvett receptötlet helyére ez kerül. Folytatod?')
+  })
+
   it('replaces the half-filled recipe when the user says yes', async () => {
     fakeBackend({ ...backendRoutes(true, [withIdea]), ...formRoutes })
     sessionStorage.setItem(draftKey, JSON.stringify({ name: 'Kakaó', servings: '2', instructions: '', rows: [] }))

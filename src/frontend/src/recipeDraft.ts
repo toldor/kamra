@@ -28,12 +28,13 @@ export function storeDraft(draft: Draft | null) {
   }
 }
 
-// receptotlet_minispec 4.: is there a half-filled draft that a recipe idea would replace (Q7: the chat asks first)?
-export function hasRecipeDraft(): boolean {
-  throw new Error('Not implemented')
-}
-
 // receptotlet_minispec 4.-6.: the chat's recipe idea becomes the draft of the form, marked as AI-suggested.
-export function storeRecipeIdea(idea: RecipeIdea): void {
-  throw new Error(`Not implemented: ${idea.name}`)
+export function storeRecipeIdea(idea: RecipeIdea) {
+  storeDraft({
+    name: idea.name,
+    servings: String(idea.servings),
+    instructions: idea.instructions,
+    rows: idea.ingredients.map((i) => ({ ...newRow(), ingredient: i.name, amount: String(i.amount), unit: i.unit })),
+    aiSuggested: true,
+  })
 }

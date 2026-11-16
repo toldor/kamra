@@ -343,6 +343,31 @@ describe('a recipe idea of the chat on the Új recept form', () => {
     expect((screen.getByLabelText('Elkészítés (nem kötelező)') as HTMLTextAreaElement).value).toBe('Melegítsd fel a tejet, és keverd bele a kakaót.')
   })
 
+  // Review U1 (Q8: A): a unit that does not fit the matched ingredient is not converted; the row says so, and the
+  // first such field gets the focus.
+  it('marks a unit that does not fit the ingredient, and only that one', async () => {
+    backend()
+    storeRecipeIdea({ ...idea, ingredients: [{ name: 'tej', amount: 0.5, unit: 'l' }, { name: 'kakaópor', amount: 2, unit: 'db' }, idea.ingredients[2]] })
+    render(<App />)
+    await screen.findByLabelText('Név')
+
+    expect(await row(2).findByText('A chat ötletében 2 db szerepelt, de a(z) kakaópor tömegben mérhető. Válaszd ki a mértékegységet, és írd át a mennyiséget.'))
+      .toBeTruthy()
+    await waitFor(() => expect(document.activeElement).toBe(row(2).getByLabelText('Mértékegység')))
+    expect(row(1).queryByText(/^A chat ötletében/)).toBeNull()
+    expect(row(3).queryByText(/^A chat ötletében/)).toBeNull()
+  })
+
+  it('does not mark the units of a hand-written draft', async () => {
+    backend()
+    sessionStorage.setItem(draftKey, JSON.stringify({ name: 'Kakaó', servings: '2', instructions: '',
+      rows: [{ key: 'k1', ingredient: 'kakaópor', amount: '2', unit: 'db' }] }))
+    render(<App />)
+
+    expect(await screen.findByText('Visszatöltöttem a félbehagyott receptet.')).toBeTruthy()
+    expect(screen.queryByText(/^A chat ötletében/)).toBeNull()
+  })
+
   it('saves it as AI-suggested, and the Receptek page labels it', async () => {
     const calls = backend({ [createUrl]: [{ status: 201, body: aiRecipe }], [recipesUrl]: [recipes(lecso, own, aiRecipe)] })
     storeRecipeIdea(idea)

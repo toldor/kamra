@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { api, ApiError, failWith, type CategoryInfo, type Ingredient, type Unit } from './api/client'
+import { api, ApiError, failWith, type CategoryInfo, type Dimension, type Ingredient, type Unit } from './api/client'
 import { useFieldErrors } from './fieldErrors'
-import { allUnits, findIngredient, unitsOf } from './format'
+import { allUnits, findIngredient, formatAmount, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
 import { newDraft, newRow, readDraft, storeDraft, type Draft, type Row } from './recipeDraft'
 import { routes } from './useHashRoute'
@@ -9,6 +9,19 @@ import { routes } from './useHashRoute'
 type Catalog = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; categories: CategoryInfo[]; ingredients: Ingredient[] }
 
 const rowField = (index: number, field: string) => `ingredients[${index}].${field}`
+const measuredIn: Record<Dimension, string> = { mass: 'tömegben', volume: 'térfogatban', count: 'darabban' }
+
+// Review U1 (Q8: A): a unit of the chat's idea that does not fit the matched ingredient is not converted (AGENTS.md 5.:
+// no guessing); its row says so, with the field error of the form.
+function unitMismatches(rows: Row[], ingredients: Ingredient[]): Record<string, string[]> {
+  return Object.fromEntries(rows.flatMap((row, i) => {
+    const ingredient = findIngredient(ingredients, row.ingredient)
+    return ingredient && !unitsOf[ingredient.dimension].includes(row.unit)
+      ? [[rowField(i, 'unit'), [`A chat ötletében ${formatAmount(Number(row.amount), row.unit)} szerepelt, de a(z) ${ingredient.name} ` +
+          `${measuredIn[ingredient.dimension]} mérhető. Válaszd ki a mértékegységet, és írd át a mennyiséget.`]]]
+      : []
+  }))
+}
 
 // N10 (M9): a new own recipe. The rows' backend errors ("ingredients[1].amount") land under their field.
 export function RecipeForm({ onSaved, onSignedOut }: { onSaved: (notice: string) => void; onSignedOut: (notice: string) => void }) {
@@ -26,6 +39,7 @@ export function RecipeForm({ onSaved, onSignedOut }: { onSaved: (notice: string)
       'instructions'],
     [rowCount])
   const fields = useFieldErrors('recipe', order)
+  const setFieldErrors = fields.setErrors
 
   useEffect(() => {
     let active = true
@@ -34,13 +48,18 @@ export function RecipeForm({ onSaved, onSignedOut }: { onSaved: (notice: string)
       .then(([categories, ingredients]) => {
         if (!active) return
         setCatalog({ status: 'ready', categories, ingredients })
-        if (restored) setRestoredNotice('Visszatöltöttem a félbehagyott receptet.')
+        if (restored?.aiSuggested) setFieldErrors(unitMismatches(restored.rows, ingredients))
+        if (restored) {
+          setRestoredNotice(restored.aiSuggested
+            ? 'Átvettem a chat receptötletét. Mentés előtt nézd át, és javítsd, amit kell.'
+            : 'Visszatöltöttem a félbehagyott receptet.')
+        }
       })
       .catch((caught: unknown) => active && fail(caught))
     return () => {
       active = false
     }
-  }, [tries, onSignedOut, restored])
+  }, [tries, onSignedOut, restored, setFieldErrors])
 
   const ingredients = catalog.status === 'ready' ? catalog.ingredients : []
 
@@ -80,6 +99,8 @@ export function RecipeForm({ onSaved, onSignedOut }: { onSaved: (notice: string)
           amount: r.amount.trim() === '' ? null : Number(r.amount),
           unit: unitsFor(r).unit,
         })),
+        // receptotlet_minispec 6.: only a draft from the chat's idea is marked; a hand-written one sends nothing.
+        aiSuggested: draft.aiSuggested || undefined,
       })
       storeDraft(null)
       onSaved(`Elmentettem a receptet: ${saved.name}.`)
