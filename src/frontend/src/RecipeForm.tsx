@@ -3,36 +3,12 @@ import { api, ApiError, failWith, type CategoryInfo, type Ingredient, type Unit 
 import { useFieldErrors } from './fieldErrors'
 import { allUnits, findIngredient, unitsOf } from './format'
 import { IngredientPicker } from './IngredientPicker'
+import { newDraft, newRow, readDraft, storeDraft, type Draft, type Row } from './recipeDraft'
 import { routes } from './useHashRoute'
 
-type Row = { key: string; ingredient: string; amount: string; unit: Unit }
-type Draft = { name: string; servings: string; instructions: string; rows: Row[] }
 type Catalog = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; categories: CategoryInfo[]; ingredients: Ingredient[] }
 
-// M14: the draft survives a reload or signing in again in this tab; it is forgotten after saving or Mégse.
-const draftKey = 'kamra:recipe-draft'
-const newRow = (): Row => ({ key: crypto.randomUUID(), ingredient: '', amount: '', unit: 'g' })
-const newDraft = (): Draft => ({ name: '', servings: '4', instructions: '', rows: [newRow()] })
 const rowField = (index: number, field: string) => `ingredients[${index}].${field}`
-
-// Storage may be unavailable (private window, blocked site data); the form then works without a draft.
-function readDraft(): Draft | null {
-  try {
-    const stored = sessionStorage.getItem(draftKey)
-    return stored ? (JSON.parse(stored) as Draft) : null
-  } catch {
-    return null
-  }
-}
-
-function storeDraft(draft: Draft | null) {
-  try {
-    if (draft) sessionStorage.setItem(draftKey, JSON.stringify(draft))
-    else sessionStorage.removeItem(draftKey)
-  } catch {
-    // Without storage there is no draft.
-  }
-}
 
 // N10 (M9): a new own recipe. The rows' backend errors ("ingredients[1].amount") land under their field.
 export function RecipeForm({ onSaved, onSignedOut }: { onSaved: (notice: string) => void; onSignedOut: (notice: string) => void }) {
