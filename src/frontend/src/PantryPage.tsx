@@ -189,6 +189,22 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
 
       {/* C3: the sentence panel, the filters, the new item form and the hint beside the list; stacked on a phone (C2). */}
       <div className="split">
+        {/* The developer (2026-11-17): the summary above both columns, so the entry cards and the list start level. */}
+          {totals !== null && totals.length > 0 && (
+            <PantrySummary
+              totals={totals}
+              expiredOnly={expiredOnly}
+              soonOnly={filter.expiringSoon}
+              onExpired={() => {
+                setExpiredOnly((on) => !on)
+                setFilter((current) => (current.expiringSoon ? { ...current, expiringSoon: false } : current))
+              }}
+              onSoon={() => {
+                setExpiredOnly(false)
+                setFilter((current) => ({ ...current, expiringSoon: !current.expiringSoon }))
+              }}
+            />
+          )}
         <div ref={side} className="side">
           {/* us2_minispec K13: at the top of the side column. */}
           {quickEntry && (
@@ -258,21 +274,6 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
               onApproved={reload}
               onNotice={setNotice}
               onSignedOut={onSignedOut}
-            />
-          )}
-          {totals !== null && totals.length > 0 && (
-            <PantrySummary
-              totals={totals}
-              expiredOnly={expiredOnly}
-              soonOnly={filter.expiringSoon}
-              onExpired={() => {
-                setExpiredOnly((on) => !on)
-                setFilter((current) => (current.expiringSoon ? { ...current, expiringSoon: false } : current))
-              }}
-              onSoon={() => {
-                setExpiredOnly(false)
-                setFilter((current) => ({ ...current, expiringSoon: !current.expiringSoon }))
-              }}
             />
           )}
           <div className="panel">

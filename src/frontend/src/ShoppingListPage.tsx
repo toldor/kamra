@@ -290,17 +290,11 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
   const shown = items.filter((i) => matchesSearch(search, i.ingredientName))
 
   return (
-    // ui_polish_minispec 19. (A8): the suggestions and the list side by side when there is room (in reading order),
-    // the minimum levels under them.
+    // ui_polish_minispec 19. (A8), the developer (2026-11-17): from 1024 px the list on the left and the suggestions on
+    // the right (in reading order); on a narrower screen the suggestions stay above the list. The minimum levels under
+    // them, as wide as both.
     <div className="content">
-      <div className="pair">
-        {suggestions.length > 0 && (
-          <section aria-labelledby="suggestions-heading" className="panel">
-            <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
-            {/* key: a new suggestion for the same ingredient starts with its own amount. */}
-            {suggestions.map((s) => <SuggestionRow key={s.id} suggestion={s} busy={busy} write={write} />)}
-          </section>
-        )}
+      <div className="shopping-pair">
 
         <section aria-labelledby="list-heading" className="panel">
           <h2 id="list-heading">A listád</h2>
@@ -364,6 +358,13 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
               `Felvettem a listára: ${formatListLine(ingredient.name, amount.amount === null ? null : { value: amount.amount, unit: amount.unit })}.`)}
           />
         </section>
+        {suggestions.length > 0 && (
+          <section aria-labelledby="suggestions-heading" className="panel suggestions">
+            <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
+            {/* key: a new suggestion for the same ingredient starts with its own amount. */}
+            {suggestions.map((s) => <SuggestionRow key={s.id} suggestion={s} busy={busy} write={write} />)}
+          </section>
+        )}
       </div>
 
       <section aria-labelledby="minimum-heading" className="panel minimums">

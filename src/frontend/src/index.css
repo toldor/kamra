@@ -32,6 +32,9 @@
   --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --radius: 4px;
+  /* The Kérdezz page (2026-11-17): rounded on purpose, a little apart from the rest of the app. */
+  --radius-chat: 16px;
+  --radius-bubble: 14px;
   --radius-tag: 3px;
   --space-1: 4px;
   --space-2: 8px;
@@ -786,9 +789,65 @@ button.chip:disabled:hover {
   background: var(--c-surface);
 }
 
-/* 19. (A8): the minimum levels under the list and the suggestions. */
-.minimums {
-  max-width: 48rem;
+/* 19. (A8): the shopping list and the suggestions; the minimum levels under them, as wide as both. */
+.shopping-pair {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.shopping-pair > .suggestions {
+  order: -1;
+}
+
+@media (min-width: 1024px) {
+  .shopping-pair {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .shopping-pair > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .shopping-pair > .suggestions {
+    order: 0;
+  }
+}
+
+/* The developer (2026-11-17): the pantry summary is its own row above the two columns; on a phone, where the columns
+   stack, it stays under the entry cards. */
+.split > .summary {
+  flex-basis: 100%;
+}
+
+@media (max-width: 759px) {
+  .split > .summary {
+    order: 1;
+  }
+
+  .split > .content {
+    order: 2;
+  }
+}
+
+/* The developer (2026-11-17): the Kérdezz box and its bubbles are rounded, a little apart from the rest of the app. */
+.chat-page .panel {
+  border-radius: var(--radius-chat);
+  overflow: hidden;
+}
+
+.chat-message {
+  border-radius: var(--radius-bubble);
+}
+
+.chat-message.user {
+  border-bottom-right-radius: var(--radius);
+}
+
+.chat-message.assistant {
+  border-bottom-left-radius: var(--radius);
 }
 
 @media (min-width: 1024px) {
