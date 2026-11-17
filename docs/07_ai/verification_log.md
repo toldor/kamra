@@ -818,3 +818,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** `/code-review`; mérés.
 - **Eredmény:** FAIL – a kis gombok 36 px magasak voltak (a minimum 44 px), a megtagadott vágólap kezeletlen hibát adott, a gomb neve nem tartalmazta a látható szót (WCAG 2.5.3), a folytató gomb után elveszett a fókusz, és egy hibás válasz felülírta a beírt piszkozatot; sötét témában az avatar háttere eltűnt. Javítva (a másológomb a fejlesztő kérésére csak ikon, szöveges névvel), tesztekkel.
 - **Következtetés:** új, kis vezérlőnél a projekt saját minimumát (44 px) is mérni kell, nem csak a WCAG-ét.
+
+### V-99 – „A picomatch-figyelmeztetés nem érinti a felhasználókat”
+- **Dátum:** 2026-11-17
+- **Állítás:** A CI-t elbuktató `picomatch` ReDoS-hiba (GHSA-fc5q-39xc-vjpf, ≤ 4.0.7, javított változat nincs) csak a fejlesztői eszközökben van, a felhasználóhoz kerülő kódban nem.
+- **Kockázat:** Alacsony (a build csak a projekt saját glob-mintáit dolgozza fel).
+- **Ellenőrzési módszer:** `npm audit --omit=dev` (0 sérülékenység); `npm ls picomatch` (csak `vite`, `vitest`, `tinyglobby`, `fdir` alatt); az `npm audit fix --force` a `vitest`-et 3.1.4-re vinné vissza, ezért nem alkalmazható.
+- **Eredmény:** PASS. A fejlesztő döntése (A): a frontend kapuja a futásidejű csomagokra blokkoló, a teljes ellenőrzés jelző (`continue-on-error`), dokumentált elfogadott kockázatként ([privacy_licensing.md](../05_security_ops/privacy_licensing.md) „Sérülékenységek”).
+- **Következtetés:** a javított `picomatch` megjelenésekor a teljes ellenőrzést vissza kell állítani blokkolóra.
