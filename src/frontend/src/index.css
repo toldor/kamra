@@ -898,9 +898,21 @@ button.chip[aria-disabled='true']:hover {
 }
 
 .chat-action {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 var(--space-3);
   font-size: 0.875rem;
+}
+
+/* The copy button: an icon in a 44 px square (review W1). */
+.chat-action.icon-only {
+  width: 44px;
+  padding: 0;
+  justify-content: center;
+}
+
+/* Review W9: the jar's square keeps a visible ground on the dark surface. */
+:root[data-theme='dark'] .chat-avatar .jar-ground {
+  fill: var(--c-neutral-tag);
 }
 
 .chat-message.typing {
@@ -1062,7 +1074,8 @@ button.chip[aria-disabled='true']:hover {
   .notice,
   .form-error,
   .card > summary,
-  .summary {
+  .summary,
+  .chat-avatar {
     display: none !important;
   }
 

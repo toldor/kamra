@@ -88,21 +88,31 @@ function Jar({ size = 28 }: { size?: number }) {
   )
 }
 
-// ui_polish_minispec 27. (K8): copies an answer; hidden where the browser gives no clipboard (an insecure page).
+// ui_polish_minispec 27. (K8): copies an answer; hidden where the browser gives no clipboard (an insecure page). The
+// developer (2026-11-17): an icon only - the name "Válasz másolása" for a screen reader, "Másolás" as the tooltip; done,
+// a tick and "Kimásolva" for a screen reader; refused, "Nem sikerült" on screen (review W2).
 function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
+  const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle')
   if (!navigator.clipboard) return null
 
   async function copy() {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(text)
+      setState('copied')
+    } catch {
+      setState('failed')
+    }
+    setTimeout(() => setState('idle'), 2000)
   }
 
   return (
-    <button type="button" className="secondary chat-action" aria-label="Válasz másolása" onClick={() => void copy()}>
-      {copied ? 'Kimásolva' : 'Másolás'}
-    </button>
+    <>
+      <button type="button" className="secondary chat-action icon-only" aria-label="Válasz másolása" title="Másolás" onClick={() => void copy()}>
+        <Icon name={state === 'copied' ? 'check' : 'copy'} size={18} />
+      </button>
+      {state === 'copied' && <span className="visually-hidden">Kimásolva</span>}
+      {state === 'failed' && <span className="hint">Nem sikerült</span>}
+    </>
   )
 }
 
@@ -175,7 +185,8 @@ export function ChatPage({ conversation, onChange, onSignedOut }: {
 
   const setQuestion = (text: string) => update(conversation.id, () => ({ question: text }))
 
-  async function send(text: string) {
+  // typed: false for an example or a follow-up button - its question does not replace a typed draft (review W6).
+  async function send(text: string, typed = true) {
     const trimmed = text.trim()
     const { id } = conversation
     if (busy) return
@@ -203,9 +214,9 @@ export function ChatPage({ conversation, onChange, onSignedOut }: {
       }
 
       // The question stays to be sent again; it does not go into the history.
-      update(id, () => ({
+      update(id, (current) => ({
         pending: null,
-        question: trimmed,
+        question: !typed && current.question.trim() !== '' ? current.question : trimmed,
         error: caught instanceof ApiError ? chatErrors[caught.code] ?? caught.errors.question?.[0] ?? caught.message : errorMessage(caught),
       }))
     }
@@ -257,7 +268,11 @@ export function ChatPage({ conversation, onChange, onSignedOut }: {
                 key={index}
                 message={message}
                 next={!busy && index === messages.length - 1 ? followUp(message) : null}
-                onAsk={(text) => void send(text)}
+                onAsk={(text) => {
+                  // Review W5: the follow-up button goes away while the answer comes; the focus waits in the field.
+                  field.current?.focus()
+                  void send(text, false)
+                }}
               />
             ))}
           {/* ui_polish_minispec 21. (K2): the dots while the answer is on its way; the button says "Gondolkodom…". */}
@@ -276,7 +291,7 @@ export function ChatPage({ conversation, onChange, onSignedOut }: {
               <p>Szia! Miben segíthetek a kamrával kapcsolatban?</p>
             </div>
             {examples.map(([example, icon]) => (
-              <button key={example} type="button" className="secondary chat-example" onClick={() => void send(example)}>
+              <button key={example} type="button" className="secondary chat-example" onClick={() => void send(example, false)}>
                 <Icon name={icon} />
                 {example}
               </button>

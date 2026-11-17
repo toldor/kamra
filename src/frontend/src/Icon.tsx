@@ -11,6 +11,9 @@ const shapes = {
   profile: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" /></>,
   // ui_polish_minispec 24. (K5): the soon-expiring items.
   clock: <><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></>,
+  // The copy button of an answer (2026-11-17) and its done state.
+  copy: <><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M15 9V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h4" /></>,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof shapes

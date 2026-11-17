@@ -594,6 +594,8 @@ describe('the livelier Kérdezz page', () => {
     await ask('Mi jár le?')
     const followUp = await log().findByRole('button', { name: 'Mit főzzek ezekből?' })
     fireEvent.change(screen.getByLabelText('Kérdésed'), { target: { value: 'Félig írt kér' } })
+    // Mutation R3: as with the keyboard, the focus is on the button that goes away.
+    followUp.focus()
 
     fireEvent.click(followUp)
 
