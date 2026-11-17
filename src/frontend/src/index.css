@@ -335,8 +335,11 @@ h3 {
   text-decoration: none;
 }
 
+/* Regression (2026-11-17): the surface colour is dark in the dark theme; a hovered item keeps the band's ink and is
+   underlined, as the Profilom button (tests/e2e/theme.spec.ts). */
 .nav a:hover {
-  color: var(--c-surface);
+  color: var(--c-band-ink);
+  text-decoration: underline;
 }
 
 .nav a[aria-current='page'] {
