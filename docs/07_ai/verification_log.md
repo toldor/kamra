@@ -784,7 +784,7 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Állítás:** Az API újraindítása utáni első futás asztali hibái a hideg API lassúságából jönnek.
 - **Kockázat:** Alacsony.
 - **Ellenőrzési módszer:** az API kérésnaplója a hibás futás alatt; 8 egyidejű hideg felhasználó mérése.
-- **Eredmény:** Részben FAIL – egyik kérés sem tartott 1,7 mp-nél tovább, 8 hideg felhasználó kb. 1,9 mp; a késés a helyi környezetben van (valószínűleg a Docker Desktop porttovábbítása). Nyitott: a CI viselkedése.
+- **Eredmény:** Részben FAIL – egyik kérés sem tartott 1,7 mp-nél tovább, 8 hideg felhasználó kb. 1,9 mp; a késés a helyi környezetben van (valószínűleg a Docker Desktop porttovábbítása). A CI-ban (Linux) az e2e első futásra átment ([run 44160245178](https://github.com/toldor/kamra/actions/runs/44160245178) (#131, `ded39b8`)).
 - **Következtetés:** a feltételezett okot mérni kell, mielőtt rá hivatkozunk.
 
 ### V-95 – Saját hiba: nyomtatás sötét témában és a csoportjelölő (az S2–S4-review találta)
