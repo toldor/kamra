@@ -484,6 +484,8 @@ describe('the Kérdezz page', () => {
     await ask('És mit főzzek?')
     await screen.findByRole('button', { name: 'Gondolkodom…' })
 
+    // ui_polish_minispec Ü5: the logout is in the Profilom panel.
+    fireEvent.click(screen.getByRole('button', { name: 'Profilom' }))
     fireEvent.click(screen.getByRole('button', { name: 'Kijelentkezés' }))
     await screen.findByRole('heading', { name: 'Bejelentkezés' })
     release(answer('Lecsót.'))

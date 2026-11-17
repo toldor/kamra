@@ -96,12 +96,13 @@ test('loads the fonts for ő and ű and lays the pantry out for the screen width
 })
 
 // Regression (code review, 2026-10-31): on hover the logout text took the muted color, about 1.8:1 on the band.
-test('the logout button keeps its contrast on the band when hovered', async ({ page }) => {
+// ui_polish_minispec Ü5: the button on the band is now Profilom; the logout moved into its panel.
+test('the Profilom button keeps its contrast on the band when hovered', async ({ page }) => {
   await registerFreshHousehold(page)
-  const logout = page.getByRole('button', { name: 'Kijelentkezés' })
-  await logout.hover()
+  const profile = page.getByRole('button', { name: 'Profilom' })
+  await profile.hover()
 
-  const ratio = await logout.evaluate((button) => {
+  const ratio = await profile.evaluate((button) => {
     const rgb = (value: string) => value.match(/\d+/g)!.slice(0, 3).map(Number)
     const lum = (value: string) => {
       const [r, g, b] = rgb(value).map((c) => {
