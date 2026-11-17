@@ -113,7 +113,11 @@ describe('the quick entry panel', () => {
     backend(true)
     render(<App />)
 
+    // ui_polish_minispec 17. (A4): the card starts closed next to the sentence entry, and the button opens it.
+    expect((await screen.findByRole('heading', { name: 'Új tétel' })).closest('details')?.open).toBe(false)
+    expect(screen.getByRole('heading', { name: 'Mondatos bevitel' }).closest('details')?.open).toBe(true)
     fireEvent.click(await screen.findByRole('button', { name: 'Inkább tételenként rögzítem' }))
+    expect(screen.getByRole('heading', { name: 'Új tétel' }).closest('details')?.open).toBe(true)
 
     expect(document.activeElement).toBe(within(screen.getByRole('form', { name: 'Új tétel' })).getByLabelText('Hozzávaló'))
   })

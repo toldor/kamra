@@ -18,6 +18,9 @@ async function registerFreshHousehold(page: Page) {
 }
 
 async function addItem(page: Page, ingredient: string, amount: string, unit: string) {
+  // ui_polish_minispec 17.: the "Új tétel" card starts closed next to the sentence entry.
+  const card = page.locator('details', { has: page.locator('#new-item-heading') })
+  if (!(await card.evaluate((d) => (d as HTMLDetailsElement).open))) await card.locator('summary').click()
   const form = page.getByRole('form', { name: 'Új tétel' })
   await form.getByLabel('Hozzávaló').fill(ingredient)
   await form.getByLabel('Mennyiség').fill(amount)

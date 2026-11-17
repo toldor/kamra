@@ -65,6 +65,7 @@ function pantryBackend(pantryReplies: Reply[], extra: Record<string, Reply[]> = 
 const form = () => within(screen.getByRole('form', { name: 'Új tétel' }))
 const emptyIcon = (text: string) => screen.getByText(text).closest('.empty-state')?.querySelector('svg[aria-hidden="true"]')
 const filters = () => within(screen.getByRole('search'))
+const summary = () => within(screen.getByRole('group', { name: 'Összesítés' }))
 
 // jsdom has no modal dialogs; the browser's showModal/close only toggle the open attribute here.
 beforeAll(() => {
@@ -184,7 +185,8 @@ describe('pantry list', () => {
     fireEvent.change(filters().getByLabelText('Keresés'), { target: { value: 'tej' } })
     await waitFor(() => expect(calls.some((c) => c.url === '/api/v1/pantry-items?search=tej')).toBe(true))
     fireEvent.change(filters().getByLabelText('Kategória'), { target: { value: 'dairy' } })
-    fireEvent.click(filters().getByLabelText('Csak a hamarosan lejárók'))
+    // ui_polish_minispec 16. (Q19: a): the soon-expiring filter is the summary's button now.
+    fireEvent.click(summary().getByRole('button', { name: /hamarosan lejár$/ }))
 
     await waitFor(() =>
       expect(calls.at(-1)?.url).toBe('/api/v1/pantry-items?search=tej&category=dairy&expiringSoon=true'))
@@ -508,5 +510,80 @@ describe('sorting the pantry', () => {
 
     fireEvent.click(sort.getByRole('radio', { name: 'Lejárat szerint' }))
     expect(document.querySelectorAll('details.category')).toHaveLength(0)
+  })
+})
+
+// ui_polish_minispec 15. (A1, Q17: a, Q18: b): the summary counts the whole pantry; "lejárt" filters in the browser,
+// "hamarosan lejár" switches the server's filter; the two exclude each other.
+describe('the pantry summary', () => {
+  const listNames = () => within(screen.getByRole('list')).getAllByRole('listitem').map((item) => item.querySelector('.name')?.textContent)
+
+  it('counts the expired, the soon-expiring and all items', async () => {
+    pantryBackend([pantry(oldMilk, rice, sourCream)])
+    render(<App />)
+    await screen.findByRole('listitem', { name: 'tej' })
+
+    expect(summary().getByRole('button', { name: '1 lejárt' }).getAttribute('aria-pressed')).toBe('false')
+    expect(summary().getByRole('button', { name: '1 hamarosan lejár' }).getAttribute('aria-pressed')).toBe('false')
+    expect(summary().getByText('3 tétel')).toBeTruthy()
+  })
+
+  it('shows only the expired items in the browser, and the two filters exclude each other', async () => {
+    const calls = pantryBackend([pantry(oldMilk, rice, sourCream)])
+    render(<App />)
+    await screen.findByRole('listitem', { name: 'tej' })
+    const requests = calls.length
+
+    fireEvent.click(summary().getByRole('button', { name: '1 lejárt' }))
+
+    expect(summary().getByRole('button', { name: '1 lejárt' }).getAttribute('aria-pressed')).toBe('true')
+    expect(listNames()).toEqual(['tej'])
+    expect(calls.length).toBe(requests)
+
+    fireEvent.click(summary().getByRole('button', { name: '1 hamarosan lejár' }))
+
+    expect(summary().getByRole('button', { name: '1 lejárt' }).getAttribute('aria-pressed')).toBe('false')
+    expect(summary().getByRole('button', { name: '1 hamarosan lejár' }).getAttribute('aria-pressed')).toBe('true')
+    await waitFor(() => expect(calls.some((c) => c.url === '/api/v1/pantry-items?expiringSoon=true')).toBe(true))
+  })
+
+  it('keeps counting the whole pantry while a filter is on', async () => {
+    const calls = pantryBackend([pantry(oldMilk, rice, sourCream)], {
+      'GET /api/v1/pantry-items?search=rizs': [pantry(rice)],
+    })
+    render(<App />)
+    await screen.findByRole('listitem', { name: 'tej' })
+
+    fireEvent.change(filters().getByLabelText('Keresés'), { target: { value: 'rizs' } })
+
+    await waitFor(() => expect(listNames()).toEqual(['rizs']))
+    expect(summary().getByText('3 tétel')).toBeTruthy()
+    expect(summary().getByRole('button', { name: '1 lejárt' })).toBeTruthy()
+    expect(calls.filter((c) => c.url === '/api/v1/pantry-items').length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('disables a filter with nothing to show, and has no summary for an empty pantry', async () => {
+    pantryBackend([pantry(rice)])
+    render(<App />)
+    await screen.findByRole('listitem', { name: 'rizs' })
+
+    expect((summary().getByRole('button', { name: '0 lejárt' }) as HTMLButtonElement).disabled).toBe(true)
+    cleanup()
+
+    pantryBackend([pantry()])
+    render(<App />)
+    await screen.findByText('Még üres a kamrád.')
+    expect(screen.queryByRole('group', { name: 'Összesítés' })).toBeNull()
+  })
+})
+
+// ui_polish_minispec 17. (A4, Q20: a): "Új tétel" is a folding card, open when the sentence entry is off.
+describe('the new item card', () => {
+  it('is open when there is no sentence entry', async () => {
+    pantryBackend([pantry()])
+    render(<App />)
+    const heading = await screen.findByRole('heading', { name: 'Új tétel' })
+
+    expect(heading.closest('details')?.open).toBe(true)
   })
 })
