@@ -11,6 +11,7 @@ Státusz: Accepted
 ## Decision
 
 - A színek, a betűk, a térközök és a lekerekítés CSS custom propertyként a `src/frontend/src/index.css` `:root` blokkjában vannak; a Zilla Slab és az IBM Plex Sans woff2-ben (latin + latin-ext, OFL 1.1) a `src/frontend/public/fonts` alatt; asztalon két oszlop, 760 px alatt egymás alatt, a sorok container queryvel igazodnak.
+- **Módosítás, 2026-11-17 (kinézet és kezelhetőség, `v0.8.0`):** (1) **Sötét paletta** ugyanazokkal a tokenekkel `:root[data-theme='dark']` alatt; a téma (Rendszer szerint / Világos / Sötét) a böngészőben marad meg, a „Rendszer szerint”-et a `theme.ts` oldja fel a `<html data-theme>`-re, így egy sötét blokk van; a `<meta name="color-scheme" content="light dark">` a szkript előtt is sötét alapot ad sötét rendszernél. A `tokens.test.ts` mindkét palettán ugyanazt a 17 + 5 párt ellenőrzi, és hogy a sötét blokkban minden token megvan. Nyomtatáskor mindkét témában sötét szöveg kerül fehér papírra. (2) **`--c-estimated`** (a becsült lejárat csíkja) díszítő token, 3:1-es pár nélkül: a jelentést a „(becsült)” szöveg hordozza (WCAG 1.4.11 csak a megértéshez szükséges grafikára kér 3:1-et); a teszt rögzíti. (3) **Ikonok** saját inline SVG-ként (`Icon.tsx`), függőség nélkül, a szöveg színével, `aria-hidden`. (4) **Elrendezés:** ragadós fejsáv; 1024 px alatt a menü alsó sáv a teljes nevekkel (WCAG 2.5.3); a görgetési margó a fejsáv és a sáv magassága (WCAG 2.4.11).
 
 ## Alternatives
 
@@ -28,5 +29,6 @@ Státusz: Accepted
 
 - [tokens.test.ts](../../../src/frontend/src/tokens.test.ts): 17 szöveg–háttér pár legalább 4,5:1, 5 nem-szöveges pár legalább 3:1, a fejsáv fókuszszínével ([V-63](../../07_ai/verification_log.md)).
 - E2E [pantry.spec.ts](../../../tests/e2e/pantry.spec.ts) „loads the fonts for ő and ű…”: a latin-ext betűk betöltődnek, asztalon két oszlop, 360 px-en egymás alatt; két mutációval ellenőrizve ([V-64](../../07_ai/verification_log.md)).
-- E2E „the logout button keeps its contrast on the band when hovered”: a fejsáv hover-állapota (a `/code-review` lelete, regressziós teszt).
+- E2E „the Profilom button keeps its contrast on the band when hovered” (`v0.8.0` előtt a kijelentkezés gombja): a fejsáv hover-állapota (a `/code-review` lelete, regressziós teszt).
 - Képernyőképek 1280 és 390 px-en, vízszintes görgetés nélkül; evidence: [test_report.md](../../04_quality/test_report.md).
+- **`v0.8.0`:** `tokens.test.ts` – mindkét paletta; e2e [frame.spec.ts](../../../tests/e2e/frame.spec.ts) (ragadós fejsáv, alsó sáv 360 és 900 px-en, görgetési margó, `color-scheme`), [theme.spec.ts](../../../tests/e2e/theme.spec.ts) (sötét rendszer, felülírás, újratöltés), [lists.spec.ts](../../../tests/e2e/lists.spec.ts) (nyomtatás mindkét témában, csökkentett mozgás); mutációval ellenőrizve ([V-90](../../07_ai/verification_log.md)).

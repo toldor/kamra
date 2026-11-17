@@ -68,6 +68,14 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Hibák:** kiesésnél *„Most nem tudok válaszolni, mert a szövegfeldolgozó nem válaszol. A kérdésed megmaradt: próbáld újra pár perc múlva.”*; értelmezhetetlen válasznál *„Erre most nem sikerült válaszolnom. Kérdezd meg másképp, vagy nézd meg közvetlenül a Készlet, a Mit főzzek? vagy a Bevásárlólista oldalon.”*; túl sok kérdésnél *„Most túl sok kérdést küldtél egymás után. Várj néhány percet.”* A kérdés a mezőben marad, és nem kerül az előzménybe.
 - **Megvalósítva** ([ChatPage.test.tsx](../../src/frontend/src/ChatPage.test.tsx), [chat.spec.ts](../../tests/e2e/chat.spec.ts)).
 
+## Keret és navigáció (`v0.8.0`)
+
+- A fejsáv görgetéskor fent marad. 1024 px alatt a menü a képernyő alján álló sáv (ikon + teljes név, a „Bevásárló­lista” két sorban); fölötte a fejsáv egy sor: „Kamra” és „Profilom”.
+- A „Profilom” gomb lenyíló panelt nyit: *„Bejelentkezve: {e-mail}”*, „Profilom” link, „Téma” (*Rendszer szerint · Világos · Sötét*), „Kijelentkezés”. Bezárul Escape-re (a fókusz a gombra kerül), kívülre kattintásra, ha a fókusz a panelen kívüli vezérlőre kerül, és oldalváltáskor.
+- A Profilom oldal (`#/profil`): az e-mail-cím, a téma, *„A téma ebben a böngészőben marad meg.”*, *„A kijelentkezés minden eszközödön kiléptet.”* és „Kijelentkezés”.
+- Ismeretlen cím: *„Nincs ilyen oldal”*, *„A megnyitott cím nem létezik a Kamrában.”*, „Ugrás a Készlethez”. A böngészőfül címe az oldal neve („Receptek – Kamra”).
+- A Készleten a tételek bal szélén csík jelzi a sürgősséget (lejárt, hamarosan lejár, becsült lejárat); „Rendezés: Lejárat szerint · Kategóriák szerint” – kategóriánként becsukható csoportok, a csoporton belül lejárat szerint. A Bevásárlólista „Nyomtatás” gombja fejléc, menü és gombok nélküli lapot nyomtat, sötét témában is sötét szöveggel.
+
 ## Üres állapotok
 
 | Hol | Helyzet | Amit a felhasználó lát | Következő lépés |
@@ -113,6 +121,10 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 - A színek kontrasztját teszt őrzi ([tokens.test.ts](../../src/frontend/src/tokens.test.ts)); a sötét fejsávon a fókuszkeret a fejsáv világos szövegszíne.
 - Készlettétel mentése után a fókusz a „Hozzávaló” mezőre kerül, és az élő régió kimondja: *„Felvettem a kamrádba: tejföl 20 dkg.”* (L1, [PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx)).
 - A főzés összegzésének fókuszt kapó címe leírásként a levonás, az elfogyott tételek és a bevásárlójavaslat mondatait is felolvastatja (L2, [CookingPage.test.tsx](../../src/frontend/src/CookingPage.test.tsx)); a chat üzenetlistája `role="log"`, a két oldal „Te:” / „Kamra:” rejtett címkével.
+- A ragadós fejsáv és az alsó sáv nem takarja a fókuszt: a görgetési margó legalább akkora (WCAG 2.4.11, [frame.spec.ts](../../tests/e2e/frame.spec.ts)).
+- A menüpontok neve mobilon is a teljes név (WCAG 2.5.3).
+- Csökkentett mozgás beállításnál nincs animáció.
+- A sötét téma ugyanazokat a kontrasztpárokat teljesíti ([tokens.test.ts](../../src/frontend/src/tokens.test.ts)).
 
 **Ellenőrzés:** a Chrome Lighthouse akadálymentességi auditja a készlet, a „Mit főzzek?” és a bevásárlólista oldalon (legalább 90 pont), valamint egy kézi billentyűzetes bejárás. Opcionális bővítés: automatizált axe-core ellenőrzés az e2e tesztekben (új függőség, jóváhagyás kell).
 

@@ -746,3 +746,51 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** `/code-review`, Spec-tengely (U1).
 - **Eredmény:** FAIL – a meglévő `unitsFor` a nem illő egységet szó nélkül az első illőre cserélte, a mennyiség változatlan maradt (a mérésben valós eset: „vöröshagyma 1 db”, a vöröshagyma tömegben mérhető). Javítva: mezőhiba és teszt.
 - **Következtetés:** modelltől jövő adatnál a meglévő űrlap csendes alapértékeit is végig kell gondolni.
+
+### V-90 – A kinézet tesztjeinek elválasztó ereje
+- **Dátum:** 2026-11-17
+- **Állítás:** A `v0.8.0` új tesztjei elbuknak, ha a kinézet szabályait megsértjük.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** 40 mutáció (S1 9 + e2e 1, S1-review 3, S2 8, S3 7, S4 5, S2–S4-review 3), egyenként visszaállítva; az e2e-javításoknál (nyomtatás sötétben, csoportjelölő, `color-scheme`) a teszt a javítás előtt ugyanazon a stacken piros volt.
+- **Eredmény:** PASS, négy erősítéssel: túlélt és erősítve H3 (az oldalváltás nem zár – a teszt a link kattintását nézte), L5 (tároló nélkül a választás nem látszott), M5 (a csoporton belüli sorrend – a tesztadatban egybeesett az ábécérenddel), és a fókusz-teszt (V-92); J1 egyenértékű (lejárt és hamarosan lejáró nem lehet egyszerre, `Expiry.cs`). A `tokens.test` „a becsült csík világosabb a mezőkeretnél” elvárása az S3-ban „elkülönül a felülettől”-re változott, mert sötét palettán a felület sötét (review T7).
+- **Következtetés:** a vázzal már zöld vagy a valóságtól elszakadt tesztet mutációval kell igazolni.
+
+### V-91 – Saját hiba: mutációs parancs, amely nem commitolt munkát dobott volna el
+- **Dátum:** 2026-11-17
+- **Állítás:** A mutációs parancs csak a mutációt vonja vissza.
+- **Kockázat:** Magas (adatvesztés).
+- **Ellenőrzési módszer:** a Claude Code automatikus védelme.
+- **Eredmény:** FAIL – a parancs végén `git checkout -- index.css` állt, amely az összes nem commitolt CSS-munkát visszaállította volna; a védelem megállította, nem futott le.
+- **Következtetés:** mutációt csak tárolás–visszaírás módszerrel.
+
+### V-92 – Saját állítás: „a fókusz-teszt bizonyítja, hogy a fejsáv nem takarja a fókuszt”
+- **Dátum:** 2026-11-17
+- **Állítás:** Az e2e fókusz-teszt elbukik a görgetési margó nélkül.
+- **Kockázat:** Közepes (WCAG 2.4.11).
+- **Ellenőrzési módszer:** mutáció (görgetési margó 0).
+- **Eredmény:** FAIL – a teszt margó nélkül is zöld volt, mert a Chrome a fókuszált elemet középre görgeti. Átírva: a görgetési margót méri a fejsáv és a sáv magasságához; utána a mutáció elbukik.
+- **Következtetés:** a böngésző viselkedését nem szabad feltételezni; a mechanizmust kell mérni.
+
+### V-93 – Saját hiba: a panel és a fejsáv viselkedése (az S1-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** A Profilom panel és a ragadós fejsáv minden szélességen és billentyűzettel is jól működik.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review` (Spec-tengely), mérés 760–1100 px-en.
+- **Eredmény:** FAIL – a panel nyitva maradt, ha a fókusz Tabbal elhagyta (2.4.11), és 760–1000 px között a fejsáv 158 px magasra tört. Javítva: bezárás fókuszvesztéskor és Escape a dokumentumon; alsó sáv 1024 px alatt; tesztekkel.
+- **Következtetés:** a köztes szélességeket (tablet) is mérni kell.
+
+### V-94 – „Az első e2e-hullám hibája a lassú API”
+- **Dátum:** 2026-11-17
+- **Állítás:** Az API újraindítása utáni első futás asztali hibái a hideg API lassúságából jönnek.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** az API kérésnaplója a hibás futás alatt; 8 egyidejű hideg felhasználó mérése.
+- **Eredmény:** Részben FAIL – egyik kérés sem tartott 1,7 mp-nél tovább, 8 hideg felhasználó kb. 1,9 mp; a késés a helyi környezetben van (valószínűleg a Docker Desktop porttovábbítása). Nyitott: a CI viselkedése.
+- **Következtetés:** a feltételezett okot mérni kell, mielőtt rá hivatkozunk.
+
+### V-95 – Saját hiba: nyomtatás sötét témában és a csoportjelölő (az S2–S4-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** A nyomtatás és a kategóriacsoportok minden témában helyesek.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review` (Spec-tengely).
+- **Eredmény:** FAIL – sötét témában világos szöveg került volna fehér papírra; a `summary` `display: flex` eltüntette a nyitás/zárás jelölőt; a témaválasztó gombjai szövegmező-stílust kaptak. Javítva, e2e- és Vitest-tesztekkel.
+- **Következtetés:** új témánál a nyomtatást és a böngésző saját vezérlőit is végig kell nézni.

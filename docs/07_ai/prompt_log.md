@@ -519,3 +519,12 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **T3:** 7. kérdés: A; 8. kérdés: A; a szétválogatás jóváhagyva; az U1 szövegében „a(z)” a jóváhagyott „a” helyett (a repó mintája) – elfogadva.
   - **Kipróbálás a PR előtt (nov. 16–17.):** a valódi Geminivel kipróbáltam; rendben, javítást nem kértem.
   - **Commit:** minden commitot és pusht én végeztem.
+
+### P-29 – Kinézet és kezelhetőség (v0.8.0)
+- **Dátum:** 2026-11-17
+- **Cél:** a kinézet és kezelhetőség bővítése (`v0.8.0`) a fejlesztő ötletei és az MI-ötletlista alapján.
+- **Eszköz:** Claude Code (claude-opus-5-5) – grilling (Q1–Q16), előnézeti oldal, mini-spec, piros tesztek, implementáció, mutációs ellenőrzés, két review (egy-egy ügynök, két tengellyel).
+- **Prompt összefoglaló:** „Adj ötleteket … aztán válogatok” (+ sötét téma, ragadós fejléc, Profilom menü, később a lapikon); a grilling döntései; a mini-spec Ü4-e; a két review szétválogatása.
+- **AI javaslat (eredeti):** 10 további ötlet (I1–I10); időzítés: nov. 18-ig 3–4 kis elem, a többi később; szakaszok S1–S4 hátulról vágva; Q5–Q16 ajánlásai (rendezési kapcsoló, háromállású téma, Profilom oldal tájékoztatással, rövid mobil feliratok, befőttesüveg-ikon, apró alapértelmezések, C lapikon, panelfelépítés, olívás sötét paletta, precedencia, díszítő bézs token); az Ü4-ben a rövid feliratok helyett teljes nevek (WCAG 2.5.3); a témaválasztó áthelyezése S3-ba; az S1-review R1–R5 javítása, R6–R8 elvetése; az S2–S4-review T1–T6 javítása, T7 dokumentálása, T8–T9 elvetése.
+- **Érintett fájlok:** `src/frontend/src/` (`Layout.tsx`, `ProfileMenu.tsx`, `ProfilePage.tsx`, `Icon.tsx`, `useLogout.ts`, `Loading.tsx`, `theme.ts`, `ThemeChoice.tsx`, `App.tsx`, `useHashRoute.ts`, `PantryPage.tsx`, `RecipesPage.tsx`, `RecommendationsPage.tsx`, `ShoppingListPage.tsx`, `main.tsx`, `index.css`), `index.html`, `public/favicon.svg`, a tesztek (Vitest, `tokens.test.ts`, e2e `frame`, `lists`, `theme`, `auth`, `pantry`), `docs/`.
+- **Mit változtattam / döntésem:** Q1: ma, a freeze nov. 20.; Q2: A; Q3: mind + lapikon; Q4–Q10: az ajánlások; Q11: C; Q12–Q14: igen, a becsült tételeknél világos bézs csík; Q15–Q16: az ajánlások; Ü4: A; mindkét review szétválogatása jóváhagyva; a commitokat ma a kérésemre az MI végezte (trailer nélkül), a pusht és a PR-okat én.
