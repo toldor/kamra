@@ -18,5 +18,5 @@ public interface IRecipeCatalog
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 
-// Ingredients: every ingredient's name, staples too (N2).
-public sealed record RecipeResponse(Guid Id, string Name, int Servings, bool Own, IReadOnlyList<string> Ingredients);
+// Ingredients: every ingredient's name, staples too (N2). AiSuggested: the "AI-javasolt" label (receptotlet_minispec 6.).
+public sealed record RecipeResponse(Guid Id, string Name, int Servings, bool Own, IReadOnlyList<string> Ingredients, bool AiSuggested = false);

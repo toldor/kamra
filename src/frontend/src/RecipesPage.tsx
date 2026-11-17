@@ -111,7 +111,13 @@ function RecipeCard({ recipe, busy, onArchive }: { recipe: Recipe; busy: boolean
         <span className="leader" aria-hidden="true" />
         <span className="serv">{recipe.servings} adag</span>
       </div>
-      {recipe.own && <p><span className="badge neutral">Saját recept</span></p>}
+      {(recipe.own || recipe.aiSuggested) && (
+        <p className="badges">
+          {recipe.own && <span className="badge neutral">Saját recept</span>}
+          {/* receptotlet_minispec 6.: saved from a recipe idea of the chat. */}
+          {recipe.aiSuggested && <span className="badge neutral">AI-javasolt</span>}
+        </p>
+      )}
       <p className="hint">Hozzávalók: {recipe.ingredients.join(', ')}</p>
       <div className="actions">
         <a href={cookingRoute(recipe.id)} className="button-link">Megnyitás</a>

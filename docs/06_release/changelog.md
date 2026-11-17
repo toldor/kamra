@@ -2,6 +2,18 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [0.7.0] – 2026-11-16 – Receptötlet a chatből
+
+A Stretch 1: a Kérdezz oldalon receptet lehet kérni, és mentés előtt az „Új recept” űrlapon átnézni. Részletek: [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 9., [test_report.md](../04_quality/test_report.md) („Chat-mérés”), [P-28](../07_ai/prompt_log.md), [V-82 – V-89](../07_ai/verification_log.md).
+
+### Hozzáadva
+- Receptötlet a Kérdezz oldalon: a válasz alatt név, adag és hozzávalók, „Szerkesztés és mentés” gombbal; a gomb kitölti az „Új recept” űrlapot, a mentett recept „AI-javasolt” címkét kap.
+- `propose_recipe` függvény a chat körében (nem MCP-eszköz), a kézi recept korlátaival ellenőrizve; `recipe` a `POST /chat` válaszában, `aiSuggested` a `POST /recipes` kérésében és a `GET /recipes` válaszában.
+
+### Módosítva
+- A chat promptja `chat.v4` (receptötlet csak kérésre, a helyettesítést elhárítja); a kimeneti korlát 4096 token.
+- A nem illő mértékegység a receptötletből átvett sorban mezőhibát kap.
+
 ## [0.6.0] – 2026-11-12 – Kérdezz a kamráról
 
 A 3. lépcső: csak olvasó chat MCP-eszközökkel, és az UAT 1. kör két akadálymentességi javítása. Részletek: [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md), [mcp_tools.md](../03_design/mcp_tools.md), [test_report.md](../04_quality/test_report.md) („Chat-mérés”), [P-27](../07_ai/prompt_log.md), [V-77 – V-81](../07_ai/verification_log.md).

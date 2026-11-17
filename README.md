@@ -52,7 +52,7 @@ Elkészült az 1. lépcső, a determinisztikus mag, és a 2. lépcső, az egy mo
 
 Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én elkészült. Következő mérföldkő: **nov. 13.** – a dolgozat teljes első változata; az UAT 2. köre nov. 21–27. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án elkészült. Következő mérföldkő: **nov. 13.** – a dolgozat teljes első változata; az UAT 2. köre nov. 21–27. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 
@@ -80,7 +80,7 @@ A chatasszisztens („Kérdezz”) csak olvasási célú MCP-eszközöket haszn�
 - receptajánlás lekérdezése;
 - bevásárlólista megtekintése.
 
-A chat nem módosít adatot; a beszélgetést a szerver nem tárolja.
+A chat nem módosít adatot; receptötletet adhat, amelyet a felhasználó az „Új recept” űrlapon átnéz és ő ment el. A beszélgetést a szerver nem tárolja.
 
 ## Technológiai stack
 
@@ -98,7 +98,7 @@ A chat nem módosít adatot; a beszélgetést a szerver nem tárolja.
 
 ## Architektúra
 
-Megvalósult (v0.6.0): React-frontend, Web API, Application, Domain, Infrastructure (benne az LLM-adapter), PostgreSQL, MCP-szerver (az API folyamatában).
+Megvalósult (v0.7.0): React-frontend, Web API, Application, Domain, Infrastructure (benne az LLM-adapter), PostgreSQL, MCP-szerver (az API folyamatában).
 
 ```text
 React + TypeScript frontend

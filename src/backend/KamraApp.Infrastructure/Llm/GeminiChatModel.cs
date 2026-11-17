@@ -11,16 +11,19 @@ namespace KamraApp.Infrastructure.Llm;
 // US-6 (ADR-0010 3.-4., us6_minispec K6-K7): Gemini generateContent with function calling over plain HTTP (no SDK).
 // The MCP tools become function declarations (parametersJsonSchema takes their JSON Schema as it is); the model's
 // step goes back unchanged (thought signatures, https://aistudio.google.com/docs/function-calling); the versioned
-// prompt chat.v2 (v1 + plain text only, after the LiveAI run of 2026-11-11; v1 stays as the measured baseline) gets
-// today's Budapest date. The US-2 retry rules (QA-3) and a log without any text (K10).
+// prompt chat.v4 (v2 + the recipe idea on request and no substitutes, receptotlet_minispec Ü3, Ü7; v3 + recipe questions
+// to get_recommendations and an idea with missing ingredients too, after the LiveAI run of 2026-11-15; v1-v3 stay as the
+// measured baselines; chat.v5 measured worse on 2026-11-15 and is not shipped) gets today's Budapest date. The US-2
+// retry rules (QA-3) and a log without any text (K10).
 public sealed class GeminiChatModel(HttpClient http, IOptions<LlmOptions> options, ILogger<GeminiChatModel> logger) : IChatModel
 {
-    public const string PromptVersion = "chat.v2";
+    public const string PromptVersion = "chat.v4";
 
-    // A short answer of a few sentences; a runaway answer is cut and refused (MAX_TOKENS).
-    private const int MaxOutputTokens = 1024;
+    // A short answer, or a recipe idea of up to 4000 characters of instructions and 50 ingredients (receptotlet_minispec);
+    // a runaway answer is cut and refused (MAX_TOKENS).
+    private const int MaxOutputTokens = 4096;
 
-    private static readonly Lazy<string> Prompt = new(() => GeminiHttp.LoadPrompt("chat.v2.txt"));
+    private static readonly Lazy<string> Prompt = new(() => GeminiHttp.LoadPrompt("chat.v4.txt"));
 
     public bool Enabled => true;
 

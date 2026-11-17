@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { resetClientForTests } from './api/client'
+import { storeRecipeIdea } from './recipeDraft'
 
 type Reply = { status: number; body?: unknown; wait?: Promise<void> }
 
@@ -301,6 +302,111 @@ describe('the Új recept form (N10)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Mégse' }))
     expect(await screen.findByRole('heading', { name: 'Receptek' })).toBeTruthy()
+    expect(sessionStorage.getItem(draftKey)).toBeNull()
+  })
+})
+
+// receptotlet_minispec 4.-6.: the chat's recipe idea on the Új recept form (the chat side: ChatPage.test.tsx).
+describe('a recipe idea of the chat on the Új recept form', () => {
+  const idea = {
+    name: 'Kakaó fahéjjal',
+    servings: 2,
+    ingredients: [
+      { name: 'tej', amount: 0.5, unit: 'l' as const },
+      { name: 'kakaópor', amount: 2, unit: 'dkg' as const },
+      { name: 'fahéj', amount: 1, unit: 'g' as const },
+    ],
+    instructions: 'Melegítsd fel a tejet, és keverd bele a kakaót.',
+  }
+  const aiRecipe = { id: 'r-ai', name: 'Kakaó fahéjjal', servings: 2, own: true, aiSuggested: true, ingredients: ['kakaópor', 'tej'] }
+
+  beforeEach(() => {
+    window.location.hash = '#/receptek/uj'
+  })
+
+  it('fills every field from the idea and says it came from the chat; an unknown ingredient can be created', async () => {
+    backend()
+    storeRecipeIdea(idea)
+    render(<App />)
+
+    expect(await screen.findByText('Átvettem a chat receptötletét. Mentés előtt nézd át, és javítsd, amit kell.')).toBeTruthy()
+    expect(screen.queryByText('Visszatöltöttem a félbehagyott receptet.')).toBeNull()
+    expect((screen.getByLabelText('Név') as HTMLInputElement).value).toBe('Kakaó fahéjjal')
+    expect((screen.getByLabelText('Adagszám') as HTMLInputElement).value).toBe('2')
+    expect([1, 2, 3].map((n) => [
+      (row(n).getByLabelText('Hozzávaló') as HTMLInputElement).value,
+      (row(n).getByLabelText('Mennyiség') as HTMLInputElement).value,
+      (row(n).getByLabelText('Mértékegység') as HTMLSelectElement).value,
+    ])).toEqual([['tej', '0.5', 'l'], ['kakaópor', '2', 'dkg'], ['fahéj', '1', 'g']])
+    expect(row(3).getByRole('button', { name: 'Új hozzávaló: fahéj' })).toBeTruthy()
+    expect(row(1).queryByRole('button', { name: /^Új hozzávaló/ })).toBeNull()
+    expect((screen.getByLabelText('Elkészítés (nem kötelező)') as HTMLTextAreaElement).value).toBe('Melegítsd fel a tejet, és keverd bele a kakaót.')
+  })
+
+  // Review U1 (Q8: A): a unit that does not fit the matched ingredient is not converted; the row says so, and the
+  // first such field gets the focus.
+  it('marks a unit that does not fit the ingredient, and only that one', async () => {
+    backend()
+    storeRecipeIdea({ ...idea, ingredients: [{ name: 'tej', amount: 0.5, unit: 'l' }, { name: 'kakaópor', amount: 2, unit: 'db' }, idea.ingredients[2]] })
+    render(<App />)
+    await screen.findByLabelText('Név')
+
+    expect(await row(2).findByText('A chat ötletében 2 db szerepelt, de a(z) kakaópor tömegben mérhető. Válaszd ki a mértékegységet, és írd át a mennyiséget.'))
+      .toBeTruthy()
+    await waitFor(() => expect(document.activeElement).toBe(row(2).getByLabelText('Mértékegység')))
+    expect(row(1).queryByText(/^A chat ötletében/)).toBeNull()
+    expect(row(3).queryByText(/^A chat ötletében/)).toBeNull()
+  })
+
+  it('does not mark the units of a hand-written draft', async () => {
+    backend()
+    sessionStorage.setItem(draftKey, JSON.stringify({ name: 'Kakaó', servings: '2', instructions: '',
+      rows: [{ key: 'k1', ingredient: 'kakaópor', amount: '2', unit: 'db' }] }))
+    render(<App />)
+
+    expect(await screen.findByText('Visszatöltöttem a félbehagyott receptet.')).toBeTruthy()
+    expect(screen.queryByText(/^A chat ötletében/)).toBeNull()
+  })
+
+  it('saves it as AI-suggested, and the Receptek page labels it', async () => {
+    const calls = backend({ [createUrl]: [{ status: 201, body: aiRecipe }], [recipesUrl]: [recipes(lecso, own, aiRecipe)] })
+    storeRecipeIdea(idea)
+    render(<App />)
+    await screen.findByLabelText('Név')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sor törlése: 3. hozzávaló' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Mentés' }))
+
+    expect(await screen.findByText('Elmentettem a receptet: Kakaó fahéjjal.')).toBeTruthy()
+    expect(calls.find((c) => c.key === createUrl)?.body).toEqual({
+      name: 'Kakaó fahéjjal',
+      servings: 2,
+      instructions: 'Melegítsd fel a tejet, és keverd bele a kakaót.',
+      ingredients: [{ ingredientId: 'i-tej', amount: 0.5, unit: 'l' }, { ingredientId: 'i-kakao', amount: 2, unit: 'dkg' }],
+      aiSuggested: true,
+    })
+    await screen.findByRole('article', { name: 'Kakaó fahéjjal' })
+    expect(card('Kakaó fahéjjal').getByText('AI-javasolt')).toBeTruthy()
+    expect(card('Kakaó fahéjjal').getByText('Saját recept')).toBeTruthy()
+    expect(card('Zabtejes kakaó').queryByText('AI-javasolt')).toBeNull()
+    expect(card('Lecsó').queryByText('AI-javasolt')).toBeNull()
+  })
+
+  it('keeps the chat notice over a reload; Mégse forgets the idea and the next form is empty', async () => {
+    backend()
+    storeRecipeIdea(idea)
+    const { unmount } = render(<App />)
+    await screen.findByLabelText('Név')
+    unmount()
+    render(<App />)
+    expect(await screen.findByText('Átvettem a chat receptötletét. Mentés előtt nézd át, és javítsd, amit kell.')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mégse' }))
+    await screen.findByRole('heading', { name: 'Receptek' })
+    window.location.hash = '#/receptek/uj'
+
+    expect(((await screen.findByLabelText('Név')) as HTMLInputElement).value).toBe('')
+    expect(screen.queryByText('Átvettem a chat receptötletét. Mentés előtt nézd át, és javítsd, amit kell.')).toBeNull()
     expect(sessionStorage.getItem(draftKey)).toBeNull()
   })
 })

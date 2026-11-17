@@ -22,6 +22,10 @@ public sealed class CreateRecipeRequest : IValidatableObject
 
     public IReadOnlyList<RecipeIngredientRequest?>? Ingredients { get; init; }
 
+    // receptotlet_minispec 6.: set by the page when the form was filled from a recipe idea of the chat; the label
+    // only, it grants nothing.
+    public bool? AiSuggested { get; init; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (Ingredient.Tidy(Name ?? "").Length is 0 or > Recipe.MaxNameLength)

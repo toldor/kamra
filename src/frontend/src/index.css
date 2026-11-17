@@ -435,6 +435,28 @@ main.chat-page {
   overflow-wrap: anywhere;
 }
 
+/* receptotlet_minispec 4.: the recipe idea under the answer, with its button. */
+.chat-recipe {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--c-rule);
+}
+
+.chat-recipe-name {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.chat-recipe ul {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-5);
+  overflow-wrap: anywhere;
+}
+
 /* The examples show only while the conversation is empty, when the log above them is hidden (l3_l5_minispec L4). */
 .chat-examples {
   display: flex;
@@ -690,6 +712,13 @@ form > button[type='submit'] {
 .badge.neutral {
   background: var(--c-neutral-tag);
   color: var(--c-primary);
+}
+
+/* receptotlet_minispec 6.: "Saját recept" and "AI-javasolt" side by side on a recipe card. */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 /* ---- Rows: name – dotted leader – amount, like a market board ---- */

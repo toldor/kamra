@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 namespace KamraApp.Unit.Tests;
 
 // US-6 (us6_minispec K6-K8, K10; ADR-0010 4.): the Gemini chat adapter against a scripted HTTP handler (never the
-// real API, AGENTS.md 6.). The request it sends (prompt chat.v2 with today's date, the conversation, the MCP tools
+// real API, AGENTS.md 6.). The request it sends (prompt chat.v4 with today's date, the conversation, the MCP tools
 // as function declarations), the model's step sent back unchanged, the function calls it reads, the US-2 retry rules
 // (QA-3) and a log without any text.
 public sealed class GeminiChatModelTests : IDisposable
@@ -43,9 +43,16 @@ public sealed class GeminiChatModelTests : IDisposable
         request.ApiKey.Should().Be("secret-test-key");
         var body = JsonNode.Parse(request.Body)!;
         var prompt = (string)body["system_instruction"]!["parts"]![0]!["text"]!;
-        prompt.Should().StartWith("You are the read-only assistant of \"Kamra\"").And.Contain("Today is 2026-11-10 (Tuesday) in Budapest.")
+        prompt.Should().StartWith("You are the assistant of \"Kamra\"").And.Contain("Today is 2026-11-10 (Tuesday) in Budapest.")
             .And.NotContain("{today}").And.NotContain("{weekday}")
-            .And.Contain("Write plain text only, without Markdown", "chat.v2: the page shows the answer as plain text (ADR-0006)");
+            .And.Contain("Write plain text only, without Markdown", "chat.v2: the page shows the answer as plain text (ADR-0006)")
+            .And.Contain("You cannot change anything", "chat.v3 keeps the chat from changing data")
+            .And.Contain("only when the user explicitly asks for a new recipe or a recipe idea", "receptotlet_minispec Ü3: an idea only on request")
+            .And.Contain("answer with propose_recipe", "receptotlet_minispec 2.: the idea comes as the function, not as text")
+            .And.Contain("cannot suggest a substitute", "receptotlet_minispec Ü7: substitutes stay out of scope")
+            .And.Contain("what is missing for a recipe) use get_recommendations", "chat.v4: C6 of the chat.v3 run went to the pantry")
+            .And.Contain("the missing ones too", "chat.v4: R2 of the chat.v3 run refused a recipe with too little stock");
+        GeminiChatModel.PromptVersion.Should().Be("chat.v4");
         var contents = body["contents"]!.AsArray();
         contents.Select(c => (string)c!["role"]!).Should().Equal("user", "model", "user");
         contents.Select(c => (string)c!["parts"]![0]!["text"]!).Should().Equal("Mi jár le?", "A tej holnap.", "És még?");
@@ -56,7 +63,8 @@ public sealed class GeminiChatModelTests : IDisposable
             "the MCP schema goes to the model unchanged (parametersJsonSchema accepts JSON Schema)");
         var config = body["generationConfig"]!;
         ((string)config["thinkingConfig"]!["thinkingLevel"]!).Should().Be("minimal");
-        ((int)config["maxOutputTokens"]!).Should().Be(1024);
+        // receptotlet_minispec: a recipe idea of up to 4000 characters of instructions and 50 ingredients fits.
+        ((int)config["maxOutputTokens"]!).Should().Be(4096);
     }
 
     [Fact]

@@ -45,10 +45,10 @@ public sealed class CreateRecipe(IIngredientRepository ingredients, IRecipeCatal
         }
 
         var (recipe, recipeLines) = Recipe.CreateOwn(householdId, valid.Name!, valid.Servings!.Value, valid.Instructions ?? "", lines,
-            time.GetUtcNow());
+            time.GetUtcNow(), aiSuggested: valid.AiSuggested == true);
         catalog.Add(recipe, recipeLines);
         await catalog.SaveChangesAsync(cancellationToken);
         return new RecipeResponse(recipe.Id, recipe.Name, recipe.Servings, Own: true,
-            [.. lines.Select(l => l.Ingredient.Name).Order(Collation.Hungarian)]);
+            [.. lines.Select(l => l.Ingredient.Name).Order(Collation.Hungarian)], recipe.Source == RecipeSource.AiSuggested);
     }
 }

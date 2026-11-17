@@ -53,7 +53,7 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | POST | `/item-proposals/{id}/approve` | Jóváhagyás a (javított) adatokkal → 201 az új készlettétellel; ismétlés → 200 ugyanazzal | US-2 | `VALIDATION_FAILED`, `INGREDIENT_NOT_FOUND`, `ITEM_PROPOSAL_NOT_FOUND`, `ITEM_PROPOSAL_STATE_CONFLICT` | Megvalósítva |
 | POST | `/item-proposals/{id}/reject` | Elvetés → 204; ismétlés → 204 | US-2 | `ITEM_PROPOSAL_NOT_FOUND`, `ITEM_PROPOSAL_STATE_CONFLICT` | Megvalósítva |
 | GET | `/chat/availability` | Be van-e kapcsolva a chat: `{ enabled }` (`Llm:Enabled`) | US-6 | – | Megvalósítva |
-| POST | `/chat` | Kérdés → válasz: `{ question, history }` → 200 `{ answer, toolsUsed }`; semmi nem módosul; rate limit | US-6 | `VALIDATION_FAILED`, `LLM_UNAVAILABLE`, `LLM_INVALID_RESPONSE`, `LLM_DISABLED`, `RATE_LIMITED` | Megvalósítva |
+| POST | `/chat` | Kérdés → válasz: `{ question, history }` → 200 `{ answer, toolsUsed, recipe }`; semmi nem módosul; rate limit | US-6 | `VALIDATION_FAILED`, `LLM_UNAVAILABLE`, `LLM_INVALID_RESPONSE`, `LLM_DISABLED`, `RATE_LIMITED` | Megvalósítva |
 
 ### Tételjavaslat (US-2) – a megvalósított szerződés
 
@@ -68,9 +68,9 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 ### Chat (US-6) – a megvalósított szerződés
 
 - **Kérés** (`POST /chat`): `{ question, history }`; `question` 1–500 karakter; `history` legfeljebb 10 korábbi üzenet `{ role: "user" | "assistant", text }`, üzenetenként 1–2000 karakter (a felület a hosszabb választ levágja). A szerver semmit nem tárol ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 5.).
-- **Válasz 200:** `{ answer, toolsUsed }` – a válasz sima szöveg; a `toolsUsed` a megnézett MCP-eszközök neve, sorrendben, ismétlés nélkül.
+- **Válasz 200:** `{ answer, toolsUsed }` – a válasz sima szöveg; a `toolsUsed` a megnézett MCP-eszközök neve, sorrendben, ismétlés nélkül. A `recipe` receptötlet vagy `null`: `{ name, servings, ingredients: [{ name, amount, unit }], instructions }`. A szerver a kézi recept korlátaival ellenőrzi (név legfeljebb 100 karakter, adag 1–100, 1–50 hozzávaló, hozzávalónév legfeljebb 100 karakter, mennyiség 0,001–100 000 legfeljebb 3 tizedessel, a 7 egység, elkészítés legfeljebb 4000 karakter), és semmit nem ment; a `propose_recipe` nem kerül a `toolsUsed`-ba.
 - **Kör:** kérdésenként legfeljebb 3 modellhívás, körönként legfeljebb 4 eszközhívás; az eszközök: [mcp_tools.md](mcp_tools.md).
-- **Hibák:** kiesés vagy elutasított kérés 503 `LLM_UNAVAILABLE`; ismeretlen eszköz, hibás argumentum, a 3. hívás után is eszközhívás vagy a vártól eltérő válasz 502 `LLM_INVALID_RESPONSE`; az eszköz belső hibája 500 `INTERNAL_ERROR`; kikapcsolva 503 `LLM_DISABLED`; háztartásonként 30 kérdés / 10 perc fölött 429 `RATE_LIMITED`.
+- **Hibák:** kiesés vagy elutasított kérés 503 `LLM_UNAVAILABLE`; ismeretlen eszköz, hibás argumentum, a 3. hívás után is eszközhívás, hibás receptötlet, a `propose_recipe` más hívással együtt, vagy a vártól eltérő válasz 502 `LLM_INVALID_RESPONSE`; az eszköz belső hibája 500 `INTERNAL_ERROR`; kikapcsolva 503 `LLM_DISABLED`; háztartásonként 30 kérdés / 10 perc fölött 429 `RATE_LIMITED`.
 
 ### Ajánlás (US-3) – a megvalósított szerződés
 
@@ -88,8 +88,8 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 
 ### Receptek és saját hozzávaló (US-3) – a megvalósított szerződés
 
-- **Lista** (`GET /recipes`): `[{ id, name, servings, own, ingredients }]`; az `ingredients` a hozzávalók neve (az alaphozzávalókkal együtt) magyar betűrendben, a lista is az.
-- **Saját recept** (`POST /recipes`): `{ name, servings, instructions?, ingredients: [{ ingredientId, amount, unit }] }` → 201 a lista sorával, `Location` nélkül (egyedi lekérdező végpont nincs). Név 1–100 karakter (a szélek levágva, a belső szóközök egyesítve; nem egyedi), adagszám 1–100, legalább egy nem alaphozzávaló, legfeljebb 50 sor, hozzávalónként egy sor, mennyiség 0,001–100 000 legfeljebb 3 tizedessel, egység a hozzávaló dimenziójából, elkészítés legfeljebb 4000 karakter. A sorhibák kulcsa `ingredients[2].amount` alakú. Visszavont, nem létező vagy más háztartás hozzávalója: 404 `INGREDIENT_NOT_FOUND`, azonos válasszal.
+- **Lista** (`GET /recipes`): `[{ id, name, servings, own, aiSuggested, ingredients }]`; az `ingredients` a hozzávalók neve (az alaphozzávalókkal együtt) magyar betűrendben, a lista is az.
+- **Saját recept** (`POST /recipes`): `{ name, servings, instructions?, ingredients: [{ ingredientId, amount, unit }] }` → 201 a lista sorával, `Location` nélkül (egyedi lekérdező végpont nincs). Név 1–100 karakter (a szélek levágva, a belső szóközök egyesítve; nem egyedi), adagszám 1–100, legalább egy nem alaphozzávaló, legfeljebb 50 sor, hozzávalónként egy sor, mennyiség 0,001–100 000 legfeljebb 3 tizedessel, egység a hozzávaló dimenziójából, elkészítés legfeljebb 4000 karakter. A sorhibák kulcsa `ingredients[2].amount` alakú. Visszavont, nem létező vagy más háztartás hozzávalója: 404 `INGREDIENT_NOT_FOUND`, azonos válasszal. Az opcionális `aiSuggested: true` (a chat receptötletéből kitöltött űrlap küldi) `AiSuggested` forrást ad, ebből lesz a lista `aiSuggested` jelzője és a felület „AI-javasolt” címkéje; csak címke, jogosultságot nem ad.
 - **Archiválás** (`POST /recipes/{id}/archive`): 204, ismételt és egyidejű kérésre is; az első időpont marad. Más háztartás saját receptje és nem létező recept: 404 `RECIPE_NOT_FOUND`. Az induló recept archiválása csak a kérő háztartásra hat. Archivált receptnél az előnézet és az új főzés 409 `RECIPE_ARCHIVED`; a korábbi `requestId` ismétlése 200, azonos törzzsel.
 - **Saját hozzávaló** (`POST /ingredients`): `{ name, dimension, defaultCategory }` → 201 a `GET /ingredients` sorával (`minimum: null`). A név a recept nevével azonos módon tárolódik; ha a kisbetűs, egyesített szóközű alakja egyezik egy aktív rendszer- vagy a háztartás saját hozzávalójáéval, 409 `INGREDIENT_NAME_TAKEN` (egyidejű kérésnél is). Más háztartás azonos nevű hozzávalója nem ütközik.
 

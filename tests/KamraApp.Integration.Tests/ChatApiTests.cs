@@ -113,8 +113,9 @@ public partial class ChatApiTests(KamraApiFactory factory)
         model.Calls[0].Should().Equal(new UserTurn("Szia"), new AssistantTurn("Szia! Miben segíthetek?"), new UserTurn("Mi van a listán?"));
     }
 
+    // receptotlet_minispec Ü4: and propose_recipe of the chat round, which is not an MCP tool.
     [Fact]
-    public async Task The_model_gets_the_four_tools_of_the_mcp_server()
+    public async Task The_model_gets_the_four_tools_of_the_mcp_server_and_propose_recipe()
     {
         var model = new ScriptedChatModel().AnswerWith("Szia!");
         using var app = WithChat(model);
@@ -122,8 +123,67 @@ public partial class ChatApiTests(KamraApiFactory factory)
 
         (await client.PostAsync("/api/v1/chat", new { question = "Szia" })).StatusCode.Should().Be(HttpStatusCode.OK);
 
-        model.Tools.Select(t => t.Name).Should().BeEquivalentTo("get_pantry_items", "get_expiring_items", "get_recommendations", "get_shopping_list");
+        model.Tools.Select(t => t.Name).Should().BeEquivalentTo("get_pantry_items", "get_expiring_items", "get_recommendations", "get_shopping_list",
+            "propose_recipe");
         model.Tools.Should().OnlyContain(t => !t.InputSchemaJson.Contains("household", StringComparison.OrdinalIgnoreCase));
+    }
+
+    // receptotlet_minispec 3.: the idea comes back with the answer, and nothing is saved.
+    [Fact]
+    public async Task A_recipe_idea_comes_back_with_the_answer_and_the_database_is_unchanged()
+    {
+        var model = new ScriptedChatModel().CallThenAnswer("propose_recipe", """
+            {"name":"Rakott cukkini","servings":4,"ingredients":[{"name":"cukkini","amount":1,"unit":"kg"},{"name":"tejföl","amount":2.5,"unit":"dl"}],
+             "instructions":"Rétegezd, és süsd meg.","answer":"Itt egy ötlet."}
+            """, "-");
+        using var app = WithChat(model);
+        var client = await ApiClient.SignedInAsync(app);
+        await AddPantryItemAsync(client, "cukkini", 1, "kg", Today.AddDays(3));
+        var recipesBefore = (await client.GetJsonAsync("/api/v1/recipes")).GetRawText();
+        var pantryBefore = (await client.GetJsonAsync("/api/v1/pantry-items")).GetRawText();
+
+        var response = await client.PostAsync("/api/v1/chat", new { question = "Adj egy receptet a cukkinihez." });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var answer = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        answer.GetProperty("answer").GetString().Should().Be("Itt egy ötlet.");
+        answer.GetProperty("toolsUsed").GetArrayLength().Should().Be(0);
+        var recipe = answer.GetProperty("recipe");
+        (recipe.GetProperty("name").GetString(), recipe.GetProperty("servings").GetInt32(), recipe.GetProperty("instructions").GetString())
+            .Should().Be(("Rakott cukkini", 4, "Rétegezd, és süsd meg."));
+        recipe.GetProperty("ingredients").EnumerateArray()
+            .Select(i => (i.GetProperty("name").GetString(), i.GetProperty("amount").GetDecimal(), i.GetProperty("unit").GetString()))
+            .Should().Equal(("cukkini", 1m, "kg"), ("tejföl", 2.5m, "dl"));
+        (await client.GetJsonAsync("/api/v1/recipes")).GetRawText().Should().Be(recipesBefore);
+        (await client.GetJsonAsync("/api/v1/pantry-items")).GetRawText().Should().Be(pantryBefore);
+    }
+
+    [Fact]
+    public async Task A_plain_answer_has_no_recipe()
+    {
+        using var app = WithChat(new ScriptedChatModel().AnswerWith("Szia!"));
+        var client = await ApiClient.SignedInAsync(app);
+
+        var answer = await (await client.PostAsync("/api/v1/chat", new { question = "Szia" })).Content
+            .ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+
+        answer.TryGetProperty("recipe", out var recipe).Should().BeTrue();
+        recipe.ValueKind.Should().Be(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public async Task A_recipe_idea_outside_the_schema_is_LLM_INVALID_RESPONSE()
+    {
+        var model = new ScriptedChatModel().CallThenAnswer("propose_recipe", """
+            {"name":"Rakott cukkini","servings":4,"ingredients":[{"name":"cukkini","amount":1,"unit":"csipet"}],"instructions":"","answer":"Itt egy ötlet."}
+            """, "-");
+        using var app = WithChat(model);
+        var client = await ApiClient.SignedInAsync(app);
+
+        var response = await client.PostAsync("/api/v1/chat", new { question = "Adj egy receptet." });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadGateway);
+        (await ApiClient.ProblemAsync(response)).GetProperty("code").GetString().Should().Be("LLM_INVALID_RESPONSE");
     }
 
     [Theory]

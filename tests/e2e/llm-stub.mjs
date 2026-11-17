@@ -5,6 +5,7 @@
 // US-6 e2e (us6_minispec K13): a request with tools is a chat question. "lejár" or "jár le" -> a function call of get_expiring_items
 // (with a thought signature that must come back unchanged, ADR-0010 4.), then an answer from the real tool result;
 // "töröld" -> a refusal; "KIESÉS" -> 503; "HIBÁS" -> a call of a tool that does not exist; anything else -> a greeting.
+// Recipe idea e2e (receptotlet_minispec, Tesztek): "recept" -> a propose_recipe call with known ingredients.
 import { createServer } from 'node:http'
 
 const port = Number(process.env.PORT ?? 8089)
@@ -24,13 +25,21 @@ const text = (value) => ({
   usageMetadata: { promptTokenCount: 900, candidatesTokenCount: 30 },
 })
 
-const call = (name) => ({
+const call = (name, args = {}) => ({
   candidates: [{
-    content: { role: 'model', parts: [{ functionCall: { id: 'e2e-call', name, args: {} }, thoughtSignature: 'e2e-signature' }] },
+    content: { role: 'model', parts: [{ functionCall: { id: 'e2e-call', name, args }, thoughtSignature: 'e2e-signature' }] },
     finishReason: 'STOP',
   }],
   usageMetadata: { promptTokenCount: 900, candidatesTokenCount: 10 },
 })
+
+const pancake = {
+  name: 'Tejes palacsinta',
+  servings: 2,
+  ingredients: [{ name: 'tej', amount: 0.5, unit: 'l' }, { name: 'finomliszt', amount: 20, unit: 'dkg' }, { name: 'tojás', amount: 2, unit: 'db' }],
+  instructions: 'Keverd csomómentesre, és süsd ki vékonyan.',
+  answer: 'Itt egy palacsintaötlet. Mentés előtt nézd át.',
+}
 
 // The chat: the first call answers the question, the second one (after the tool) answers from the tool result.
 function chat(body) {
@@ -49,6 +58,7 @@ function chat(body) {
   if (question.includes('HIBÁS')) return [200, call('delete_pantry_items')]
   if (question.toLowerCase().includes('töröld')) return [200, text('Itt nem tudom törölni a tételeket. Ezt a Készlet oldalon teheted meg.')]
   if (/lejár|jár le/.test(question)) return [200, call('get_expiring_items')]
+  if (question.toLowerCase().includes('recept')) return [200, call('propose_recipe', pancake)]
   return [200, text('Szia! Miben segíthetek?')]
 }
 
