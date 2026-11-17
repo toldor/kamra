@@ -794,3 +794,27 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** `/code-review` (Spec-tengely).
 - **Eredmény:** FAIL – sötét témában világos szöveg került volna fehér papírra; a `summary` `display: flex` eltüntette a nyitás/zárás jelölőt; a témaválasztó gombjai szövegmező-stílust kaptak. Javítva, e2e- és Vitest-tesztekkel.
 - **Következtetés:** új témánál a nyomtatást és a böngésző saját vezérlőit is végig kell nézni.
+
+### V-96 – Az asztali elrendezés és a Kérdezz oldal tesztjeinek elválasztó ereje
+- **Dátum:** 2026-11-17
+- **Állítás:** Az S5, az S6 és a késői javítások új tesztjei elbuknak, ha a szabályaikat megsértjük.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** 19 mutáció (S5 P1–P7, S6 Q1–Q8, javítások R1–R4), egyenként visszaállítva; az e2e-javításoknál (az „Új tétel” kártya késő kapcsolónál, a receptrács, a nyomtatás, a gombméret) a teszt a javítás előtt piros volt.
+- **Eredmény:** PASS, két erősítéssel: P2 (a két szűrőgomb kizárása csak az egyik irányban volt tesztelve), R3 (a fókusz a mezőn volt a teszt előtt is).
+- **Következtetés:** –
+
+### V-97 – Saját hibák az asztali elrendezésben (az S5-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** Az összegző sáv, a kártyák és a receptrács a spec szerint működik.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review` (két tengely, egy ügynök).
+- **Eredmény:** FAIL – az „Új tétel” kártya a böngésző nyitáskor kiadott eseménye miatt nyitva ragadhatott (időzítésfüggő, e2e-vel reprodukálva), az utolsó receptkártya elvesztette az alsó keretét, 1440 px fölött 4 oszlopos lett a rács, a tiltott szűrőgomb elvette a fókuszt, a nyomtatáson és hibás lekérésnél felesleges vagy elavult elemek maradtak. Javítva, tesztekkel.
+- **Következtetés:** natív elemeknél (`<details>`) a böngésző eseményeit is figyelembe kell venni; a régi CSS-szabályok (`:last-child`) új környezetben is hatnak.
+
+### V-98 – Saját hibák a Kérdezz oldalon (az S6-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** A Kérdezz oldal új vezérlői teljesítik a projekt akadálymentességi minimumát.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review`; mérés.
+- **Eredmény:** FAIL – a kis gombok 36 px magasak voltak (a minimum 44 px), a megtagadott vágólap kezeletlen hibát adott, a gomb neve nem tartalmazta a látható szót (WCAG 2.5.3), a folytató gomb után elveszett a fókusz, és egy hibás válasz felülírta a beírt piszkozatot; sötét témában az avatar háttere eltűnt. Javítva (a másológomb a fejlesztő kérésére csak ikon, szöveges névvel), tesztekkel.
+- **Következtetés:** új, kis vezérlőnél a projekt saját minimumát (44 px) is mérni kell, nem csak a WCAG-ét.

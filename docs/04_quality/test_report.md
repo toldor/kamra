@@ -24,14 +24,14 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 |---|---|---|---|
 | Unit | ≥ 18 | 616 | 616 |
 | Integrációs | ≥ 6 | 289 (+2 `LiveAI`, a CI-ban kiszűrve) | 289 |
-| Frontend (Vitest) | – | 252 | 252 |
-| E2E | ≥ 6 | 33 (×2 nézet) | 33 |
+| Frontend (Vitest) | – | 268 | 268 |
+| E2E | ≥ 6 | 41 (×2 nézet, a nézethez kötöttek egyben) | 41 |
 | Negatív esetek | ≥ 5 | ≥ 374 (a `v0.3.1` óta nem számoltuk újra; minden új modul negatív esetekkel bővült) | – |
-| **Összesen** | **≥ 30** | **1190** | **1190** |
+| **Összesen** | **≥ 30** | **1214** | **1214** |
 
 ## Legutolsó futás eredménye
 
-- **2026-11-17 (`v0.8.0`, `feature/ui-polish`):** PASS – Vitest 252/252; Playwright 65/65 (33 teszt × asztali Chrome és 360 px, 1 kihagyva: a 360 px-es sáv tesztje asztalon); a backend nem változott. Mutációs ellenőrzés: S1 9/9 + e2e 1/1, S1-review 3/3, S2 7/7 (+1 egyenértékű), S3 7/7, S4 5/5, S2–S4-review 3/3 (+ az e2e javítások előtt pirosak) – négy teszt a mutáció után erősítve ([V-90](../07_ai/verification_log.md)).
+- **2026-11-17 (`v0.8.0`, `feature/ui-polish`):** PASS – Vitest 268/268; Playwright 73/73 (41 teszt × asztali Chrome és 360 px, 9 kihagyva: a nézethez kötött tesztek a másik nézetben); a backend nem változott. Mutációs ellenőrzés: S1 9/9 + e2e 1/1, S1-review 3/3, S2 7/7 (+1 egyenértékű), S3 7/7, S4 5/5, S2–S4-review 3/3, S5 7/7, S6 8/8, S6-review 4/4 (+ az e2e javítások előtt pirosak) – hat teszt a mutáció után erősítve ([V-90](../07_ai/verification_log.md), [V-96](../07_ai/verification_log.md)).
 - **2026-11-16 (`v0.7.0`, `feature/recipe-idea`):** PASS – .NET 616 unit + 289 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 199/199; Playwright 44/44 (22 teszt × asztali Chrome és 360 px) az LLM-csonkkal. Mutációs ellenőrzés: T1 21/21, T3 14/14, T3-review 7/7 – mind elbukott. CI: [run 44106858844](https://github.com/toldor/kamra/actions/runs/44106858844) (#124, `8fb6ab0`), mind a négy job zöld.
 - **2026-11-12 (`v0.6.0`, L3–L5, `feature/us-6-chat`):** PASS – Vitest 187/187, Playwright 42/42 (21 teszt × asztali Chrome és 360 px); a backend nem változott; mutáció L3–L5 5/5. CI: a `feature/us-6-chat` → `develop` PR checkjei.
 - **2026-11-12 (`v0.6.0`, `feature/us-6-chat` @ `dd3b40b`):** PASS – .NET 583 unit + 285 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 184/184; Playwright 38/38 futás (19 teszt × asztali Chrome és 360 px) az LLM-csonkkal. Mutációs ellenőrzés: T1 13/13, T1-review 6/6, T2 10/10, T3 9/9 (két gyenge teszt erősítve), T2+T3-review 5/5, külső review 5/5, L1/L2 3/3. CI: [run 43280942836](https://github.com/toldor/kamra/actions/runs/43280942836) (#113), mind a négy job zöld.

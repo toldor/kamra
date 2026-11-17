@@ -11,9 +11,15 @@ A fejlesztő kérésére (Stretch 3.). Részletek: [ADR-0013](../02_architecture
 - Sötét téma (Rendszer szerint / Világos / Sötét), a böngészőben megjegyezve.
 - Ragadós fejsáv; 1024 px alatt alsó menüsáv; ikonok a menüben; saját lapikon; oldalcímek; „Nincs ilyen oldal”.
 - Lejárati csík a készlettételeken, helykitöltő sorok betöltéskor, ikon az üres listáknál, nyomtatható bevásárlólista, kategóriánkénti rendezés a Készleten, mérsékelt animációk.
+- Asztali elrendezés: összegző sáv és szűrőgombok a Készleten, összecsukható beviteli kártyák, ragadós bal oszlop, receptrács, kétoszlopos bevásárlólista, szélesebb tartalom nagy képernyőn.
+- Élénkebb Kérdezz oldal: lekerekített doboz és buborékok, avatar, gépelő pöttyök, négy ikonos példa (receptkéréssel), folytató gombok, ikonos „Megnéztem” sor, karakterszámláló, másológomb.
 
 ### Módosítva
 - A kijelentkezés a Profilom panelbe és a Profilom oldalra került; a feature freeze nov. 20-ra.
+- A „Csak a hamarosan lejárók” jelölőnégyzet helyett az összegző sáv gombja szűr.
+
+### Javítva
+- Sötét témában a menüpont hoverkor is olvasható.
 
 ## [0.7.0] – 2026-11-16 – Receptötlet a chatből
 
