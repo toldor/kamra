@@ -15,6 +15,10 @@ async function registerFreshHousehold(page: Page) {
 
 test('the printed shopping list has no band, menu or buttons', async ({ page }) => {
   await registerFreshHousehold(page)
+  // Review V5: a printed pantry has no entry card headings and no summary either.
+  await page.emulateMedia({ media: 'print' })
+  await expect(page.locator('details.card > summary').first()).toBeHidden()
+  await page.emulateMedia({ media: 'screen' })
   await page.getByRole('navigation', { name: 'Oldalak' }).getByRole('link', { name: 'Bevásárlólista', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Nyomtatás' })).toBeVisible()
 

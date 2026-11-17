@@ -568,12 +568,32 @@ describe('the pantry summary', () => {
     expect(calls.filter((c) => c.url === '/api/v1/pantry-items').length).toBeGreaterThanOrEqual(2)
   })
 
+  // Review V6: no stale counts - if the whole pantry cannot be read while a filter is on, the summary goes.
+  it('drops the summary when the whole pantry cannot be read while a filter is on', async () => {
+    pantryBackend([pantry(oldMilk, rice, sourCream), { status: 500, body: { code: 'INTERNAL_ERROR', title: 'Váratlan hiba történt.' } }], {
+      'GET /api/v1/pantry-items?search=rizs': [pantry(rice)],
+    })
+    render(<App />)
+    await screen.findByRole('listitem', { name: 'tej' })
+    expect(summary().getByText('3 tétel')).toBeTruthy()
+
+    fireEvent.change(filters().getByLabelText('Keresés'), { target: { value: 'rizs' } })
+
+    await waitFor(() => expect(screen.queryByRole('group', { name: 'Összesítés' })).toBeNull())
+    expect(screen.getByRole('listitem', { name: 'rizs' })).toBeTruthy()
+  })
+
   it('disables a filter with nothing to show, and has no summary for an empty pantry', async () => {
     pantryBackend([pantry(rice)])
     render(<App />)
     await screen.findByRole('listitem', { name: 'rizs' })
 
-    expect((summary().getByRole('button', { name: '0 lejárt' }) as HTMLButtonElement).disabled).toBe(true)
+    // Review V4: aria-disabled, not disabled - a button switched off at 0 keeps the keyboard focus; a click does nothing.
+    const zero = summary().getByRole('button', { name: '0 lejárt' })
+    expect(zero.getAttribute('aria-disabled')).toBe('true')
+    expect((zero as HTMLButtonElement).disabled).toBe(false)
+    fireEvent.click(zero)
+    expect(zero.getAttribute('aria-pressed')).toBe('false')
     cleanup()
 
     pantryBackend([pantry()])

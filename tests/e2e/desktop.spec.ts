@@ -56,6 +56,26 @@ test('the recipes are a grid of three cards in a row at 1280 px', async ({ page 
   expect(boxes[2].y).toBe(boxes[0].y)
   expect(boxes[1].x).toBeGreaterThan(boxes[0].x)
   expect(boxes[3].y).toBeGreaterThan(boxes[0].y)
+  // Review V2: the last card keeps its bottom border.
+  expect(await cards.last().evaluate((card) => getComputedStyle(card).borderBottomWidth)).toBe('1px')
+
+  // Review V3: three columns on a wide screen too.
+  await page.setViewportSize({ width: 1600, height: 900 })
+  const wide = await Promise.all([0, 3].map(async (i) => (await cards.nth(i).boundingBox())!))
+  expect(wide[1].y).toBeGreaterThan(wide[0].y)
+})
+
+// Review V1: the "Új tétel" card stays closed next to the sentence entry, also when the entry's switch answers late.
+test('the new item card starts closed when the sentence entry answers late', async ({ page }) => {
+  await page.route('**/api/v1/item-proposals/availability', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await route.continue()
+  })
+  await registerFreshHousehold(page)
+  await expect(page.getByRole('heading', { name: 'Mondatos bevitel' })).toBeVisible()
+
+  const open = await page.locator('details', { has: page.locator('#new-item-heading') }).evaluate((d) => (d as HTMLDetailsElement).open)
+  expect(open).toBe(false)
 })
 
 test('the shopping list and its suggestions stand side by side', async ({ page }) => {
