@@ -1,10 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import css from './index.css?raw'
 
 // ADR-0013, ux_flows a11y: the design tokens keep WCAG 2.2 AA contrast. Text needs 4.5:1, focus rings,
 // field borders and the menu indicator 3:1 (1.4.11). The values are read from index.css itself, so a
-// changed token is checked too.
-const tokens = Object.fromEntries([...css.matchAll(/--(c-[a-z-]+):\s*(#[0-9a-f]{6});/g)].map((m) => [m[1], m[2]]))
+// changed token is checked too - the light palette (:root) and, since ui_polish_minispec 13., the dark one.
+function palette(selector: string) {
+  const start = css.indexOf(`${selector} {`)
+  const block = css.slice(start, css.indexOf('}', start))
+  return Object.fromEntries([...block.matchAll(/--(c-[a-z-]+):\s*(#[0-9a-f]{6});/g)].map((m) => [m[1], m[2]]))
+}
+
+const light = palette(':root')
+const dark = palette(":root[data-theme='dark']")
+let tokens = light
 
 function luminance(hex: string) {
   const [r, g, b] = [1, 3, 5].map((i) => {
@@ -48,7 +56,15 @@ const nonText: [string, string][] = [
   ['c-accent', 'c-surface'],
 ]
 
-describe('design tokens', () => {
+describe.each([['light', light], ['dark', dark]])('the %s palette', (_name, colors) => {
+  beforeEach(() => {
+    tokens = colors
+  })
+
+  it('has every token of the light palette', () => {
+    expect(Object.keys(colors).sort()).toEqual(Object.keys(light).sort())
+  })
+
   it('reads every token the pairs use', () => {
     for (const name of [...text, ...nonText].flat()) expect(tokens[name], name).toMatch(/^#[0-9a-f]{6}$/)
   })
@@ -63,9 +79,15 @@ describe('design tokens', () => {
 
   // ui_polish_minispec 8., Q16: the estimated-expiry stripe is decorative - the "(becsült)" text next to it carries the
   // meaning (WCAG 1.4.11 asks 3:1 only of a graphic needed to understand the content) - so it has no 3:1 pair.
-  it('has the estimated-expiry stripe as a decorative token, lighter than the field border', () => {
+  it('has the estimated-expiry stripe as a decorative token, apart from the surface', () => {
     expect(tokens['c-estimated']).toMatch(/^#[0-9a-f]{6}$/)
-    expect(luminance(tokens['c-estimated'])).toBeGreaterThan(luminance(tokens['c-field']))
+    expect(contrast('c-estimated', 'c-surface')).toBeGreaterThan(1.2)
+  })
+})
+
+describe('the light palette on the band', () => {
+  beforeEach(() => {
+    tokens = light
   })
 
   // The blue ring fails on the olive band (about 2:1), so the band uses its light ink for focus.
