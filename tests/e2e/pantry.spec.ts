@@ -117,3 +117,23 @@ test('the Profilom button keeps its contrast on the band when hovered', async ({
   })
   expect(ratio).toBeGreaterThanOrEqual(4.5)
 })
+
+// ui_polish_minispec 14.: by category, each group folds with the browser's own <details>.
+test('sorts the pantry by category, and a group folds and opens again', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await addItem(page, 'tej', '1', 'l')
+  await expect(page.getByText('Felvettem a kamrádba: tej 1 l.')).toBeVisible()
+  await addItem(page, 'finomliszt', '1', 'kg')
+  await expect(page.getByText('Felvettem a kamrádba: finomliszt 1 kg.')).toBeVisible()
+
+  await page.getByRole('group', { name: 'Rendezés' }).getByRole('radio', { name: 'Kategóriák szerint' }).check()
+  const dairy = page.locator('details.category', { has: page.locator('summary', { hasText: 'Tejtermék (1)' }) })
+  await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeVisible()
+
+  await dairy.locator('summary').click()
+  await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeHidden()
+  await expect(page.getByRole('listitem', { name: 'finomliszt' })).toBeVisible()
+
+  await dairy.locator('summary').click()
+  await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeVisible()
+})
