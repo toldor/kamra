@@ -639,6 +639,32 @@ main .theme-choice {
   font-weight: 400;
 }
 
+/* ui_polish_minispec 14.: the pantry's sort choice and its category groups (the browser's own <details>). */
+.filters .sort {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filters .sort legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+details.category > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--c-rule);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+details.category[open] > .items {
+  animation: kamra-fade 200ms ease-out;
+}
+
 /* ui_polish_minispec 9.: placeholder rows while a list loads. */
 .skeleton {
   display: flex;

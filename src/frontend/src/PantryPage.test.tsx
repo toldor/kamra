@@ -485,22 +485,24 @@ describe('sorting the pantry', () => {
   const names = (where: HTMLElement) => within(where).getAllByRole('listitem').map((item) => item.querySelector('.name')?.textContent)
 
   it('lists by expiry by default, and by category on request, without a new request', async () => {
-    const calls = pantryBackend([pantry(oldMilk, rice, sourCream)])
+    // Mutation M5: the latest yoghurt comes last by expiry, but first by name.
+    const yoghurt = { ...sourCream, id: 'p-6', ingredientName: 'joghurt', expiryDate: '2026-10-20' }
+    const calls = pantryBackend([pantry(oldMilk, rice, sourCream, yoghurt)])
     render(<App />)
     await screen.findByRole('listitem', { name: 'tej' })
     const sort = within(screen.getByRole('group', { name: 'Rendezés' }))
 
     expect((sort.getByRole('radio', { name: 'Lejárat szerint' }) as HTMLInputElement).checked).toBe(true)
     expect(document.querySelectorAll('details.category')).toHaveLength(0)
-    expect(names(screen.getByRole('list'))).toEqual(['tej', 'rizs', 'tejföl'])
+    expect(names(screen.getByRole('list'))).toEqual(['tej', 'rizs', 'tejföl', 'joghurt'])
     const requests = calls.filter((c) => c.url.startsWith('/api/v1/pantry-items')).length
 
     fireEvent.click(sort.getByRole('radio', { name: 'Kategóriák szerint' }))
 
     const groups = Array.from(document.querySelectorAll<HTMLDetailsElement>('details.category'))
-    expect(groups.map((g) => g.querySelector('summary')?.textContent)).toEqual(['Tejtermék (2)', 'Száraz élelmiszer (1)'])
+    expect(groups.map((g) => g.querySelector('summary')?.textContent)).toEqual(['Tejtermék (3)', 'Száraz élelmiszer (1)'])
     expect(groups.every((g) => g.open)).toBe(true)
-    expect(names(groups[0])).toEqual(['tej', 'tejföl'])
+    expect(names(groups[0])).toEqual(['tej', 'tejföl', 'joghurt'])
     expect(names(groups[1])).toEqual(['rizs'])
     expect(calls.filter((c) => c.url.startsWith('/api/v1/pantry-items'))).toHaveLength(requests)
 

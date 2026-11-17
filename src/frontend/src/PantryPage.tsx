@@ -21,6 +21,7 @@ type Catalog =
 // items come first, because the backend orders by expiry date.
 export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => void }) {
   const [filter, setFilter] = useState(noFilter)
+  const [byCategory, setByCategory] = useState(false)
   const [searchInput, setSearchInput] = useState('')
   const [list, setList] = useState<List>({ status: 'loading' })
   const [reloads, setReloads] = useState(0)
@@ -78,6 +79,42 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
   const filtered = filter.search.trim() !== '' || filter.category !== '' || filter.expiringSoon
   const categories = catalog.status === 'ready' ? catalog.categories : []
 
+
+  // ui_polish_minispec 14.: by category - the groups in the order of the categories (any other category after them),
+  // each item in its expiry order from the server.
+  const groups = (items: PantryItem[]): [Category, PantryItem[]][] =>
+    [...new Set([...categories.map((c) => c.category), ...items.map((i) => i.category)])]
+      .map((category): [Category, PantryItem[]] => [category, items.filter((i) => i.category === category)])
+      .filter(([, inGroup]) => inGroup.length > 0)
+
+  const itemRow = (item: PantryItem) => (
+    <li key={item.id} aria-labelledby={`item-${item.id}`} className={`item cols ${expiryStripe(item)}`}>
+      <span className="line">
+        <span id={`item-${item.id}`} className="name">{item.ingredientName}</span>
+        <span className="leader" aria-hidden="true" />
+        <span className="qty">{formatAmount(item.amount, item.unit)}</span>
+      </span>
+      <span className="meta">
+        <span>
+          {formatDate(item.expiryDate)}
+          {item.expiryEstimated && ' (becsült)'}
+        </span>
+        <span>
+          {item.expired && <span className="badge expired">Lejárt</span>}
+          {item.soonExpiring && <span className="badge soon">Hamarosan lejár</span>}
+        </span>
+      </span>
+      <button
+        type="button"
+        className="secondary"
+        aria-label={`Módosítás: ${item.ingredientName}`}
+        onClick={() => setEditing(item)}
+      >
+        Módosítás
+      </button>
+    </li>
+  )
+
   return (
     <main>
       <h1 tabIndex={-1}>Készlet</h1>
@@ -123,6 +160,18 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
               />
               Csak a hamarosan lejárók
             </label>
+            {/* ui_polish_minispec 14.: in the browser only; not kept over a reload. */}
+            <fieldset className="sort">
+              <legend>Rendezés</legend>
+              <label className="check">
+                <input type="radio" name="pantry-sort" checked={!byCategory} onChange={() => setByCategory(false)} />
+                Lejárat szerint
+              </label>
+              <label className="check">
+                <input type="radio" name="pantry-sort" checked={byCategory} onChange={() => setByCategory(true)} />
+                Kategóriák szerint
+              </label>
+            </fieldset>
           </form>
           {catalog.status === 'loading' && <p role="status">Betöltés…</p>}
           {catalog.status === 'error' && (
@@ -206,37 +255,14 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
                   </div>
                 ))}
             </div>
-            {list.status === 'ready' && list.items.length > 0 && (
-              <ul className="items">
-                {list.items.map((item) => (
-                  <li key={item.id} aria-labelledby={`item-${item.id}`} className={`item cols ${expiryStripe(item)}`}>
-                    <span className="line">
-                      <span id={`item-${item.id}`} className="name">{item.ingredientName}</span>
-                      <span className="leader" aria-hidden="true" />
-                      <span className="qty">{formatAmount(item.amount, item.unit)}</span>
-                    </span>
-                    <span className="meta">
-                      <span>
-                        {formatDate(item.expiryDate)}
-                        {item.expiryEstimated && ' (becsült)'}
-                      </span>
-                      <span>
-                        {item.expired && <span className="badge expired">Lejárt</span>}
-                        {item.soonExpiring && <span className="badge soon">Hamarosan lejár</span>}
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      className="secondary"
-                      aria-label={`Módosítás: ${item.ingredientName}`}
-                      onClick={() => setEditing(item)}
-                    >
-                      Módosítás
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {list.status === 'ready' && list.items.length > 0 && (byCategory
+              ? groups(list.items).map(([category, items]) => (
+                <details key={category} className="category" open>
+                  <summary>{categoryName(category)} ({items.length})</summary>
+                  <ul className="items">{items.map(itemRow)}</ul>
+                </details>
+              ))
+              : <ul className="items">{list.items.map(itemRow)}</ul>)}
           </div>
         </section>
       </div>
