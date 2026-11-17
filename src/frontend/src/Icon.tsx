@@ -9,6 +9,8 @@ const shapes = {
   list: <><path d="M10 6h10M10 12h10M10 18h10" /><path d="M4 6l1.2 1.2L7.5 5M4 12l1.2 1.2L7.5 11" /><circle cx="5.5" cy="18" r="1.2" /></>,
   chat: <><path d="M4 5h16v11H10l-5 4v-4H4z" /><path d="M8 9.5h8M8 12.5h5" /></>,
   profile: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6" /></>,
+  // ui_polish_minispec 24. (K5): the soon-expiring items.
+  clock: <><circle cx="12" cy="12" r="8" /><path d="M12 8v4l3 2" /></>,
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof shapes

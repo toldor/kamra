@@ -1,7 +1,8 @@
-import { useRef, type Dispatch, type FormEvent, type KeyboardEvent, type SetStateAction } from 'react'
+import { Fragment, useRef, useState, type Dispatch, type FormEvent, type KeyboardEvent, type SetStateAction } from 'react'
 import { api, ApiError, errorMessage, type RecipeIdea } from './api/client'
 import { newConversation, type Conversation, type Message } from './conversation'
 import { formatAmount } from './format'
+import { Icon, type IconName } from './Icon'
 import { readDraft, storeRecipeIdea } from './recipeDraft'
 import { routes } from './useHashRoute'
 
@@ -11,13 +12,27 @@ import { routes } from './useHashRoute'
 // starts a new one (l3_l5_minispec L5). The answer is plain text (ADR-0006); the line under it names the tools the
 // model looked at (K2).
 
-const examples = ['Mi jár le hamarosan?', 'Mit főzhetek abból, ami otthon van?', 'Mi van a bevásárlólistán?']
+// ui_polish_minispec 22. (K3): the examples as cards with an icon; the last one asks for a recipe idea.
+const examples: [string, IconName][] = [
+  ['Mi jár le hamarosan?', 'pantry'],
+  ['Mit főzhetek abból, ami otthon van?', 'cook'],
+  ['Mi van a bevásárlólistán?', 'list'],
+  ['Adj egy receptet abból, ami otthon van.', 'recipes'],
+]
 
-const toolNames: Record<string, string> = {
-  get_pantry_items: 'a készletet',
-  get_expiring_items: 'a hamarosan lejáró tételeket',
-  get_recommendations: 'az ajánlást',
-  get_shopping_list: 'a bevásárlólistát',
+// The tools in the "Megnéztem" line, with their icon (ui_polish_minispec 24., K5).
+const toolNames: Record<string, [string, IconName]> = {
+  get_pantry_items: ['a készletet', 'pantry'],
+  get_expiring_items: ['a hamarosan lejáró tételeket', 'clock'],
+  get_recommendations: ['az ajánlást', 'cook'],
+  get_shopping_list: ['a bevásárlólistát', 'list'],
+}
+
+// ui_polish_minispec 23. (K4): the question a follow-up button sends after the last answer.
+function followUp(message: Message): [string, string] | null {
+  if (message.recipe) return ['Másik ötlet', 'Adj egy másik receptötletet.']
+  if (message.toolsUsed?.includes('get_expiring_items')) return ['Mit főzzek ezekből?', 'Mit főzhetek a hamarosan lejáró tételekből?']
+  return null
 }
 
 // The chat's own texts for the codes it shares with the quick entry (us6_minispec, Hibák).
@@ -35,13 +50,60 @@ const historyMax = 10
 const historyTextMax = 2000
 
 
-// "Megnéztem: a készletet, az ajánlást és a bevásárlólistát." - or nothing when no tool was used.
-function toolsLine(tools: string[] = []): string | null {
+// "Megnéztem: a készletet, az ajánlást és a bevásárlólistát." - or nothing when no tool was used. Since
+// ui_polish_minispec 24. (K5) each tool name has its icon; the sentence itself is unchanged.
+function ToolsLine({ tools = [] }: { tools?: string[] }) {
   // An unknown name is left out: the user never sees a technical name (review R5).
-  const names = tools.filter((tool) => tool in toolNames).map((tool) => toolNames[tool])
-  if (names.length === 0) return null
+  const known = tools.filter((tool) => tool in toolNames)
+  if (known.length === 0) return null
+  const names = known.map((tool) => toolNames[tool][0])
   const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} és ${names[names.length - 1]}`
-  return `Megnéztem: ${list}.`
+  // The sentence in one piece for a screen reader; the same with icons on screen.
+  return (
+    <p className="hint tools-line">
+      <span className="visually-hidden">Megnéztem: {list}.</span>
+      <span aria-hidden="true">
+        Megnéztem:{' '}
+        {known.map((tool, index) => (
+          <Fragment key={tool}>
+            {index > 0 && (index === known.length - 1 ? ' és ' : ', ')}
+            <span className="tool"><Icon name={toolNames[tool][1]} size={14} />{toolNames[tool][0]}</span>
+          </Fragment>
+        ))}
+        .
+      </span>
+    </p>
+  )
+}
+
+// ui_polish_minispec 20. (K1): the Kamra jar (the tab icon) next to its answers; decorative.
+function Jar({ size = 28 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true" focusable="false" className="chat-avatar">
+      <rect x="1" y="1" width="30" height="30" rx="7" className="jar-ground" />
+      <rect x="11" y="5.5" width="10" height="4" rx="1.2" className="jar-lid" />
+      <rect x="9" y="10" width="14" height="16.5" rx="3.5" className="jar-body" />
+      <rect x="12" y="16" width="8" height="2.5" rx="1" className="jar-ground" />
+    </svg>
+  )
+}
+
+// ui_polish_minispec 27. (K8): copies an answer; hidden where the browser gives no clipboard (an insecure page).
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  if (!navigator.clipboard) return null
+
+  async function copy() {
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <button type="button" className="secondary chat-action" aria-label="Válasz másolása" onClick={() => void copy()}>
+      {copied ? 'Kimásolva' : 'Másolás'}
+    </button>
+  )
 }
 
 // receptotlet_minispec 4. and Q7 (A): the idea in short (name, servings, ingredients; the steps are on the form), and
@@ -69,14 +131,30 @@ function RecipeIdeaCard({ idea }: { idea: RecipeIdea }) {
   )
 }
 
-function Bubble({ message }: { message: Message }) {
-  const line = toolsLine(message.toolsUsed)
+// next: the follow-up of the last answer (K4), not while a question is on its way.
+function Bubble({ message, next, onAsk }: { message: Message; next?: [string, string] | null; onAsk?: (question: string) => void }) {
+  if (message.role === 'user') {
+    return (
+      <div className="chat-message user">
+        <span className="visually-hidden">Te:</span>
+        <p className="chat-text">{message.text}</p>
+      </div>
+    )
+  }
+
   return (
-    <div className={`chat-message ${message.role}`}>
-      <span className="visually-hidden">{message.role === 'user' ? 'Te:' : 'Kamra:'}</span>
-      <p className="chat-text">{message.text}</p>
-      {line && <p className="hint">{line}</p>}
-      {message.recipe && <RecipeIdeaCard idea={message.recipe} />}
+    <div className="chat-row">
+      <Jar />
+      <div className="chat-message assistant">
+        <span className="visually-hidden">Kamra:</span>
+        <p className="chat-text">{message.text}</p>
+        <ToolsLine tools={message.toolsUsed} />
+        {message.recipe && <RecipeIdeaCard idea={message.recipe} />}
+        <div className="chat-actions">
+          <CopyButton text={message.text} />
+          {next && onAsk && <button type="button" className="secondary chat-action" onClick={() => onAsk(next[1])}>{next[0]}</button>}
+        </div>
+      </div>
     </div>
   )
 }
@@ -174,12 +252,34 @@ export function ChatPage({ conversation, onChange, onSignedOut }: {
           {/* One list with the waiting question last: it stays the same element when the answer comes, so a screen
               reader reads it out once (review R4). */}
           {[...messages, ...(pending !== null ? [{ role: 'user' as const, text: pending }] : [])]
-            .map((message, index) => <Bubble key={index} message={message} />)}
+            .map((message, index) => (
+              <Bubble
+                key={index}
+                message={message}
+                next={!busy && index === messages.length - 1 ? followUp(message) : null}
+                onAsk={(text) => void send(text)}
+              />
+            ))}
+          {/* ui_polish_minispec 21. (K2): the dots while the answer is on its way; the button says "Gondolkodom…". */}
+          {busy && (
+            <div className="chat-row" aria-hidden="true">
+              <Jar />
+              <div className="chat-message assistant typing"><span /><span /><span /></div>
+            </div>
+          )}
         </div>
         {messages.length === 0 && !busy && (
           <div className="chat-examples">
-            {examples.map((example) => (
-              <button key={example} type="button" className="secondary" onClick={() => void send(example)}>{example}</button>
+            {/* ui_polish_minispec 25. (K6): a greeting above the examples of an empty conversation. */}
+            <div className="chat-welcome">
+              <Jar size={56} />
+              <p>Szia! Miben segíthetek a kamrával kapcsolatban?</p>
+            </div>
+            {examples.map(([example, icon]) => (
+              <button key={example} type="button" className="secondary chat-example" onClick={() => void send(example)}>
+                <Icon name={icon} />
+                {example}
+              </button>
             ))}
           </div>
         )}
@@ -194,8 +294,10 @@ export function ChatPage({ conversation, onChange, onSignedOut }: {
             onChange={(event) => setQuestion(event.target.value)}
             onKeyDown={keyDown}
             aria-invalid={error ? 'true' : undefined}
-            aria-describedby="chat-error"
+            aria-describedby="chat-error chat-count"
           />
+          {/* ui_polish_minispec 26. (K7). */}
+          <p id="chat-count" className="hint chat-count">{question.length} / {questionMax}</p>
           <div id="chat-error" role="alert" className="form-error">{error}</div>
           <button type="submit" disabled={busy}>{busy ? 'Gondolkodom…' : 'Küldés'}</button>
         </form>

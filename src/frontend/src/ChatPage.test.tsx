@@ -256,7 +256,8 @@ describe('the Kérdezz page', () => {
       'Megnéztem: a készletet, a hamarosan lejáró tételeket, az ajánlást és a bevásárlólistát.')).toBeTruthy()
     await ask('Szia')
     await log().findByText('Szia!')
-    expect(log().getAllByText(/^Megnéztem:/)).toHaveLength(1)
+    // ui_polish_minispec 24. (K5): the line is read once (the sentence) and shown once (with icons); count the sentences.
+    expect(log().getAllByText(/^Megnéztem:/, { selector: '.visually-hidden' })).toHaveLength(1)
   })
 
   it('labels the two sides for a screen reader', async () => {
@@ -589,7 +590,7 @@ describe('the livelier Kérdezz page', () => {
     await ask('Mi van?')
 
     const line = await log().findByText('Megnéztem: a hamarosan lejáró tételeket és az ajánlást.')
-    expect(line.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2)
+    expect(line.closest('.tools-line')?.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2)
   })
 
   it('counts the characters of the question (K7)', async () => {
