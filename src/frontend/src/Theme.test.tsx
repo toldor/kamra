@@ -50,8 +50,9 @@ describe('the theme choice', () => {
   it('is on the Profilom page and in the panel, "Rendszer szerint" by default, with the note on the page', async () => {
     backend()
     render(<App />)
-    const page = within(await screen.findByRole('main'))
-    await page.findByRole('heading', { name: 'Profilom' })
+    // The app's own loading screen is a <main> too, so the page heading is awaited first.
+    await screen.findByRole('heading', { level: 1, name: 'Profilom' })
+    const page = within(screen.getByRole('main'))
 
     expect((choices(page).getByRole('radio', { name: 'Rendszer szerint' }) as HTMLInputElement).checked).toBe(true)
     expect(choices(page).getAllByRole('radio').map((r) => r.getAttribute('aria-label') ?? r.closest('label')?.textContent))
@@ -66,8 +67,9 @@ describe('the theme choice', () => {
   it('switches the page to dark and remembers it; the panel and the page show the same choice', async () => {
     backend()
     render(<App />)
-    const page = within(await screen.findByRole('main'))
-    await page.findByRole('heading', { name: 'Profilom' })
+    // The app's own loading screen is a <main> too, so the page heading is awaited first.
+    await screen.findByRole('heading', { level: 1, name: 'Profilom' })
+    const page = within(screen.getByRole('main'))
     fireEvent.click(screen.getByRole('button', { name: 'Profilom' }))
     const panel = within(screen.getByRole('region', { name: 'Profilom' }))
 
@@ -121,5 +123,8 @@ describe('the theme on load', () => {
     expect(readTheme()).toBe('system')
     expect(() => chooseTheme('dark')).not.toThrow()
     expect(theme()).toBe('dark')
+    // Mutation L5: the choice still shows until the page is reloaded.
+    expect(readTheme()).toBe('dark')
+    chooseTheme('system')
   })
 })

@@ -47,6 +47,34 @@
   line-height: 1.5;
   color: var(--c-ink);
   background: var(--c-ground);
+
+  color-scheme: light;
+}
+/* ui_polish_minispec 13.: the dark palette - the same tokens, checked with the same pairs (tokens.test.ts); theme.ts
+   puts the resolved theme ("Rendszer szerint" follows the system) on <html data-theme>. */
+:root[data-theme='dark'] {
+  --c-band: #11160d;
+  --c-band-ink: #eef0e4;
+  --c-band-muted: #c3c9b5;
+  --c-ground: #161a12;
+  --c-surface: #1f241a;
+  --c-rule: #3a4232;
+  --c-ink: #e8ebdf;
+  --c-muted: #b1b8a6;
+  --c-field: #8e9884;
+  --c-primary: #b8cc96;
+  --c-primary-hover: #cadcab;
+  --c-on-primary: #141810;
+  --c-accent: #f0809f;
+  --c-indicator: #f0809f;
+  --c-leader: #8f5a6b;
+  --c-expired: #f4a7bb;
+  --c-missing: #ff8fac;
+  --c-neutral-tag: #3d4433;
+  --c-focus: #8ab4f8;
+  --c-estimated: #a39a74;
+
+  color-scheme: dark;
 }
 
 /* Self-hosted OFL fonts (public/fonts); latin + latin-ext covers ő and ű. */
@@ -581,6 +609,34 @@ main.chat-page {
 
 .chat-form button[type='submit'] {
   align-self: flex-start;
+}
+
+/* ui_polish_minispec 13.: the theme choice in the panel and on the Profilom page. */
+.theme-choice {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-top: 1px solid var(--c-rule);
+  border-bottom: 1px solid var(--c-rule);
+}
+
+main .theme-choice {
+  padding: var(--space-2) 0;
+  border: 0;
+}
+
+.theme-choice legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.theme-choice label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin: 0;
+  font-weight: 400;
 }
 
 /* ui_polish_minispec 9.: placeholder rows while a list loads. */

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type FocusEvent } from 'react'
 import type { Me } from './api/client'
 import { Icon } from './Icon'
+import { ThemeChoice } from './ThemeChoice'
 import { useLogout } from './useLogout'
 import { routes, type Route } from './useHashRoute'
 
@@ -68,6 +69,7 @@ function ProfilePanel({ id, me, onSignedOut, onClose }: { id: string; me: Me; on
     <section id={id} aria-label="Profilom" className="profile-panel">
       <p className="who">Bejelentkezve: {me.email}</p>
       <a href={routes.profile} onClick={onClose}>Profilom</a>
+      <ThemeChoice />
       <button type="button" className="link" onClick={() => void logout()} disabled={busy}>Kijelentkezés</button>
       <p role="alert" className="form-error">{error}</p>
     </section>
