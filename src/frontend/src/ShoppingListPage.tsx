@@ -4,7 +4,9 @@ import {
 } from './api/client'
 import { useFieldErrors } from './fieldErrors'
 import { allUnits, findIngredient, formatAmount, formatDay, formatListLine, matchesSearch, unitsOf } from './format'
+import { Icon } from './Icon'
 import { IngredientPicker } from './IngredientPicker'
+import { LoadingRows } from './Loading'
 
 type Data = { suggestions: ShoppingSuggestion[]; items: ShoppingListItem[]; ingredients: Ingredient[] }
 
@@ -249,10 +251,14 @@ export function ShoppingListPage({ onSignedOut }: { onSignedOut: (notice: string
 
   return (
     <main>
-      <h1 tabIndex={-1}>Bevásárlólista</h1>
+      {/* ui_polish_minispec 11.: the browser's own print; the print styles leave the frame and the controls out. */}
+      <div className="page-head">
+        <h1 tabIndex={-1}>Bevásárlólista</h1>
+        <button type="button" className="secondary" onClick={() => window.print()}>Nyomtatás</button>
+      </div>
       <p ref={noticeRef} role="status" className="notice" tabIndex={-1}>{notice}</p>
       <div ref={errorRef} role="alert" className="form-error" tabIndex={-1}>{error}</div>
-      {load.status === 'loading' && <p role="status">Betöltés…</p>}
+      {load.status === 'loading' && <LoadingRows />}
       {load.status === 'error' && (
         <div>
           <p role="alert">{load.message}</p>
@@ -306,11 +312,14 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
               </form>
             )}
             {items.length === 0 && (
-              <p className="empty">
-                {suggestions.length > 0
-                  ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
-                  : 'A listád üres. Vegyél fel tételt alább.'}
-              </p>
+              <div className="empty-state">
+                <Icon name="list" size={48} />
+                <p className="empty">
+                  {suggestions.length > 0
+                    ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
+                    : 'A listád üres. Vegyél fel tételt alább.'}
+                </p>
+              </div>
             )}
             {items.length > 0 && shown.length === 0 && <p className="empty">Nincs a keresésnek megfelelő tétel a listádon.</p>}
           </div>

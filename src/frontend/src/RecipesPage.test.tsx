@@ -93,8 +93,10 @@ describe('the Receptek page (N9)', () => {
     })
     render(<App />)
 
-    // ui_polish_minispec 9.: placeholder rows while loading; a screen reader still hears "Betöltés…".
-    const loading = await screen.findByText('Betöltés…')
+    // ui_polish_minispec 9.: placeholder rows while loading; a screen reader still hears "Betöltés…". (The app's own
+    // session check shows "Betöltés…" first, so the page heading is awaited.)
+    await screen.findByRole('heading', { level: 1, name: 'Receptek' })
+    const loading = screen.getByText('Betöltés…')
     expect(loading.classList.contains('visually-hidden')).toBe(true)
     expect(loading.closest('[role="status"]')).toBeTruthy()
     const rows = document.querySelector('.skeleton')

@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { api, failWith, type Recipe } from './api/client'
 import { matchesSearch } from './format'
+import { Icon } from './Icon'
+import { LoadingRows } from './Loading'
 import { cookingRoute, routes } from './useHashRoute'
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; recipes: Recipe[] }
@@ -57,7 +59,7 @@ export function RecipesPage({ notice: openingNotice, onSignedOut }: { notice?: s
       </div>
       <p ref={noticeRef} role="status" className="notice" tabIndex={-1}>{notice}</p>
       <p role="alert" className="form-error">{error}</p>
-      {load.status === 'loading' && <p>Betöltés…</p>}
+      {load.status === 'loading' && <LoadingRows />}
       {load.status === 'error' && (
         <div>
           <p role="alert">{load.message}</p>
@@ -73,7 +75,10 @@ export function RecipesPage({ notice: openingNotice, onSignedOut }: { notice?: s
         </div>
       )}
       {load.status === 'ready' && load.recipes.length === 0 && (
-        <p className="empty">Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.</p>
+        <div className="empty-state">
+          <Icon name="recipes" size={48} />
+          <p className="empty">Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.</p>
+        </div>
       )}
       {load.status === 'ready' && load.recipes.length > 0 && (
         <RecipeList recipes={load.recipes} busy={busy} onArchive={(r) => void archive(r)} />

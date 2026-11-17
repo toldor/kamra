@@ -22,6 +22,8 @@
   --c-missing: #a82a50;
   --c-neutral-tag: #dcdac3;
   --c-focus: #0b57d0;
+  /* ui_polish_minispec 8.: the stripe of an estimated expiry; decorative, the "(becsült)" text carries the meaning. */
+  --c-estimated: #d9cfa8;
 
   --font-display: 'Zilla Slab', Georgia, 'Times New Roman', serif;
   --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -574,6 +576,94 @@ main.chat-page {
   align-self: flex-start;
 }
 
+/* ui_polish_minispec 9.: placeholder rows while a list loads. */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.skeleton span {
+  height: 14px;
+  border-radius: var(--radius-tag);
+  background: var(--c-rule);
+  animation: kamra-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.skeleton span:nth-child(1) { width: 70%; }
+.skeleton span:nth-child(2) { width: 55%; }
+.skeleton span:nth-child(3) { width: 62%; }
+
+@keyframes kamra-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.5; }
+}
+
+/* ui_polish_minispec 10.: an empty list with the page's icon above its text. */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.empty-state > .icon {
+  color: var(--c-muted);
+}
+
+/* ui_polish_minispec 12.: short, quiet motion; none when the user asked for less motion. */
+@keyframes kamra-drop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes kamra-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.profile-panel {
+  animation: kamra-drop 150ms ease-out;
+}
+
+.notice:not(:empty) {
+  animation: kamra-fade 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ui_polish_minispec 11.: the printed shopping list - the page and its items, without the frame and the controls; the
+   check boxes stay (a ticked item prints ticked). */
+@media print {
+  .band,
+  .nav,
+  button,
+  .button-link,
+  form,
+  .filters,
+  .notice,
+  .form-error {
+    display: none !important;
+  }
+
+  body,
+  body:has(.band) {
+    padding: 0;
+    background: #fff;
+  }
+
+  .panel {
+    border: 0;
+  }
+}
+
 /* Text only for a screen reader (the "Te:" / "Kamra:" labels of the conversation). */
 .visually-hidden {
   position: absolute;
@@ -874,6 +964,19 @@ form > button[type='submit'] {
 
 .item:last-child {
   border-bottom: none;
+}
+
+/* ui_polish_minispec 8.: the stripe of the most urgent state on the left edge of a pantry item. */
+.item.expired {
+  box-shadow: inset 5px 0 0 var(--c-expired);
+}
+
+.item.soon {
+  box-shadow: inset 5px 0 0 var(--c-accent);
+}
+
+.item.estimated {
+  box-shadow: inset 5px 0 0 var(--c-estimated);
 }
 
 .item > .line {

@@ -61,6 +61,13 @@ describe('design tokens', () => {
     expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3)
   })
 
+  // ui_polish_minispec 8., Q16: the estimated-expiry stripe is decorative - the "(becsült)" text next to it carries the
+  // meaning (WCAG 1.4.11 asks 3:1 only of a graphic needed to understand the content) - so it has no 3:1 pair.
+  it('has the estimated-expiry stripe as a decorative token, lighter than the field border', () => {
+    expect(tokens['c-estimated']).toMatch(/^#[0-9a-f]{6}$/)
+    expect(luminance(tokens['c-estimated'])).toBeGreaterThan(luminance(tokens['c-field']))
+  })
+
   // The blue ring fails on the olive band (about 2:1), so the band uses its light ink for focus.
   it('gives the band its own focus color', () => {
     expect(contrast('c-focus', 'c-band')).toBeLessThan(3)

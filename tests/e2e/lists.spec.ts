@@ -15,7 +15,7 @@ async function registerFreshHousehold(page: Page) {
 
 test('the printed shopping list has no band, menu or buttons', async ({ page }) => {
   await registerFreshHousehold(page)
-  await page.getByRole('link', { name: 'Bevásárlólista', exact: true }).click()
+  await page.getByRole('navigation', { name: 'Oldalak' }).getByRole('link', { name: 'Bevásárlólista', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Nyomtatás' })).toBeVisible()
 
   await page.emulateMedia({ media: 'print' })

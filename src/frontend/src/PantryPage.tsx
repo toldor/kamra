@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { api, failWith, noFilter, type Category, type CategoryInfo, type Ingredient, type ItemProposal, type PantryItem } from './api/client'
 import { categoryName, formatAmount, formatDate } from './format'
+import { Icon } from './Icon'
+import { LoadingRows } from './Loading'
 import { PantryItemEditor } from './PantryItemEditor'
 import { PantryItemForm } from './PantryItemForm'
 import { ProposalList, QuickEntryForm } from './QuickEntry'
 import { routes } from './useHashRoute'
+
+// ui_polish_minispec 8.: the stripe of the most urgent state; the badges and "(becsült)" carry the meaning.
+const expiryStripe = (item: PantryItem) => (item.expired ? 'expired' : item.soonExpiring ? 'soon' : item.expiryEstimated ? 'estimated' : '')
 
 type List = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; items: PantryItem[] }
 type Catalog =
@@ -172,7 +177,7 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
           <div className="panel">
             <h2 id="pantry-heading">Tételek</h2>
             <div className="panel-body">
-              {list.status === 'loading' && <p role="status">Betöltés…</p>}
+              {list.status === 'loading' && <LoadingRows />}
               {list.status === 'error' && (
                 <div>
                   <p role="alert">{list.message}</p>
@@ -190,20 +195,21 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
               {list.status === 'ready' && list.items.length === 0 && (filtered
                 ? <p className="empty">Nincs a szűrésnek megfelelő tétel.</p>
                 : (
-                  <>
+                  <div className="empty-state">
+                    <Icon name="pantry" size={48} />
                     <p className="empty">Még üres a kamrád.</p>
                     <p>
                       {quickEntry
                         ? 'Írd le egy mondatban, mit vettél – például: »vettem 2 liter tejet, 10 tojást és fél kiló paradicsomot, a tej pénteken jár le«.'
                         : 'Rögzítsd az első tételt az »Új tétel« űrlappal.'}
                     </p>
-                  </>
+                  </div>
                 ))}
             </div>
             {list.status === 'ready' && list.items.length > 0 && (
               <ul className="items">
                 {list.items.map((item) => (
-                  <li key={item.id} aria-labelledby={`item-${item.id}`} className="item cols">
+                  <li key={item.id} aria-labelledby={`item-${item.id}`} className={`item cols ${expiryStripe(item)}`}>
                     <span className="line">
                       <span id={`item-${item.id}`} className="name">{item.ingredientName}</span>
                       <span className="leader" aria-hidden="true" />
