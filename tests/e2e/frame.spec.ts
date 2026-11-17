@@ -67,6 +67,21 @@ test('a focused control is not hidden under the band or the menu bar', async ({ 
   if (nav.y > band.y + band.height) expect(padding.bottom).toBeGreaterThanOrEqual(nav.height)
 })
 
+// Review R2: between 760 and about 1000 px the top menu wrapped into 2-3 rows (158 px). Below 1024 px the menu is the
+// bar at the bottom, so the band stays one row on a tablet too.
+test('on a tablet (900 px) the band is one row and the menu is the bar at the bottom', async ({ page }) => {
+  await page.setViewportSize({ width: 900, height: 700 })
+  await registerFreshHousehold(page)
+
+  const band = (await page.locator('header.band').boundingBox())!
+  const nav = (await page.getByRole('navigation', { name: 'Oldalak' }).boundingBox())!
+  const padding = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom))
+  expect(band.height).toBeLessThanOrEqual(64)
+  expect(Math.round(nav.y + nav.height)).toBe(700)
+  expect(padding).toBeGreaterThanOrEqual(nav.height)
+  await expectNoHorizontalScroll(page)
+})
+
 test('signs out from the Profilom panel, which Escape closes', async ({ page }) => {
   await registerFreshHousehold(page)
   const button = page.getByRole('button', { name: 'Profilom' })

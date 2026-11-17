@@ -129,6 +129,51 @@ describe('the Profilom panel (ui_polish_minispec 1.)', () => {
     expect(button.getAttribute('aria-expanded')).toBe('false')
   })
 
+  // Review R1: Tab out of the panel closes it, so it cannot cover the focused control (WCAG 2.4.11); focus that only
+  // leaves for the page itself (a click on plain text) does not.
+  it('closes when the focus moves to a control outside it', async () => {
+    backend()
+    render(<App />)
+    const button = await profileButton()
+    fireEvent.click(button)
+    const link = panel().getByRole('link', { name: 'Profilom' })
+
+    fireEvent.focusOut(link, { relatedTarget: null })
+    expect(button.getAttribute('aria-expanded')).toBe('true')
+
+    fireEvent.focusOut(link, { relatedTarget: screen.getByRole('heading', { level: 1 }) })
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  // Review R1: a browser that does not focus a clicked button (Safari) leaves the focus on the page; Escape still closes.
+  it('closes on Escape when the focus is not in it', async () => {
+    backend()
+    render(<App />)
+    const button = await profileButton()
+    fireEvent.click(button)
+    button.blur()
+
+    fireEvent.keyDown(document.body, { key: 'Escape' })
+
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(button)
+  })
+
+  // Review R3: an old error does not come back with the panel.
+  it('shows a failed logout, and not again after the panel is reopened', async () => {
+    backend({ 'POST /api/v1/auth/logout': [{ status: 500, body: { code: 'INTERNAL_ERROR', title: 'Váratlan hiba történt. Próbáld újra később.' } }] })
+    render(<App />)
+    const button = await profileButton()
+    fireEvent.click(button)
+    fireEvent.click(panel().getByRole('button', { name: 'Kijelentkezés' }))
+    expect(await panel().findByText('Váratlan hiba történt. Próbáld újra később.')).toBeTruthy()
+
+    fireEvent.click(button)
+    fireEvent.click(button)
+
+    expect(panel().queryByText('Váratlan hiba történt. Próbáld újra később.')).toBeNull()
+  })
+
   it('signs out from the panel', async () => {
     const calls = backend()
     render(<App />)
