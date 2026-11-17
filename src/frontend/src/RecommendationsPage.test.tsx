@@ -139,6 +139,9 @@ describe('recipe suggestions', () => {
     render(<App />)
 
     expect(await screen.findByText('Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.')).toBeTruthy()
+    // ui_polish_minispec 10.
+    expect(screen.getByText('Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.')
+      .closest('.empty-state')?.querySelector('svg[aria-hidden="true"]')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Készlet rögzítése' }).getAttribute('href')).toBe('#/')
   })
 

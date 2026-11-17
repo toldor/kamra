@@ -63,6 +63,7 @@ function pantryBackend(pantryReplies: Reply[], extra: Record<string, Reply[]> = 
 }
 
 const form = () => within(screen.getByRole('form', { name: 'Új tétel' }))
+const emptyIcon = (text: string) => screen.getByText(text).closest('.empty-state')?.querySelector('svg[aria-hidden="true"]')
 const filters = () => within(screen.getByRole('search'))
 
 // jsdom has no modal dialogs; the browser's showModal/close only toggle the open attribute here.
@@ -90,11 +91,31 @@ describe('pantry list', () => {
     expect(screen.getByRole('listitem', { name: /rizs/ }).textContent).toContain('Hamarosan lejár')
   })
 
+  // ui_polish_minispec 8.: the stripe of the most urgent state (expired > soon > estimated); none when all is well.
+  it('marks each item with the stripe of its most urgent state', async () => {
+    const soonEstimated = { ...rice, id: 'p-4', ingredientName: 'joghurt', expiryEstimated: true }
+    const fine = { ...rice, id: 'p-5', ingredientName: 'só', soonExpiring: false }
+    pantryBackend([pantry(oldMilk, rice, soonEstimated, sourCream, fine)])
+    render(<App />)
+
+    const stripe = async (name: string) => {
+      const classes = (await screen.findByRole('listitem', { name })).classList
+      return ['expired', 'soon', 'estimated'].filter((c) => classes.contains(c))
+    }
+    expect(await stripe('tej')).toEqual(['expired'])
+    expect(await stripe('rizs')).toEqual(['soon'])
+    expect(await stripe('joghurt')).toEqual(['soon'])
+    expect(await stripe('tejföl')).toEqual(['estimated'])
+    expect(await stripe('só')).toEqual([])
+  })
+
   it('shows the empty pantry and the empty filter result', async () => {
     pantryBackend([pantry()], { 'GET /api/v1/pantry-items?search=xyz': [pantry()] })
     render(<App />)
 
     expect(await screen.findByText('Még üres a kamrád.')).toBeTruthy()
+    // ui_polish_minispec 10.: the page's icon above the existing text.
+    expect(emptyIcon('Még üres a kamrád.')).toBeTruthy()
     expect(screen.getByText('Rögzítsd az első tételt az »Új tétel« űrlappal.')).toBeTruthy()
 
     fireEvent.change(filters().getByLabelText('Keresés'), { target: { value: 'xyz' } })
