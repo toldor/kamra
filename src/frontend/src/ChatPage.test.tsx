@@ -217,7 +217,8 @@ describe('the Kérdezz menu item', () => {
 })
 
 describe('the Kérdezz page', () => {
-  it('shows the title, the introduction, the note and three example questions', async () => {
+  // ui_polish_minispec 22. (K3): four examples since 2026-11-17, the new one asks for a recipe idea.
+  it('shows the title, the introduction, the note and four example questions with icons', async () => {
     backend(true)
     render(<App />)
 
@@ -226,8 +227,9 @@ describe('the Kérdezz page', () => {
       'A válaszhoz csak a saját adataidat nézem meg, és semmit nem módosítok.')).toBeTruthy()
     expect(screen.getByText('A beszélgetést nem mentjük el: másik oldalra lépve megmarad, de az oldal újratöltésekor vagy ' +
       'kijelentkezéskor újrakezdődik.')).toBeTruthy()
-    for (const example of ['Mi jár le hamarosan?', 'Mit főzhetek abból, ami otthon van?', 'Mi van a bevásárlólistán?']) {
-      expect(screen.getByRole('button', { name: example })).toBeTruthy()
+    for (const example of ['Mi jár le hamarosan?', 'Mit főzhetek abból, ami otthon van?', 'Mi van a bevásárlólistán?',
+      'Adj egy receptet abból, ami otthon van.']) {
+      expect(screen.getByRole('button', { name: example }).querySelector('svg[aria-hidden="true"]'), example).toBeTruthy()
     }
   })
 
@@ -507,5 +509,119 @@ describe('the Kérdezz page', () => {
     await ask('Mi jár le?')
 
     expect(await screen.findByText('Biztonsági okból kiléptettünk. Jelentkezz be újra, és folytathatod.')).toBeTruthy()
+  })
+})
+
+// ui_polish_minispec S6 (K1, K2, K4-K8): the Kérdezz page, livelier.
+describe('the livelier Kérdezz page', () => {
+  const idea = { name: 'Palacsinta', servings: 2, ingredients: [{ name: 'tej', amount: 0.5, unit: 'l' }], instructions: 'Süsd ki.' }
+
+  afterEach(() => vi.restoreAllMocks())
+
+  it('greets an empty conversation, and the greeting goes with the first message (K6)', async () => {
+    backend(true, [answer('Szia!')])
+    render(<App />)
+
+    expect(await screen.findByText('Szia! Miben segíthetek a kamrával kapcsolatban?')).toBeTruthy()
+    await ask('Szia')
+    await log().findByText('Szia!')
+
+    expect(screen.queryByText('Szia! Miben segíthetek a kamrával kapcsolatban?')).toBeNull()
+  })
+
+  it('shows the jar next to the answers only, and the dots while waiting (K1, K2)', async () => {
+    let release!: (reply: Reply) => void
+    backend(true, [() => new Promise<Reply>((resolve) => { release = resolve })])
+    render(<App />)
+    await ask('Mi jár le?')
+
+    const typing = await waitFor(() => {
+      const dots = document.querySelector('.chat-message.typing')
+      expect(dots).toBeTruthy()
+      return dots!
+    })
+    expect(typing.closest('[aria-hidden="true"]')).toBeTruthy()
+    release(answer('A tej.'))
+    await log().findByText('A tej.')
+
+    expect(document.querySelector('.chat-message.typing')).toBeNull()
+    const avatars = Array.from(document.querySelectorAll('.chat-avatar'))
+    expect(avatars).toHaveLength(1)
+    expect(avatars[0].getAttribute('aria-hidden')).toBe('true')
+    expect(avatars[0].closest('.chat-row')?.querySelector('.chat-message.assistant')).toBeTruthy()
+  })
+
+  it('offers "Másik ötlet" after a recipe idea and sends its question (K4)', async () => {
+    const calls = backend(true, [ok({ answer: 'Itt egy ötlet.', toolsUsed: ['get_pantry_items'], recipe: idea }), answer('Egy másik.')])
+    render(<App />)
+    await ask('Adj egy receptet.')
+
+    fireEvent.click(await log().findByRole('button', { name: 'Másik ötlet' }))
+
+    await log().findByText('Egy másik.')
+    expect((chatPosts(calls)[1] as { question: string }).question).toBe('Adj egy másik receptötletet.')
+  })
+
+  it('offers "Mit főzzek ezekből?" after the soon-expiring items, only under the last answer (K4)', async () => {
+    const calls = backend(true, [answer('A tej holnap.', ['get_expiring_items']), answer('Palacsintát.')])
+    render(<App />)
+    await ask('Mi jár le?')
+
+    fireEvent.click(await log().findByRole('button', { name: 'Mit főzzek ezekből?' }))
+
+    await log().findByText('Palacsintát.')
+    expect((chatPosts(calls)[1] as { question: string }).question).toBe('Mit főzhetek a hamarosan lejáró tételekből?')
+    expect(log().queryByRole('button', { name: 'Mit főzzek ezekből?' })).toBeNull()
+  })
+
+  it('offers no follow-up under a plain answer', async () => {
+    backend(true, [answer('Szia!')])
+    render(<App />)
+    await ask('Szia')
+    await log().findByText('Szia!')
+
+    expect(log().queryByRole('button', { name: /Másik ötlet|Mit főzzek ezekből/ })).toBeNull()
+  })
+
+  it('puts an icon before each tool name, the sentence unchanged (K5)', async () => {
+    backend(true, [answer('Rendben.', ['get_expiring_items', 'get_recommendations'])])
+    render(<App />)
+    await ask('Mi van?')
+
+    const line = await log().findByText('Megnéztem: a hamarosan lejáró tételeket és az ajánlást.')
+    expect(line.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2)
+  })
+
+  it('counts the characters of the question (K7)', async () => {
+    backend(true)
+    render(<App />)
+    const field = await screen.findByLabelText('Kérdésed')
+    expect(screen.getByText('0 / 500')).toBeTruthy()
+
+    fireEvent.change(field, { target: { value: 'Mi jár le hamarosan?' } })
+
+    const counter = screen.getByText('20 / 500')
+    expect(field.getAttribute('aria-describedby')?.split(' ')).toContain(counter.id)
+  })
+
+  it('copies an answer, says so, and has no copy button without a clipboard (K8)', async () => {
+    const writeText = vi.fn(async () => {})
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } })
+    backend(true, [answer('A tej holnap jár le.')])
+    render(<App />)
+    await ask('Mi jár le?')
+
+    fireEvent.click(await log().findByRole('button', { name: 'Válasz másolása' }))
+
+    expect(writeText).toHaveBeenCalledWith('A tej holnap jár le.')
+    expect(await log().findByText('Kimásolva')).toBeTruthy()
+    cleanup()
+
+    vi.stubGlobal('navigator', { ...navigator, clipboard: undefined })
+    backend(true, [answer('Szia!')])
+    render(<App />)
+    await ask('Szia')
+    await log().findByText('Szia!')
+    expect(log().queryByRole('button', { name: 'Válasz másolása' })).toBeNull()
   })
 })
