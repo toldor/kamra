@@ -34,7 +34,8 @@ const current = (): Route => {
   return hash.length > cookingPrefix.length && hash.startsWith(cookingPrefix) ? (hash as Route) : notFoundRoute
 }
 
-const titles: Record<string, string> = {
+// Review R5: every route but the cooking ones needs a title, or the compiler says so.
+const titles: Record<Exclude<Route, `${typeof cookingPrefix}${string}`>, string> = {
   [routes.pantry]: 'Készlet',
   [routes.recommendations]: 'Mit főzzek?',
   [routes.recipes]: 'Receptek',
@@ -46,7 +47,8 @@ const titles: Record<string, string> = {
 }
 
 // ui_polish_minispec 6.: the browser tab's title of a signed-in page.
-export const pageTitle = (route: Route): string => `${cookingRecipeId(route) ? 'Főzés' : titles[route]} – Kamra`
+export const pageTitle = (route: Route): string =>
+  `${cookingRecipeId(route) ? 'Főzés' : titles[route as keyof typeof titles]} – Kamra`
 
 export function useHashRoute(): Route {
   const [route, setRoute] = useState(current)
