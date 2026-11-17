@@ -517,4 +517,5 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
   - **T1:** a tervet jóváhagytam; tokenkorlát: A (4096); R3: A (sémaleírás, kerekítés nélkül); a szétválogatás jóváhagyva.
   - **T2:** 3. kérdés: A; 4.: A; 5.: A; 6.: A (`v4`). A négy mérést én futtattam a saját ablakomban (a kulcs nem került a chatbe).
   - **T3:** 7. kérdés: A; 8. kérdés: A; a szétválogatás jóváhagyva; az U1 szövegében „a(z)” a jóváhagyott „a” helyett (a repó mintája) – elfogadva.
-  - **Commit:** minden commitot én végeztem.
+  - **Kipróbálás a PR előtt (nov. 16–17.):** a valódi Geminivel kipróbáltam; rendben, javítást nem kértem.
+  - **Commit:** minden commitot és pusht én végeztem.
