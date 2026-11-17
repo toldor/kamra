@@ -26,15 +26,27 @@ export const cookingRoute = (recipeId: string): Route => `${cookingPrefix}${reci
 export const cookingRecipeId = (route: Route): string | null =>
   route.startsWith(cookingPrefix) ? route.slice(cookingPrefix.length) : null
 
-// An unknown or empty address shows the pantry.
+// An empty address shows the pantry; an unknown one says so (ui_polish_minispec 7.).
 const current = (): Route => {
   const hash = window.location.hash
+  if (hash === '' || hash === '#') return routes.pantry
   if ((Object.values(routes) as string[]).includes(hash)) return hash as Route
-  return hash.length > cookingPrefix.length && hash.startsWith(cookingPrefix) ? (hash as Route) : routes.pantry
+  return hash.length > cookingPrefix.length && hash.startsWith(cookingPrefix) ? (hash as Route) : notFoundRoute
+}
+
+const titles: Record<string, string> = {
+  [routes.pantry]: 'Készlet',
+  [routes.recommendations]: 'Mit főzzek?',
+  [routes.recipes]: 'Receptek',
+  [routes.newRecipe]: 'Új recept',
+  [routes.shopping]: 'Bevásárlólista',
+  [routes.chat]: 'Kérdezz',
+  [routes.profile]: 'Profilom',
+  [notFoundRoute]: 'Nincs ilyen oldal',
 }
 
 // ui_polish_minispec 6.: the browser tab's title of a signed-in page.
-export const pageTitle = (route: Route): string => (route ? 'Kamra' : 'Kamra')
+export const pageTitle = (route: Route): string => `${cookingRecipeId(route) ? 'Főzés' : titles[route]} – Kamra`
 
 export function useHashRoute(): Route {
   const [route, setRoute] = useState(current)

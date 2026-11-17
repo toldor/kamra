@@ -86,6 +86,17 @@ body {
   background: var(--c-ground);
 }
 
+/* ui_polish_minispec Ü7 (WCAG 2.4.11): a focused control scrolls clear of the sticky band and, on a phone, of the
+   menu bar at the bottom; the page itself ends above the bar. */
+html {
+  scroll-padding-top: 80px;
+  scroll-padding-bottom: 80px;
+}
+
+body:has(.band) {
+  padding-bottom: 64px;
+}
+
 a {
   color: var(--c-primary);
 }
@@ -164,9 +175,13 @@ h3 {
   font-weight: 600;
 }
 
-/* ---- The frame: the olive band with the brand, the menu and the account ---- */
+/* ---- The frame: the olive band with the brand, the menu and the Profilom button ---- */
 
+/* ui_polish_minispec 3.: the band stays on top while the page scrolls. */
 .band {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   background: var(--c-band);
   color: var(--c-band-ink);
   padding: 0 var(--space-4);
@@ -186,43 +201,104 @@ h3 {
   padding: var(--space-3) 0;
 }
 
-.account {
+/* ui_polish_minispec 1.: the Profilom button and its panel. The panel sits on the band's white ground, so its
+   text, links and focus ring take the page colors, not the band's. */
+.profile {
   margin-left: auto;
+}
+
+.profile-button,
+.profile-button:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin: 0;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--c-band-ink);
+  font: 500 1rem var(--font-body);
+  cursor: pointer;
+}
+
+.profile-button:hover {
+  text-decoration: underline;
+}
+
+.profile-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--c-rule);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 25%);
+}
+
+.band .profile-panel :focus-visible {
+  outline-color: var(--c-focus);
+}
+
+.profile-panel .who {
+  margin: 0;
+  padding: var(--space-1) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--c-rule);
+  color: var(--c-muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.profile-panel a,
+.profile-panel button.link {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-/* Long e-mail addresses must wrap instead of pushing the page wider than 360 px. */
-.account span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 0.875rem;
-  color: var(--c-band-muted);
-}
-
-.band button.link,
-.band button.link:hover {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 44px;
   margin: 0;
-  color: var(--c-band-ink);
+  padding: 0 var(--space-4);
+  color: var(--c-primary);
+  text-align: left;
 }
 
-/* On a phone the menu gets its own row under the brand and the account (C2). */
+.profile-panel .form-error {
+  padding: 0 var(--space-4);
+}
+
+/* On a phone the menu is a bar at the bottom: five equal columns, icon over the full name (Ü4: the names stay the
+   same, so speech control and the tests find them); the current page is marked on top. */
 .nav {
-  order: 3;
-  flex-basis: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--space-4);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--c-band);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav a {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 44px;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: var(--space-1) 2px;
   color: var(--c-band-ink);
+  font-size: 0.75rem;
   font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
   text-decoration: none;
 }
 
@@ -232,17 +308,12 @@ h3 {
 
 .nav a[aria-current='page'] {
   font-weight: 600;
-  box-shadow: inset 0 -4px 0 var(--c-indicator);
+  box-shadow: inset 0 4px 0 var(--c-indicator);
 }
 
 /* The blue ring has only about 2:1 on the olive band; the light ink reaches 3:1 (tokens.test.ts). */
 .band :focus-visible {
   outline-color: var(--c-band-ink);
-}
-
-.band .form-error {
-  flex-basis: 100%;
-  color: var(--c-band-ink);
 }
 
 @media (min-width: 760px) {
@@ -258,14 +329,43 @@ h3 {
     font-size: 1.875rem;
   }
 
+  body:has(.band) {
+    padding-bottom: 0;
+  }
+
+  html {
+    scroll-padding-bottom: 0;
+  }
+
   .nav {
-    order: 0;
-    flex-basis: auto;
+    position: static;
+    display: flex;
     gap: 0 28px;
+    padding: 0;
+    background: none;
   }
 
   .nav a {
+    flex-direction: row;
+    gap: var(--space-2);
     min-height: 60px;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .nav a[aria-current='page'] {
+    box-shadow: inset 0 -4px 0 var(--c-indicator);
+  }
+
+  .profile {
+    position: relative;
+  }
+
+  .profile-panel {
+    left: auto;
+    right: 0;
+    width: 18rem;
   }
 }
 

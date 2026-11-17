@@ -6,11 +6,12 @@ import { newConversation, type Conversation } from './conversation'
 import { CookingPage } from './CookingPage'
 import { Layout } from './Layout'
 import { PantryPage } from './PantryPage'
+import { ProfilePage } from './ProfilePage'
 import { RecipeForm } from './RecipeForm'
 import { RecipesPage } from './RecipesPage'
 import { RecommendationsPage } from './RecommendationsPage'
 import { ShoppingListPage } from './ShoppingListPage'
-import { cookingRecipeId, routes, useHashRoute, type Route } from './useHashRoute'
+import { cookingRecipeId, notFoundRoute, pageTitle, routes, useHashRoute, type Route } from './useHashRoute'
 
 // Signed out: the auth screens; signed in: the pages chosen by the hash route (useHashRoute).
 type State =
@@ -28,9 +29,21 @@ async function loadSession(): Promise<State> {
   }
 }
 
-function Page({ route, onSignedOut, recipeNotice, onRecipeSaved, conversation, onConversationChange }: {
+// ui_polish_minispec 7.: an unknown address.
+function NotFoundPage() {
+  return (
+    <main className="narrow">
+      <h1 tabIndex={-1}>Nincs ilyen oldal</h1>
+      <p>A megnyitott cím nem létezik a Kamrában.</p>
+      <p><a href={routes.pantry}>Ugrás a Készlethez</a></p>
+    </main>
+  )
+}
+
+function Page({ me, route, onSignedOut, recipeNotice, onRecipeSaved, conversation, onConversationChange }: {
+  me: Me
   route: Route
-  onSignedOut: (notice: string) => void
+  onSignedOut: (notice?: string) => void
   // The Kérdezz conversation outlives the page (l3_l5_minispec L5).
   conversation: Conversation
   onConversationChange: Dispatch<SetStateAction<Conversation>>
@@ -46,6 +59,8 @@ function Page({ route, onSignedOut, recipeNotice, onRecipeSaved, conversation, o
   if (route === routes.chat) return <ChatPage conversation={conversation} onChange={onConversationChange} onSignedOut={onSignedOut} />
   if (route === routes.recipes) return <RecipesPage notice={recipeNotice} onSignedOut={onSignedOut} />
   if (route === routes.newRecipe) return <RecipeForm onSaved={onRecipeSaved} onSignedOut={onSignedOut} />
+  if (route === routes.profile) return <ProfilePage me={me} onSignedOut={onSignedOut} />
+  if (route === notFoundRoute) return <NotFoundPage />
   return <PantryPage onSignedOut={onSignedOut} />
 }
 
@@ -66,6 +81,13 @@ export default function App() {
     setNoticeRoute(route)
     if (route !== routes.recipes) setRecipeNotice(null)
   }
+
+  // ui_polish_minispec 6.: the browser tab names the page.
+  useEffect(() => {
+    document.title = state.screen === 'pantry' ? pageTitle(route)
+      : state.screen === 'login' ? 'Bejelentkezés – Kamra'
+        : state.screen === 'register' ? 'Regisztráció – Kamra' : 'Kamra'
+  }, [state.screen, route])
 
   useEffect(() => {
     let active = true
@@ -100,6 +122,7 @@ export default function App() {
       return (
         <Layout me={state.me} route={route} onSignedOut={signOut}>
           <Page
+            me={state.me}
             route={route}
             onSignedOut={signOut}
             conversation={conversation}

@@ -43,26 +43,28 @@ test('on a phone the band is one row and the menu is a bar at the bottom', async
   expect(band.height).toBeLessThanOrEqual(64)
   expect(Math.round(nav.y + nav.height)).toBe(viewport.height)
   for (const name of ['Készlet', 'Mit főzzek?', 'Receptek', 'Bevásárlólista', 'Kérdezz']) {
-    const link = (await page.getByRole('link', { name }).boundingBox())!
+    const link = (await page.getByRole('navigation', { name: 'Oldalak' }).getByRole('link', { name, exact: true }).boundingBox())!
     expect(link.y, name).toBeGreaterThanOrEqual(nav.y)
     expect(link.height, name).toBeGreaterThanOrEqual(44)
   }
   await expectNoHorizontalScroll(page)
 })
 
+// Mutation (2026-11-17): focusing a field from far away centers it, so a test that only focuses one passed without the
+// padding too. The page scrolls a focused control clear of the band and the bar by its scroll padding, so that is
+// what is measured: at least as tall as the band, and on a phone as the bar.
 test('a focused control is not hidden under the band or the menu bar', async ({ page }) => {
   await registerFreshHousehold(page)
-  await makeLong(page)
-  const field = page.getByLabel('Keresés')
 
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-  await field.focus()
-
-  const box = (await field.boundingBox())!
+  const padding = await page.evaluate(() => {
+    const style = getComputedStyle(document.documentElement)
+    return { top: parseFloat(style.scrollPaddingTop), bottom: parseFloat(style.scrollPaddingBottom) }
+  })
   const band = (await page.locator('header.band').boundingBox())!
   const nav = (await page.getByRole('navigation', { name: 'Oldalak' }).boundingBox())!
-  expect(box.y).toBeGreaterThanOrEqual(band.y + band.height)
-  if (nav.y > band.y + band.height) expect(box.y + box.height).toBeLessThanOrEqual(nav.y)
+  expect(padding.top).toBeGreaterThanOrEqual(band.height)
+  // On a phone the menu is a bar at the bottom of the screen.
+  if (nav.y > band.y + band.height) expect(padding.bottom).toBeGreaterThanOrEqual(nav.height)
 })
 
 test('signs out from the Profilom panel, which Escape closes', async ({ page }) => {

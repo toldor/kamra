@@ -116,6 +116,19 @@ describe('the Profilom panel (ui_polish_minispec 1.)', () => {
     expect(button.getAttribute('aria-expanded')).toBe('false')
   })
 
+  // Mutation H3: a page opened from the keyboard or the browser's Back button has no click to close the panel.
+  it('closes when the page changes without a click, as with the Back button', async () => {
+    backend()
+    render(<App />)
+    const button = await profileButton()
+    fireEvent.click(button)
+
+    window.location.hash = '#/profil'
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profilom' })).toBeTruthy()
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+  })
+
   it('signs out from the panel', async () => {
     const calls = backend()
     render(<App />)
