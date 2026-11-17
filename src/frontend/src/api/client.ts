@@ -32,7 +32,9 @@ export type CreateRecipeRequest = components['schemas']['CreateRecipeRequest']
 export type ItemProposal = components['schemas']['ItemProposalResponse']
 // US-6 (us6_minispec K2-K3): the client keeps the conversation and sends its last messages as text.
 export type ChatMessage = { role: 'user' | 'assistant'; text: string }
-export type ChatAnswer = { answer: string; toolsUsed: string[] }
+// receptotlet_minispec 3.: the answer can carry a recipe idea for the Új recept form.
+export type ChatAnswer = components['schemas']['AskChatResponse']
+export type RecipeIdea = components['schemas']['RecipeIdea']
 // The request's fields are strings in the OpenAPI document (validated by the backend); the page sends the enums.
 export type CreateIngredientRequest = { name: string; dimension: Dimension; defaultCategory: Category }
 // The `available` extension of INSUFFICIENT_STOCK (error_handling.md); ProblemDetails are not in the OpenAPI.

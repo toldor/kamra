@@ -682,3 +682,67 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** a fejlesztő jelzései, a CI, a külső review és a mutációs ellenőrzés.
 - **Eredmény:** **FAIL, hat esetben.** (1) Az okt. 28-i témavezetői levelet két hétig egyetlen állapotfájl sem dolgozta fel, és a nov. 7-i levelet „elküldöttnek” írtam. (2) Az állapotfájl a „fizetős szinten nincs ingyenes keret” állítást forrásként írta, holott a forrás nem mondja ki. (3) Az elkülönítési teszt a nyers JSON-ban kereste az ékezetes nevet (V-80). (4) A mutáció két gyenge felületi tesztet talált (előzménykorlát, Shift+Enter). (5) A CI-t 30 másodpercenként kérdeztem, és elfogyasztottam az API óránkénti keretét. (6) A tesztjelölőt `secretQuestion`-nek neveztem, a gitleaks kulcsnak vette.
 - **Következtetés:** a levelezés mappáját minden munkamenet elején átnézem; ékezetes szöveget csak dekódolva ellenőrzök; a CI-t legfeljebb 3 percenként kérdezem.
+
+### V-82 – A receptötlet backendtesztjeinek elválasztó ereje
+- **Dátum:** 2026-11-15
+- **Állítás:** A T1 új tesztjei elbuknak, ha a receptötlet bármely szabályát megsértjük.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** 21 mutáció, egyenként visszaállítva: az ellenőrzés minden feltétele, a kör szabályai (egyedül, 3. hívás, felajánlás), a név rendezése, a séma korlátja, a forrás, a jelző, a lista címkéje és a chat válasza.
+- **Eredmény:** PASS – mind a 21 elbukik. A vázzal már zöld 27 teszt (hibás receptek, a kör szabályai) így igazoltan elválaszt.
+- **Következtetés:** a vázzal zöld tesztet mutációval kell igazolni.
+
+### V-83 – „Az `AiSuggested` migráció nélkül tárolható”
+- **Dátum:** 2026-11-15
+- **Állítás:** Az új forrásértékhez nem kell migráció, mert a `Source` szövegként tárolódik.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** `dotnet ef migrations has-pending-model-changes`; integrációs teszt valódi PostgreSQL-en.
+- **Eredmény:** PASS – nincs függő modellváltozás; a teszt a `"AiSuggested"` szöveget olvassa vissza.
+- **Következtetés:** –
+
+### V-84 – Saját állítás: „a séma ugyanazokat a korlátokat mondja a modellnek”
+- **Dátum:** 2026-11-15
+- **Állítás:** A `propose_recipe` sémája ugyanazokat a korlátokat közli a modellel, amelyeket a szerver ellenőriz (kódmegjegyzés).
+- **Kockázat:** Közepes (elkerülhető 502-k).
+- **Ellenőrzési módszer:** `/code-review`, Spec-tengely.
+- **Eredmény:** FAIL – a 3 tizedesjegyes szabály hiányzott a sémából (R3). Javítva; a sémateszt ellenőrzi.
+- **Következtetés:** a séma és az ellenőrzés egyezését teszt őrzi, nem a megjegyzés.
+
+### V-85 – „A 4096 token elég a legnagyobb receptötlethez”
+- **Dátum:** 2026-11-15
+- **Állítás:** A 4096 tokenes kimeneti korlát elég egy receptötlethez (becslés: kb. 2700–3000 token a legrosszabb esetre).
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** a LiveAI-mérések legnagyobb kimenete hívásonként.
+- **Eredmény:** PASS – a valódi ötletek legfeljebb 301 tokenesek (`v3`: 263, `v4`: 301); a `v5` egy elszabadult válasza 4092 tokennél a korlátba ütközött, az adapter 502-vel elutasította – a korlát a terv szerint véd.
+- **Következtetés:** –
+
+### V-86 – A `chat.v3` mérése
+- **Dátum:** 2026-11-15
+- **Állítás:** A `chat.v3` a receptötletet csak kérésre adja, és a régi 12 kérdésen nem romlik.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** LiveAI, 17 kérdés × 3 (a fejlesztő futtatta).
+- **Eredmény:** FAIL (45/51) – a C6 visszalépett a `v2`-höz képest (0/3, `get_pantry_items` a `get_recommendations` helyett), az R2 (sushi, kevés készlet) nem ad receptet (0/3).
+- **Következtetés:** `chat.v4`.
+
+### V-87 – A `chat.v4` és a `chat.v5` mérése
+- **Dátum:** 2026-11-15
+- **Állítás:** A `chat.v4`, illetve a `chat.v5` javítja a `v3` hibáit.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** LiveAI, 17 kérdés × 3 (a fejlesztő futtatta); a `v5`-nél az elutasított argumentumok rögzítésével.
+- **Eredmény:** Részben PASS. `v4`: 46/51 (C6 2/3, R2 0/3, egy 502). `v5`: 43/51 (C8 visszalépés 1/3, két 502: `"unit":"db,"` és 4092 token).
+- **Következtetés:** a `v4` a szállított; az R2, az alkalmankénti 502, a kitöltő mennyiségek és a C6 eltérései ismert korlátként a test_reportban; a „sushirecept” megfogalmazást nem mértük.
+
+### V-88 – A felület tesztjeinek elválasztó ereje
+- **Dátum:** 2026-11-16
+- **Állítás:** A T3 új tesztjei elbuknak, ha a receptötlet felületi szabályait megsértjük.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** 21 mutáció (piszkozat és jelző, a megerősítés és két szövege, a mértékegység-hiba, az összefoglaló formázása és elkészítés nélküli tartalma, az előzmény, a címke), egyenként visszaállítva.
+- **Eredmény:** PASS – mind elbukik. A „sima válasz” és a „kézi piszkozat” teszt a vázzal is zöld volt (regresszióvédelem).
+- **Következtetés:** –
+
+### V-89 – Saját hiba: a nem illő mértékegység csendes cseréje
+- **Dátum:** 2026-11-16
+- **Állítás:** Az átvett receptötlet sorai helyesen jelennek meg az űrlapon.
+- **Kockázat:** Közepes (hibás mennyiség menthető).
+- **Ellenőrzési módszer:** `/code-review`, Spec-tengely (U1).
+- **Eredmény:** FAIL – a meglévő `unitsFor` a nem illő egységet szó nélkül az első illőre cserélte, a mennyiség változatlan maradt (a mérésben valós eset: „vöröshagyma 1 db”, a vöröshagyma tömegben mérhető). Javítva: mezőhiba és teszt.
+- **Következtetés:** modelltől jövő adatnál a meglévő űrlap csendes alapértékeit is végig kell gondolni.

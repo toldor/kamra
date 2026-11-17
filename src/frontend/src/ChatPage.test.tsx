@@ -71,6 +71,123 @@ afterEach(() => {
   window.location.hash = ''
 })
 
+// receptotlet_minispec 4. and Q7 (A): the idea under the answer, and the button that hands it to the Új recept form.
+describe('a recipe idea in the chat', () => {
+  const idea = {
+    name: 'Tejes palacsinta',
+    servings: 2,
+    ingredients: [{ name: 'tej', amount: 0.5, unit: 'l' }, { name: 'finomliszt', amount: 20, unit: 'dkg' }, { name: 'tojás', amount: 2, unit: 'db' }],
+    instructions: 'Keverd csomómentesre, és süsd ki.',
+  }
+  const withIdea = ok({ answer: 'Itt egy ötlet. Mentés előtt nézd át.', toolsUsed: ['get_pantry_items'], recipe: idea })
+  const draftKey = 'kamra:recipe-draft'
+  const findIdea = async () => within(await log().findByRole('group', { name: 'Receptötlet: Tejes palacsinta' }))
+  // The Új recept form loads these when the button opens it.
+  const formRoutes: Record<string, Answer[]> = {
+    'GET /api/v1/categories': [ok([{ category: 'dairy', shelfLifeDays: 7 }])],
+    'GET /api/v1/ingredients': [ok([{ id: 'i-tej', name: 'tej', dimension: 'volume', defaultCategory: 'dairy', minimum: null }])],
+  }
+
+  beforeEach(() => sessionStorage.clear())
+  afterEach(() => vi.restoreAllMocks())
+
+  it('shows the name, the servings and the ingredients under the answer, without the steps, with the button', async () => {
+    backend(true, [withIdea])
+    render(<App />)
+
+    await ask('Adj egy palacsintareceptet.')
+
+    expect(await log().findByText('Itt egy ötlet. Mentés előtt nézd át.')).toBeTruthy()
+    const group = await findIdea()
+    expect(group.getByText('Tejes palacsinta (2 adag)')).toBeTruthy()
+    expect(group.getAllByRole('listitem').map((item) => item.textContent)).toEqual(['tej 0,5 l', 'finomliszt 20 dkg', 'tojás 2 db'])
+    expect(group.queryByText(/csomómentesre/)).toBeNull()
+    expect(group.getByRole('button', { name: 'Szerkesztés és mentés' })).toBeTruthy()
+  })
+
+  it('shows no idea and no button under a plain answer', async () => {
+    backend(true, [answer('Szia!')])
+    render(<App />)
+
+    await ask('Szia')
+
+    expect(await log().findByText('Szia!')).toBeTruthy()
+    expect(screen.queryByRole('group', { name: /^Receptötlet/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Szerkesztés és mentés' })).toBeNull()
+  })
+
+  it('sends only the text of an answer with an idea as an earlier message', async () => {
+    const calls = backend(true, [withIdea, answer('Szívesen.')])
+    render(<App />)
+    await ask('Adj egy palacsintareceptet.')
+    await findIdea()
+
+    await ask('Köszönöm')
+
+    await log().findByText('Szívesen.')
+    expect(chatPosts(calls)[1]).toEqual({
+      question: 'Köszönöm',
+      history: [{ role: 'user', text: 'Adj egy palacsintareceptet.' }, { role: 'assistant', text: 'Itt egy ötlet. Mentés előtt nézd át.' }],
+    })
+  })
+
+  it('opens the Új recept form filled with the idea, without asking when there is no draft', async () => {
+    fakeBackend({ ...backendRoutes(true, [withIdea]), ...formRoutes })
+    const confirm = vi.spyOn(window, 'confirm')
+    render(<App />)
+    await ask('Adj egy palacsintareceptet.')
+
+    fireEvent.click((await findIdea()).getByRole('button', { name: 'Szerkesztés és mentés' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Új recept' })).toBeTruthy()
+    expect(window.location.hash).toBe('#/receptek/uj')
+    expect(await screen.findByText('Átvettem a chat receptötletét. Mentés előtt nézd át, és javítsd, amit kell.')).toBeTruthy()
+    expect((screen.getByLabelText('Név') as HTMLInputElement).value).toBe('Tejes palacsinta')
+    expect(confirm).not.toHaveBeenCalled()
+  })
+
+  it('asks before replacing a half-filled recipe, and keeps it when the user says no', async () => {
+    backend(true, [withIdea])
+    const draft = JSON.stringify({ name: 'Kakaó', servings: '2', instructions: '', rows: [] })
+    sessionStorage.setItem(draftKey, draft)
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<App />)
+    await ask('Adj egy palacsintareceptet.')
+
+    fireEvent.click((await findIdea()).getByRole('button', { name: 'Szerkesztés és mentés' }))
+
+    expect(confirm).toHaveBeenCalledWith('A félbehagyott új recepted helyére a chat receptötlete kerül. Folytatod?')
+    expect(sessionStorage.getItem(draftKey)).toBe(draft)
+    expect(window.location.hash).toBe('#/kerdezz')
+  })
+
+  // Review U3: an earlier idea that was taken over is not "your half-filled recipe".
+  it('asks with its own text before replacing an earlier recipe idea', async () => {
+    backend(true, [withIdea])
+    sessionStorage.setItem(draftKey, JSON.stringify({ name: 'Kakaó', servings: '2', instructions: '', rows: [], aiSuggested: true }))
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(<App />)
+    await ask('Adj egy palacsintareceptet.')
+
+    fireEvent.click((await findIdea()).getByRole('button', { name: 'Szerkesztés és mentés' }))
+
+    expect(confirm).toHaveBeenCalledWith('A korábban átvett receptötlet helyére ez kerül. Folytatod?')
+  })
+
+  it('replaces the half-filled recipe when the user says yes', async () => {
+    fakeBackend({ ...backendRoutes(true, [withIdea]), ...formRoutes })
+    sessionStorage.setItem(draftKey, JSON.stringify({ name: 'Kakaó', servings: '2', instructions: '', rows: [] }))
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    render(<App />)
+    await ask('Adj egy palacsintareceptet.')
+
+    fireEvent.click((await findIdea()).getByRole('button', { name: 'Szerkesztés és mentés' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Új recept' })).toBeTruthy()
+    expect(((await screen.findByLabelText('Név')) as HTMLInputElement).value).toBe('Tejes palacsinta')
+  })
+})
+
 describe('the Kérdezz menu item', () => {
   it('is in the menu when the switch is on', async () => {
     // On the Kérdezz page itself: the fake backend answers only the chat, so no other page waits for data.

@@ -158,6 +158,21 @@ public class OwnRecipeTests
         _catalog.Saves.Should().Be(1);
     }
 
+    // receptotlet_minispec 6.: a recipe saved from a recipe idea of the chat carries its source and its label;
+    // a hand-written one (no flag, or false) does not.
+    [Theory]
+    [InlineData(true, RecipeSource.AiSuggested)]
+    [InlineData(false, RecipeSource.User)]
+    [InlineData(null, RecipeSource.User)]
+    public async Task An_own_recipe_is_marked_AI_suggested_only_when_the_page_says_so(bool? aiSuggested, RecipeSource source)
+    {
+        var response = await CreateRecipeAsync(RecipeRequest(aiSuggested: aiSuggested));
+
+        var (recipe, _) = _catalog.Added.Single();
+        recipe.Source.Should().Be(source);
+        response.AiSuggested.Should().Be(source == RecipeSource.AiSuggested);
+    }
+
     // ---- ListRecipes (N2) ----
 
     [Fact]
@@ -273,12 +288,13 @@ public class OwnRecipeTests
     // ---- helpers ----
 
     private static CreateRecipeRequest RecipeRequest(string? name = "Kakaó", int? servings = 2, string? instructions = "Keverd ki.",
-        RecipeIngredientRequest?[]? rows = null) => new()
+        RecipeIngredientRequest?[]? rows = null, bool? aiSuggested = null) => new()
         {
             Name = name,
             Servings = servings,
             Instructions = instructions,
             Ingredients = rows ?? [Row(Tej.Id, 5, "dl"), Row(Kakao.Id, 2, "dkg")],
+            AiSuggested = aiSuggested,
         };
 
     private static RecipeIngredientRequest Row(Guid? ingredientId, decimal? amount, string? unit) =>

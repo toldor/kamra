@@ -1,6 +1,9 @@
 import { useRef, type Dispatch, type FormEvent, type KeyboardEvent, type SetStateAction } from 'react'
-import { api, ApiError, errorMessage } from './api/client'
+import { api, ApiError, errorMessage, type RecipeIdea } from './api/client'
 import { newConversation, type Conversation, type Message } from './conversation'
+import { formatAmount } from './format'
+import { readDraft, storeRecipeIdea } from './recipeDraft'
+import { routes } from './useHashRoute'
 
 // US-6 "Kérdezz" (us6_minispec K11-K12 and its texts): a read-only chat about the own household. The server keeps
 // nothing (ADR-0010 5.): the last 10 messages go with every question, a failed question is not kept. The conversation
@@ -41,6 +44,31 @@ function toolsLine(tools: string[] = []): string | null {
   return `Megnéztem: ${list}.`
 }
 
+// receptotlet_minispec 4. and Q7 (A): the idea in short (name, servings, ingredients; the steps are on the form), and
+// the button that fills the Új recept form with it. A draft is replaced only after the browser's own confirmation, as
+// archiving asks; an earlier idea has its own question (review U3).
+function RecipeIdeaCard({ idea }: { idea: RecipeIdea }) {
+  function edit() {
+    const current = readDraft()
+    const question = current?.aiSuggested
+      ? 'A korábban átvett receptötlet helyére ez kerül. Folytatod?'
+      : 'A félbehagyott új recepted helyére a chat receptötlete kerül. Folytatod?'
+    if (current && !window.confirm(question)) return
+    storeRecipeIdea(idea)
+    window.location.hash = routes.newRecipe
+  }
+
+  return (
+    <div role="group" aria-label={`Receptötlet: ${idea.name}`} className="chat-recipe">
+      <p className="chat-recipe-name">{idea.name} ({idea.servings} adag)</p>
+      <ul>
+        {idea.ingredients.map((ingredient, index) => <li key={index}>{ingredient.name} {formatAmount(ingredient.amount, ingredient.unit)}</li>)}
+      </ul>
+      <button type="button" className="secondary" onClick={edit}>Szerkesztés és mentés</button>
+    </div>
+  )
+}
+
 function Bubble({ message }: { message: Message }) {
   const line = toolsLine(message.toolsUsed)
   return (
@@ -48,6 +76,7 @@ function Bubble({ message }: { message: Message }) {
       <span className="visually-hidden">{message.role === 'user' ? 'Te:' : 'Kamra:'}</span>
       <p className="chat-text">{message.text}</p>
       {line && <p className="hint">{line}</p>}
+      {message.recipe && <RecipeIdeaCard idea={message.recipe} />}
     </div>
   )
 }
@@ -85,7 +114,7 @@ export function ChatPage({ conversation, onChange, onSignedOut }: {
       update(id, (current) => ({
         pending: null,
         messages: [...current.messages, { role: 'user', text: trimmed },
-          { role: 'assistant', text: reply.answer, toolsUsed: reply.toolsUsed }],
+          { role: 'assistant', text: reply.answer, toolsUsed: reply.toolsUsed, recipe: reply.recipe }],
         // What was typed while waiting stays (review R3).
         question: current.question.trim() === trimmed ? '' : current.question,
       }))

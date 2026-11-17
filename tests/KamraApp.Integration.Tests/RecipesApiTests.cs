@@ -32,6 +32,37 @@ public class RecipesApiTests(KamraApiFactory factory)
         Names(await a.GetJsonAsync("/api/v1/recommendations"), "makeable").Should().Contain(Kakao);
     }
 
+    // receptotlet_minispec 6.: the flag of the page becomes the stored source (text, no migration) and the label.
+    [Fact]
+    public async Task An_ai_suggested_recipe_is_labelled_and_stored_with_its_source_and_a_hand_written_one_is_not()
+    {
+        var a = await ApiClient.SignedInAsync(factory);
+        var tej = await IngredientIdAsync(a, "tej");
+
+        var ai = await a.PostAsync("/api/v1/recipes", new
+        {
+            name = "Meleg tej",
+            servings = 1,
+            instructions = "Melegítsd fel.",
+            ingredients = new[] { new { ingredientId = tej, amount = 2.5m, unit = "dl" } },
+            aiSuggested = true,
+        });
+        var manual = await CreateRecipeAsync(a, "Hideg tej", 1, (tej, 2, "dl"));
+
+        ai.StatusCode.Should().Be(HttpStatusCode.Created, await RawAsync(ai));
+        manual.StatusCode.Should().Be(HttpStatusCode.Created);
+        var aiId = await IdAsync(ai);
+        var rows = await RecipesAsync(a);
+        rows.Single(r => r.GetProperty("id").GetGuid() == aiId).GetProperty("aiSuggested").GetBoolean().Should().BeTrue();
+        rows.Single(r => r.GetProperty("name").GetString() == "Hideg tej").GetProperty("aiSuggested").GetBoolean().Should().BeFalse();
+        rows.Single(r => r.GetProperty("name").GetString() == "Lecsó").GetProperty("aiSuggested").GetBoolean().Should().BeFalse();
+        using var scope = factory.Services.CreateScope();
+        (await scope.ServiceProvider.GetRequiredService<KamraDbContext>().Database
+                .SqlQuery<string>($"""SELECT "Source" AS "Value" FROM "Recipes" WHERE "Id" = {aiId}""")
+                .SingleAsync(TestContext.Current.CancellationToken))
+            .Should().Be("AiSuggested");
+    }
+
     [Theory]
     [InlineData("Zabtej ")]   // the household's own name, normalized
     [InlineData("tej")]       // a system name

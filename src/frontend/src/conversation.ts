@@ -1,7 +1,8 @@
-import type { ChatMessage } from './api/client'
+import type { ChatMessage, RecipeIdea } from './api/client'
 
-// The Kérdezz conversation: it lives in App's memory, so it outlives the page (l3_l5_minispec L5).
-export type Message = ChatMessage & { toolsUsed?: string[] }
+// The Kérdezz conversation: it lives in App's memory, so it outlives the page (l3_l5_minispec L5). recipe: the idea
+// under an answer (receptotlet_minispec 4.); only the text goes back as an earlier message.
+export type Message = ChatMessage & { toolsUsed?: string[]; recipe?: RecipeIdea | null }
 
 // The id tells conversations apart: an answer that comes after "Új beszélgetés" or signing out is dropped, so it never
 // reaches the next conversation or the next user.

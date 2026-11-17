@@ -119,13 +119,13 @@ Domain-entitás: [Recipe.cs](../../src/backend/KamraApp.Domain/Recipes/Recipe.cs
 | Name | text | A recept neve |
 | Servings | integer | Alapértelmezett adagszám; > 0 (CHECK) |
 | Instructions | text | Elkészítés |
-| Source | text | `Seed` (induló receptkészlet) vagy `User` (kézi felvitel); az AI-receptötlet (stretch) új értékkel bővítené |
+| Source | text | `Seed` (induló receptkészlet), `User` (kézi felvitel) vagy `AiSuggested` (a chat receptötletéből mentett saját recept, `v0.7.0`) |
 | SeedKey | text, null | Induló receptnél egyedi, nem változtatható kulcs |
 | CreatedAt | timestamptz | Létrehozás (UTC) |
 | RetiredAt | timestamptz, null | Visszavont induló recept: egyik háztartásban sem jelenik meg az ajánlásban, a főzések hivatkozása megmarad. A háztartásonkénti archiválás a `RecipeArchives` táblában van |
 
 - A saját recept létrehozható, szerkesztés nincs (Ismert korlátok); bármely recept archiválható a saját háztartásban (`RecipeArchives`).
-- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 20 recept (az okt. 16-i 5 változatlan, 15 új; saját szöveg, a fejlesztő ellenőrizte, [V-43](../07_ai/verification_log.md)): [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept `Source = User`, a háztartás azonosítójával; a hozzávalói nem lehetnek más háztartáséi (a Domain is őrzi, [OwnRecipeTests.cs](../../tests/KamraApp.Unit.Tests/OwnRecipeTests.cs)).
+- **Megvalósítás:** a `Source` az enum nevével tárolódik (`Seed`, `User`, `AiSuggested`; az új értékhez nem kellett migráció, [V-83](../07_ai/verification_log.md)); kényszer: `CK_Recipes_Servings_Positive`. Az induló receptkészlet 20 recept (az okt. 16-i 5 változatlan, 15 új; saját szöveg, a fejlesztő ellenőrizte, [V-43](../07_ai/verification_log.md)): [recipes.json](../../src/backend/KamraApp.Infrastructure/Persistence/Seed/recipes.json) (beágyazott erőforrás, `HasData`; a hozzávalókra `SeedKey`-jel hivatkozik, ismeretlen kulcsnál, idegen dimenziójú egységnél vagy duplikátumnál a betöltés leáll). A seed létrehozási ideje rögzített, így a migráció újragenerálása nem változtatja a sorokat. A saját recept `Source = User`, a háztartás azonosítójával; a hozzávalói nem lehetnek más háztartáséi (a Domain is őrzi, [OwnRecipeTests.cs](../../tests/KamraApp.Unit.Tests/OwnRecipeTests.cs)).
 
 ### RecipeIngredients (Recept hozzávalója)
 

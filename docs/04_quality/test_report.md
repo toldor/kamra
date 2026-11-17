@@ -22,15 +22,16 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
-| Unit | ≥ 18 | 583 | 583 |
-| Integrációs | ≥ 6 | 285 (+2 `LiveAI`, a CI-ban kiszűrve) | 285 |
-| Frontend (Vitest) | – | 187 | 187 |
-| E2E | ≥ 6 | 21 (×2 nézet) | 21 |
+| Unit | ≥ 18 | 616 | 616 |
+| Integrációs | ≥ 6 | 289 (+2 `LiveAI`, a CI-ban kiszűrve) | 289 |
+| Frontend (Vitest) | – | 199 | 199 |
+| E2E | ≥ 6 | 22 (×2 nézet) | 22 |
 | Negatív esetek | ≥ 5 | ≥ 374 (a `v0.3.1` óta nem számoltuk újra; minden új modul negatív esetekkel bővült) | – |
-| **Összesen** | **≥ 30** | **1076** | **1076** |
+| **Összesen** | **≥ 30** | **1126** | **1126** |
 
 ## Legutolsó futás eredménye
 
+- **2026-11-16 (`v0.7.0`, `feature/recipe-idea`):** PASS – .NET 616 unit + 289 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 199/199; Playwright 44/44 (22 teszt × asztali Chrome és 360 px) az LLM-csonkkal. Mutációs ellenőrzés: T1 21/21, T3 14/14, T3-review 7/7 – mind elbukott. CI: [run 44106858844](https://github.com/toldor/kamra/actions/runs/44106858844) (#124, `8fb6ab0`), mind a négy job zöld.
 - **2026-11-12 (`v0.6.0`, L3–L5, `feature/us-6-chat`):** PASS – Vitest 187/187, Playwright 42/42 (21 teszt × asztali Chrome és 360 px); a backend nem változott; mutáció L3–L5 5/5. CI: a `feature/us-6-chat` → `develop` PR checkjei.
 - **2026-11-12 (`v0.6.0`, `feature/us-6-chat` @ `dd3b40b`):** PASS – .NET 583 unit + 285 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 184/184; Playwright 38/38 futás (19 teszt × asztali Chrome és 360 px) az LLM-csonkkal. Mutációs ellenőrzés: T1 13/13, T1-review 6/6, T2 10/10, T3 9/9 (két gyenge teszt erősítve), T2+T3-review 5/5, külső review 5/5, L1/L2 3/3. CI: [run 43280942836](https://github.com/toldor/kamra/actions/runs/43280942836) (#113), mind a négy job zöld.
 - **2026-11-08 (`v0.5.0`, `feature/us-2-quick-entry` @ `9d376c5`):** PASS – .NET 515 unit + 246 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; az új 402-es eset mutációval ellenőrizve (1/1 elbukott); a frontend és az e2e a `19cddfc` óta nem változott. CI: [run 42524059536](https://github.com/toldor/kamra/actions/runs/42524059536), mind a négy job zöld.
@@ -136,6 +137,16 @@ A chat valódi modellel mért pontossága ([ChatPocTests.cs](../../tests/KamraAp
 
 ¹ A C12-ben a modell a rejtett utasítású tételnevet adatként felsorolta, az utasítást nem követte; a pontozás a tiltott szöveget a névben is kereste – javítva ([V-79](../07_ai/verification_log.md)). A `chat.v1` válaszai Markdownt tartalmaztak, ezért lett `chat.v2`. Egy kérdés kb. 0,05 cent. Riportok: [llm_meres/](llm_meres/) (`chat-report-*`).
 
+A receptötlethez (`v0.7.0`) a mérés 17 kérdésre bővült: a régi 12, négy receptkérés (R1–R4; az R2-höz kevés a készlet, az R4-ben egy injection-nevű tétel van) és egy helyettesítési kérdés (S1, elhárítandó). A receptnél a pontozás a hozzávalókat, az adagot és a tiltott szavakat is nézi; a régi kérdéseknél recept nem jöhet.
+
+| Futás (helyi idő) | Prompt | Helyes eszköz | Helyes tartalom | Hiba | p50 | p95 | Token be / ki | Max. ki token |
+|---|---|---|---|---|---|---|---|---|
+| nov. 15. 19:25 | chat.v3 | 94,1% (48/51) | 88,2% (45/51) | 0 | 1,9 mp | 3,1 mp | 3024 / 84 | 263 |
+| **nov. 15. 20:06** | **chat.v4 (szállított)** | **92,2% (47/51)** | **90,2% (46/51)** | **1** | **1,9 mp** | **2,8 mp** | **3041 / 93** | **301** |
+| nov. 15. 20:39 | chat.v5 | 86,3% (44/51) | 88,2% (45/51) | 2 | 2,0 mp | 3,1 mp | 3007 / 167 | 4092 |
+
+A `chat.v3` a C6-ban visszalépett (a „Mi hiányzik…” kérdés a készlethez ment), az R2-ben nem adott receptet; a `v4` a C6-ot 2/3-ra javította; a `v5` a C8-ban visszalépett, és két 502-t adott (`"unit":"db,"`; egy elszabadult válasz 4092 tokennél a korlátba ütközött) – ezért a `v4` a szállított ([V-86](../07_ai/verification_log.md), [V-87](../07_ai/verification_log.md)). Egy kérdés kb. 0,09 cent. Riportok: [llm_meres/](llm_meres/) (`chat-report-20261115-*`).
+
 ## Kézzel számolt ellenőrző példák
 
 A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt példák igazolják: az elvárt értéket a fejlesztő és az AI is kiszámolta az implementáció előtt, és mindegyik példához automatizált teszt tartozik (Q3). A P11–P20-at a fejlesztő a T1 előtt kézzel átszámolta (2026-10-17).
@@ -169,7 +180,8 @@ A témavezető kérésére a szabályok helyességét előre, kézzel kiszámolt
 
 ## Ismert hiányosságok
 
-- A chat valódi modellel mért pontossága rögzített eszközeredményeken alapul (12 kérdés); valódi felhasználói kérdéseken a UAT 2. köre méri.
+- A chat valódi modellel mért pontossága rögzített eszközeredményeken alapul (17 kérdés); valódi felhasználói kérdéseken a UAT 2. köre méri.
+- A receptötlet (`chat.v4`): kevés készletnél a modell elutasíthatja a receptkérést (R2: a `v3`–`v5` 9 futásából 9); receptkérésnél alkalmanként 502 (`v4`: 12 receptfutásból 1) – a felhasználó újrakérdezhet, mentés nem történik; a mennyiségek néha kitöltő értékek (például „burgonya 1 g”), amelyeket az űrlapon kell javítani; a „Mi hiányzik…” válaszból 3 futásból egyszer hiányzik a pontos mennyiség. Más megfogalmazást (például „Adj egy sushireceptet.”) nem mértünk.
 - A Domainben még csak a `Household`, az Applicationben csak a hibamodell és az auth-használati esetek vannak: az assembly-alapú tesztek csak a kódban ténylegesen használt hivatkozást látják, ezért a valódi bizonyító erejük a Domain és az Application kódjával együtt nő. A deklarált, de nem használt hivatkozást a projektfájl-alapú tesztek már most is kiszűrik (kézzel igazolva: egy ideiglenes `FrameworkReference` mindkét projektfájl-tesztet elbuktatta).
 - Az [ADR-0006](../02_architecture/adr/0006-cookie-auth-identity.md) Verification-listájából a „más háztartás erőforrása 404” (S-2) pontot a [PantryApiTests.cs](../../tests/KamraApp.Integration.Tests/PantryApiTests.cs) lefedi; a „session megmarad az api konténer újraindítása után” pontot a [V-14](../07_ai/verification_log.md) próbája igazolta (Docker Compose, kézi Playwright-szkript); a deploy runbookba az S6-ban kerül.
 - A ux_flows „Lejárt munkamenet” üzenete („Biztonsági okból kiléptettünk…”) az első adatlekérő végponttal (US-1, készlet betöltése) kap valódi kiváltó eseményt; a szöveg már az üzenetkatalógusban van.

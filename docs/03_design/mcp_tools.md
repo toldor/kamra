@@ -1,6 +1,6 @@
 # MCP Tools
 
-Az MCP-szerver (`KamraApp.McpServer`) eszközei, amelyeket a chat asszisztens használ (US-6, [scope_contract.md](../01_product/scope_contract.md), [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)). A szerver az API folyamatában, kérésenként fut, memóriabeli streamen (`ModelContextProtocol.Core` 2.3.1); minden eszköz ugyanazt az Application-használati esetet hívja, mint a REST API, és a háztartást a bejelentkezett kérés hatóköréből kapja.
+Az MCP-szerver (`KamraApp.McpServer`) eszközei, amelyeket a chat asszisztens használ (US-6, [scope_contract.md](../01_product/scope_contract.md), [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)). A szerver az API folyamatában, kérésenként fut, memóriabeli streamen (`ModelContextProtocol.Core` 2.3.1); minden eszköz ugyanazt az Application-használati esetet hívja, mint a REST API, és a háztartást a bejelentkezett kérés hatóköréből kapja. A chat köre ezeken kívül egy `propose_recipe` függvényt is felajánl a modellnek (receptötlet, [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 9.). Ez nem MCP-eszköz: nem olvas és nem ír; a szerver csak ellenőrzi és továbbadja.
 
 ## Eszközök
 

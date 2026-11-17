@@ -53,7 +53,7 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
 
 - **Csúszás esetén** először a CAP-06 szűkül; az 1. és a 2. lépcső képességei védettek. (2026-11-07: a fejlesztő döntése szerint nem szűkül, az ütemezés csúszik – [scope_contract.md](scope_contract.md), Vágási szabály.)
 - **Stretch** (nem vállalt, csak ha a 3. lépcső a nov. 18-i feature freeze előtt kész és zöld):
-  - *AI-receptötlet mentése jóváhagyással:* a hideg indulást az induló receptkészlet már kezeli, ez csak kényelmi bővítés.
+  - *AI-receptötlet mentése jóváhagyással:* **megvalósítva** (`v0.7.0`, nov. 16.) – a Kérdezz oldalról az „Új recept” űrlapra, „AI-javasolt” címkével.
   - *Kipipált bevásárlólista-tételből készletbevitel:* a készletbevitel e nélkül is működik; ez a kör zárását kényelmesíti.
 - Az AI-os helyettesítés és adagjavaslat a témavezetővel egyeztetett szűkítés szerint továbbfejlesztési lehetőség ([scope_contract.md](scope_contract.md)).
 

@@ -97,3 +97,29 @@ test('a call of an unknown tool is refused and nothing changes', async ({ page }
     'Erre most nem sikerült válaszolnom. Kérdezd meg másképp, vagy nézd meg közvetlenül a Készlet, a Mit főzzek? vagy a Bevásárlólista oldalon.')
   await expect(page.getByLabel('Kérdésed')).toHaveValue('HIBÁS: mi van?')
 })
+
+// receptotlet_minispec (Tesztek, e2e): the idea goes from the chat to the Új recept form, and once saved it is among
+// the recipes with its label.
+test('a recipe idea is taken to the new recipe form, saved and labelled as AI-suggested', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await openChat(page)
+  await ask(page, 'Adj egy palacsintareceptet.')
+
+  const idea = page.getByRole('log').getByRole('group', { name: 'Receptötlet: Tejes palacsinta' })
+  await expect(idea.getByText('Tejes palacsinta (2 adag)')).toBeVisible()
+  await expect(idea.getByRole('listitem')).toHaveText(['tej 0,5 l', 'finomliszt 20 dkg', 'tojás 2 db'])
+  await expectNoHorizontalScroll(page)
+  await idea.getByRole('button', { name: 'Szerkesztés és mentés' }).click()
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Új recept' })).toBeVisible()
+  await expect(page.getByText('Átvettem a chat receptötletét. Mentés előtt nézd át, és javítsd, amit kell.')).toBeVisible()
+  await expect(page.getByLabel('Név')).toHaveValue('Tejes palacsinta')
+  await expect(page.getByLabel('Elkészítés (nem kötelező)')).toHaveValue('Keverd csomómentesre, és süsd ki vékonyan.')
+  await page.getByRole('button', { name: 'Mentés' }).click()
+
+  await expect(page.getByText('Elmentettem a receptet: Tejes palacsinta.')).toBeVisible()
+  const card = page.getByRole('article', { name: 'Tejes palacsinta' })
+  await expect(card.getByText('AI-javasolt')).toBeVisible()
+  await expect(card.getByText('Hozzávalók: finomliszt, tej, tojás')).toBeVisible()
+  await expectNoHorizontalScroll(page)
+})

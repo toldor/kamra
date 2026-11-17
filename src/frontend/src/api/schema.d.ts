@@ -1194,6 +1194,7 @@ export interface components {
         AskChatResponse: {
             answer: string;
             toolsUsed: string[];
+            recipe?: null | components["schemas"]["RecipeIdea"];
         };
         /** @enum {unknown} */
         Category: "dairy" | "cheese" | "eggs" | "freshMeatFish" | "processedMeat" | "vegetables" | "fruit" | "bakery" | "dryGoods" | "cannedAndSauces" | "frozen" | "beverages" | "preparedFood" | "other";
@@ -1289,6 +1290,7 @@ export interface components {
             servings?: null | number;
             instructions?: null | string;
             ingredients?: null | components["schemas"]["RecipeIngredientRequest"][];
+            aiSuggested?: null | boolean;
         };
         /** @enum {unknown} */
         Dimension: "mass" | "volume" | "count";
@@ -1357,6 +1359,19 @@ export interface components {
             /** Format: uint32 */
             version: number;
         };
+        RecipeIdea: {
+            name: string;
+            /** Format: int32 */
+            servings: number;
+            ingredients: components["schemas"]["RecipeIdeaIngredient"][];
+            instructions: string;
+        };
+        RecipeIdeaIngredient: {
+            name: string;
+            /** Format: double */
+            amount: number;
+            unit: components["schemas"]["Unit"];
+        };
         RecipeIngredientRequest: {
             /** Format: uuid */
             ingredientId?: null | string;
@@ -1372,6 +1387,8 @@ export interface components {
             servings: number;
             own: boolean;
             ingredients: string[];
+            /** @default false */
+            aiSuggested: boolean;
         };
         RecommendationResponse: {
             /** Format: uuid */
