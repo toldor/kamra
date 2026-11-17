@@ -27,6 +27,21 @@ test('the pantry filters sit on top of the list, and the side column stays in vi
   expect(search.x).toBeGreaterThanOrEqual(list.x)
   expect(search.y).toBeGreaterThanOrEqual(list.y)
   expect(await page.locator('.side').evaluate((side) => getComputedStyle(side).position)).toBe('sticky')
+
+  // The developer (2026-11-17): the sentence entry starts level with the item list, the summary above both (it shows
+  // once there is an item).
+  const card = page.locator('details', { has: page.locator('#new-item-heading') })
+  await card.locator('summary').click()
+  const form = page.getByRole('form', { name: 'Új tétel' })
+  await form.getByLabel('Hozzávaló').fill('tej')
+  await form.getByLabel('Mennyiség').fill('1')
+  await form.getByLabel('Mértékegység').selectOption('l')
+  await form.getByRole('button', { name: 'Hozzáadás' }).click()
+  await expect(page.getByRole('group', { name: 'Összesítés' })).toBeVisible()
+  await card.locator('summary').click()
+  const quick = (await page.locator('details', { has: page.locator('#quick-heading') }).boundingBox())!
+  const panel = (await page.locator('.panel', { has: page.locator('#pantry-heading') }).boundingBox())!
+  expect(Math.abs(quick.y - panel.y)).toBeLessThanOrEqual(1)
 })
 
 test('the recipes are a grid of three cards in a row at 1280 px', async ({ page }) => {
@@ -56,7 +71,11 @@ test('the shopping list and its suggestions stand side by side', async ({ page }
   const list = (await page.getByRole('region', { name: 'A listád' }).boundingBox())!
   const suggestions = (await page.getByRole('region', { name: /^Javaslatok/ }).boundingBox())!
   expect(suggestions.y).toBe(list.y)
-  expect(suggestions.x).not.toBe(list.x)
+  // The developer (2026-11-17): the list on the left, the suggestions on the right; the minimum levels as wide as both.
+  expect(list.x).toBeLessThan(suggestions.x)
+  const minimums = (await page.getByRole('region', { name: 'Minimumszintek' }).boundingBox())!
+  expect(Math.round(minimums.x)).toBe(Math.round(list.x))
+  expect(Math.round(minimums.x + minimums.width)).toBe(Math.round(suggestions.x + suggestions.width))
 })
 
 test('the content is wider on a large screen and stays as it was at 1280 px', async ({ page }) => {
@@ -68,4 +87,18 @@ test('the content is wider on a large screen and stays as it was at 1280 px', as
 
   await page.setViewportSize({ width: 1280, height: 900 })
   expect((await page.locator('main').boundingBox())!.width).toBeLessThanOrEqual(1184)
+})
+
+// The developer (2026-11-17): the Kérdezz box and its bubbles have rounded corners, unlike the rest of the app.
+test('the chat box and its bubbles are rounded', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await menu(page, 'Kérdezz').click()
+  await page.getByLabel('Kérdésed').fill('Szia')
+  await page.getByRole('button', { name: 'Küldés' }).click()
+  await expect(page.getByRole('log').getByText('Szia! Miben segíthetek?')).toBeVisible()
+
+  const radius = (selector: string) => page.locator(selector).first().evaluate((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius))
+  expect(await radius('.chat-page .panel')).toBeGreaterThanOrEqual(12)
+  expect(await radius('.chat-message.user')).toBeGreaterThanOrEqual(12)
+  expect(await radius('.chat-message.assistant')).toBeGreaterThanOrEqual(4)
 })

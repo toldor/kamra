@@ -107,3 +107,23 @@ test('the tab icon is the Kamra jar, and the page tells the browser both colour 
   expect(icon).toContain('#f4f1e8')
   expect(icon).not.toContain('#863bff')
 })
+
+// The developer liked the phone view: the desktop changes of 2026-11-17 keep its order - the summary under the entry
+// cards, and the suggestions above the shopping list.
+test('on a phone the pantry summary stays under the entry cards', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-360', 'phone layout only')
+  await registerFreshHousehold(page)
+  await page.getByRole('region', { name: 'Tételek' }).waitFor()
+  const card = page.locator('details', { has: page.locator('#new-item-heading') })
+  await card.locator('summary').click()
+  const form = page.getByRole('form', { name: 'Új tétel' })
+  await form.getByLabel('Hozzávaló').fill('tej')
+  await form.getByLabel('Mennyiség').fill('1')
+  await form.getByLabel('Mértékegység').selectOption('l')
+  await form.getByRole('button', { name: 'Hozzáadás' }).click()
+  const summary = page.getByRole('group', { name: 'Összesítés' })
+  await expect(summary).toBeVisible()
+
+  const cards = (await card.boundingBox())!
+  expect((await summary.boundingBox())!.y).toBeGreaterThan(cards.y)
+})
