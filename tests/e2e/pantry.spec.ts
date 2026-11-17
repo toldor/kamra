@@ -129,6 +129,8 @@ test('sorts the pantry by category, and a group folds and opens again', async ({
   await page.getByRole('group', { name: 'Rendezés' }).getByRole('radio', { name: 'Kategóriák szerint' }).check()
   const dairy = page.locator('details.category', { has: page.locator('summary', { hasText: 'Tejtermék (1)' }) })
   await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeVisible()
+  // Review T2: the summary keeps the browser's open/closed marker.
+  expect(await dairy.locator('summary').evaluate((s) => getComputedStyle(s).display)).toBe('list-item')
 
   await dairy.locator('summary').click()
   await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeHidden()

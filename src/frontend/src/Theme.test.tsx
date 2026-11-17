@@ -58,6 +58,8 @@ describe('the theme choice', () => {
     expect(choices(page).getAllByRole('radio').map((r) => r.getAttribute('aria-label') ?? r.closest('label')?.textContent))
       .toEqual(['Rendszer szerint', 'Világos', 'Sötét'])
     expect(page.getByText('A téma ebben a böngészőben marad meg.')).toBeTruthy()
+    // Review T3: the radios look like the other radio groups (the .check rule), not like text fields.
+    expect(choices(page).getAllByRole('radio').every((r) => r.closest('label')?.classList.contains('check'))).toBe(true)
 
     fireEvent.click(screen.getByRole('button', { name: 'Profilom' }))
     const panel = within(screen.getByRole('region', { name: 'Profilom' }))
@@ -87,6 +89,39 @@ describe('the theme choice', () => {
 
     fireEvent.click(choices(page).getByRole('radio', { name: 'Rendszer szerint' }))
     expect(localStorage.getItem('kamra:theme')).toBeNull()
+  })
+})
+
+describe('the theme while the app is open (review T6)', () => {
+  // A system whose setting can change, with the listener the app registered.
+  function changingSystem() {
+    const system = { matches: false, listeners: [] as (() => void)[] }
+    vi.stubGlobal('matchMedia', vi.fn(() => ({
+      get matches() { return system.matches },
+      addEventListener: (_type: string, listener: () => void) => system.listeners.push(listener),
+      removeEventListener: vi.fn(),
+    })))
+    return { switchTo(dark: boolean) { system.matches = dark; system.listeners.forEach((l) => l()) } }
+  }
+
+  it('follows the system when it changes, while "Rendszer szerint" is chosen', () => {
+    const system = changingSystem()
+    startTheme()
+    expect(theme()).toBe('light')
+
+    system.switchTo(true)
+
+    expect(theme()).toBe('dark')
+  })
+
+  it('keeps a chosen theme when the system changes', () => {
+    const system = changingSystem()
+    localStorage.setItem('kamra:theme', 'light')
+    startTheme()
+
+    system.switchTo(true)
+
+    expect(theme()).toBe('light')
   })
 })
 

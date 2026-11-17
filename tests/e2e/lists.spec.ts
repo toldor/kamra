@@ -26,6 +26,24 @@ test('the printed shopping list has no band, menu or buttons', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Nyomtatás' })).toBeHidden()
 })
 
+// Review T1: in the dark theme the printed list is dark text on white paper, not the screen's light text.
+test('the shopping list prints dark on light in the dark theme too', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await registerFreshHousehold(page)
+  await page.getByRole('navigation', { name: 'Oldalak' }).getByRole('link', { name: 'Bevásárlólista', exact: true }).click()
+  const heading = page.getByRole('heading', { level: 1, name: 'Bevásárlólista' })
+  await expect(heading).toBeVisible()
+
+  await page.emulateMedia({ media: 'print', colorScheme: 'dark' })
+
+  const colors = await heading.evaluate((h) => ({
+    text: getComputedStyle(h).color,
+    page: getComputedStyle(document.body).backgroundColor,
+    scheme: getComputedStyle(document.documentElement).colorScheme,
+  }))
+  expect(colors).toEqual({ text: 'rgb(30, 36, 25)', page: 'rgb(255, 255, 255)', scheme: 'light' })
+})
+
 test('the Profilom panel opens with a short animation, and without one when motion is reduced', async ({ page }) => {
   await registerFreshHousehold(page)
   const animation = () => page.locator('.profile-panel').evaluate((panel) => getComputedStyle(panel).animationName)

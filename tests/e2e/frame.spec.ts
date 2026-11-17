@@ -97,8 +97,10 @@ test('signs out from the Profilom panel, which Escape closes', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Bejelentkezés' })).toBeVisible()
 })
 
-test('the tab icon is the Kamra jar', async ({ page }) => {
+test('the tab icon is the Kamra jar, and the page tells the browser both colour schemes', async ({ page }) => {
   await page.goto('/')
+  // Review T5: a dark system gets a dark page before the app's script runs.
+  await expect(page.locator('meta[name="color-scheme"]')).toHaveAttribute('content', 'light dark')
   const href = await page.locator('link[rel="icon"]').getAttribute('href')
   const icon = await (await page.request.get(href!)).text()
 
