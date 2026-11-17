@@ -47,8 +47,9 @@ export function QuickEntryForm({ open, onToggle, onProposed, onManual, onSignedO
     }
   }
 
+  // Review V1: the browser also fires "toggle" when the card is created open; only a real change counts.
   return (
-    <details className="panel card" open={open} onToggle={(e) => onToggle(e.currentTarget.open)}>
+    <details className="panel card" open={open} onToggle={(e) => e.currentTarget.open !== open && onToggle(e.currentTarget.open)}>
       <summary><h2 id="quick-heading">Mondatos bevitel</h2></summary>
       <form aria-labelledby="quick-heading" className="card-body" onSubmit={submit} noValidate>
         <label htmlFor="quick-text">Mit vettél?</label>

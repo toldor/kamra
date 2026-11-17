@@ -22,12 +22,17 @@ function PantrySummary({ totals, expiredOnly, soonOnly, onExpired, onSoon }: {
 }) {
   const expired = totals.filter((i) => i.expired).length
   const soon = totals.filter((i) => i.soonExpiring).length
+  // Review V4: aria-disabled, so a button switched off at 0 keeps the keyboard focus.
+  const expiredIdle = expired === 0 && !expiredOnly
+  const soonIdle = soon === 0 && !soonOnly
   return (
     <div role="group" aria-label="Összesítés" className="summary">
-      <button type="button" className="chip expired" aria-pressed={expiredOnly} disabled={expired === 0 && !expiredOnly} onClick={onExpired}>
+      <button type="button" className="chip expired" aria-pressed={expiredOnly} aria-disabled={expiredIdle || undefined}
+        onClick={() => !expiredIdle && onExpired()}>
         {expired} lejárt
       </button>
-      <button type="button" className="chip soon" aria-pressed={soonOnly} disabled={soon === 0 && !soonOnly} onClick={onSoon}>
+      <button type="button" className="chip soon" aria-pressed={soonOnly} aria-disabled={soonIdle || undefined}
+        onClick={() => !soonIdle && onSoon()}>
         {soon} hamarosan lejár
       </button>
       <span className="chip">{totals.length} tétel</span>
@@ -121,7 +126,8 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
     let active = true
     api.pantryItems(noFilter)
       .then((items) => active && setTotals(items))
-      .catch(() => {})
+      // Review V6: no stale counts.
+      .catch(() => active && setTotals(null))
     return () => {
       active = false
     }

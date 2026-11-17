@@ -69,8 +69,9 @@ export function PantryItemForm({ open, onToggle, categories, ingredients, onAdde
     }
   }
 
+  // Review V1: the browser also fires "toggle" when the card is created open; only a real change counts.
   return (
-    <details className="panel card" open={open} onToggle={(e) => onToggle(e.currentTarget.open)}>
+    <details className="panel card" open={open} onToggle={(e) => e.currentTarget.open !== open && onToggle(e.currentTarget.open)}>
       <summary><h2 id="new-item-heading">Új tétel</h2></summary>
       <form aria-labelledby="new-item-heading" className="card-body" onSubmit={submit} noValidate>
 
