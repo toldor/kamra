@@ -11,7 +11,7 @@ export function ThemeChoice() {
     <fieldset className="theme-choice">
       <legend>Téma</legend>
       {options.map(([value, label]) => (
-        <label key={value}>
+        <label key={value} className="check">
           <input type="radio" name={name} value={value} checked={current === value} onChange={() => chooseTheme(value)} />
           {label}
         </label>
