@@ -14,7 +14,10 @@ const goneCodes = ['ITEM_PROPOSAL_NOT_FOUND', 'ITEM_PROPOSAL_STATE_CONFLICT']
 const textOrder = ['text'] as const
 
 // US-2 (us2_minispec K13): the sentence panel in the side column. The text stays after every error.
-export function QuickEntryForm({ onProposed, onManual, onSignedOut }: {
+export function QuickEntryForm({ open, onToggle, onProposed, onManual, onSignedOut }: {
+  // ui_polish_minispec 17.: a folding card; the page keeps it open or closed.
+  open: boolean
+  onToggle: (open: boolean) => void
   onProposed: (proposals: ItemProposal[]) => void
   onManual: () => void
   onSignedOut: (notice: string) => void
@@ -45,20 +48,22 @@ export function QuickEntryForm({ onProposed, onManual, onSignedOut }: {
   }
 
   return (
-    <form aria-labelledby="quick-heading" className="panel" onSubmit={submit} noValidate>
-      <h2 id="quick-heading">Mondatos bevitel</h2>
-      <label htmlFor="quick-text">Mit vettél?</label>
-      <textarea {...fields.props('text', 'quick-hint')} rows={3} value={text} onChange={(e) => setText(e.target.value)} />
-      {fields.error('text') || (
-        <p id="quick-hint" className="hint">
-          Írd le egy mondatban, például: »2 liter tej, 10 tojás és fél kiló paradicsom, a tej péntekig jó«. Mentés előtt átnézheted.
-        </p>
-      )}
-      <div role="alert" className="form-error">{error}</div>
-      <button type="submit" disabled={busy}>{busy ? 'Feldolgozás…' : 'Feldolgozom'}</button>
-      {busy && <p className="hint">Ez néhány másodpercig is tarthat.</p>}
-      <button type="button" className="secondary" onClick={onManual}>Inkább tételenként rögzítem</button>
-    </form>
+    <details className="panel card" open={open} onToggle={(e) => onToggle(e.currentTarget.open)}>
+      <summary><h2 id="quick-heading">Mondatos bevitel</h2></summary>
+      <form aria-labelledby="quick-heading" className="card-body" onSubmit={submit} noValidate>
+        <label htmlFor="quick-text">Mit vettél?</label>
+        <textarea {...fields.props('text', 'quick-hint')} rows={3} value={text} onChange={(e) => setText(e.target.value)} />
+        {fields.error('text') || (
+          <p id="quick-hint" className="hint">
+            Írd le egy mondatban, például: »2 liter tej, 10 tojás és fél kiló paradicsom, a tej péntekig jó«. Mentés előtt átnézheted.
+          </p>
+        )}
+        <div role="alert" className="form-error">{error}</div>
+        <button type="submit" disabled={busy}>{busy ? 'Feldolgozás…' : 'Feldolgozom'}</button>
+        {busy && <p className="hint">Ez néhány másodpercig is tarthat.</p>}
+        <button type="button" className="secondary" onClick={onManual}>Inkább tételenként rögzítem</button>
+      </form>
+    </details>
   )
 }
 

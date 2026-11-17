@@ -174,7 +174,8 @@ describe('pantry list', () => {
   })
 
   it('sends the search, category and soon-expiring filters', async () => {
-    const calls = pantryBackend([pantry(sourCream)], {
+    // ui_polish_minispec 15.: the soon-expiring button needs something to show (with none it is disabled).
+    const calls = pantryBackend([pantry(sourCream, rice)], {
       'GET /api/v1/pantry-items?search=tej': [pantry(sourCream)],
       'GET /api/v1/pantry-items?search=tej&category=dairy': [pantry(sourCream)],
       'GET /api/v1/pantry-items?search=tej&category=dairy&expiringSoon=true': [pantry()],
@@ -545,6 +546,11 @@ describe('the pantry summary', () => {
     expect(summary().getByRole('button', { name: '1 lejárt' }).getAttribute('aria-pressed')).toBe('false')
     expect(summary().getByRole('button', { name: '1 hamarosan lejár' }).getAttribute('aria-pressed')).toBe('true')
     await waitFor(() => expect(calls.some((c) => c.url === '/api/v1/pantry-items?expiringSoon=true')).toBe(true))
+
+    // Mutation P2: and the other way round - "lejárt" switches the soon-expiring filter off.
+    fireEvent.click(summary().getByRole('button', { name: '1 lejárt' }))
+    expect(summary().getByRole('button', { name: '1 hamarosan lejár' }).getAttribute('aria-pressed')).toBe('false')
+    expect(summary().getByRole('button', { name: '1 lejárt' }).getAttribute('aria-pressed')).toBe('true')
   })
 
   it('keeps counting the whole pantry while a filter is on', async () => {

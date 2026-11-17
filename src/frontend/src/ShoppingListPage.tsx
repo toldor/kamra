@@ -290,9 +290,10 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
   const shown = items.filter((i) => matchesSearch(search, i.ingredientName))
 
   return (
-    // C3: the suggestions and the list in the content column, the minimum levels beside them.
-    <div className="split">
-      <div className="content">
+    // ui_polish_minispec 19. (A8): the suggestions and the list side by side when there is room (in reading order),
+    // the minimum levels under them.
+    <div className="content">
+      <div className="pair">
         {suggestions.length > 0 && (
           <section aria-labelledby="suggestions-heading" className="panel">
             <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
@@ -365,7 +366,7 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
         </section>
       </div>
 
-      <section aria-labelledby="minimum-heading" className="panel side">
+      <section aria-labelledby="minimum-heading" className="panel minimums">
         <h2 id="minimum-heading">Minimumszintek</h2>
         <div className="panel-body">
           <p className="hint">Ha egy hozzávalóból a minimumszint alá csökken a készlet, felveszem a bevásárlójavaslatok közé.</p>

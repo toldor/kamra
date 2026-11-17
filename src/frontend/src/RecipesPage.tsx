@@ -92,17 +92,16 @@ function RecipeList({ recipes, busy, onArchive }: { recipes: Recipe[]; busy: boo
   const [search, setSearch] = useState('')
   const shown = recipes.filter((r) => matchesSearch(search, r.name, ...r.ingredients))
   return (
-    <div className="split">
-      <form role="search" className="filters panel side" onSubmit={(e) => e.preventDefault()}>
+    // ui_polish_minispec 19. (A6): the search above a grid of cards (3 / 2 / 1 columns by width).
+    <div className="content">
+      <form role="search" className="filters panel recipe-search" onSubmit={(e) => e.preventDefault()}>
         <label htmlFor="recipe-search">Keresés</label>
         <input id="recipe-search" type="search" aria-describedby="recipe-search-hint" value={search} onChange={(e) => setSearch(e.target.value)} />
         <p id="recipe-search-hint" className="hint">A recept nevében és a hozzávalóiban keresek.</p>
       </form>
-      <div className="content">
-        {shown.length === 0
-          ? <p className="empty">Nincs a keresésnek megfelelő recept.</p>
-          : <div className="panel">{shown.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => onArchive(r)} />)}</div>}
-      </div>
+      {shown.length === 0
+        ? <p className="empty">Nincs a keresésnek megfelelő recept.</p>
+        : <div className="recipe-grid">{shown.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => onArchive(r)} />)}</div>}
     </div>
   )
 }

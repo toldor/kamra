@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { api, failWith, noFilter, type Category, type CategoryInfo, type Ingredient, type ItemProposal, type PantryItem } from './api/client'
 import { categoryName, formatAmount, formatDate } from './format'
 import { Icon } from './Icon'
@@ -7,6 +8,32 @@ import { PantryItemEditor } from './PantryItemEditor'
 import { PantryItemForm } from './PantryItemForm'
 import { ProposalList, QuickEntryForm } from './QuickEntry'
 import { routes } from './useHashRoute'
+
+// No search, category or soon-expiring filter: the list is the whole pantry.
+const isWhole = (filter: typeof noFilter) => filter.search.trim() === '' && filter.category === '' && !filter.expiringSoon
+
+// ui_polish_minispec 15. (A1): the counts of the whole pantry; "lejárt" and "hamarosan lejár" switch their filter.
+function PantrySummary({ totals, expiredOnly, soonOnly, onExpired, onSoon }: {
+  totals: PantryItem[]
+  expiredOnly: boolean
+  soonOnly: boolean
+  onExpired: () => void
+  onSoon: () => void
+}) {
+  const expired = totals.filter((i) => i.expired).length
+  const soon = totals.filter((i) => i.soonExpiring).length
+  return (
+    <div role="group" aria-label="Összesítés" className="summary">
+      <button type="button" className="chip expired" aria-pressed={expiredOnly} disabled={expired === 0 && !expiredOnly} onClick={onExpired}>
+        {expired} lejárt
+      </button>
+      <button type="button" className="chip soon" aria-pressed={soonOnly} disabled={soon === 0 && !soonOnly} onClick={onSoon}>
+        {soon} hamarosan lejár
+      </button>
+      <span className="chip">{totals.length} tétel</span>
+    </div>
+  )
+}
 
 // ui_polish_minispec 8.: the stripe of the most urgent state; the badges and "(becsült)" carry the meaning.
 const expiryStripe = (item: PantryItem) => (item.expired ? 'expired' : item.soonExpiring ? 'soon' : item.expiryEstimated ? 'estimated' : '')
@@ -34,6 +61,13 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
   const [quickEntry, setQuickEntry] = useState(false)
   const [proposals, setProposals] = useState<ItemProposal[]>([])
   const [batch, setBatch] = useState(0)
+  // ui_polish_minispec 15.: the counts of the whole pantry, and the expired filter in the browser.
+  const [totals, setTotals] = useState<PantryItem[] | null>(null)
+  const [expiredOnly, setExpiredOnly] = useState(false)
+  // ui_polish_minispec 17.: the folding cards; "Új tétel" opens when there is no sentence entry.
+  const [quickOpen, setQuickOpen] = useState(true)
+  const [newItemOpen, setNewItemOpen] = useState<boolean | null>(null)
+  const side = useRef<HTMLDivElement>(null)
 
   const reload = () => setReloads((n) => n + 1)
 
@@ -69,14 +103,47 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
     let active = true
     const fail = failWith(onSignedOut, (message) => setList({ status: 'error', message }))
     api.pantryItems(filter)
-      .then((items) => active && setList({ status: 'ready', items }))
+      .then((items) => {
+        if (!active) return
+        setList({ status: 'ready', items })
+        if (isWhole(filter)) setTotals(items)
+      })
       .catch((caught: unknown) => active && fail(caught))
     return () => {
       active = false
     }
   }, [filter, reloads, onSignedOut])
 
-  const filtered = filter.search.trim() !== '' || filter.category !== '' || filter.expiringSoon
+  // Q17 (a): while a filter is on, the summary still counts the whole pantry - one more request, only then.
+  const whole = isWhole(filter)
+  useEffect(() => {
+    if (whole) return
+    let active = true
+    api.pantryItems(noFilter)
+      .then((items) => active && setTotals(items))
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [whole, reloads])
+
+  // Q21 (b): the side column stays in view only when it fits on the screen.
+  useEffect(() => {
+    const element = side.current
+    if (!element) return
+    const fit = () => element.classList.toggle('fits', element.offsetHeight + 96 <= window.innerHeight)
+    fit()
+    window.addEventListener('resize', fit)
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(fit)
+    observer?.observe(element)
+    return () => {
+      window.removeEventListener('resize', fit)
+      observer?.disconnect()
+    }
+  }, [])
+
+  const filtered = filter.search.trim() !== '' || filter.category !== '' || filter.expiringSoon || expiredOnly
+  const shown = list.status === 'ready' ? (expiredOnly ? list.items.filter((i) => i.expired) : list.items) : []
   const categories = catalog.status === 'ready' ? catalog.categories : []
 
 
@@ -122,57 +189,25 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
 
       {/* C3: the sentence panel, the filters, the new item form and the hint beside the list; stacked on a phone (C2). */}
       <div className="split">
-        <div className="side">
+        <div ref={side} className="side">
           {/* us2_minispec K13: at the top of the side column. */}
           {quickEntry && (
             <QuickEntryForm
+              open={quickOpen}
+              onToggle={setQuickOpen}
               onProposed={(items) => {
                 setNotice(null)
                 setProposals(items)
                 setBatch((n) => n + 1)
               }}
-              onManual={() => document.getElementById('new-ingredientId')?.focus()}
+              onManual={() => {
+                // The field inside a closed card cannot take the focus, so the card opens first.
+                flushSync(() => setNewItemOpen(true))
+                document.getElementById('new-ingredientId')?.focus()
+              }}
               onSignedOut={onSignedOut}
             />
           )}
-          <form role="search" className="filters panel" onSubmit={(e) => e.preventDefault()}>
-            <label htmlFor="filter-search">Keresés</label>
-            <input
-              id="filter-search"
-              type="search"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-            />
-            <label htmlFor="filter-category">Kategória</label>
-            <select
-              id="filter-category"
-              value={filter.category}
-              onChange={(e) => setFilter({ ...filter, category: e.target.value as Category | '' })}
-            >
-              <option value="">Mind</option>
-              {categories.map((c) => <option key={c.category} value={c.category}>{categoryName(c.category)}</option>)}
-            </select>
-            <label className="check">
-              <input
-                type="checkbox"
-                checked={filter.expiringSoon}
-                onChange={(e) => setFilter({ ...filter, expiringSoon: e.target.checked })}
-              />
-              Csak a hamarosan lejárók
-            </label>
-            {/* ui_polish_minispec 14.: in the browser only; not kept over a reload. */}
-            <fieldset className="sort">
-              <legend>Rendezés</legend>
-              <label className="check">
-                <input type="radio" name="pantry-sort" checked={!byCategory} onChange={() => setByCategory(false)} />
-                Lejárat szerint
-              </label>
-              <label className="check">
-                <input type="radio" name="pantry-sort" checked={byCategory} onChange={() => setByCategory(true)} />
-                Kategóriák szerint
-              </label>
-            </fieldset>
-          </form>
           {catalog.status === 'loading' && <p role="status">Betöltés…</p>}
           {catalog.status === 'error' && (
             <div>
@@ -191,6 +226,8 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
           )}
           {catalog.status === 'ready' && (
             <PantryItemForm
+              open={newItemOpen ?? !quickEntry}
+              onToggle={setNewItemOpen}
               categories={catalog.categories}
               ingredients={catalog.ingredients}
               onAdded={(item) => {
@@ -223,8 +260,57 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
               onSignedOut={onSignedOut}
             />
           )}
+          {totals !== null && totals.length > 0 && (
+            <PantrySummary
+              totals={totals}
+              expiredOnly={expiredOnly}
+              soonOnly={filter.expiringSoon}
+              onExpired={() => {
+                setExpiredOnly((on) => !on)
+                setFilter((current) => (current.expiringSoon ? { ...current, expiringSoon: false } : current))
+              }}
+              onSoon={() => {
+                setExpiredOnly(false)
+                setFilter((current) => ({ ...current, expiringSoon: !current.expiringSoon }))
+              }}
+            />
+          )}
           <div className="panel">
             <h2 id="pantry-heading">Tételek</h2>
+              <form role="search" className="filters filterbar" onSubmit={(e) => e.preventDefault()}>
+                <div className="field search">
+                  <label htmlFor="filter-search">Keresés</label>
+                  <input
+                    id="filter-search"
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="filter-category">Kategória</label>
+                  <select
+                    id="filter-category"
+                    value={filter.category}
+                    onChange={(e) => setFilter({ ...filter, category: e.target.value as Category | '' })}
+                  >
+                    <option value="">Mind</option>
+                    {categories.map((c) => <option key={c.category} value={c.category}>{categoryName(c.category)}</option>)}
+                  </select>
+                </div>
+                {/* ui_polish_minispec 14.: in the browser only; not kept over a reload. */}
+                <fieldset className="sort">
+                  <legend>Rendezés</legend>
+                  <label className="check">
+                    <input type="radio" name="pantry-sort" checked={!byCategory} onChange={() => setByCategory(false)} />
+                    Lejárat szerint
+                  </label>
+                  <label className="check">
+                    <input type="radio" name="pantry-sort" checked={byCategory} onChange={() => setByCategory(true)} />
+                    Kategóriák szerint
+                  </label>
+                </fieldset>
+              </form>
             <div className="panel-body">
               {list.status === 'loading' && <LoadingRows />}
               {list.status === 'error' && (
@@ -241,7 +327,7 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
                   </button>
                 </div>
               )}
-              {list.status === 'ready' && list.items.length === 0 && (filtered
+              {list.status === 'ready' && shown.length === 0 && (filtered
                 ? <p className="empty">Nincs a szűrésnek megfelelő tétel.</p>
                 : (
                   <div className="empty-state">
@@ -255,14 +341,14 @@ export function PantryPage({ onSignedOut }: { onSignedOut: (notice: string) => v
                   </div>
                 ))}
             </div>
-            {list.status === 'ready' && list.items.length > 0 && (byCategory
-              ? groups(list.items).map(([category, items]) => (
+            {list.status === 'ready' && shown.length > 0 && (byCategory
+              ? groups(shown).map(([category, items]) => (
                 <details key={category} className="category" open>
                   <summary>{categoryName(category)} ({items.length})</summary>
                   <ul className="items">{items.map(itemRow)}</ul>
                 </details>
               ))
-              : <ul className="items">{list.items.map(itemRow)}</ul>)}
+              : <ul className="items">{shown.map(itemRow)}</ul>)}
           </div>
         </section>
       </div>

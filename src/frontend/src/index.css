@@ -664,6 +664,148 @@ details.category[open] > .items {
   animation: kamra-fade 200ms ease-out;
 }
 
+/* ---- ui_polish_minispec S5: the desktop layout ---- */
+
+/* 17. (A4): a folding card whose summary is the form's heading. */
+.card > summary {
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+}
+
+.card[open] > summary {
+  border-bottom: 1px solid var(--c-rule);
+}
+
+.card > summary > h2 {
+  display: inline;
+  margin: 0;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+/* 15. (A1): the summary of the whole pantry; the two counts are filter buttons. */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip,
+button.chip,
+button.chip:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin: 0;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--c-rule);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-weight: 600;
+}
+
+button.chip:hover:not(:disabled) {
+  border-color: var(--c-field);
+}
+
+button.chip[aria-pressed='true'] {
+  border-color: var(--c-primary);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+}
+
+button.chip:disabled,
+button.chip:disabled:hover {
+  border-color: var(--c-rule);
+  background: var(--c-surface);
+  color: var(--c-muted);
+  cursor: default;
+}
+
+.chip.expired::before,
+.chip.soon::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-expired);
+}
+
+.chip.soon::before {
+  background: var(--c-accent);
+}
+
+/* 16. (A2): the filters on top of the list. */
+.filterbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--c-rule);
+}
+
+.filterbar .field {
+  flex: 0 1 auto;
+  gap: var(--space-1);
+}
+
+.filterbar .field.search {
+  flex: 1 1 220px;
+}
+
+.filterbar .sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+}
+
+.filterbar .sort legend {
+  margin-bottom: var(--space-1);
+}
+
+/* 19. (A6): the recipes as a grid of cards. */
+.recipe-search {
+  max-width: 40rem;
+}
+
+.recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-4);
+}
+
+.recipe-grid > .recipe {
+  border: 1px solid var(--c-rule);
+  background: var(--c-surface);
+}
+
+/* 19. (A8): the minimum levels under the list and the suggestions. */
+.minimums {
+  max-width: 48rem;
+}
+
+@media (min-width: 1024px) {
+  /* 18. (A3, Q21: b): the side column stays in view when it fits on the screen (PantryPage measures it). */
+  .side.fits {
+    position: sticky;
+    top: 76px;
+  }
+}
+
+/* 19. (A11): wider content on a large screen; the narrow pages keep their own width. */
+@media (min-width: 1440px) {
+  :root {
+    --content-max: 1400px;
+  }
+}
+
 /* ui_polish_minispec 9.: placeholder rows while a list loads. */
 .skeleton {
   display: flex;
