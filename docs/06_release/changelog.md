@@ -4,7 +4,7 @@ A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; 
 
 ## [0.8.0] – 2026-11-17 – Kinézet és kezelhetőség
 
-A fejlesztő kérésére (Stretch 3.). Részletek: [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [ux_flows.md](../01_product/ux_flows.md) „Keret és navigáció”, [P-29](../07_ai/prompt_log.md), [V-90 – V-95](../07_ai/verification_log.md).
+A fejlesztő kérésére (Stretch 3.). Részletek: [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [ux_flows.md](../01_product/ux_flows.md) „Keret és navigáció”, [P-29](../07_ai/prompt_log.md), [V-90 – V-98](../07_ai/verification_log.md).
 
 ### Hozzáadva
 - Profilom panel (e-mail, Profilom oldal, téma, kijelentkezés) és Profilom oldal.
