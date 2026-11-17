@@ -121,4 +121,8 @@ test('the chat box and its bubbles are rounded', async ({ page }) => {
   expect(await radius('.chat-page .panel')).toBeGreaterThanOrEqual(12)
   expect(await radius('.chat-message.user')).toBeGreaterThanOrEqual(12)
   expect(await radius('.chat-message.assistant')).toBeGreaterThanOrEqual(4)
+  // Review W1: the small chat buttons keep the 44 px target of the project (ux_flows).
+  const copy = (await page.getByRole('button', { name: 'Válasz másolása' }).boundingBox())!
+  expect(copy.height).toBeGreaterThanOrEqual(44)
+  expect(copy.width).toBeGreaterThanOrEqual(44)
 })

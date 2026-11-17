@@ -575,6 +575,33 @@ describe('the livelier Kérdezz page', () => {
     expect(log().queryByRole('button', { name: 'Mit főzzek ezekből?' })).toBeNull()
   })
 
+  // Review W2: a refused clipboard says so instead of failing silently.
+  it('says when the answer could not be copied', async () => {
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText: vi.fn(async () => { throw new Error('NotAllowedError') }) } })
+    backend(true, [answer('A tej.')])
+    render(<App />)
+    await ask('Mi jár le?')
+
+    fireEvent.click(await log().findByRole('button', { name: 'Válasz másolása' }))
+
+    expect(await log().findByText('Nem sikerült')).toBeTruthy()
+  })
+
+  // Review W5, W6: a follow-up moves the focus to the question field, and a failed one keeps the typed draft.
+  it('focuses the question field on a follow-up, and keeps a typed draft when it fails', async () => {
+    backend(true, [answer('A tej holnap.', ['get_expiring_items']), problem(503, 'LLM_UNAVAILABLE', 'A szövegfeldolgozó most nem válaszol.')])
+    render(<App />)
+    await ask('Mi jár le?')
+    const followUp = await log().findByRole('button', { name: 'Mit főzzek ezekből?' })
+    fireEvent.change(screen.getByLabelText('Kérdésed'), { target: { value: 'Félig írt kér' } })
+
+    fireEvent.click(followUp)
+
+    expect(document.activeElement).toBe(screen.getByLabelText('Kérdésed'))
+    expect(await screen.findByText(/Most nem tudok válaszolni/)).toBeTruthy()
+    expect((screen.getByLabelText('Kérdésed') as HTMLTextAreaElement).value).toBe('Félig írt kér')
+  })
+
   it('offers no follow-up under a plain answer', async () => {
     backend(true, [answer('Szia!')])
     render(<App />)
@@ -612,7 +639,11 @@ describe('the livelier Kérdezz page', () => {
     render(<App />)
     await ask('Mi jár le?')
 
-    fireEvent.click(await log().findByRole('button', { name: 'Válasz másolása' }))
+    const copy = await log().findByRole('button', { name: 'Válasz másolása' })
+    // The developer (2026-11-17): an icon only, no visible label; the tooltip says "Másolás".
+    expect(copy.textContent).toBe('')
+    expect(copy.getAttribute('title')).toBe('Másolás')
+    fireEvent.click(copy)
 
     expect(writeText).toHaveBeenCalledWith('A tej holnap jár le.')
     expect(await log().findByText('Kimásolva')).toBeTruthy()
