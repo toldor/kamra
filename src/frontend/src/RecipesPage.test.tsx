@@ -49,6 +49,7 @@ function backend(extra: Record<string, Reply[]> = {}) {
   })
 }
 
+const emptyIcon = (text: string) => screen.getByText(text).closest('.empty-state')?.querySelector('svg[aria-hidden="true"]')
 const card = (name: string) => within(screen.getByRole('article', { name }))
 const row = (n: number) => within(screen.getByRole('group', { name: `${n}. hozzávaló` }))
 
@@ -92,11 +93,20 @@ describe('the Receptek page (N9)', () => {
     })
     render(<App />)
 
-    expect(await screen.findByText('Betöltés…')).toBeTruthy()
+    // ui_polish_minispec 9.: placeholder rows while loading; a screen reader still hears "Betöltés…". (The app's own
+    // session check shows "Betöltés…" first, so the page heading is awaited.)
+    await screen.findByRole('heading', { level: 1, name: 'Receptek' })
+    const loading = screen.getByText('Betöltés…')
+    expect(loading.classList.contains('visually-hidden')).toBe(true)
+    expect(loading.closest('[role="status"]')).toBeTruthy()
+    const rows = document.querySelector('.skeleton')
+    expect(rows?.getAttribute('aria-hidden')).toBe('true')
+    expect(rows?.children.length).toBe(3)
     release()
     expect((await screen.findByText('Váratlan hiba történt. Próbáld újra később.')).getAttribute('role')).toBe('alert')
     fireEvent.click(screen.getByRole('button', { name: 'Újra' }))
     expect(await screen.findByText('Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.')).toBeTruthy()
+    expect(emptyIcon('Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.')).toBeTruthy()
   })
 
   it('archives only after the confirmation, then tells so and reloads (M10)', async () => {

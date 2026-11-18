@@ -1,6 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { api, failWith, type Recipe } from './api/client'
 import { matchesSearch } from './format'
+import { Icon } from './Icon'
+import { LoadingRows } from './Loading'
 import { cookingRoute, routes } from './useHashRoute'
 
 type Load = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; recipes: Recipe[] }
@@ -57,7 +59,7 @@ export function RecipesPage({ notice: openingNotice, onSignedOut }: { notice?: s
       </div>
       <p ref={noticeRef} role="status" className="notice" tabIndex={-1}>{notice}</p>
       <p role="alert" className="form-error">{error}</p>
-      {load.status === 'loading' && <p>Betöltés…</p>}
+      {load.status === 'loading' && <LoadingRows />}
       {load.status === 'error' && (
         <div>
           <p role="alert">{load.message}</p>
@@ -73,7 +75,10 @@ export function RecipesPage({ notice: openingNotice, onSignedOut }: { notice?: s
         </div>
       )}
       {load.status === 'ready' && load.recipes.length === 0 && (
-        <p className="empty">Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.</p>
+        <div className="empty-state">
+          <Icon name="recipes" size={48} />
+          <p className="empty">Nincs recepted. Vegyél fel egyet az „Új recept” gombbal.</p>
+        </div>
       )}
       {load.status === 'ready' && load.recipes.length > 0 && (
         <RecipeList recipes={load.recipes} busy={busy} onArchive={(r) => void archive(r)} />
@@ -87,17 +92,16 @@ function RecipeList({ recipes, busy, onArchive }: { recipes: Recipe[]; busy: boo
   const [search, setSearch] = useState('')
   const shown = recipes.filter((r) => matchesSearch(search, r.name, ...r.ingredients))
   return (
-    <div className="split">
-      <form role="search" className="filters panel side" onSubmit={(e) => e.preventDefault()}>
+    // ui_polish_minispec 19. (A6): the search above a grid of cards (3 / 2 / 1 columns by width).
+    <div className="content">
+      <form role="search" className="filters panel recipe-search" onSubmit={(e) => e.preventDefault()}>
         <label htmlFor="recipe-search">Keresés</label>
         <input id="recipe-search" type="search" aria-describedby="recipe-search-hint" value={search} onChange={(e) => setSearch(e.target.value)} />
         <p id="recipe-search-hint" className="hint">A recept nevében és a hozzávalóiban keresek.</p>
       </form>
-      <div className="content">
-        {shown.length === 0
-          ? <p className="empty">Nincs a keresésnek megfelelő recept.</p>
-          : <div className="panel">{shown.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => onArchive(r)} />)}</div>}
-      </div>
+      {shown.length === 0
+        ? <p className="empty">Nincs a keresésnek megfelelő recept.</p>
+        : <div className="recipe-grid">{shown.map((r) => <RecipeCard key={r.id} recipe={r} busy={busy} onArchive={() => onArchive(r)} />)}</div>}
     </div>
   )
 }

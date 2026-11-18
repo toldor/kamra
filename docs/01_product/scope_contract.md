@@ -91,6 +91,7 @@ Sorrendben, az MVP Definition of Done teljesülése után:
 
 1. **AI-receptötlet mentése:** az AI által generált recept szerkeszthető űrlapon jelenik meg, és jóváhagyás után „AI-javasolt” forrásjelöléssel a receptek közé menthető. Mentés után az ajánlásban ugyanúgy szerepel, mint bármely más recept. **Megvalósítva (`v0.7.0`, 2026-11-16):** a receptötletet a Kérdezz oldalon lehet kérni; a modell a `propose_recipe` függvénnyel adja (nem MCP-eszköz, nem olvas, nem ír), a „Szerkesztés és mentés” gomb az „Új recept” űrlapra viszi, a mentett recept „AI-javasolt” címkét kap ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 9., [P-28](../07_ai/prompt_log.md)).
 2. **Kipipált tételből készletbevitel:** a bevásárlólistán kipipált tétel előre kitöltött készletbeviteli formot nyit (hozzávaló, mennyiség, egység), amit a felhasználó lejárattal kiegészítve ment.
+3. **Kinézet és kezelhetőség** (a fejlesztő kérésére, 2026-11-17; **megvalósítva, `v0.8.0`**): Profilom panel és oldal, sötét téma, ragadós fejléc és 1024 px alatt alsó menüsáv, ikonok és saját lapikon, oldalcímek, „Nincs ilyen oldal”, lejárati csík, helykitöltő sorok, üres állapot ikonok, nyomtatható bevásárlólista, kategóriánkénti rendezés, asztalon összegző sáv, összecsukható beviteli kártyák, receptrács és kétoszlopos bevásárlólista, valamint egy élénkebb Kérdezz oldal ([ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [P-29](../07_ai/prompt_log.md)).
 
 ## 3. Korlátok
 
@@ -108,7 +109,7 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 | nov. 21 – dec. 4. | Hibajavítás; felhasználói kipróbálás 2. köre (nov. 21–27., 3–4 fő); javítás utáni újratesztelés; ellenőrzött telepítés másik gépen; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás |
 | dec. 5 – dec. 11. | Végső ellenőrzés | dec. 11.: végső belső ellenőrzési csomag |
 
-- **Feature freeze: nov. 18.** (a 2026-11-07-i átütemezés óta; a témavezetői határidő nov. 20.). Utána csak javítás és dokumentáció kerül be.
+- **Feature freeze: nov. 20.** (2026-11-17-én nov. 18-ról áthelyezve a kinézet bővítése miatt, a fejlesztő döntése; a témavezetői határidő nov. 20.). Utána csak javítás és dokumentáció kerül be.
 - **Hivatalos határidők** (a témavezető tájékoztatása szerint a TTIK kari naptára alapján, egyedileg ellenőrizendő): jelentkezés a januári záróvizsgára okt. 31., dolgozatbeadás dec. 19.
 - **Döntési pont – okt. 22–23.:** az 1. lépcső eredménye alapján a témavezetővel döntünk a januári záróvizsga tarthatóságáról; csúszás esetén későbbi záróvizsga.
 - A dolgozat a fejlesztéssel párhuzamosan készül: minden lépcső végén a hozzá tartozó fejezet.

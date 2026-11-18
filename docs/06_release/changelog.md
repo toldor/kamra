@@ -2,6 +2,25 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [0.8.0] – 2026-11-17 – Kinézet és kezelhetőség
+
+A fejlesztő kérésére (Stretch 3.). Részletek: [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [ux_flows.md](../01_product/ux_flows.md) „Keret és navigáció”, [P-29](../07_ai/prompt_log.md), [V-90 – V-98](../07_ai/verification_log.md).
+
+### Hozzáadva
+- Profilom panel (e-mail, Profilom oldal, téma, kijelentkezés) és Profilom oldal.
+- Sötét téma (Rendszer szerint / Világos / Sötét), a böngészőben megjegyezve.
+- Ragadós fejsáv; 1024 px alatt alsó menüsáv; ikonok a menüben; saját lapikon; oldalcímek; „Nincs ilyen oldal”.
+- Lejárati csík a készlettételeken, helykitöltő sorok betöltéskor, ikon az üres listáknál, nyomtatható bevásárlólista, kategóriánkénti rendezés a Készleten, mérsékelt animációk.
+- Asztali elrendezés: összegző sáv és szűrőgombok a Készleten, összecsukható beviteli kártyák, ragadós bal oszlop, receptrács, kétoszlopos bevásárlólista, szélesebb tartalom nagy képernyőn.
+- Élénkebb Kérdezz oldal: lekerekített doboz és buborékok, avatar, gépelő pöttyök, négy ikonos példa (receptkéréssel), folytató gombok, ikonos „Megnéztem” sor, karakterszámláló, másológomb.
+
+### Módosítva
+- A kijelentkezés a Profilom panelbe és a Profilom oldalra került; a feature freeze nov. 20-ra.
+- A „Csak a hamarosan lejárók” jelölőnégyzet helyett az összegző sáv gombja szűr.
+
+### Javítva
+- Sötét témában a menüpont hoverkor is olvasható.
+
 ## [0.7.0] – 2026-11-16 – Receptötlet a chatből
 
 A Stretch 1: a Kérdezz oldalon receptet lehet kérni, és mentés előtt az „Új recept” űrlapon átnézni. Részletek: [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 9., [test_report.md](../04_quality/test_report.md) („Chat-mérés”), [P-28](../07_ai/prompt_log.md), [V-82 – V-89](../07_ai/verification_log.md).

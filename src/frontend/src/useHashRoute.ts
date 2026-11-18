@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-// Q9: hash routes (#/, #/mit-fozzek, #/receptek, #/receptek/uj, #/bevasarlolista, #/kerdezz, #/fozes/{receptId}) need no server fallback and no router dependency.
+// Q9: hash routes (#/, #/mit-fozzek, #/receptek, #/receptek/uj, #/bevasarlolista, #/kerdezz, #/profil, #/fozes/{receptId}) need no server fallback and no router dependency.
 // The route lives in the URL, so after signing in again the user is back on the same page (ux_flows,
 // Lejárt munkamenet).
 export const routes = {
@@ -10,11 +10,15 @@ export const routes = {
   newRecipe: '#/receptek/uj',
   shopping: '#/bevasarlolista',
   chat: '#/kerdezz',
+  profile: '#/profil',
 } as const
+
+// ui_polish_minispec 7.: an unknown, non-empty address.
+export const notFoundRoute = 'not-found'
 
 const cookingPrefix = '#/fozes/'
 
-export type Route = (typeof routes)[keyof typeof routes] | `${typeof cookingPrefix}${string}`
+export type Route = (typeof routes)[keyof typeof routes] | `${typeof cookingPrefix}${string}` | typeof notFoundRoute
 
 export const cookingRoute = (recipeId: string): Route => `${cookingPrefix}${recipeId}`
 
@@ -22,12 +26,29 @@ export const cookingRoute = (recipeId: string): Route => `${cookingPrefix}${reci
 export const cookingRecipeId = (route: Route): string | null =>
   route.startsWith(cookingPrefix) ? route.slice(cookingPrefix.length) : null
 
-// An unknown or empty address shows the pantry.
+// An empty address shows the pantry; an unknown one says so (ui_polish_minispec 7.).
 const current = (): Route => {
   const hash = window.location.hash
+  if (hash === '' || hash === '#') return routes.pantry
   if ((Object.values(routes) as string[]).includes(hash)) return hash as Route
-  return hash.length > cookingPrefix.length && hash.startsWith(cookingPrefix) ? (hash as Route) : routes.pantry
+  return hash.length > cookingPrefix.length && hash.startsWith(cookingPrefix) ? (hash as Route) : notFoundRoute
 }
+
+// Review R5: every route but the cooking ones needs a title, or the compiler says so.
+const titles: Record<Exclude<Route, `${typeof cookingPrefix}${string}`>, string> = {
+  [routes.pantry]: 'Készlet',
+  [routes.recommendations]: 'Mit főzzek?',
+  [routes.recipes]: 'Receptek',
+  [routes.newRecipe]: 'Új recept',
+  [routes.shopping]: 'Bevásárlólista',
+  [routes.chat]: 'Kérdezz',
+  [routes.profile]: 'Profilom',
+  [notFoundRoute]: 'Nincs ilyen oldal',
+}
+
+// ui_polish_minispec 6.: the browser tab's title of a signed-in page.
+export const pageTitle = (route: Route): string =>
+  `${cookingRecipeId(route) ? 'Főzés' : titles[route as keyof typeof titles]} – Kamra`
 
 export function useHashRoute(): Route {
   const [route, setRoute] = useState(current)

@@ -64,11 +64,15 @@ describe('navigation', () => {
     expect(screen.getByRole('link', { name: 'Készlet' }).getAttribute('aria-current')).toBeNull()
   })
 
-  it('moves the focus to the new page heading, and treats an unknown address as the pantry', async () => {
+  // ui_polish_minispec Ü6: an unknown address has its own page (Layout.test.tsx); the link leads to the pantry.
+  it('moves the focus to the new page heading, from the unknown address page to the pantry and on', async () => {
     window.location.hash = '#/ismeretlen'
     backend([recommendations({})])
     render(<App />)
 
+    expect(await screen.findByRole('heading', { level: 1, name: 'Nincs ilyen oldal' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('link', { name: 'Ugrás a Készlethez' }))
+    window.location.hash = '#/'
     expect(await screen.findByRole('heading', { level: 1, name: 'Készlet' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Készlet' }).getAttribute('aria-current')).toBe('page')
 
@@ -135,6 +139,9 @@ describe('recipe suggestions', () => {
     render(<App />)
 
     expect(await screen.findByText('Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.')).toBeTruthy()
+    // ui_polish_minispec 10.
+    expect(screen.getByText('Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.')
+      .closest('.empty-state')?.querySelector('svg[aria-hidden="true"]')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Készlet rögzítése' }).getAttribute('href')).toBe('#/')
   })
 

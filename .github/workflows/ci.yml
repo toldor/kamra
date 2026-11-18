@@ -105,7 +105,12 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - name: Vulnerable npm packages
+      # The packages that reach the users block the build at high severity; the dev tools (vite, vitest) are reported
+      # only - V-99 (2026-11-17): picomatch GHSA-fc5q-39xc-vjpf has no fixed version yet. Blocking again once it has.
+      - name: Vulnerable npm packages (runtime)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Vulnerable npm packages (dev tools, reported only)
+        continue-on-error: true
         run: npm audit --audit-level=high
 
   e2e:
