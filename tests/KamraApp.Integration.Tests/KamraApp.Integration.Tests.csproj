@@ -22,4 +22,8 @@
     <ProjectReference Include="..\..\src\backend\KamraApp.Api\KamraApp.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\docs\01_product\metrics.sql" Link="metrics.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
