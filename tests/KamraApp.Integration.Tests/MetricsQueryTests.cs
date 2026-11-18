@@ -33,7 +33,7 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
         data.Cook(tomi, At(11, 3), Day(11, 3).AddDays(soon)); // N1: the last soon-expiring day
         data.Cook(tomi, At(11, 6), new DateOnly(2027, 1, 1)); // N2: not soon
         data.Cook(betti, At(11, 7), Day(11, 7).AddDays(soon + 1)); // N3: one day too late
-        data.Cook(tomi, At(11, 9, 0, 30), Day(11, 9).AddDays(soon)); // N4: still Nov 8 in UTC
+        data.Cook(tomi, At(11, 9, 0, 30), Day(11, 9)); // N4: still Nov 8 in UTC, but in the second week
         data.Cook(tomi, At(11, 10), Day(11, 10), Day(11, 11)); // N5: two soon items, one saved cooking
         data.Cook(tomi, At(11, 12), Day(11, 11)); // N6: already expired
         data.Cook(tomi, At(11, 16, 0, 30), Day(11, 16)); // N7: still Nov 15 in UTC, but after the window
