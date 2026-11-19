@@ -590,3 +590,13 @@ A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-
 - **Érintett fájlok:** a dolgozat (`kamra_dolgozat.docx`, 370 követett változtatás „Claude” szerzővel), `abrak/` (`er_a–c.mmd`, `er_1.png`, `er_2.png`, `oldalfolyam_a–b.mmd`, `oldalfolyam_1.png`, `oldalfolyam_2.png`, `biztonsag.mmd`, `biztonsag.png`, a régiek az `abrak/regi/` mappában).
 - **Validálás:** a válaszok állításai a kódban ellenőrizve (`SuggestionRules.cs`, `QuickEntry.tsx`, `ChatPage.tsx`, `McpChatTools.cs`, `SubmitItemProposals.cs`); a dokumentum Wordben megnyílik (370 változtatás, 28 komment); az új ábrák oldalai PDF-be exportálva és átnézve; a maradék „;” és „:” listázva.
 - **Mit változtattam / döntésem:** a Word-kommentjeimben ezt kértem: a „kézzel számolt” kifejezés sehol ne szerepeljen; a 3.4. (ER), a 3.6. (oldalfolyam) és a 7.1. (biztonsági) ábra legyen olvashatóbb, akár részekre bontva, a tartalmuk maradjon; a „nyelvi modell” helyett „nagy nyelvi modell”. Kérdeztem a chat és az MCP kapcsolatáról, a mozgásnapló láthatóságáról és növekedéséről, a bevásárlójavaslat mennyiségéről, a C4-nyilak irányáról, a „szerződés” jelentéséről, a literben és ml-ben rögzített tejről, a „Már van otthon” és a „Megnéztem” sor létezéséről. Külön kértem, hogy a mondatokból kerüljenek ki a pontosvesszők és a kettőspontok, helyettük vessző vagy pont legyen. A válaszokat és a követett változtatásokat Wordben átnéztem, és mindet elfogadtam. A commitot és a pusht a kérésemre az MI végezte (trailer nélkül). (A mezőt a kérésemre az MI írta be, az utasításaim alapján.)
+
+### P-33 – A `v0.8.0` kiadás
+- **Dátum:** 2026-11-19
+- **Cél:** a `v0.8.0` kiadása a `main` ágra (a kinézet és kezelhetőség, a CAP-12 és a leadási dokumentáció).
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** „mergeltem a pr-t, jöhet a v0.8.0 kiadás”.
+- **AI javaslat (eredeti):** a `v0.7.0` mintája szerint egy dokumentációs commit (a changelog `[Unreleased]` része a `[0.8.0]` alá, a dátum nov. 19., a README állapota, az önértékelés CI-kapuja), PR a `develop`-ba, majd „Release v0.8.0” PR a `main`-be, a tag a `main` merge-commitjára.
+- **Érintett fájlok:** `docs/06_release/changelog.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/07_ai/prompt_log.md`.
+- **Validálás:** a release ág CI-futása; a tag a `main` merge-commitjára mutat.
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]

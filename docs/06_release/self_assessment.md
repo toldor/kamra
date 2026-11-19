@@ -7,7 +7,7 @@ A leadandó csomag v1.2 4.5. pontja szerinti kötelező önértékelés, a 6.3. 
 | Kapu | Teljesül? | Evidence |
 |---|---|---|
 | Futtathatóság: a Quickstart alapján indul | Igen | [README.md](../../README.md) „Gyors indítás”; tiszta környezetben 1 p 26 mp ([manual_tests.md](../04_quality/manual_tests.md) MT-02) |
-| CI zöld a `main` ágon | Igen | a `v0.7.0` `main`-je: [run 44116327989](https://github.com/toldor/kamra/actions/runs/44116327989); a `v0.8.0` kiadása után frissítendő |
+| CI zöld a `main` ágon | Igen | a `v0.8.0` `main`-je: [a `main` ág CI-futásai](https://github.com/toldor/kamra/actions?query=branch%3Amain); a kiadott kód utolsó futása (`6149646`): [run 44627621751](https://github.com/toldor/kamra/actions/runs/44627621751) |
 | Nincs titok a repóban | Igen | gitleaks a teljes historyra minden CI-futásban ([ci.yml](../../.github/workflows/ci.yml)); [.env.example](../../.env.example) érték nélkül |
 | Legalább 30 automatizált teszt | Igen | 1220 teszt ([test_report.md](../04_quality/test_report.md)) |
 | AI-átláthatóság | Igen | [ai_manifest.md](../07_ai/ai_manifest.md), [prompt_log.md](../07_ai/prompt_log.md), [verification_log.md](../07_ai/verification_log.md) |
@@ -29,6 +29,5 @@ A leadandó csomag v1.2 4.5. pontja szerinti kötelező önértékelés, a 6.3. 
 
 ## A leadásig nyitott pontok
 
-- A `v0.8.0` kiadása a `main` ágra, a zöld CI-link frissítése a kapu-táblában.
 - A felhasználói kipróbálás 2. köre és az eredményei ([uat.md](../04_quality/uat.md)).
 - A demóforgatókönyv időmért, kézi végigjátszása ([demo_script.md](demo_script.md)).
