@@ -54,7 +54,7 @@ Elkészült mindhárom lépcső: a determinisztikus mag, az egy mondatos bevitel
 
 Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án, a `v0.8.0` (kinézet és kezelhetőség) nov. 17-én, a metrika-lekérdezések (CAP-12) nov. 19-én elkészültek. Következő mérföldkő: **nov. 20.** – a feature freeze, a dolgozat és a projektcsomag; utána az UAT 2. köre. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án, a `v0.8.0` (kinézet és kezelhetőség, a mérőszámok lekérdezése, CAP-12) nov. 19-én elkészült. Következő mérföldkő: **nov. 20.** – a feature freeze, a dolgozat és a projektcsomag; utána az UAT 2. köre. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Használat röviden
 
