@@ -39,7 +39,7 @@ Egy kezelt üzleti hiba (409) és a kérés összefoglaló sora, ugyanazzal a `c
 
 ## Metrikák
 
-Nincs külön metrikagyűjtés: egy gépen, kevés felhasználóval a kérésenkénti naplósor (útvonal, státusz, időtartam) és a `/health` elég a hibakereséshez ([deploy_runbook.md](deploy_runbook.md), Incidensek). A termékmetrikák (North Star, guardrailek) SQL-lekérdezésekből jönnek ([metrics.md](../01_product/metrics.md)).
+Nincs külön metrikagyűjtés: egy gépen, kevés felhasználóval a kérésenkénti naplósor (útvonal, státusz, időtartam) és a `/health` elég a hibakereséshez ([deploy_runbook.md](deploy_runbook.md), Incidensek). A termékmetrikák (North Star, guardrailek) SQL-lekérdezésekből jönnek ([metrics.sql](../01_product/metrics.sql), futtatás és definíciók: [metrics.md](../01_product/metrics.md)); a G3 LLM-válaszideje az LLM-hívás naplóeseményéből.
 
 ## Ismert hiányosságok
 

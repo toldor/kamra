@@ -2,6 +2,14 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [Unreleased]
+
+### Hozzáadva
+- A North Star és a három guardrail metrika lekérdezése ([metrics.sql](../01_product/metrics.sql), CAP-12), szintetikus adaton, kézzel számolt értékekkel tesztelve; futtatás: [metrics.md](../01_product/metrics.md).
+
+### Módosítva
+- A feature freeze (nov. 20.) alól egy kivétel: az opcionális heti e-mail (Stretch 4), ha a felhasználói kipróbálás 2. köréig elkészül.
+
 ## [0.8.0] – 2026-11-17 – Kinézet és kezelhetőség
 
 A fejlesztő kérésére (Stretch 3.). Részletek: [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [ux_flows.md](../01_product/ux_flows.md) „Keret és navigáció”, [P-29](../07_ai/prompt_log.md), [V-90 – V-98](../07_ai/verification_log.md).

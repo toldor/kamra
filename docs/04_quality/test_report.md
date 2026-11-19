@@ -23,14 +23,15 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Kategória | Cél | Jelenlegi | Átmegy |
 |---|---|---|---|
 | Unit | ≥ 18 | 616 | 616 |
-| Integrációs | ≥ 6 | 289 (+2 `LiveAI`, a CI-ban kiszűrve) | 289 |
+| Integrációs | ≥ 6 | 295 (+2 `LiveAI`, a CI-ban kiszűrve) | 295 |
 | Frontend (Vitest) | – | 268 | 268 |
 | E2E | ≥ 6 | 41 (×2 nézet, a nézethez kötöttek egyben) | 41 |
 | Negatív esetek | ≥ 5 | ≥ 374 (a `v0.3.1` óta nem számoltuk újra; minden új modul negatív esetekkel bővült) | – |
-| **Összesen** | **≥ 30** | **1214** | **1214** |
+| **Összesen** | **≥ 30** | **1220** | **1220** |
 
 ## Legutolsó futás eredménye
 
+- **2026-11-19 (CAP-12, `feature/metrics`):** PASS – .NET 616 unit (a lefedettségi kapu fölött) + 295 integrációs (a `LiveAI` kihagyva; 6 új a metrika-lekérdezésekre); `dotnet format` és `build -warnaserror` tiszta; Playwright `quick-entry.spec.ts` 8/8 az LLM-csonkkal (a G3 naplós parancsának kipróbálásához); a frontend nem változott. Mutációs ellenőrzés: 36 SQL-mutáció és az `Expiry.SoonExpiringDays` állandó, 37/37 elbukott – az „UTC-nap” mutáció elsőre túlélt, a spec-review pedig öt túlélő határ-mutációt és egy nyári időszámítási hibát talált; a tesztadat erősítve, a G2 javítva ([V-100](../07_ai/verification_log.md)). CI: lásd a P-30-at.
 - **2026-11-17 (`v0.8.0`, `feature/ui-polish`):** PASS – Vitest 268/268; Playwright 73/73 (41 teszt × asztali Chrome és 360 px, 9 kihagyva: a nézethez kötött tesztek a másik nézetben); a backend nem változott. Mutációs ellenőrzés: S1 9/9 + e2e 1/1, S1-review 3/3, S2 7/7 (+1 egyenértékű), S3 7/7, S4 5/5, S2–S4-review 3/3, S5 7/7, S6 8/8, S6-review 4/4 (+ az e2e javítások előtt pirosak) – hat teszt a mutáció után erősítve ([V-90](../07_ai/verification_log.md), [V-96](../07_ai/verification_log.md)). CI: [run 44160245178](https://github.com/toldor/kamra/actions/runs/44160245178) (#131, `ded39b8`), mind a négy job zöld; az e2e a CI-ban első futásra átment.
 - **2026-11-16 (`v0.7.0`, `feature/recipe-idea`):** PASS – .NET 616 unit + 289 integrációs (a `LiveAI` kihagyva), a lefedettségi kapu fölött; Vitest 199/199; Playwright 44/44 (22 teszt × asztali Chrome és 360 px) az LLM-csonkkal. Mutációs ellenőrzés: T1 21/21, T3 14/14, T3-review 7/7 – mind elbukott. CI: [run 44106858844](https://github.com/toldor/kamra/actions/runs/44106858844) (#124, `8fb6ab0`), mind a négy job zöld.
 - **2026-11-12 (`v0.6.0`, L3–L5, `feature/us-6-chat`):** PASS – Vitest 187/187, Playwright 42/42 (21 teszt × asztali Chrome és 360 px); a backend nem változott; mutáció L3–L5 5/5. CI: a `feature/us-6-chat` → `develop` PR checkjei.
@@ -101,6 +102,7 @@ Cél: 30+ automatizált teszt (≥18 unit, ≥6 integrációs, ≥6 e2e/contract
 | Ellenséges tesztek ([AdversarialItemProposalApiTests.cs](../../tests/KamraApp.Integration.Tests/AdversarialItemProposalApiTests.cs)) | Integrációs | A külső review (Antigravity) tesztjeiből a nem ismétlődők: a modell nem pozitív mennyisége, túl hosszú lejárat-szövege, a hibatörzsben nincs szivárgás | ✅ 5/5 |
 | Mondatos bevitel felülete ([QuickEntry.test.tsx](../../src/frontend/src/QuickEntry.test.tsx)) | Unit (Vitest) | A panel helye és kapcsolója, a kártyák, a szövegek (a „Már van otthon” két alakja), a hibakódok szövegei, jóváhagyás és kihagyás minden hibaúttal, fókusz, `aria-describedby`, a dátum ragjai | ✅ 35/35 |
 | E2E ([quick-entry.spec.ts](../../tests/e2e/quick-entry.spec.ts)) | E2E (Playwright) | Az LLM-csonkkal: mondat → kártyák → kihagyás → jóváhagyás → a készletben; kiesés és értelmezhetetlen válasz: a szöveg megmarad, egy kattintással a kézi űrlap | ✅ 3/3 (×2) |
+| Metrika-lekérdezések ([MetricsQueryTests.cs](../../tests/KamraApp.Integration.Tests/MetricsQueryTests.cs)) | Integrációs | A [metrics.sql](../01_product/metrics.sql) valódi PostgreSQL-en, metrikánként külön adatbázisban, kézzel számolt értékekkel: North Star (0,50 és 1,00, a +2 napos határ és az éjfél utáni főzés), G1 39,3%, G2 25,0% (a nyári időben regisztrált háztartással), G3 p50 35 és p90 82 mp, az ablakok első és utolsó napjával; üres adatbázison nincs nullával osztás (negatív); dátum nélkül a mai budapesti nap ([metrics.md](../01_product/metrics.md)) | ✅ 6/6 |
 
 ## LLM-mérés (T0, US-2)
 

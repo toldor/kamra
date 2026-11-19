@@ -826,3 +826,27 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** `npm audit --omit=dev` (0 sérülékenység); `npm ls picomatch` (csak `vite`, `vitest`, `tinyglobby`, `fdir` alatt); az `npm audit fix --force` a `vitest`-et 3.1.4-re vinné vissza, ezért nem alkalmazható.
 - **Eredmény:** PASS. A fejlesztő döntése (A): a frontend kapuja a futásidejű csomagokra blokkoló, a teljes ellenőrzés jelző (`continue-on-error`), dokumentált elfogadott kockázatként ([privacy_licensing.md](../05_security_ops/privacy_licensing.md) „Sérülékenységek”).
 - **Következtetés:** a javított `picomatch` megjelenésekor a teljes ellenőrzést vissza kell állítani blokkolóra.
+
+### V-100 – „A metrika-lekérdezések a definíció szerint számolnak”
+- **Dátum:** 2026-11-19
+- **Állítás:** A [metrics.sql](../01_product/metrics.sql) négy lekérdezése a [metrics.md](../01_product/metrics.md) definícióit valósítja meg (a hamarosan lejáró határ, a budapesti nap, az aktív háztartás, a G1 eredeti és pazarolt mennyisége, a mondatonkénti számolás, az ablakok határai).
+- **Kockázat:** Közepes (a North Star és a guardrailek a dolgozat értékelésének alapjai; egy rossz határ csendben torzít).
+- **Ellenőrzési módszer:** kézzel számolt értékek metrikánként külön, frissen migrált adatbázisban ([MetricsQueryTests.cs](../../tests/KamraApp.Integration.Tests/MetricsQueryTests.cs)); mutációs ellenőrzés a lefordított tesztkönyvtár SQL-másolatán (a forrás érintetlen), és a Domain `Expiry.SoonExpiringDays` állandóján tárolás–visszaírás módszerrel; két review (Claude, két külön ügynök: kódolási szabályok és spec).
+- **Eredmény:** PASS a javítások után. Az első körben 25 SQL-mutációból 24 és az állandó elbukott; az „UTC-nap” mutáció túlélt (két eset egymást kompenzálta), a teszt erősítve. A spec-review további öt határ-mutációt talált, amely túlélt volna (az ablakok szűkítése), és egy valódi hibát: a G2 14 napja `interval '14 days'`-szel UTC-munkamenetben 336 óra, így a nyári időben regisztráltnál egy órát csúszott – javítva (budapesti falióra), tesztesettel. A végső kör: 36 SQL-mutáció és az állandó, 37/37 elbukott.
+- **Következtetés:** az ablakhatárokat mindkét irányban (szűkítés és tágítás) kell mutálni; az elsőként megírt tesztadat csak a tágítást fogta meg.
+
+### V-101 – „A futtatási parancsok a Compose-stacken működnek”
+- **Dátum:** 2026-11-19
+- **Állítás:** A `metrics.md` két parancsa (a mai nap és a `PGOPTIONS`-szal megadott nap) a helyi Docker Compose adatbázisán lefut, a `postgres:18` image ismeri az `Europe/Budapest` zónát, és a G3 naplós PowerShell-parancsa kiszámolja a p95-öt.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** futtatás a helyi stacken (`kamra`), a `kamra.as_of=2026-11-30` beállítással (a hetek nov. 16-ra és 23-ra léptek); a naplós parancs az elkülönített e2e-stacken a `quick-entry.spec.ts` után (LLM-csonk).
+- **Eredmény:** PASS – a lekérdezések kilépési kódja 0; a dátum-felülírás hat; a naplóból 8 LLM-hívás, p95 95 ms (a csonk válaszideje).
+- **Következtetés:** a parancsok a dokumentált formában használhatók; a valódi LLM-válaszidőt a tesztfelhasználói mérés adja.
+
+### V-102 – „A G1 a mozgáskori lejárattal számol” (a data_model korábbi állítása)
+- **Dátum:** 2026-11-19
+- **Állítás:** A `data_model.md` (az MI javaslata egy PR-review nyomán, [P-14](prompt_log.md)): „a metrikák (megmentett főzés, G1) az `ExpiryDateAtMovement`-tel számolnak”.
+- **Kockázat:** Közepes (téves pazarlási arány).
+- **Ellenőrzési módszer:** a kód végigkövetése: a lejárat szerkesztése (`PantryItem.UpdateDetails`) nem ír mozgást, ezért egy mozgás nélkül javított lejárat a mozgáskori dátumon marad; teszteset: nov. 5-i tétel, mozgás nélkül nov. 20-ra javítva.
+- **Eredmény:** **FAIL** a G1-re: a mozgáskori lejárat szerint a még jó tétel lejártnak és 100%-ban pazaroltnak látszana. A North Starra az állítás helyes. Javítva: a G1 a tétel aktuális lejáratával számol; a `data_model.md` és a `metrics.md` pontosítva, a teszt a javított lejáratú tételt ellenőrzi.
+- **Következtetés:** egy „a múltat védő” mező csak azokra az adatokra véd, amelyek változását naplózzuk; a definíciót a tényleges írási utakkal kell összevetni.

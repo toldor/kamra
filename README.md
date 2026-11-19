@@ -37,10 +37,12 @@ A projekt célja egy olyan mérnökileg ellenőrizhető rendszer megtervezése �
 4. főzés után következetesen frissíti a készletet;
 5. az AI-t csak ellenőrzött, validált és felhasználói jóváhagyással működő folyamatokban használja.
 
-## Jelenlegi állapot – 2026. november 8.
+## Jelenlegi állapot – 2026. november 19.
 
-Elkészült az 1. lépcső, a determinisztikus mag, és a 2. lépcső, az egy mondatos bevitel.
+Elkészült mindhárom lépcső: a determinisztikus mag, az egy mondatos bevitel és a csak olvasó chat, a receptötlet (Stretch 1) és a kinézet bővítése (Stretch 3).
 
+- chat (US-6): kérdés a készletről, a lejáró tételekről, az ajánlásról és a bevásárlólistáról, négy csak olvasó MCP-eszközzel; receptötlet kérésre, amely az „Új recept” űrlapon átnézhető és menthető ([ADR-0010](docs/02_architecture/adr/0010-mcp-integracio.md));
+- a siker mérése: a North Star és a három guardrail lekérdezése, szintetikus adaton, kézzel számolt értékekkel ellenőrizve ([metrics.md](docs/01_product/metrics.md));
 - egy mondatos bevitel (US-2): a mondatból az AI (Google Gemini) szerkeszthető tételjavaslatokat készít, jóváhagyás nélkül semmi nem kerül a készletbe; kiesésnél a szöveg megmarad, a kézi űrlap egy kattintásra ([ADR-0009](docs/02_architecture/adr/0009-llm-szolgaltato.md));
 - készlettételek rögzítése, szerkesztése, csökkentése okkal és törlése; becsült, jelölt lejárat; keresés és szűrők; alapegységű tárolás és készletmozgás-napló;
 - ajánlás: elkészíthető és majdnem elkészíthető receptek, indoklás a hamarosan lejáró hozzávalókkal, hiány „van / kell” bontásban;
@@ -52,7 +54,7 @@ Elkészült az 1. lépcső, a determinisztikus mag, és a 2. lépcső, az egy mo
 
 Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án, a `v0.8.0` (kinézet és kezelhetőség) nov. 17-én elkészült. Következő mérföldkő: **nov. 20.** – a feature freeze, a dolgozat és a projektcsomag; az UAT 2. köre nov. 21–27. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án, a `v0.8.0` (kinézet és kezelhetőség) nov. 17-én, a metrika-lekérdezések (CAP-12) nov. 19-én elkészültek. Következő mérföldkő: **nov. 20.** – a feature freeze, a dolgozat és a projektcsomag; utána az UAT 2. köre. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Tervezett MVP-lépcsők
 
