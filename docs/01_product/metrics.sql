@@ -96,9 +96,13 @@ eligible AS (
            (SELECT count(*) FROM entries e
             WHERE e."HouseholdId" = h."Id"
               AND e.saved_at >= h."CreatedAt"
-              AND e.saved_at < h."CreatedAt" + interval '14 days') AS entry_count
-    FROM "Households" h CROSS JOIN params p
-    WHERE h."CreatedAt" + interval '14 days' <= p.end_at
+              AND e.saved_at < h.day_14) AS entry_count
+    FROM (SELECT "Id", "CreatedAt",
+                 -- 14 days on the Budapest wall clock, so a daylight saving change does not move it by an hour
+                 (("CreatedAt" AT TIME ZONE 'Europe/Budapest') + interval '14 days') AT TIME ZONE 'Europe/Budapest' AS day_14
+          FROM "Households") h
+    CROSS JOIN params p
+    WHERE h.day_14 <= p.end_at
 )
 SELECT 'g2_retention' AS metric, count(*) AS eligible_households,
        count(*) FILTER (WHERE entry_count >= 3) AS retained_households,

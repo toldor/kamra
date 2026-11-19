@@ -1,3 +1,4 @@
+using KamraApp.Application.Common;
 using KamraApp.Domain.Cookings;
 using KamraApp.Domain.Households;
 using KamraApp.Domain.Ingredients;
@@ -65,7 +66,7 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
 
         var c = data.Item(home, 500, Day(11, 7), added);
         data.Change(c, 250, MovementReason.Consumed, At(11, 4));
-        data.Change(c, 0, MovementReason.Consumed, At(11, 17)); // after the window: 250 was still there, 50%
+        data.Change(c, 0, MovementReason.Consumed, At(11, 16, 0, 0)); // at the end of the window: 250 was still there, 50%
 
         var d = data.Item(home, 200, Day(11, 8), added);
         data.Change(d, 100, MovementReason.Corrected, At(10, 21));
@@ -77,6 +78,12 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
         var f = data.Item(home, 200, Day(11, 5), added);
         data.Change(f, 0, MovementReason.Consumed, At(11, 7)); // eaten after the expiry: 0%
 
+        var first = data.Item(home, 100, Day(11, 2), added);
+        data.Change(first, 0, MovementReason.Discarded, At(11, 3)); // the first day of the window: 100%
+
+        var last = data.Item(home, 100, Day(11, 15), added);
+        data.Change(last, 0, MovementReason.Consumed, At(11, 15, 23, 30)); // the last day, eaten just in time: 0%
+
         data.Item(home, 100, Day(11, 1), added); // before the window
         data.Item(home, 100, Day(11, 16), added); // has not expired on the evaluation day
 
@@ -85,7 +92,7 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
 
         var waste = (await data.ReadAsync(AsOf)).Waste;
 
-        waste.Should().Be(new WasteResult(5, 35.0m));
+        waste.Should().Be(new WasteResult(7, 39.3m)); // (0 + 25 + 50 + 100 + 0 + 100 + 0) / 7
     }
 
     [Fact]
@@ -93,10 +100,14 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
     {
         await using var data = await Scenario.CreateAsync(databases);
 
+        // Registered in summer time: 14 days later is Nov 3 12:00 in Budapest, an hour after 14 x 24 hours.
         var kept = data.Household(At(10, 20));
         data.Item(kept, 100, Day(12, 1), At(10, 21));
-        data.Item(kept, 100, Day(12, 1), At(10, 22));
         data.Sentence(kept, At(10, 23), 60, 60, 60); // three items, one entry
+        data.Item(kept, 100, Day(12, 1), At(11, 3, 11, 30));
+
+        data.Household(At(11, 2, 0, 0)); // exactly 14 days old on the evaluation day: counts, without entries
+        data.Household(At(11, 2, 0, 1)); // a minute younger: does not
 
         var oneSentence = data.Household(At(10, 25));
         data.Sentence(oneSentence, At(10, 26), 60, 60, 60);
@@ -116,7 +127,7 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
 
         var retention = (await data.ReadAsync(AsOf)).Retention;
 
-        retention.Should().Be(new RetentionResult(3, 1, 33.3m));
+        retention.Should().Be(new RetentionResult(4, 1, 25.0m));
     }
 
     [Fact]
@@ -125,10 +136,10 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
         await using var data = await Scenario.CreateAsync(databases);
         var home = data.Household(At(10, 1));
 
-        data.Sentence(home, At(11, 3), 20);
+        data.Sentence(home, At(11, 2, 0, 0), 20); // the first minute of the window
         data.Sentence(home, At(11, 4), 10, 30); // two items: 30 seconds
         data.Sentence(home, At(11, 5), 40);
-        data.Sentence(home, At(11, 6), 100);
+        data.Sentence(home, At(11, 15, 23, 50), 100); // the last minutes of the window
         data.RejectedSentence(home, At(11, 7));
         data.Sentence(home, At(11, 1, 23, 59), 5); // approved before the window
         data.Sentence(home, At(11, 16), 5); // approved after it
@@ -157,23 +168,29 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
     public async Task Without_a_date_the_queries_use_the_current_day_in_Budapest()
     {
         await using var data = await Scenario.CreateAsync(databases);
-        var today = KamraApp.Application.Common.Today.Of(DateTimeOffset.UtcNow);
+        var before = Today.Of(DateTimeOffset.UtcNow);
+
+        var weeks = (await data.ReadAsync(asOf: null)).NorthStar.Select(w => w.WeekStart).ToList();
+
+        // Read on both sides of the query, so a run across midnight in Budapest cannot fail it.
+        var after = Today.Of(DateTimeOffset.UtcNow);
+        (weeks.SequenceEqual(LastTwoWeeks(before)) || weeks.SequenceEqual(LastTwoWeeks(after)))
+            .Should().BeTrue($"the weeks were {string.Join(", ", weeks)}");
+    }
+
+    private static readonly TimeZoneInfo Budapest = TimeZoneInfo.FindSystemTimeZoneById("Europe/Budapest");
+
+    private static List<DateOnly> LastTwoWeeks(DateOnly today)
+    {
         var thisMonday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
-
-        var weeks = (await data.ReadAsync(asOf: null)).NorthStar;
-
-        weeks.Select(w => w.WeekStart).Should().Equal(thisMonday.AddDays(-14), thisMonday.AddDays(-7));
+        return [thisMonday.AddDays(-14), thisMonday.AddDays(-7)];
     }
 
     private static DateOnly Day(int month, int day) => new(2026, month, day);
 
     // A Budapest wall-clock time as the UTC instant the application stores.
-    private static DateTimeOffset At(int month, int day, int hour = 12, int minute = 0)
-    {
-        var budapest = TimeZoneInfo.FindSystemTimeZoneById("Europe/Budapest");
-        var local = new DateTime(2026, month, day, hour, minute, 0, DateTimeKind.Unspecified);
-        return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(local, budapest));
-    }
+    private static DateTimeOffset At(int month, int day, int hour = 12, int minute = 0) =>
+        new(TimeZoneInfo.ConvertTimeToUtc(new DateTime(2026, month, day, hour, minute, 0, DateTimeKind.Unspecified), Budapest));
 
     private sealed record NorthStarWeek(DateOnly WeekStart, long SavedCookings, long ActiveHouseholds, decimal? PerHousehold);
 
@@ -206,9 +223,17 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
         {
             var connectionString = await databases.CreateDatabaseAsync(Cancellation);
             var db = MetricsDatabases.Context(connectionString);
-            var milk = await db.Ingredients.SingleAsync(i => i.SeedKey == "tej", Cancellation);
-            var recipeId = await db.Recipes.Select(r => r.Id).FirstAsync(Cancellation);
-            return new Scenario(connectionString, db, milk, recipeId);
+            try
+            {
+                var milk = await db.Ingredients.SingleAsync(i => i.SeedKey == "tej", Cancellation);
+                var recipeId = await db.Recipes.Select(r => r.Id).FirstAsync(Cancellation);
+                return new Scenario(connectionString, db, milk, recipeId);
+            }
+            catch
+            {
+                await db.DisposeAsync();
+                throw;
+            }
         }
 
         public Guid Household(DateTimeOffset registeredAt)
@@ -229,8 +254,7 @@ public sealed class MetricsQueryTests(MetricsDatabases databases) : IClassFixtur
 
         public PantryItem Item(Guid household, decimal millilitres, DateOnly expiry, DateTimeOffset at)
         {
-            var (item, movement) = PantryItem.Create(household, _milk, millilitres, Unit.Ml, Category.Dairy, expiry,
-                KamraApp.Application.Common.Today.Of(at), at);
+            var (item, movement) = PantryItem.Create(household, _milk, millilitres, Unit.Ml, Category.Dairy, expiry, Today.Of(at), at);
             _db.AddRange(item, movement);
             return item;
         }
@@ -338,6 +362,7 @@ public sealed class MetricsDatabases : IAsyncLifetime
 
     public async Task<string> CreateDatabaseAsync(CancellationToken cancellationToken)
     {
+        // Identifiers cannot be parameters; the name is a constant prefix and a Guid, never outside input.
         var name = $"metrics_{Guid.NewGuid():N}";
         await ExecuteAsync($"""CREATE DATABASE "{name}" TEMPLATE "{Template}" """, cancellationToken);
         return ConnectionString(name);
