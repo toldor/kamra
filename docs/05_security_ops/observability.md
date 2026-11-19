@@ -39,7 +39,15 @@ Egy kezelt üzleti hiba (409) és a kérés összefoglaló sora, ugyanazzal a `c
 
 ## Metrikák
 
-Nincs külön metrikagyűjtés: egy gépen, kevés felhasználóval a kérésenkénti naplósor (útvonal, státusz, időtartam) és a `/health` elég a hibakereséshez ([deploy_runbook.md](deploy_runbook.md), Incidensek). A termékmetrikák (North Star, guardrailek) SQL-lekérdezésekből jönnek ([metrics.md](../01_product/metrics.md)).
+Nincs külön metrikagyűjtő rendszer (Prometheus, OpenTelemetry): egy gépen, kevés felhasználóval a kérésenkénti naplósor (útvonal, státusz, időtartam) és a `/health` elég a hibakereséshez. A három üzemeltetési metrika ezért a naplóból számolható; definíciójuk és lekérdezésük:
+
+| Metrika | Definíció | Forrás a naplóban | Célérték | Lekérdezés (PowerShell, a repó gyökeréből) |
+|---|---|---|---|---|
+| **M1 – API-válaszidő** | A HTTP-kérések p95 időtartama, végpontonként vagy összesen | a kérés összefoglaló sora: `RequestPath`, `StatusCode`, `Elapsed` (ms) | az ajánlásnál p95 ≤ 300 ms (QA-5, [performance.md](../04_quality/performance.md)) | `$t = docker compose logs --no-log-prefix api \| % { try { $_ \| ConvertFrom-Json -EA Stop } catch {} } \| ? { $_.RequestPath -and $_.StatusCode } \| % { [double]$_.Elapsed } \| sort; $t[[math]::Ceiling($t.Count*0.95)-1]` |
+| **M2 – Váratlan szerverhiba-arány** | Az 500-as válaszok aránya az összes kéréshez; a 502 és az 503 az LLM-kiesés, azt az M3 méri | a kérés összefoglaló sora: `StatusCode` | 0% (minden 500-as hiba incidens, [deploy_runbook.md](deploy_runbook.md) 1. incidens) | `$r = docker compose logs --no-log-prefix api \| % { try { $_ \| ConvertFrom-Json -EA Stop } catch {} } \| ? { $_.RequestPath -and $_.StatusCode }; ($r \| ? { $_.StatusCode -eq 500 }).Count / $r.Count` |
+| **M3 – LLM-hívások kimenete és ideje** | Az LLM-próbálkozások aránya kimenetenként (`ok`, `invalid`, `timeout`, `unavailable`, `refused`) és a p95 időtartam | az LLM-hívás eseménye: `Outcome`, `DurationMs` | p95 ≤ 10 mp (QA-5); a nem `ok` arány 5% alatt | `docker compose logs --no-log-prefix api \| % { try { $_ \| ConvertFrom-Json -EA Stop } catch {} } \| ? { $_.Outcome } \| group Outcome \| select Name, Count` (a p95: [metrics.md](../01_product/metrics.md), G3) |
+
+A naplót a konténer újralétrehozása törli, ezért a metrikák csak a konténer életidejére számolhatók (Ismert hiányosságok). Kipróbálva (2026-11-19) az LLM-csonkos stacken a `quick-entry` és a `chat` e2e-tesztek után: M1 413 kérés, p95 112 ms; M2 0 / 413 (a 4 db 502 és a 20 db 503 a tesztek szándékos kiesései); M3 14 `ok`, 8 `unavailable`, 2 `invalid`. Figyelem: a PowerShell a mezőnevekben nem különbözteti meg a kis- és nagybetűt, ezért a szűrő a kérés összefoglaló sorát a `RequestPath` és a `StatusCode` együttesével azonosítja. Egy gépes telepítésnél ez a hibakereséshez elég ([deploy_runbook.md](deploy_runbook.md), Incidensek). A termékmetrikák (North Star, guardrailek) SQL-lekérdezésekből jönnek ([metrics.sql](../01_product/metrics.sql), futtatás és definíciók: [metrics.md](../01_product/metrics.md)); a G3 LLM-válaszideje az LLM-hívás naplóeseményéből.
 
 ## Ismert hiányosságok
 

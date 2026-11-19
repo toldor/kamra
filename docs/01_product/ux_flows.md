@@ -59,7 +59,7 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Cél:** Tomi egy kérdéssel megtudja, mi jár le, mit főzhet, vagy mi van a listán, anélkül hogy végignézné az oldalakat.
 - **Előfeltétel:** bejelentkezett felhasználó, bekapcsolt chat (a „Kérdezz” menüpont csak ekkor látszik).
 - **Lépések:**
-  1. A „Kérdezz” oldalon: *„Kérdezd meg, mi van otthon, mi jár le hamarosan, mit főzhetsz, vagy mi van a bevásárlólistán. A válaszhoz csak a saját adataidat nézem meg, és semmit nem módosítok.”* Alatta: *„A beszélgetést nem mentjük el: másik oldalra lépve megmarad, de az oldal újratöltésekor vagy kijelentkezéskor újrakezdődik.”* és három példakérdés.
+  1. A „Kérdezz” oldalon: *„Kérdezd meg, mi van otthon, mi jár le hamarosan, mit főzhetsz, vagy mi van a bevásárlólistán. A válaszhoz csak a saját adataidat nézem meg, és semmit nem módosítok.”* Alatta: *„A beszélgetést nem mentjük el: másik oldalra lépve megmarad, de az oldal újratöltésekor vagy kijelentkezéskor újrakezdődik.”* és négy ikonos példakérdés, köztük a receptkérés (*„Adj egy receptet abból, ami otthon van.”*); fölöttük üdvözlés: *„Szia! Miben segíthetek a kamrával kapcsolatban?”*.
   2. Tomi kérdez (Enter küld, Shift+Enter új sor); a kérdése azonnal látszik, a gomb „Gondolkodom…”.
   3. A válasz sima szövegként jelenik meg, alatta: *„Megnéztem: a hamarosan lejáró tételeket és az ajánlást.”* A következő kérdés az előzménnyel (legfeljebb 10 üzenet) megy; az „Új beszélgetés” gomb törli az előzményt.
   4. Ha módosítást kér („Töröld a joghurtot”), a válasz megmondja, melyik oldalon teheti meg; semmi nem módosul.
@@ -67,6 +67,17 @@ A három fő felhasználói útvonal, a hibahelyzetek, az üres állapotok és a
 - **Sikerkritérium:** a válasz a saját, aktuális adatokból jön; egy hamarosan lejáró tétel a nevével és a dátumával szerepel.
 - **Hibák:** kiesésnél *„Most nem tudok válaszolni, mert a szövegfeldolgozó nem válaszol. A kérdésed megmaradt: próbáld újra pár perc múlva.”*; értelmezhetetlen válasznál *„Erre most nem sikerült válaszolnom. Kérdezd meg másképp, vagy nézd meg közvetlenül a Készlet, a Mit főzzek? vagy a Bevásárlólista oldalon.”*; túl sok kérdésnél *„Most túl sok kérdést küldtél egymás után. Várj néhány percet.”* A kérdés a mezőben marad, és nem kerül az előzménybe.
 - **Megvalósítva** ([ChatPage.test.tsx](../../src/frontend/src/ChatPage.test.tsx), [chat.spec.ts](../../tests/e2e/chat.spec.ts)).
+
+## Keret és navigáció (`v0.8.0`)
+
+- A fejsáv görgetéskor fent marad. 1024 px alatt a menü a képernyő alján álló sáv (ikon + teljes név, a „Bevásárló­lista” két sorban); fölötte a fejsáv egy sor: „Kamra” és „Profilom”.
+- A „Profilom” gomb lenyíló panelt nyit: *„Bejelentkezve: {e-mail}”*, „Profilom” link, „Téma” (*Rendszer szerint · Világos · Sötét*), „Kijelentkezés”. Bezárul Escape-re (a fókusz a gombra kerül), kívülre kattintásra, ha a fókusz a panelen kívüli vezérlőre kerül, és oldalváltáskor.
+- A Profilom oldal (`#/profil`): az e-mail-cím, a téma, *„A téma ebben a böngészőben marad meg.”*, *„A kijelentkezés minden eszközödön kiléptet.”* és „Kijelentkezés”.
+- Ismeretlen cím: *„Nincs ilyen oldal”*, *„A megnyitott cím nem létezik a Kamrában.”*, „Ugrás a Készlethez”. A böngészőfül címe az oldal neve („Receptek – Kamra”).
+- A Készleten a tételek bal szélén csík jelzi a sürgősséget (lejárt, hamarosan lejár, becsült lejárat); „Rendezés: Lejárat szerint · Kategóriák szerint” – kategóriánként becsukható csoportok, a csoporton belül lejárat szerint. A Bevásárlólista „Nyomtatás” gombja fejléc, menü és gombok nélküli lapot nyomtat, sötét témában is sötét szöveggel.
+- A Készlet tetején összegző sáv a teljes készletből: *„{n} lejárt”* és *„{n} hamarosan lejár”* szűrőgomb (kizárják egymást; 0-nál nem aktív) és *„{n} tétel”*; a szűrők (keresés, kategória, rendezés) a lista tetején. A „Mondatos bevitel” és az „Új tétel” összecsukható kártya (a mondatos bevitel nyitva, az „Új tétel” csukva; az „Inkább tételenként rögzítem” kinyitja). Asztalon a bal oszlop görgetéskor fent marad, ha elfér.
+- Asztalon a Receptek kártyarácsban (3 / 2 / 1 oszlop), a Bevásárlólistán „A listád” bal oldalt, a „Javaslatok” jobb oldalt, alattuk a teljes szélességű „Minimumszintek”; 1440 px-től szélesebb tartalom.
+- A Kérdezz oldalon: lekerekített doboz és buborékok, a Kamra válaszai mellett befőttesüveg, várakozás közben három pötty, a „Megnéztem:” sor ikonos címkékkel (a felolvasott mondat változatlan), a legutolsó válasz alatt folytató gomb (*„Másik ötlet”* receptötlet után, *„Mit főzzek ezekből?”* a lejáró tételek után), karakterszámláló (*„{n} / 500”*), és ikonos másológomb (*„Válasz másolása”*; hibánál *„Nem sikerült”*).
 
 ## Üres állapotok
 
@@ -113,6 +124,10 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 - A színek kontrasztját teszt őrzi ([tokens.test.ts](../../src/frontend/src/tokens.test.ts)); a sötét fejsávon a fókuszkeret a fejsáv világos szövegszíne.
 - Készlettétel mentése után a fókusz a „Hozzávaló” mezőre kerül, és az élő régió kimondja: *„Felvettem a kamrádba: tejföl 20 dkg.”* (L1, [PantryPage.test.tsx](../../src/frontend/src/PantryPage.test.tsx)).
 - A főzés összegzésének fókuszt kapó címe leírásként a levonás, az elfogyott tételek és a bevásárlójavaslat mondatait is felolvastatja (L2, [CookingPage.test.tsx](../../src/frontend/src/CookingPage.test.tsx)); a chat üzenetlistája `role="log"`, a két oldal „Te:” / „Kamra:” rejtett címkével.
+- A ragadós fejsáv és az alsó sáv nem takarja a fókuszt: a görgetési margó legalább akkora (WCAG 2.4.11, [frame.spec.ts](../../tests/e2e/frame.spec.ts)).
+- A menüpontok neve mobilon is a teljes név (WCAG 2.5.3).
+- Csökkentett mozgás beállításnál nincs animáció.
+- A sötét téma ugyanazokat a kontrasztpárokat teljesíti ([tokens.test.ts](../../src/frontend/src/tokens.test.ts)).
 
 **Ellenőrzés:** a Chrome Lighthouse akadálymentességi auditja a készlet, a „Mit főzzek?” és a bevásárlólista oldalon (legalább 90 pont), valamint egy kézi billentyűzetes bejárás. Opcionális bővítés: automatizált axe-core ellenőrzés az e2e tesztekben (új függőség, jóváhagyás kell).
 
@@ -132,6 +147,7 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 - A javaslatkártyák csak a böngészőfülben élnek: az oldal újratöltése vagy elhagyása után a döntés nélkül hagyott javaslatok nem jelennek meg újra (a mondatot újra kell küldeni). A „Már van otthon” tájékoztató a beküldés pillanatának készletét mutatja.
 - Az „Új hozzávaló” csak a készlet- és a receptűrlapon érhető el, a bevásárlólistán és a minimumszintnél nem. A saját hozzávaló és a saját recept nem szerkeszthető, az archiválás nem vonható vissza (data_model, Ismert hiányosságok).
 - A „Hiány a bevásárlólistára” gomb (a „Mit főzzek?” oldalon és a főzés előnézetén) a sikeres felvétel után eltűnik az adott képernyőről. Ha az oldal újratöltése után újra megnyomod, a mennyiségek összeadódnak, a lista egy sor marad. Ha a főzés előnézetén a felvétel után módosítod a mennyiségeket, a különbséget kézzel veheted fel a listára.
+- Telefonon a Készlet összegző sávja és 1024 px alatt a Bevásárlólista javaslatai vizuálisan máshol állnak, mint a felolvasási (Tab) sorrendben – a telefonos nézet változatlanul hagyásának ára (WCAG 2.4.3). A másológomb csak biztonságos (HTTPS vagy localhost) oldalon jelenik meg.
 - A receptötlet hozzávalónevei eltérhetnek a listáétól (például „liszt” a „finomliszt” helyett); ilyenkor a felhasználó a listából választ, vagy az „Új hozzávaló” gombbal felveszi. A piszkozat a böngészőfül tárolójában él (M14): ha a böngésző nem engedi a tárolást, a gomb üres űrlapra visz; kijelentkezéskor a piszkozat megmarad (az M14 szerint).
 - A keresés a böngészőben szűr; az ékezet számít (a „lecso” nem találja a „Lecsó”-t), ahogy a készletnél.
 - A szerkesztőablak bezárásakor a fókusz visszakerül a megnyitó „Módosítás” gombra ([V-28](../07_ai/verification_log.md)); törléskor a gomb megszűnik, ilyenkor a fókusz a lap elejére kerül.

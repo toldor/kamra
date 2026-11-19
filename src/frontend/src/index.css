@@ -22,11 +22,19 @@
   --c-missing: #a82a50;
   --c-neutral-tag: #dcdac3;
   --c-focus: #0b57d0;
+  /* ui_polish_minispec 8.: the stripe of an estimated expiry; decorative, the "(becsült)" text carries the meaning. */
+  --c-estimated: #d9cfa8;
+
+  /* ui_polish_minispec 3., review R4: the height of the menu bar at the bottom (56 px links + 2 x 4 px padding). */
+  --bar-height: 64px;
 
   --font-display: 'Zilla Slab', Georgia, 'Times New Roman', serif;
   --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
   --radius: 4px;
+  /* The Kérdezz page (2026-11-17): rounded on purpose, a little apart from the rest of the app. */
+  --radius-chat: 16px;
+  --radius-bubble: 14px;
   --radius-tag: 3px;
   --space-1: 4px;
   --space-2: 8px;
@@ -42,6 +50,34 @@
   line-height: 1.5;
   color: var(--c-ink);
   background: var(--c-ground);
+
+  color-scheme: light;
+}
+/* ui_polish_minispec 13.: the dark palette - the same tokens, checked with the same pairs (tokens.test.ts); theme.ts
+   puts the resolved theme ("Rendszer szerint" follows the system) on <html data-theme>. */
+:root[data-theme='dark'] {
+  --c-band: #11160d;
+  --c-band-ink: #eef0e4;
+  --c-band-muted: #c3c9b5;
+  --c-ground: #161a12;
+  --c-surface: #1f241a;
+  --c-rule: #3a4232;
+  --c-ink: #e8ebdf;
+  --c-muted: #b1b8a6;
+  --c-field: #8e9884;
+  --c-primary: #b8cc96;
+  --c-primary-hover: #cadcab;
+  --c-on-primary: #141810;
+  --c-accent: #f0809f;
+  --c-indicator: #f0809f;
+  --c-leader: #8f5a6b;
+  --c-expired: #f4a7bb;
+  --c-missing: #ff8fac;
+  --c-neutral-tag: #3d4433;
+  --c-focus: #8ab4f8;
+  --c-estimated: #a39a74;
+
+  color-scheme: dark;
 }
 
 /* Self-hosted OFL fonts (public/fonts); latin + latin-ext covers ő and ű. */
@@ -84,6 +120,17 @@
 body {
   margin: 0;
   background: var(--c-ground);
+}
+
+/* ui_polish_minispec Ü7 (WCAG 2.4.11): a focused control scrolls clear of the sticky band and, on a phone, of the
+   menu bar at the bottom; the page itself ends above the bar. */
+html {
+  scroll-padding-top: 80px;
+  scroll-padding-bottom: calc(var(--bar-height) + 16px);
+}
+
+body:has(.band) {
+  padding-bottom: var(--bar-height);
 }
 
 a {
@@ -164,9 +211,13 @@ h3 {
   font-weight: 600;
 }
 
-/* ---- The frame: the olive band with the brand, the menu and the account ---- */
+/* ---- The frame: the olive band with the brand, the menu and the Profilom button ---- */
 
+/* ui_polish_minispec 3.: the band stays on top while the page scrolls. */
 .band {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   background: var(--c-band);
   color: var(--c-band-ink);
   padding: 0 var(--space-4);
@@ -186,63 +237,122 @@ h3 {
   padding: var(--space-3) 0;
 }
 
-.account {
+/* ui_polish_minispec 1.: the Profilom button and its panel. The panel sits on the band's white ground, so its
+   text, links and focus ring take the page colors, not the band's. */
+.profile {
   margin-left: auto;
+}
+
+.profile-button,
+.profile-button:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin: 0;
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--c-band-ink);
+  font: 500 1rem var(--font-body);
+  cursor: pointer;
+}
+
+.profile-button:hover {
+  text-decoration: underline;
+}
+
+.profile-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--c-rule);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 25%);
+}
+
+.band .profile-panel :focus-visible {
+  outline-color: var(--c-focus);
+}
+
+.profile-panel .who {
+  margin: 0;
+  padding: var(--space-1) var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--c-rule);
+  color: var(--c-muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.profile-panel a,
+.profile-panel button.link {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-/* Long e-mail addresses must wrap instead of pushing the page wider than 360 px. */
-.account span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 0.875rem;
-  color: var(--c-band-muted);
-}
-
-.band button.link,
-.band button.link:hover {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 44px;
   margin: 0;
-  color: var(--c-band-ink);
+  padding: 0 var(--space-4);
+  color: var(--c-primary);
+  text-align: left;
 }
 
-/* On a phone the menu gets its own row under the brand and the account (C2). */
+.profile-panel .form-error {
+  padding: 0 var(--space-4);
+}
+
+/* On a phone the menu is a bar at the bottom: five equal columns, icon over the full name (Ü4: the names stay the
+   same, so speech control and the tests find them); the current page is marked on top. */
 .nav {
-  order: 3;
-  flex-basis: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--space-4);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--c-band);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav a {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 44px;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: var(--space-1) 2px;
   color: var(--c-band-ink);
+  font-size: 0.75rem;
   font-weight: 500;
+  line-height: 1.15;
+  text-align: center;
   text-decoration: none;
 }
 
+/* Regression (2026-11-17): the surface colour is dark in the dark theme; a hovered item keeps the band's ink and is
+   underlined, as the Profilom button (tests/e2e/theme.spec.ts). */
 .nav a:hover {
-  color: var(--c-surface);
+  color: var(--c-band-ink);
+  text-decoration: underline;
 }
 
 .nav a[aria-current='page'] {
   font-weight: 600;
-  box-shadow: inset 0 -4px 0 var(--c-indicator);
+  box-shadow: inset 0 4px 0 var(--c-indicator);
 }
 
 /* The blue ring has only about 2:1 on the olive band; the light ink reaches 3:1 (tokens.test.ts). */
 .band :focus-visible {
   outline-color: var(--c-band-ink);
-}
-
-.band .form-error {
-  flex-basis: 100%;
-  color: var(--c-band-ink);
 }
 
 @media (min-width: 760px) {
@@ -258,14 +368,47 @@ h3 {
     font-size: 1.875rem;
   }
 
+  .profile {
+    position: relative;
+  }
+
+  .profile-panel {
+    left: auto;
+    right: 0;
+    width: 18rem;
+  }
+}
+
+/* Review R2: the top menu needs about 1000 px for the brand, five items with icons and Profilom; below that it is the
+   bar at the bottom (tablets too), so the band stays one row. */
+@media (min-width: 1024px) {
+  body:has(.band) {
+    padding-bottom: 0;
+  }
+
+  html {
+    scroll-padding-bottom: 0;
+  }
+
   .nav {
-    order: 0;
-    flex-basis: auto;
+    position: static;
+    display: flex;
     gap: 0 28px;
+    padding: 0;
+    background: none;
   }
 
   .nav a {
+    flex-direction: row;
+    gap: var(--space-2);
     min-height: 60px;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .nav a[aria-current='page'] {
+    box-shadow: inset 0 -4px 0 var(--c-indicator);
   }
 }
 
@@ -472,6 +615,490 @@ main.chat-page {
 
 .chat-form button[type='submit'] {
   align-self: flex-start;
+}
+
+/* ui_polish_minispec 13.: the theme choice in the panel and on the Profilom page. */
+.theme-choice {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-top: 1px solid var(--c-rule);
+  border-bottom: 1px solid var(--c-rule);
+}
+
+main .theme-choice {
+  padding: var(--space-2) 0;
+  border: 0;
+}
+
+.theme-choice legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.theme-choice label {
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ui_polish_minispec 14.: the pantry's sort choice and its category groups (the browser's own <details>). */
+.filters .sort {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.filters .sort legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+/* Review T2: the summary keeps its list-item display, so the browser draws the open/closed marker. */
+details.category > summary {
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--c-rule);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+details.category[open] > .items {
+  animation: kamra-fade 200ms ease-out;
+}
+
+/* ---- ui_polish_minispec S5: the desktop layout ---- */
+
+/* 17. (A4): a folding card whose summary is the form's heading. */
+.card > summary {
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+}
+
+.card[open] > summary {
+  border-bottom: 1px solid var(--c-rule);
+}
+
+.card > summary > h2 {
+  display: inline;
+  margin: 0;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+/* 15. (A1): the summary of the whole pantry; the two counts are filter buttons. */
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip,
+button.chip,
+button.chip:hover {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  margin: 0;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--c-rule);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-weight: 600;
+}
+
+button.chip:hover:not(:disabled) {
+  border-color: var(--c-field);
+}
+
+button.chip[aria-pressed='true'] {
+  border-color: var(--c-primary);
+  box-shadow: inset 0 0 0 1px var(--c-primary);
+}
+
+button.chip[aria-disabled='true'],
+button.chip[aria-disabled='true']:hover {
+  border-color: var(--c-rule);
+  background: var(--c-surface);
+  color: var(--c-muted);
+  cursor: default;
+}
+
+.chip.expired::before,
+.chip.soon::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c-expired);
+}
+
+.chip.soon::before {
+  background: var(--c-accent);
+}
+
+/* 16. (A2): the filters on top of the list. */
+.filterbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--c-rule);
+}
+
+.filterbar .field {
+  flex: 0 1 auto;
+  gap: var(--space-1);
+}
+
+.filterbar .field.search {
+  flex: 1 1 220px;
+}
+
+.filterbar .sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+}
+
+.filterbar .sort legend {
+  margin-bottom: var(--space-1);
+}
+
+/* 19. (A6): the recipes as a grid of cards. */
+.recipe-search {
+  max-width: 40rem;
+}
+
+.recipe-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+/* Review V2: the grid's cards keep all four borders (.recipe:last-child drops the bottom one in a list). */
+.recipe-grid > .recipe,
+.recipe-grid > .recipe:last-child {
+  border: 1px solid var(--c-rule);
+  background: var(--c-surface);
+}
+
+/* Review V3: 3 / 2 / 1 columns, also on a wide screen. */
+@media (min-width: 760px) {
+  .recipe-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .recipe-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 19. (A8): the shopping list and the suggestions; the minimum levels under them, as wide as both. */
+.shopping-pair {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.shopping-pair > .suggestions {
+  order: -1;
+}
+
+@media (min-width: 1024px) {
+  .shopping-pair {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .shopping-pair > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .shopping-pair > .suggestions {
+    order: 0;
+  }
+}
+
+/* The developer (2026-11-17): the pantry summary is its own row above the two columns; on a phone, where the columns
+   stack, it stays under the entry cards. */
+.split > .summary {
+  flex-basis: 100%;
+}
+
+@media (max-width: 759px) {
+  .split > .summary {
+    order: 1;
+  }
+
+  .split > .content {
+    order: 2;
+  }
+}
+
+/* ui_polish_minispec S6: the livelier Kérdezz page. */
+.chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  max-width: 90%;
+  align-self: flex-start;
+}
+
+.chat-row > .chat-message {
+  max-width: none;
+  min-width: 0;
+}
+
+.chat-avatar {
+  flex: none;
+}
+
+.chat-avatar .jar-ground {
+  fill: var(--c-band);
+}
+
+.chat-avatar .jar-lid {
+  fill: var(--c-indicator);
+}
+
+.chat-avatar .jar-body {
+  fill: var(--c-band-ink);
+}
+
+.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--c-neutral-tag);
+  color: var(--c-primary);
+}
+
+.chat-actions:empty {
+  display: none;
+}
+
+.chat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chat-action {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  font-size: 0.875rem;
+}
+
+/* The copy button: an icon in a 44 px square (review W1). */
+.chat-action.icon-only {
+  width: 44px;
+  padding: 0;
+  justify-content: center;
+}
+
+/* Review W9: the jar's square keeps a visible ground on the dark surface. */
+:root[data-theme='dark'] .chat-avatar .jar-ground {
+  fill: var(--c-neutral-tag);
+}
+
+.chat-message.typing {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  padding: var(--space-3) var(--space-4);
+}
+
+.chat-message.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-muted);
+  animation: kamra-dot 1s ease-in-out infinite;
+}
+
+.chat-message.typing span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.chat-message.typing span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes kamra-dot {
+  0%, 60%, 100% { transform: none; opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.chat-welcome {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chat-welcome p {
+  margin: 0;
+  font: 700 1.25rem/1.3 var(--font-display);
+}
+
+.chat-example {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.chat-count {
+  margin: 0;
+  text-align: right;
+}
+
+/* The developer (2026-11-17): the Kérdezz box and its bubbles are rounded, a little apart from the rest of the app. */
+.chat-page .panel {
+  border-radius: var(--radius-chat);
+  overflow: hidden;
+}
+
+.chat-message {
+  border-radius: var(--radius-bubble);
+}
+
+.chat-message.user {
+  border-bottom-right-radius: var(--radius);
+}
+
+.chat-message.assistant {
+  border-bottom-left-radius: var(--radius);
+}
+
+@media (min-width: 1024px) {
+  /* 18. (A3, Q21: b): the side column stays in view when it fits on the screen (PantryPage measures it). */
+  .side.fits {
+    position: sticky;
+    top: 76px;
+  }
+}
+
+/* 19. (A11): wider content on a large screen; the narrow pages keep their own width. */
+@media (min-width: 1440px) {
+  :root {
+    --content-max: 1400px;
+  }
+}
+
+/* ui_polish_minispec 9.: placeholder rows while a list loads. */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.skeleton span {
+  height: 14px;
+  border-radius: var(--radius-tag);
+  background: var(--c-rule);
+  animation: kamra-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.skeleton span:nth-child(1) { width: 70%; }
+.skeleton span:nth-child(2) { width: 55%; }
+.skeleton span:nth-child(3) { width: 62%; }
+
+@keyframes kamra-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.5; }
+}
+
+/* ui_polish_minispec 10.: an empty list with the page's icon above its text. */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.empty-state > .icon {
+  color: var(--c-muted);
+}
+
+/* ui_polish_minispec 12.: short, quiet motion; none when the user asked for less motion. */
+@keyframes kamra-drop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes kamra-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.profile-panel {
+  animation: kamra-drop 150ms ease-out;
+}
+
+.notice:not(:empty) {
+  animation: kamra-fade 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ui_polish_minispec 11.: the printed shopping list - the page and its items, without the frame and the controls; the
+   check boxes stay (a ticked item prints ticked). */
+@media print {
+  .band,
+  .nav,
+  button,
+  .button-link,
+  form,
+  .filters,
+  .notice,
+  .form-error,
+  .card > summary,
+  .summary,
+  .chat-avatar {
+    display: none !important;
+  }
+
+  /* Review T1: dark text on white paper in either theme (the background is not printed by default). */
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: light;
+  }
+
+  body,
+  body:has(.band) {
+    padding: 0;
+    background: #fff;
+  }
+
+  body * {
+    color: #1e2419 !important;
+    background: transparent !important;
+  }
+
+  .panel {
+    border: 0;
+  }
 }
 
 /* Text only for a screen reader (the "Te:" / "Kamra:" labels of the conversation). */
@@ -776,6 +1403,19 @@ form > button[type='submit'] {
   border-bottom: none;
 }
 
+/* ui_polish_minispec 8.: the stripe of the most urgent state on the left edge of a pantry item. */
+.item.expired {
+  box-shadow: inset 5px 0 0 var(--c-expired);
+}
+
+.item.soon {
+  box-shadow: inset 5px 0 0 var(--c-accent);
+}
+
+.item.estimated {
+  box-shadow: inset 5px 0 0 var(--c-estimated);
+}
+
 .item > .line {
   flex-basis: 100%;
 }
@@ -928,6 +1568,11 @@ dialog h2 {
 
 dialog::backdrop {
   background: rgb(30 36 25 / 50%);
+}
+
+/* Review T4: on the dark ground the light veil hardly showed; the dark theme dims more. */
+:root[data-theme='dark'] dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -22,6 +22,9 @@ const inDays = (days: number) =>
   new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Budapest' }).format(new Date(Date.now() + days * 86_400_000))
 
 async function addItem(page: Page, ingredient: string, amount: string, unit: string, daysToExpiry: number) {
+  // ui_polish_minispec 17.: the "Új tétel" card starts closed next to the sentence entry.
+  const card = page.locator('details', { has: page.locator('#new-item-heading') })
+  if (!(await card.evaluate((d) => (d as HTMLDetailsElement).open))) await card.locator('summary').click()
   const form = page.getByRole('form', { name: 'Új tétel' })
   await form.getByLabel('Hozzávaló').fill(ingredient)
   await form.getByLabel('Mennyiség').fill(amount)

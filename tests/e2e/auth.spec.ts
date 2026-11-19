@@ -27,6 +27,8 @@ test('register, see the empty pantry, log out and log back in', async ({ page })
   await page.reload()
   await expect(page.getByText('Még üres a kamrád.'), 'the session survives a reload').toBeVisible()
 
+  // ui_polish_minispec Ü5: the logout is in the Profilom panel.
+  await page.getByRole('button', { name: 'Profilom' }).click()
   await page.getByRole('button', { name: 'Kijelentkezés' }).click()
   await expect(page.getByRole('heading', { name: 'Bejelentkezés' })).toBeVisible()
 

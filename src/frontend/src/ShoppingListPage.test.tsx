@@ -103,11 +103,27 @@ describe('shopping list page', () => {
     expect(await screen.findByText('A listád üres. Vegyél fel tételt alább.')).toBeTruthy()
   })
 
+  // ui_polish_minispec 11.: the browser's own print, from a button next to the title.
+  it('prints the list with the browser', async () => {
+    backend()
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
+    render(<App />)
+    await screen.findByText('A listád üres. Vegyél fel tételt alább.')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nyomtatás' }))
+
+    expect(print).toHaveBeenCalledTimes(1)
+    print.mockRestore()
+  })
+
   it('tells what to do with an empty list, with and without suggestions', async () => {
     backend()
     render(<App />)
 
     expect(await screen.findByText('A listád üres. Vegyél fel tételt alább.')).toBeTruthy()
+    // ui_polish_minispec 10.: the page's icon above the existing text.
+    expect(screen.getByText('A listád üres. Vegyél fel tételt alább.').closest('.empty-state')?.querySelector('svg[aria-hidden="true"]'))
+      .toBeTruthy()
     expect(screen.queryByRole('heading', { name: /Javaslatok/ })).toBeNull()
     cleanup()
 

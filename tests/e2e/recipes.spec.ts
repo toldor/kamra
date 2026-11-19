@@ -54,6 +54,9 @@ test('an own recipe with an own ingredient is recommended, and gone once archive
   await expectNoHorizontalScroll(page)
 
   await page.getByRole('link', { name: 'Készlet' }).click()
+  // ui_polish_minispec 17.: the "Új tétel" card starts closed next to the sentence entry.
+  const card = page.locator('details', { has: page.locator('#new-item-heading') })
+  if (!(await card.evaluate((d) => (d as HTMLDetailsElement).open))) await card.locator('summary').click()
   const form = page.getByRole('form', { name: 'Új tétel' })
   await form.getByLabel('Hozzávaló').fill('zabtej')
   await form.getByLabel('Mennyiség').fill('1')

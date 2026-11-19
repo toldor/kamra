@@ -2,6 +2,28 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [0.8.0] – 2026-11-19 – Kinézet, kezelhetőség és a siker mérése
+
+A fejlesztő kérésére (Stretch 3.), a siker mérőszámainak lekérdezése (CAP-12) és a leadási dokumentáció. Részletek: [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [ux_flows.md](../01_product/ux_flows.md) „Keret és navigáció”, [metrics.md](../01_product/metrics.md), [P-29 – P-32](../07_ai/prompt_log.md), [V-90 – V-103](../07_ai/verification_log.md).
+
+### Hozzáadva
+- Profilom panel (e-mail, Profilom oldal, téma, kijelentkezés) és Profilom oldal.
+- Sötét téma (Rendszer szerint / Világos / Sötét), a böngészőben megjegyezve.
+- Ragadós fejsáv; 1024 px alatt alsó menüsáv; ikonok a menüben; saját lapikon; oldalcímek; „Nincs ilyen oldal”.
+- Lejárati csík a készlettételeken, helykitöltő sorok betöltéskor, ikon az üres listáknál, nyomtatható bevásárlólista, kategóriánkénti rendezés a Készleten, mérsékelt animációk.
+- Asztali elrendezés: összegző sáv és szűrőgombok a Készleten, összecsukható beviteli kártyák, ragadós bal oszlop, receptrács, kétoszlopos bevásárlólista, szélesebb tartalom nagy képernyőn.
+- Élénkebb Kérdezz oldal: lekerekített doboz és buborékok, avatar, gépelő pöttyök, négy ikonos példa (receptkéréssel), folytató gombok, ikonos „Megnéztem” sor, karakterszámláló, másológomb.
+- A North Star és a három guardrail metrika lekérdezése ([metrics.sql](../01_product/metrics.sql), CAP-12), szintetikus adaton, kézzel számolt értékekkel tesztelve; futtatás: [metrics.md](../01_product/metrics.md).
+- Teljesítménymérés az ajánlás-végpontra ([performance.md](../04_quality/performance.md), mérőszkript: `tests/perf/recommendations.mjs`), demóforgatókönyv ([demo_script.md](demo_script.md)), önértékelés ([self_assessment.md](self_assessment.md)), post-mortem ([postmortem.md](../04_quality/postmortem.md)), három naplóalapú üzemeltetési metrika ([observability.md](../05_security_ops/observability.md)), rövid használati útmutató képernyőképekkel a README-ben.
+
+### Módosítva
+- A kijelentkezés a Profilom panelbe és a Profilom oldalra került; a feature freeze nov. 20-ra.
+- A „Csak a hamarosan lejárók” jelölőnégyzet helyett az összegző sáv gombja szűr.
+- A feature freeze (nov. 20.) alól egy kivétel: az opcionális heti e-mail (Stretch 4), ha a felhasználói kipróbálás 2. köréig elkészül.
+
+### Javítva
+- Sötét témában a menüpont hoverkor is olvasható.
+
 ## [0.7.0] – 2026-11-16 – Receptötlet a chatből
 
 A Stretch 1: a Kérdezz oldalon receptet lehet kérni, és mentés előtt az „Új recept” űrlapon átnézni. Részletek: [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 9., [test_report.md](../04_quality/test_report.md) („Chat-mérés”), [P-28](../07_ai/prompt_log.md), [V-82 – V-89](../07_ai/verification_log.md).

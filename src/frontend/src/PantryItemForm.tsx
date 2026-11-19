@@ -9,7 +9,10 @@ const fieldOrder = ['ingredientId', 'amount', 'unit', 'category', 'expiryDate'] 
 
 // US-1: a new pantry item. The ingredient is chosen from the list (ADR-0003); the units follow its
 // dimension (ADR-0002); a missing expiry date is estimated by the backend from the category.
-export function PantryItemForm({ categories, ingredients, onAdded, onIngredientCreated, onSignedOut }: {
+export function PantryItemForm({ open, onToggle, categories, ingredients, onAdded, onIngredientCreated, onSignedOut }: {
+  // ui_polish_minispec 17.: a folding card; the page keeps it open or closed.
+  open: boolean
+  onToggle: (open: boolean) => void
   categories: CategoryInfo[]
   ingredients: Ingredient[]
   // L1: the saved item, so the page can say what went in.
@@ -66,62 +69,65 @@ export function PantryItemForm({ categories, ingredients, onAdded, onIngredientC
     }
   }
 
+  // Review V1: the browser also fires "toggle" when the card is created open; only a real change counts.
   return (
-    <form aria-labelledby="new-item-heading" className="panel" onSubmit={submit} noValidate>
-      <h2 id="new-item-heading">Új tétel</h2>
+    <details className="panel card" open={open} onToggle={(e) => e.currentTarget.open !== open && onToggle(e.currentTarget.open)}>
+      <summary><h2 id="new-item-heading">Új tétel</h2></summary>
+      <form aria-labelledby="new-item-heading" className="card-body" onSubmit={submit} noValidate>
 
-      <IngredientPicker
-        ingredients={ingredients}
-        value={ingredientName}
-        onChange={setIngredientName}
-        field={fields.props('ingredientId')}
-        error={fields.error('ingredientId')}
-        create={{ categories, onCreated: onIngredientCreated, onSignedOut }}
-      />
+        <IngredientPicker
+          ingredients={ingredients}
+          value={ingredientName}
+          onChange={setIngredientName}
+          field={fields.props('ingredientId')}
+          error={fields.error('ingredientId')}
+          create={{ categories, onCreated: onIngredientCreated, onSignedOut }}
+        />
 
-      <div className="row">
-        <div className="field">
-          <label htmlFor="new-amount">Mennyiség</label>
-          <input
-            {...fields.props('amount')}
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="any"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+        <div className="row">
+          <div className="field">
+            <label htmlFor="new-amount">Mennyiség</label>
+            <input
+              {...fields.props('amount')}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="new-unit">Mértékegység</label>
+            <select {...fields.props('unit')} value={chosenUnit} onChange={(e) => setUnit(e.target.value as Unit)}>
+              {units.map((u) => <option key={u} value={u}>{u}</option>)}
+            </select>
+          </div>
         </div>
-        <div className="field">
-          <label htmlFor="new-unit">Mértékegység</label>
-          <select {...fields.props('unit')} value={chosenUnit} onChange={(e) => setUnit(e.target.value as Unit)}>
-            {units.map((u) => <option key={u} value={u}>{u}</option>)}
-          </select>
-        </div>
-      </div>
-      {fields.error('amount')}
-      {fields.error('unit')}
+        {fields.error('amount')}
+        {fields.error('unit')}
 
-      <label htmlFor="new-category">Kategória</label>
-      <select {...fields.props('category')} value={chosenCategory} onChange={(e) => setCategory(e.target.value as Category)}>
-        {!chosenCategory && <option value="">Válassz kategóriát</option>}
-        {categories.map((c) => <option key={c.category} value={c.category}>{categoryName(c.category)}</option>)}
-      </select>
-      {fields.error('category')}
+        <label htmlFor="new-category">Kategória</label>
+        <select {...fields.props('category')} value={chosenCategory} onChange={(e) => setCategory(e.target.value as Category)}>
+          {!chosenCategory && <option value="">Válassz kategóriát</option>}
+          {categories.map((c) => <option key={c.category} value={c.category}>{categoryName(c.category)}</option>)}
+        </select>
+        {fields.error('category')}
 
-      <label htmlFor="new-expiryDate">Lejárat (nem kötelező)</label>
-      <input
-        {...fields.props('expiryDate', 'new-expiry-hint')}
-        type="date"
-        value={expiryDate}
-        onChange={(e) => setExpiryDate(e.target.value)}
-      />
-      {fields.error('expiryDate') || (
-        <p id="new-expiry-hint" className="hint">Ha üresen hagyod, a kategória alapján becsüljük meg.</p>
-      )}
+        <label htmlFor="new-expiryDate">Lejárat (nem kötelező)</label>
+        <input
+          {...fields.props('expiryDate', 'new-expiry-hint')}
+          type="date"
+          value={expiryDate}
+          onChange={(e) => setExpiryDate(e.target.value)}
+        />
+        {fields.error('expiryDate') || (
+          <p id="new-expiry-hint" className="hint">Ha üresen hagyod, a kategória alapján becsüljük meg.</p>
+        )}
 
-      <div role="alert" className="form-error">{error}</div>
-      <button type="submit" disabled={busy}>{busy ? 'Kérlek, várj…' : 'Hozzáadás'}</button>
-    </form>
+        <div role="alert" className="form-error">{error}</div>
+        <button type="submit" disabled={busy}>{busy ? 'Kérlek, várj…' : 'Hozzáadás'}</button>
+      </form>
+    </details>
   )
 }

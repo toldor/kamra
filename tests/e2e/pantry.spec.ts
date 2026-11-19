@@ -18,6 +18,9 @@ async function registerFreshHousehold(page: Page) {
 }
 
 async function addItem(page: Page, ingredient: string, amount: string, unit: string) {
+  // ui_polish_minispec 17.: the "Új tétel" card starts closed next to the sentence entry.
+  const card = page.locator('details', { has: page.locator('#new-item-heading') })
+  if (!(await card.evaluate((d) => (d as HTMLDetailsElement).open))) await card.locator('summary').click()
   const form = page.getByRole('form', { name: 'Új tétel' })
   await form.getByLabel('Hozzávaló').fill(ingredient)
   await form.getByLabel('Mennyiség').fill(amount)
@@ -96,12 +99,13 @@ test('loads the fonts for ő and ű and lays the pantry out for the screen width
 })
 
 // Regression (code review, 2026-10-31): on hover the logout text took the muted color, about 1.8:1 on the band.
-test('the logout button keeps its contrast on the band when hovered', async ({ page }) => {
+// ui_polish_minispec Ü5: the button on the band is now Profilom; the logout moved into its panel.
+test('the Profilom button keeps its contrast on the band when hovered', async ({ page }) => {
   await registerFreshHousehold(page)
-  const logout = page.getByRole('button', { name: 'Kijelentkezés' })
-  await logout.hover()
+  const profile = page.getByRole('button', { name: 'Profilom' })
+  await profile.hover()
 
-  const ratio = await logout.evaluate((button) => {
+  const ratio = await profile.evaluate((button) => {
     const rgb = (value: string) => value.match(/\d+/g)!.slice(0, 3).map(Number)
     const lum = (value: string) => {
       const [r, g, b] = rgb(value).map((c) => {
@@ -115,4 +119,26 @@ test('the logout button keeps its contrast on the band when hovered', async ({ p
     return (Math.max(text, band) + 0.05) / (Math.min(text, band) + 0.05)
   })
   expect(ratio).toBeGreaterThanOrEqual(4.5)
+})
+
+// ui_polish_minispec 14.: by category, each group folds with the browser's own <details>.
+test('sorts the pantry by category, and a group folds and opens again', async ({ page }) => {
+  await registerFreshHousehold(page)
+  await addItem(page, 'tej', '1', 'l')
+  await expect(page.getByText('Felvettem a kamrádba: tej 1 l.')).toBeVisible()
+  await addItem(page, 'finomliszt', '1', 'kg')
+  await expect(page.getByText('Felvettem a kamrádba: finomliszt 1 kg.')).toBeVisible()
+
+  await page.getByRole('group', { name: 'Rendezés' }).getByRole('radio', { name: 'Kategóriák szerint' }).check()
+  const dairy = page.locator('details.category', { has: page.locator('summary', { hasText: 'Tejtermék (1)' }) })
+  await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeVisible()
+  // Review T2: the summary keeps the browser's open/closed marker.
+  expect(await dairy.locator('summary').evaluate((s) => getComputedStyle(s).display)).toBe('list-item')
+
+  await dairy.locator('summary').click()
+  await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeHidden()
+  await expect(page.getByRole('listitem', { name: 'finomliszt' })).toBeVisible()
+
+  await dairy.locator('summary').click()
+  await expect(dairy.getByRole('listitem', { name: 'tej' })).toBeVisible()
 })

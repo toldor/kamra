@@ -45,7 +45,8 @@ test('answers what expires soon from the own pantry and names the tool it looked
 
   const log = page.getByRole('log')
   await expect(log.getByText('Hamarosan lejár: tej.')).toBeVisible()
-  await expect(log.getByText('Megnéztem: a hamarosan lejáró tételeket.')).toBeVisible()
+  // ui_polish_minispec 24. (K5): the visible line has the icons; a screen reader reads the same sentence.
+  await expect(log.locator('.tools-line > [aria-hidden="true"]')).toHaveText('Megnéztem: a hamarosan lejáró tételeket.')
   await expectNoHorizontalScroll(page)
 })
 

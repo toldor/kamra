@@ -1,6 +1,8 @@
 import { useEffect, useId, useState } from 'react'
 import { api, failWith, type Recommendation, type RecommendationsResponse } from './api/client'
 import { formatShortage } from './format'
+import { Icon } from './Icon'
+import { LoadingRows } from './Loading'
 import { ShortageToList } from './ShortageToList'
 import { cookingRoute, routes } from './useHashRoute'
 
@@ -63,7 +65,7 @@ export function RecommendationsPage({ onSignedOut }: { onSignedOut: (notice: str
   return (
     <main>
       <h1 tabIndex={-1}>Mit főzzek?</h1>
-      {load.status === 'loading' && <p role="status">Betöltés…</p>}
+      {load.status === 'loading' && <LoadingRows />}
       {load.status === 'error' && (
         <div>
           <p role="alert">{load.message}</p>
@@ -87,10 +89,11 @@ function Suggestions({ data, onSignedOut }: { data: RecommendationsResponse; onS
   // ux_flows, Üres állapotok.
   if (data.pantryIsEmpty) {
     return (
-      <>
+      <div className="empty-state">
+        <Icon name="cook" size={48} />
         <p className="empty">Még nincs mit ajánlanom, mert üres a kamrád. Rögzítsd, mit vettél, és megmutatom, mit főzhetsz belőle.</p>
         {recordPantry}
-      </>
+      </div>
     )
   }
 

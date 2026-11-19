@@ -38,6 +38,10 @@ Szolgáltató: Google Gemini API (`gemini-3.1-flash-lite`, [ADR-0009](../02_arch
 - **Fizetős keret (bekapcsolva 2026-11-08):** Tier 1, előre fizetett 5 dollár, automatikus újratöltés nélkül, havi költéskorlát 5 dollárral. A kérések a fizetős ár szerint díjkötelesek, és csak pozitív egyenleg mellett futnak ([Billing](https://aistudio.google.com/docs/billing), [Pricing](https://aistudio.google.com/docs/pricing), 2026-11-08). Ha az egyenleg elfogy, a Gemini HTTP 402-t ad; az alkalmazás ezt újrapróbálás nélkül `LLM_UNAVAILABLE`-ként adja vissza, a kézi űrlap működik ([V-76](../07_ai/verification_log.md)).
 - A CI-ban és a tesztekben valódi LLM-hívás nincs (AGENTS.md 7.): a tesztek hamis adaptert, az e2e egy LLM-csonkot használ.
 
+## Sérülékenységek
+
+A CI minden futásnál ellenőrzi a függőségeket (NuGet, `npm audit`). **Elfogadott kockázat (2026-11-17, [V-99](../07_ai/verification_log.md)):** a `picomatch` ReDoS-hibájára (GHSA-fc5q-39xc-vjpf, ≤ 4.0.7) még nincs javított változat; csak a fejlesztői eszközökön (`vite`, `vitest`) át érkezik, a felhasználóhoz kerülő kódban nincs (`npm audit --omit=dev`: 0), és a build csak a projekt saját fájlmintáit dolgozza fel. Ezért a frontend `npm audit` kapuja a futásidejű csomagokra blokkoló, a fejlesztői eszközökre csak jelző; a javított változat megjelenésekor a teljes ellenőrzés újra blokkoló lesz.
+
 ## Licencek
 
 A projekt licence: MIT ([LICENSE](../../LICENSE)) (D2).

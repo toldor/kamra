@@ -11,7 +11,7 @@ Az akadálymentesség a [ux_flows.md](../01_product/ux_flows.md), a naplózás �
 | QA-2 | **Helyesség – determinizmus** | Azonos készletre és receptkészletre azonos eredmény: ajánlás és rangsor, FEFO-levonás, adagskálázás és kerekítés, becsült lejárat, relatív dátumok, bevásárlójavaslat-szabályok. | Unit tesztek a Domain és az Application rétegben | US-1–US-5 |
 | QA-3 | **Hibatűrés – LLM-kiesés** | Próbálkozásonként 15 mp időkorlát; időtúllépésnél vagy kiesésnél egy azonnali újrapróbálás; utána magyar hibaüzenet, semmi nem mentődik, a nem AI-alapú funkciók működnek tovább. Sémahibás válasznál nincs újrapróbálás. | Mockolt kiesés-teszt (S-1) | US-2, US-6; Scope contract, Külső API |
 | QA-4 | **Adatintegritás** | A készlet soha nem negatív; egy tételjavaslat jóváhagyása egyszer fut le; párhuzamos levonásnál nem vész el levonás; minden mennyiségváltozás a készletmozgás-naplóba kerül. | Integrációs tesztek valódi Postgresszel (Testcontainers); a konkurenciakezelés módja külön ADR-ben | US-1, US-2, US-4 |
-| QA-5 | **Teljesítmény** | LLM válaszidő p95 ≤ 10 mp; ajánlás-végpont p95 ≤ 300 ms (S-3). | LLM-PoC és a backend strukturált logja; terheléses mérés | Metrics G3 (LLM); az ajánlás célértéke ebben a dokumentumban rögzített új elvárás |
+| QA-5 | **Teljesítmény** | LLM válaszidő p95 ≤ 10 mp; ajánlás-végpont p95 ≤ 300 ms (S-3). | LLM-PoC és a backend strukturált logja; terheléses mérés. **Eredmény:** az ajánlás p95 18–22 ms ([performance.md](../04_quality/performance.md)); az LLM p95 időszakonként 44 mp-ig nőtt ([test_report.md](../04_quality/test_report.md) „LLM-mérés”) | Metrics G3 (LLM); az ajánlás célértéke ebben a dokumentumban rögzített új elvárás |
 | QA-6 | **Modularitás és tesztelhetőség** | A rétegszabályok ([AGENTS.md](../../AGENTS.md) 3. pont) sértetlenek; minden LLM-hívás az Application rétegben definiált interfész mögött van, és tesztben mockolható; a Domain és az Application réteg sorlefedettsége ≥ 80%. | Projekthivatkozások + reflexiós rétegszabály-teszt; lefedettségi riport a CI-ban | Scope contract, DoD |
 | QA-7 | **Telepíthetőség** | Tiszta gépen, a README alapján, `docker compose up` paranccsal 15 percen belül elindul; hiányzó vagy érvénytelen konfiguráció esetén az alkalmazás induláskor hibával leáll. | Friss klónból végzett, időmért indítási próba; integrációs teszt: hiányzó kötelező konfigurációval az alkalmazás nem indul el | Scope contract, DoD; v1.2 futtathatósági kapufeltétel |
 
@@ -51,7 +51,7 @@ Az akadálymentesség a [ux_flows.md](../01_product/ux_flows.md), a naplózás �
 | Artefakt | Az ajánlás-végpont: Application use case és a Postgres-lekérdezés |
 | Válasz | A helyesen rangsorolt elkészíthető és majdnem elkészíthető receptek listája indoklással |
 | Mérőszám | p95 válaszidő ≤ 300 ms; 0% hibás válasz |
-| Igazolás | Terheléses mérés a minőségbiztosítási szakaszban. A mérőeszközt a mérés előtt választjuk ki; az eredmény a teljesítménymérési dokumentumba és a [verification_log.md](../07_ai/verification_log.md)-ba kerül. |
+| Igazolás | **Mérve 2026-11-19:** p95 18–22 ms, 0 hiba (három futás), 50 felhasználónál p95 110 ms ([performance.md](../04_quality/performance.md), [V-103](../07_ai/verification_log.md)). Eredeti terv: terheléses mérés a minőségbiztosítási szakaszban. A mérőeszközt a mérés előtt választjuk ki; az eredmény a teljesítménymérési dokumentumba és a [verification_log.md](../07_ai/verification_log.md)-ba kerül. |
 
 ## Ismert korlátok
 

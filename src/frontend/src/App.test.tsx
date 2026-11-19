@@ -121,7 +121,9 @@ describe('sign-in screens', () => {
     })
     render(<App />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Kijelentkezés' }))
+    // ui_polish_minispec Ü5: the logout is in the Profilom panel.
+    fireEvent.click(await screen.findByRole('button', { name: 'Profilom' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Kijelentkezés' }))
 
     expect(await screen.findByRole('heading', { name: 'Bejelentkezés' })).toBeTruthy()
     expect(screen.getByRole('alert').textContent).toBe('')

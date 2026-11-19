@@ -746,3 +746,115 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** `/code-review`, Spec-tengely (U1).
 - **Eredmény:** FAIL – a meglévő `unitsFor` a nem illő egységet szó nélkül az első illőre cserélte, a mennyiség változatlan maradt (a mérésben valós eset: „vöröshagyma 1 db”, a vöröshagyma tömegben mérhető). Javítva: mezőhiba és teszt.
 - **Következtetés:** modelltől jövő adatnál a meglévő űrlap csendes alapértékeit is végig kell gondolni.
+
+### V-90 – A kinézet tesztjeinek elválasztó ereje
+- **Dátum:** 2026-11-17
+- **Állítás:** A `v0.8.0` új tesztjei elbuknak, ha a kinézet szabályait megsértjük.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** 40 mutáció (S1 9 + e2e 1, S1-review 3, S2 8, S3 7, S4 5, S2–S4-review 3), egyenként visszaállítva; az e2e-javításoknál (nyomtatás sötétben, csoportjelölő, `color-scheme`) a teszt a javítás előtt ugyanazon a stacken piros volt.
+- **Eredmény:** PASS, négy erősítéssel: túlélt és erősítve H3 (az oldalváltás nem zár – a teszt a link kattintását nézte), L5 (tároló nélkül a választás nem látszott), M5 (a csoporton belüli sorrend – a tesztadatban egybeesett az ábécérenddel), és a fókusz-teszt (V-92); J1 egyenértékű (lejárt és hamarosan lejáró nem lehet egyszerre, `Expiry.cs`). A `tokens.test` „a becsült csík világosabb a mezőkeretnél” elvárása az S3-ban „elkülönül a felülettől”-re változott, mert sötét palettán a felület sötét (review T7).
+- **Következtetés:** a vázzal már zöld vagy a valóságtól elszakadt tesztet mutációval kell igazolni.
+
+### V-91 – Saját hiba: mutációs parancs, amely nem commitolt munkát dobott volna el
+- **Dátum:** 2026-11-17
+- **Állítás:** A mutációs parancs csak a mutációt vonja vissza.
+- **Kockázat:** Magas (adatvesztés).
+- **Ellenőrzési módszer:** a Claude Code automatikus védelme.
+- **Eredmény:** FAIL – a parancs végén `git checkout -- index.css` állt, amely az összes nem commitolt CSS-munkát visszaállította volna; a védelem megállította, nem futott le.
+- **Következtetés:** mutációt csak tárolás–visszaírás módszerrel.
+
+### V-92 – Saját állítás: „a fókusz-teszt bizonyítja, hogy a fejsáv nem takarja a fókuszt”
+- **Dátum:** 2026-11-17
+- **Állítás:** Az e2e fókusz-teszt elbukik a görgetési margó nélkül.
+- **Kockázat:** Közepes (WCAG 2.4.11).
+- **Ellenőrzési módszer:** mutáció (görgetési margó 0).
+- **Eredmény:** FAIL – a teszt margó nélkül is zöld volt, mert a Chrome a fókuszált elemet középre görgeti. Átírva: a görgetési margót méri a fejsáv és a sáv magasságához; utána a mutáció elbukik.
+- **Következtetés:** a böngésző viselkedését nem szabad feltételezni; a mechanizmust kell mérni.
+
+### V-93 – Saját hiba: a panel és a fejsáv viselkedése (az S1-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** A Profilom panel és a ragadós fejsáv minden szélességen és billentyűzettel is jól működik.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review` (Spec-tengely), mérés 760–1100 px-en.
+- **Eredmény:** FAIL – a panel nyitva maradt, ha a fókusz Tabbal elhagyta (2.4.11), és 760–1000 px között a fejsáv 158 px magasra tört. Javítva: bezárás fókuszvesztéskor és Escape a dokumentumon; alsó sáv 1024 px alatt; tesztekkel.
+- **Következtetés:** a köztes szélességeket (tablet) is mérni kell.
+
+### V-94 – „Az első e2e-hullám hibája a lassú API”
+- **Dátum:** 2026-11-17
+- **Állítás:** Az API újraindítása utáni első futás asztali hibái a hideg API lassúságából jönnek.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** az API kérésnaplója a hibás futás alatt; 8 egyidejű hideg felhasználó mérése.
+- **Eredmény:** Részben FAIL – egyik kérés sem tartott 1,7 mp-nél tovább, 8 hideg felhasználó kb. 1,9 mp; a késés a helyi környezetben van (valószínűleg a Docker Desktop porttovábbítása). A CI-ban (Linux) az e2e első futásra átment ([run 44160245178](https://github.com/toldor/kamra/actions/runs/44160245178) (#131, `ded39b8`)).
+- **Következtetés:** a feltételezett okot mérni kell, mielőtt rá hivatkozunk.
+
+### V-95 – Saját hiba: nyomtatás sötét témában és a csoportjelölő (az S2–S4-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** A nyomtatás és a kategóriacsoportok minden témában helyesek.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review` (Spec-tengely).
+- **Eredmény:** FAIL – sötét témában világos szöveg került volna fehér papírra; a `summary` `display: flex` eltüntette a nyitás/zárás jelölőt; a témaválasztó gombjai szövegmező-stílust kaptak. Javítva, e2e- és Vitest-tesztekkel.
+- **Következtetés:** új témánál a nyomtatást és a böngésző saját vezérlőit is végig kell nézni.
+
+### V-96 – Az asztali elrendezés és a Kérdezz oldal tesztjeinek elválasztó ereje
+- **Dátum:** 2026-11-17
+- **Állítás:** Az S5, az S6 és a késői javítások új tesztjei elbuknak, ha a szabályaikat megsértjük.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** 19 mutáció (S5 P1–P7, S6 Q1–Q8, javítások R1–R4), egyenként visszaállítva; az e2e-javításoknál (az „Új tétel” kártya késő kapcsolónál, a receptrács, a nyomtatás, a gombméret) a teszt a javítás előtt piros volt.
+- **Eredmény:** PASS, két erősítéssel: P2 (a két szűrőgomb kizárása csak az egyik irányban volt tesztelve), R3 (a fókusz a mezőn volt a teszt előtt is).
+- **Következtetés:** –
+
+### V-97 – Saját hibák az asztali elrendezésben (az S5-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** Az összegző sáv, a kártyák és a receptrács a spec szerint működik.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review` (két tengely, egy ügynök).
+- **Eredmény:** FAIL – az „Új tétel” kártya a böngésző nyitáskor kiadott eseménye miatt nyitva ragadhatott (időzítésfüggő, e2e-vel reprodukálva), az utolsó receptkártya elvesztette az alsó keretét, 1440 px fölött 4 oszlopos lett a rács, a tiltott szűrőgomb elvette a fókuszt, a nyomtatáson és hibás lekérésnél felesleges vagy elavult elemek maradtak. Javítva, tesztekkel.
+- **Következtetés:** natív elemeknél (`<details>`) a böngésző eseményeit is figyelembe kell venni; a régi CSS-szabályok (`:last-child`) új környezetben is hatnak.
+
+### V-98 – Saját hibák a Kérdezz oldalon (az S6-review találta)
+- **Dátum:** 2026-11-17
+- **Állítás:** A Kérdezz oldal új vezérlői teljesítik a projekt akadálymentességi minimumát.
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** `/code-review`; mérés.
+- **Eredmény:** FAIL – a kis gombok 36 px magasak voltak (a minimum 44 px), a megtagadott vágólap kezeletlen hibát adott, a gomb neve nem tartalmazta a látható szót (WCAG 2.5.3), a folytató gomb után elveszett a fókusz, és egy hibás válasz felülírta a beírt piszkozatot; sötét témában az avatar háttere eltűnt. Javítva (a másológomb a fejlesztő kérésére csak ikon, szöveges névvel), tesztekkel.
+- **Következtetés:** új, kis vezérlőnél a projekt saját minimumát (44 px) is mérni kell, nem csak a WCAG-ét.
+
+### V-99 – „A picomatch-figyelmeztetés nem érinti a felhasználókat”
+- **Dátum:** 2026-11-17
+- **Állítás:** A CI-t elbuktató `picomatch` ReDoS-hiba (GHSA-fc5q-39xc-vjpf, ≤ 4.0.7, javított változat nincs) csak a fejlesztői eszközökben van, a felhasználóhoz kerülő kódban nem.
+- **Kockázat:** Alacsony (a build csak a projekt saját glob-mintáit dolgozza fel).
+- **Ellenőrzési módszer:** `npm audit --omit=dev` (0 sérülékenység); `npm ls picomatch` (csak `vite`, `vitest`, `tinyglobby`, `fdir` alatt); az `npm audit fix --force` a `vitest`-et 3.1.4-re vinné vissza, ezért nem alkalmazható.
+- **Eredmény:** PASS. A fejlesztő döntése (A): a frontend kapuja a futásidejű csomagokra blokkoló, a teljes ellenőrzés jelző (`continue-on-error`), dokumentált elfogadott kockázatként ([privacy_licensing.md](../05_security_ops/privacy_licensing.md) „Sérülékenységek”).
+- **Következtetés:** a javított `picomatch` megjelenésekor a teljes ellenőrzést vissza kell állítani blokkolóra.
+
+### V-100 – „A metrika-lekérdezések a definíció szerint számolnak”
+- **Dátum:** 2026-11-19
+- **Állítás:** A [metrics.sql](../01_product/metrics.sql) négy lekérdezése a [metrics.md](../01_product/metrics.md) definícióit valósítja meg (a hamarosan lejáró határ, a budapesti nap, az aktív háztartás, a G1 eredeti és pazarolt mennyisége, a mondatonkénti számolás, az ablakok határai).
+- **Kockázat:** Közepes (a North Star és a guardrailek a dolgozat értékelésének alapjai; egy rossz határ csendben torzít).
+- **Ellenőrzési módszer:** kézzel számolt értékek metrikánként külön, frissen migrált adatbázisban ([MetricsQueryTests.cs](../../tests/KamraApp.Integration.Tests/MetricsQueryTests.cs)); mutációs ellenőrzés a lefordított tesztkönyvtár SQL-másolatán (a forrás érintetlen), és a Domain `Expiry.SoonExpiringDays` állandóján tárolás–visszaírás módszerrel; két review (Claude, két külön ügynök: kódolási szabályok és spec).
+- **Eredmény:** PASS a javítások után. Az első körben 25 SQL-mutációból 24 és az állandó elbukott; az „UTC-nap” mutáció túlélt (két eset egymást kompenzálta), a teszt erősítve. A spec-review további öt határ-mutációt talált, amely túlélt volna (az ablakok szűkítése), és egy valódi hibát: a G2 14 napja `interval '14 days'`-szel UTC-munkamenetben 336 óra, így a nyári időben regisztráltnál egy órát csúszott – javítva (budapesti falióra), tesztesettel. A végső kör: 36 SQL-mutáció és az állandó, 37/37 elbukott.
+- **Következtetés:** az ablakhatárokat mindkét irányban (szűkítés és tágítás) kell mutálni; az elsőként megírt tesztadat csak a tágítást fogta meg.
+
+### V-101 – „A futtatási parancsok a Compose-stacken működnek”
+- **Dátum:** 2026-11-19
+- **Állítás:** A `metrics.md` két parancsa (a mai nap és a `PGOPTIONS`-szal megadott nap) a helyi Docker Compose adatbázisán lefut, a `postgres:18` image ismeri az `Europe/Budapest` zónát, és a G3 naplós PowerShell-parancsa kiszámolja a p95-öt.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** futtatás a helyi stacken (`kamra`), a `kamra.as_of=2026-11-30` beállítással (a hetek nov. 16-ra és 23-ra léptek); a naplós parancs az elkülönített e2e-stacken a `quick-entry.spec.ts` után (LLM-csonk).
+- **Eredmény:** PASS – a lekérdezések kilépési kódja 0; a dátum-felülírás hat; a naplóból 8 LLM-hívás, p95 95 ms (a csonk válaszideje).
+- **Következtetés:** a parancsok a dokumentált formában használhatók; a valódi LLM-válaszidőt a tesztfelhasználói mérés adja.
+
+### V-102 – „A G1 a mozgáskori lejárattal számol” (a data_model korábbi állítása)
+- **Dátum:** 2026-11-19
+- **Állítás:** A `data_model.md` (az MI javaslata egy PR-review nyomán, [P-14](prompt_log.md)): „a metrikák (megmentett főzés, G1) az `ExpiryDateAtMovement`-tel számolnak”.
+- **Kockázat:** Közepes (téves pazarlási arány).
+- **Ellenőrzési módszer:** a kód végigkövetése: a lejárat szerkesztése (`PantryItem.UpdateDetails`) nem ír mozgást, ezért egy mozgás nélkül javított lejárat a mozgáskori dátumon marad; teszteset: nov. 5-i tétel, mozgás nélkül nov. 20-ra javítva.
+- **Eredmény:** **FAIL** a G1-re: a mozgáskori lejárat szerint a még jó tétel lejártnak és 100%-ban pazaroltnak látszana. A North Starra az állítás helyes. Javítva: a G1 a tétel aktuális lejáratával számol; a `data_model.md` és a `metrics.md` pontosítva, a teszt a javított lejáratú tételt ellenőrzi.
+- **Következtetés:** egy „a múltat védő” mező csak azokra az adatokra véd, amelyek változását naplózzuk; a definíciót a tényleges írási utakkal kell összevetni.
+
+### V-103 – „Az ajánlás-végpont p95-je 300 ms alatt van” (QA-5, S-3)
+- **Dátum:** 2026-11-19
+- **Állítás:** 10 párhuzamos felhasználónál, háztartásonként 50 készlettétellel az ajánlás p95 válaszideje legfeljebb 300 ms, hibás válasz nélkül.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** terheléses mérés a [recommendations.mjs](../../tests/perf/recommendations.mjs) szkripttel a Docker Compose stack ellen (külön projekt, 8091-es port): 50 bemelegítő és 500 mért kérés, háromszor; változatok: 300 tétel/háztartás, illetve 50 felhasználó 1000 kéréssel ([performance.md](../04_quality/performance.md)).
+- **Eredmény:** PASS – p95 22,2, 21,1 és 18,0 ms, 0 hiba; 300 tételnél p95 24,7 ms; 50 felhasználónál p95 109,8 ms (a cél ekkor is teljesül). A válaszidő a párhuzamossággal nő, a készlet méretével alig, miközben a konténerek CPU-terhelése alacsony maradt.
+- **Következtetés:** a cél bőven teljesül, javítás nem kell; a valószínű korlát a kérésenkénti adatbázis-körök száma (a biztonsági bélyeg ellenőrzése is), ezt egy későbbi mérés bonthatja tovább.

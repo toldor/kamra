@@ -16,11 +16,11 @@ Hasonló recept-, kamra- és bevásárlólista-alkalmazások funkciónkénti ös
 | **Bring!** [8] | n.e. | n.e. | n.e. (heti receptválogatás) | n.e. | ✓ | ✓ | n.e. | n.e. | n.e. |
 | **AnyList** [9] | n.e. | n.e. | n.e. | n.e. | ✓ | ✓ | ✓ | n.e. | n.e. |
 | **Pantry Vault AI** (nyílt forrású projekt) [10] | ✓ | ✓ | n.e. | n.e. | n.e. | n.e. | n.e. | n.e. | bemásolt lista → LLM kinyeri a tételeket, mennyiséget és lejáratot |
-| **Kamra** *(tervezett, még nincs implementálva)* | ✓ | ✓ (kategória alapú becsléssel) | ✓ | ✓ | ✓ | ✗ (non-goal) | ✓ | ✓ | form, egy mondatos szabad szöveg jóváhagyással |
+| **Kamra** *(megvalósítva, `v0.8.0`)* | ✓ | ✓ (kategória alapú becsléssel) | ✓ | ✓ | ✓ | ✗ (non-goal) | ✓ | ✓ | form, egy mondatos szabad szöveg jóváhagyással |
 
 ## Megkülönböztető érték
 
-**Tudott hiányosság:** a jelenlegi terv szerint a Kamrának nincs olyan funkciója vagy értéke, amelyről forrással igazolható, hogy más alkalmazásban nincs meg. A táblázat alapján minden tervezett fő funkció (lejárat-követés, lejárat szerint rangsorolt receptajánlás, főzés utáni levonás, bevásárlólista) legalább egy versenytársban megtalálható. Az egy mondatos, szabad szöveges bevitel is létezik [10]. Negatív állítás, például „más app nem magyar nyelvű” vagy „más app nem indokolja az ajánlást”, a teljes piac átvizsgálása nélkül nem igazolható. Az ellenőrzés menete: [verification_log V-01](../07_ai/verification_log.md).
+**Tudott hiányosság:** a Kamrának nincs olyan funkciója vagy értéke, amelyről forrással igazolható, hogy más alkalmazásban nincs meg. A táblázat alapján minden tervezett fő funkció (lejárat-követés, lejárat szerint rangsorolt receptajánlás, főzés utáni levonás, bevásárlólista) legalább egy versenytársban megtalálható. Az egy mondatos, szabad szöveges bevitel is létezik [10]. Negatív állítás, például „más app nem magyar nyelvű” vagy „más app nem indokolja az ajánlást”, a teljes piac átvizsgálása nélkül nem igazolható. Az ellenőrzés menete: [verification_log V-01](../07_ai/verification_log.md).
 
 Ami a táblázatból igazolhatóan kiolvasható: a magyar nyelvet a Samsung Food és a KitchenPal a saját nyelvlistája szerint nem támogatja [2][3]. Ez két konkrét alkalmazásra igaz, nem a piac egészére.
 

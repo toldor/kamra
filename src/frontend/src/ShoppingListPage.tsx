@@ -4,7 +4,9 @@ import {
 } from './api/client'
 import { useFieldErrors } from './fieldErrors'
 import { allUnits, findIngredient, formatAmount, formatDay, formatListLine, matchesSearch, unitsOf } from './format'
+import { Icon } from './Icon'
 import { IngredientPicker } from './IngredientPicker'
+import { LoadingRows } from './Loading'
 
 type Data = { suggestions: ShoppingSuggestion[]; items: ShoppingListItem[]; ingredients: Ingredient[] }
 
@@ -249,10 +251,14 @@ export function ShoppingListPage({ onSignedOut }: { onSignedOut: (notice: string
 
   return (
     <main>
-      <h1 tabIndex={-1}>Bevásárlólista</h1>
+      {/* ui_polish_minispec 11.: the browser's own print; the print styles leave the frame and the controls out. */}
+      <div className="page-head">
+        <h1 tabIndex={-1}>Bevásárlólista</h1>
+        <button type="button" className="secondary" onClick={() => window.print()}>Nyomtatás</button>
+      </div>
       <p ref={noticeRef} role="status" className="notice" tabIndex={-1}>{notice}</p>
       <div ref={errorRef} role="alert" className="form-error" tabIndex={-1}>{error}</div>
-      {load.status === 'loading' && <p role="status">Betöltés…</p>}
+      {load.status === 'loading' && <LoadingRows />}
       {load.status === 'error' && (
         <div>
           <p role="alert">{load.message}</p>
@@ -284,16 +290,11 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
   const shown = items.filter((i) => matchesSearch(search, i.ingredientName))
 
   return (
-    // C3: the suggestions and the list in the content column, the minimum levels beside them.
-    <div className="split">
-      <div className="content">
-        {suggestions.length > 0 && (
-          <section aria-labelledby="suggestions-heading" className="panel">
-            <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
-            {/* key: a new suggestion for the same ingredient starts with its own amount. */}
-            {suggestions.map((s) => <SuggestionRow key={s.id} suggestion={s} busy={busy} write={write} />)}
-          </section>
-        )}
+    // ui_polish_minispec 19. (A8), the developer (2026-11-17): from 1024 px the list on the left and the suggestions on
+    // the right (in reading order); on a narrower screen the suggestions stay above the list. The minimum levels under
+    // them, as wide as both.
+    <div className="content">
+      <div className="shopping-pair">
 
         <section aria-labelledby="list-heading" className="panel">
           <h2 id="list-heading">A listád</h2>
@@ -306,11 +307,14 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
               </form>
             )}
             {items.length === 0 && (
-              <p className="empty">
-                {suggestions.length > 0
-                  ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
-                  : 'A listád üres. Vegyél fel tételt alább.'}
-              </p>
+              <div className="empty-state">
+                <Icon name="list" size={48} />
+                <p className="empty">
+                  {suggestions.length > 0
+                    ? 'A listád üres. Fogadj el egy javaslatot, vagy vegyél fel tételt alább.'
+                    : 'A listád üres. Vegyél fel tételt alább.'}
+                </p>
+              </div>
             )}
             {items.length > 0 && shown.length === 0 && <p className="empty">Nincs a keresésnek megfelelő tétel a listádon.</p>}
           </div>
@@ -354,9 +358,16 @@ function Content({ data: { suggestions, items, ingredients }, busy, write, onChe
               `Felvettem a listára: ${formatListLine(ingredient.name, amount.amount === null ? null : { value: amount.amount, unit: amount.unit })}.`)}
           />
         </section>
+        {suggestions.length > 0 && (
+          <section aria-labelledby="suggestions-heading" className="panel suggestions">
+            <h2 id="suggestions-heading">Javaslatok ({suggestions.length})</h2>
+            {/* key: a new suggestion for the same ingredient starts with its own amount. */}
+            {suggestions.map((s) => <SuggestionRow key={s.id} suggestion={s} busy={busy} write={write} />)}
+          </section>
+        )}
       </div>
 
-      <section aria-labelledby="minimum-heading" className="panel side">
+      <section aria-labelledby="minimum-heading" className="panel minimums">
         <h2 id="minimum-heading">Minimumszintek</h2>
         <div className="panel-body">
           <p className="hint">Ha egy hozzávalóból a minimumszint alá csökken a készlet, felveszem a bevásárlójavaslatok közé.</p>
