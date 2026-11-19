@@ -6,6 +6,7 @@ A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; 
 
 ### Hozzáadva
 - A North Star és a három guardrail metrika lekérdezése ([metrics.sql](../01_product/metrics.sql), CAP-12), szintetikus adaton, kézzel számolt értékekkel tesztelve; futtatás: [metrics.md](../01_product/metrics.md).
+- Teljesítménymérés az ajánlás-végpontra ([performance.md](../04_quality/performance.md), mérőszkript: `tests/perf/recommendations.mjs`), demóforgatókönyv ([demo_script.md](demo_script.md)), önértékelés ([self_assessment.md](self_assessment.md)), post-mortem ([postmortem.md](../04_quality/postmortem.md)), három naplóalapú üzemeltetési metrika ([observability.md](../05_security_ops/observability.md)), rövid használati útmutató képernyőképekkel a README-ben.
 
 ### Módosítva
 - A feature freeze (nov. 20.) alól egy kivétel: az opcionális heti e-mail (Stretch 4), ha a felhasználói kipróbálás 2. köréig elkészül.

@@ -56,7 +56,24 @@ Az aktuális képességállapot: [capability map](docs/01_product/capability_map
 
 A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án, a `v0.8.0` (kinézet és kezelhetőség) nov. 17-én, a metrika-lekérdezések (CAP-12) nov. 19-én elkészültek. Következő mérföldkő: **nov. 20.** – a feature freeze, a dolgozat és a projektcsomag; utána az UAT 2. köre. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
-## Tervezett MVP-lépcsők
+## Használat röviden
+
+A képek a `v0.8.0` felületéről, kitalált adatokkal készültek; az AI-képeken a tesztkörnyezet LLM-csonkjának válasza látszik. A teljes bemutató menete: [demóforgatókönyv](docs/06_release/demo_script.md).
+
+1. **Készlet:** rögzítsd, mit vettél – tételenként az „Új tétel” kártyán, vagy egy mondatban a „Mondatos bevitel” mezőben. Lejárat nélkül a rendszer a kategóriából becsül; a hamarosan lejáró tételt jelöli.
+   ![A Készlet oldal asztali nézetben](docs/assets/v080-keszlet-1280.png)
+2. **Mondatos bevitel:** a mondatból szerkeszthető kártyák lesznek; a készletbe csak a „Jóváhagyom” után kerül bármi.
+   <img src="docs/assets/v080-mondatos-bevitel-360.png" alt="Javaslatkártyák egy mondatból" width="240">
+3. **Mit főzzek?:** elöl a hamarosan lejáró alapanyagot felhasználó receptek; a majdnem elkészíthetőnél a hiány „van / kell” bontásban, egy kattintással a listára tehető.
+   <img src="docs/assets/v080-mit-fozzek-360.png" alt="A Mit főzzek? oldal" width="240">
+4. **Főzés:** add meg, mennyit használtál fel; a rendszer a legkorábban lejáró tételtől von le, és megmutatja, mi fogyott el.
+   <img src="docs/assets/v080-fozes-360.png" alt="A főzés megerősítése" width="240">
+5. **Bevásárlólista:** az elfogyott vagy a minimumszint alá csökkent hozzávalóból javaslat lesz, az okával; te döntöd el, felkerül-e.
+   <img src="docs/assets/v080-bevasarlolista-360.png" alt="Bevásárlójavaslat" width="240">
+6. **Kérdezz:** kérdezz a készletedről élő nyelven, vagy kérj receptötletet; a chat csak olvas, a receptet te mented el.
+   <img src="docs/assets/v080-kerdezz-360.png" alt="A Kérdezz oldal" width="240"> <img src="docs/assets/v080-receptotlet-360.png" alt="Receptötlet" width="240">
+
+## MVP-lépcsők
 
 ### 1. Determinisztikus mag
 
@@ -149,6 +166,12 @@ A teljes dokumentáció a repository `docs` könyvtárában található.
 - [Kézi tesztek](https://github.com/toldor/kamra/blob/develop/docs/04_quality/manual_tests.md)
 - [Megfeleltetési táblázat](https://github.com/toldor/kamra/blob/develop/docs/04_quality/traceability.md)
 - [UAT-terv](https://github.com/toldor/kamra/blob/develop/docs/04_quality/uat.md)
+- [Tesztjelentés](https://github.com/toldor/kamra/blob/develop/docs/04_quality/test_report.md)
+- [Teljesítménymérés](https://github.com/toldor/kamra/blob/develop/docs/04_quality/performance.md)
+- [Mérőszámok](https://github.com/toldor/kamra/blob/develop/docs/01_product/metrics.md)
+- [Demóforgatókönyv](https://github.com/toldor/kamra/blob/develop/docs/06_release/demo_script.md)
+- [Önértékelés](https://github.com/toldor/kamra/blob/develop/docs/06_release/self_assessment.md)
+- [Változásnapló](https://github.com/toldor/kamra/blob/develop/docs/06_release/changelog.md)
 
 ## Futtatás
 
@@ -226,7 +249,8 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 | 1. lépcső | Determinisztikus készlet-, recept-, főzés- és bevásárlólista-funkciók | Kész (v0.3.0, 2026-10-24; az UAT előtti javítások: v0.3.1, 2026-10-31; új felület: v0.4.0, 2026-11-01); a felhasználói kipróbálás okt. 26-tól |
 | 2. lépcső | AI-alapú egy mondatos készletbevitel | Kész (`v0.5.0`, nov. 8.; eredeti cél: nov. 3.) |
 | 3. lépcső | Olvasási célú chat és mérési funkciók | Kész (`v0.6.0`, nov. 12.) |
-| Lezárás | Tesztek, hardening, dokumentáció, demó és szakdolgozati anyag | Tervezett (cél: dec. 4.) |
+| Bővítések | Receptötlet a chatből (Stretch 1), kinézet és kezelhetőség (Stretch 3), a mérőszámok lekérdezése | Kész (`v0.7.0`, nov. 16.; `v0.8.0`, nov. 17–19.) |
+| Lezárás | Teljesítménymérés, demóforgatókönyv, önértékelés; a felhasználói kipróbálás 2. köre; javított dolgozat és alkalmazás | Folyamatban (nov. 20.: az első teljes dolgozat; dec. 4.: a javított változat) |
 
 ## Biztonsági és minőségi alapelvek
 

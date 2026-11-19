@@ -850,3 +850,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** a kód végigkövetése: a lejárat szerkesztése (`PantryItem.UpdateDetails`) nem ír mozgást, ezért egy mozgás nélkül javított lejárat a mozgáskori dátumon marad; teszteset: nov. 5-i tétel, mozgás nélkül nov. 20-ra javítva.
 - **Eredmény:** **FAIL** a G1-re: a mozgáskori lejárat szerint a még jó tétel lejártnak és 100%-ban pazaroltnak látszana. A North Starra az állítás helyes. Javítva: a G1 a tétel aktuális lejáratával számol; a `data_model.md` és a `metrics.md` pontosítva, a teszt a javított lejáratú tételt ellenőrzi.
 - **Következtetés:** egy „a múltat védő” mező csak azokra az adatokra véd, amelyek változását naplózzuk; a definíciót a tényleges írási utakkal kell összevetni.
+
+### V-103 – „Az ajánlás-végpont p95-je 300 ms alatt van” (QA-5, S-3)
+- **Dátum:** 2026-11-19
+- **Állítás:** 10 párhuzamos felhasználónál, háztartásonként 50 készlettétellel az ajánlás p95 válaszideje legfeljebb 300 ms, hibás válasz nélkül.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** terheléses mérés a [recommendations.mjs](../../tests/perf/recommendations.mjs) szkripttel a Docker Compose stack ellen (külön projekt, 8091-es port): 50 bemelegítő és 500 mért kérés, háromszor; változatok: 300 tétel/háztartás, illetve 50 felhasználó 1000 kéréssel ([performance.md](../04_quality/performance.md)).
+- **Eredmény:** PASS – p95 22,2, 21,1 és 18,0 ms, 0 hiba; 300 tételnél p95 24,7 ms; 50 felhasználónál p95 109,8 ms (a cél ekkor is teljesül). A válaszidő a párhuzamossággal nő, a készlet méretével alig, miközben a konténerek CPU-terhelése alacsony maradt.
+- **Következtetés:** a cél bőven teljesül, javítás nem kell; a valószínű korlát a kérésenkénti adatbázis-körök száma (a biztonsági bélyeg ellenőrzése is), ezt egy későbbi mérés bonthatja tovább.

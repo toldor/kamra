@@ -3,7 +3,7 @@
 A Kamra projekt AI-first módon készül. Ez a dokumentum leírja, **milyen AI eszközöket, mire és milyen korlátokkal** használok.
 Élő dokumentum: a fejlesztés során folyamatosan bővül. Részletek: [prompt_log.md](prompt_log.md), [verification_log.md](verification_log.md).
 
-Utolsó frissítés: 2026-10-18
+Utolsó frissítés: 2026-11-19
 
 ---
 
@@ -102,5 +102,6 @@ Technikai védelem: `.gitignore` (`.env`), `.env.example` érték nélkül, comm
 - **Azonos modellcsaládú reviewer, kritikusnak jelölt téves állítással ([V-38](verification_log.md), [V-39](verification_log.md)).** A T1 reviewja (Claude Sonnet 4.6) „Kritikus” SQL-injekciót jelzett egy paraméterezett lekérdezésben, és három már meglévő tesztet hiányzónak nevezett. Tanulság: a súlyosság nem bizonyíték; minden állítást a kódon és forrással ellenőrzök, és a reviewer modellcsaládját a naplóban rögzítem.
 - **A formázó csonkolhatja a nem forduló fájlt ([V-41](verification_log.md)).** Egy szintaktikailag hibás tesztfájlon futtatott `dotnet format` négy tesztet törölt; a tesztszám csökkenéséből derült ki. Tanulság: formázás csak forduló kódon, és a tesztszámot minden futás után összevetem az előzővel.
 - **A spec szerinti review valódi hibát talált ([V-32](verification_log.md)).** A `/code-review` spec-ügynöke a kg-os recept és a grammos készlet kombinációját végigkövetve olyan hibát talált, amelyet sem a tesztek, sem az implementáló nem vett észre. Tanulság: a két tengelyt (kódolási szabályok és spec) érdemes külön ügynökkel vizsgálni.
+- **A saját mutációs próba is lehet egyoldalú ([V-100](verification_log.md), [V-102](verification_log.md)).** A mérőszámok lekérdezésénél az MI csak az ablakhatárok tágítását mutálta, a szűkítést nem, így öt hibás változat túlélt volna; a spec-review ezt és egy valódi nyári időszámítási hibát is megtalált, a `data_model.md` egy korábbi MI-állításáról pedig kiderült, hogy a lejárat szerkesztése nem naplózódik, így a mozgáskori lejárat hamis pazarlást mutatna. Tanulság: határt mindkét irányban kell mutálni, és egy definíciót a tényleges írási utakkal kell összevetni.
 - **Helyi kapu kimaradt, a CI piros lett (S5).** Az AI „zöldet” jelentett a `dotnet format` ellenőrzés nélkül, a CI backend-jobja elbukott. Tanulság: a „zöld” jelentés előtt minden CI-kaput helyben kell futtatni.
 
