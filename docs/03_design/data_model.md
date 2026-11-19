@@ -100,7 +100,7 @@ Csak hozzáfűzhető: sor nem módosul és nem törlődik. Domain-entitás: [Sto
 | Delta | numeric(12,3) | Előjeles változás alapegységben (+ bevitel, − csökkenés) |
 | Reason | text | `Added` (bevitel), `Consumed` (*elfogyott*), `Discarded` (*kidobtam*), `Corrected` (*hibás rögzítés*) |
 | CookingId | uuid (FK → Cooking.Id), null | Kitöltve, ha a mozgást főzés okozta (mindig `Consumed`); `NO ACTION`; az `AddCookings` migráció adta hozzá |
-| ExpiryDateAtMovement | date | A készlettétel lejárata a mozgás pillanatában; a metrikák (megmentett főzés, G1) ezzel számolnak, így a lejárat utólagos szerkesztése nem írja át a múltat |
+| ExpiryDateAtMovement | date | A készlettétel lejárata a mozgás pillanatában; a megmentett főzés (North Star) ezzel számol, így a lejárat utólagos szerkesztése nem írja át a múltat. A G1 a tétel aktuális `ExpiryDate`-jével számol, mert a lejárat szerkesztése nem naplózódik ([metrics.md](../01_product/metrics.md), [V-102](../07_ai/verification_log.md)) |
 | OccurredAt | timestamptz | Időpont (UTC) |
 
 - A kézi csökkentésnél a felhasználó választja az okot (US-1); a mennyiség szerkesztéssel történő növelése `Corrected`, mert az új vásárlás új készlettétel.

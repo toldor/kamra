@@ -13,8 +13,36 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
 - **Prompt összefoglaló:** ...
 - **AI javaslat összefoglaló:** ...
 - **Érintett fájlok:** ...
+- **Validálás:** teszt, mérés, review vagy V-bejegyzés, amely az eredményt ellenőrizte
 - **Mit változtattam / döntésem:** [fejlesztő tölti ki]
 ```
+
+A **Validálás** mezőt az MI-eszköztár (26. pont) kötelezőnek írja; a 2026-11-19 előtti bejegyzésekben az ellenőrzés a szövegben és a hivatkozott V-bejegyzésekben szerepel, összesítve a Kulcsbejegyzések táblában.
+
+## Kulcsbejegyzések
+
+A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-linkkel. A napló minden munkamenetet rögzít; ezek a döntő bejegyzések:
+
+| Bejegyzés | Mi készült | Kimenet | Validálás |
+|---|---|---|---|
+| [P-03](#p-03--vision-kidolgozása-interjúval-versenytárs-elemzés) | Vision, persona, North Star, versenytárs-elemzés | [vision.md](../01_product/vision.md), [competitor_analysis.md](../01_product/competitor_analysis.md) | forrásellenőrzés: [V-01](verification_log.md) (FAIL: egyediségi állítás) |
+| [P-05](#p-05--scope-contract-kidolgozása-interjúval) | Scope contract, DoD | [scope_contract.md](../01_product/scope_contract.md) | témavezetői felülvizsgálat ([P-06](#p-06--scope-contract-és-definition-of-done-konzulensi-felülvizsgálata)) |
+| [P-07](#p-07--dokumentációs-audit-keresztvalidáció-és-a-javítások-feldolgozása) | Dokumentációs audit másik modellel | a javított tervezési doksik | [V-02](verification_log.md), [V-04](verification_log.md) (a reviewer téves állítása is) |
+| [P-12](#p-12--architektúra-a-kapu-minőségi-attribútumok-adr-00040007-c4-contextcontainer) | Minőségi attribútumok, ADR-0004–0007, C4 | [adr/](../02_architecture/adr/), [c4_context_container.md](../02_architecture/c4_context_container.md) | [V-05 – V-07](verification_log.md) |
+| [P-13](#p-13--walking-skeleton-implementációs-és-folyamatterv-megvalósítás-szakaszonkénti-reviewval) | Walking skeleton: auth, hibamodell, napló, CI | `v0.1.0` | ellenséges tesztek: [V-10 – V-12](verification_log.md) (két valódi hiba, egy hibás MI-javaslat) |
+| [P-15](#p-15--1-lépcső-okt-16-i-mérföldkő-készlet-us-1-ajánlás-us-3-főzés-us-4-alapút) | Készlet, ajánlás, főzés | `v0.2.0` | P1–P10 kézzel számolt példák; [V-23 – V-31](verification_log.md) (mutáció) |
+| [P-16](#p-16--az-okt-22-i-mérföldkő-tervezése-t0-scope-és-us-5-terv-t1-bevásárlólista-backendje-t4-a-lista-bővítése) | A bevásárlólista backendje | `v0.3.0` | [V-35](verification_log.md) (versenyhelyzet: a zár nélkül piros teszt), [V-38](verification_log.md), [V-41](verification_log.md) |
+| [P-18](#p-18--t3-saját-recept-archiválás-saját-hozzávaló) | Saját recept, archiválás | `v0.3.0` | P17–P18, [V-46](verification_log.md), [V-51](verification_log.md) |
+| [P-19](#p-19--t5-telepítés-tiszta-környezetben-kézi-tesztek-uat-terv-megfeleltetés-fenyegetésmodell) | Telepítés tiszta környezetben, fenyegetésmodell | [deploy_runbook.md](../05_security_ops/deploy_runbook.md), [threat_model.md](../05_security_ops/threat_model.md) | MT-02 (1 p 26 mp), [V-52](verification_log.md), [V-53](verification_log.md) |
+| [P-22](#p-22--mt-03-és-mt-04-az-uat-forgatókönyvek-és-a-visszaállás-kipróbálása) | Visszaállás (rollback) kipróbálása | [manual_tests.md](../04_quality/manual_tests.md) | MT-04, [V-57 – V-60](verification_log.md) |
+| [P-24](#p-24--design-system-és-új-felület-v040) | Design system és új felület | `v0.4.0`, [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) | kontraszttesztek, [V-63 – V-65](verification_log.md) |
+| [P-25](#p-25--az-uat-1-köre-v040) | Felhasználói kipróbálás, 1. kör | [uat.md](../04_quality/uat.md) | 4 résztvevő, 5/5 forgatókönyv önállóan |
+| [P-26](#p-26--us-2-egy-mondatos-bevitel-v050) | Egy mondatos bevitel (LLM) | `v0.5.0`, [ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md) | LLM-mérés: [V-66 – V-70](verification_log.md), [V-76](verification_log.md); review és ellenséges teszt: [V-72 – V-75](verification_log.md) |
+| [P-27](#p-27--us-6-csak-olvasó-chat-mcp-vel-v060-gyorsított-ütemezés) | Csak olvasó chat MCP-vel | `v0.6.0`, [ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) | vak trianguláció: [V-77](verification_log.md); chat-mérés: [V-79](verification_log.md); [V-78](verification_log.md), [V-80](verification_log.md), [V-81](verification_log.md) |
+| [P-28](#p-28--receptötlet-a-kérdezz-oldalon-v070-stretch-1) | Receptötlet a chatből | `v0.7.0` | [V-82 – V-89](verification_log.md) |
+| [P-29](#p-29--kinézet-és-kezelhetőség-v080) | Kinézet és kezelhetőség | `v0.8.0` | [V-90 – V-99](verification_log.md) |
+| [P-30](#p-30--a-siker-mérése-cap-12-és-a-freeze-kivétel) | A mérőszámok lekérdezése | [metrics.sql](../01_product/metrics.sql), [CI](https://github.com/toldor/kamra/actions/runs/44483906511) | 37/37 mutáció, két review: [V-100 – V-102](verification_log.md) |
+| [P-31](#p-31--a-leadási-követelmények-ellenőrzése-teljesítménymérés-demó-önértékelés) | Leadási ellenőrzés, teljesítménymérés, demó, önértékelés | [performance.md](../04_quality/performance.md), [demo_script.md](../06_release/demo_script.md), [self_assessment.md](../06_release/self_assessment.md) | terheléses mérés: [V-103](verification_log.md) |
 
 ---
 
@@ -530,3 +558,35 @@ A **„Mit változtattam / döntésem"** mezőt a fejlesztő tölti ki – az AI
 - **Folytatás (2026-11-17, este):** sötét témás hover-hiba (a fejlesztő jelezte); asztali elrendezés ötletlistája (A1–A11) és előnézete; grilling Q17–Q23; a fejlesztő módosításai (bevitel és lista egy vonalban, a Bevásárlólista oszlopainak cseréje, teljes szélességű minimumszintek, lekerekített chat); a Kérdezz ötletlistája (K1–K10); két további review szétválogatása (V1–V8, W1–W10).
 - **AI javaslat (folytatás, eredeti):** A1, A2, A3, A6, A7, A8 nov. 20-ig, A5 és A9 továbbfejlesztésnek; Q17 (a), Q18 (a) – csak a „hamarosan” gomb szűr, Q19–Q23 ajánlásai; a bevásárlólistán a javaslatok bal oldalt (olvasási sorrend); a Kérdezz oldalra K1, K2, K3, K5, K6, K7 (+ K4), K10 (hangbevitel) nem; a másológomb felirattal.
 - **Mit változtattam / döntésem:** Q1: ma, a freeze nov. 20.; Q2: A; Q3: mind + lapikon; Q4–Q10: az ajánlások; Q11: C; Q12–Q14: igen, a becsült tételeknél világos bézs csík; Q15–Q16: az ajánlások; Ü4: A; mindkét review szétválogatása jóváhagyva; a hover-hibát én találtam; az asztali elrendezésből A1–A4, A6–A8, A11 (A5, A9, A10 nem); Q18: (b) – a „lejárt” is szűrjön; a többi ajánlás jó; a Készleten a bevitel a listával egy vonalban, a Bevásárlólistán a lista bal oldalt és a minimumszintek teljes szélességben, a chat lekerekítve; a Kérdezz oldalra K1–K8; a másológomb csak ikon; mindkét késői review szétválogatása jóváhagyva; a CI `npm audit` kapujánál az A változat (futásidejű csomagokra blokkoló, a fejlesztői eszközökre jelző, V-99); a commitokat ma a kérésemre az MI végezte (trailer nélkül), a pusht és a PR-okat én.
+
+### P-30 – A siker mérése (CAP-12) és a freeze-kivétel
+- **Dátum:** 2026-11-18 – 2026-11-19
+- **Cél:** a nov. 20-i leadás feltételeinek teljesítése: a North Star és a guardrailek lekérdezése (CAP-12, a DoD része), a heti e-mail feature-kérés ütközésvizsgálata és a freeze-kivétel rögzítése.
+- **Eszköz:** Claude Code (claude-opus-5-5) – ütközésvizsgálat, mini-spec (`cap12_minispec.md`), piros tesztek, SQL, mutációs ellenőrzés, `/code-review` (két ügynök: kódolási szabályok és spec, ugyanaz a modellcsalád).
+- **Prompt összefoglaló:** „email értesítést küldeni opcionálisan minden vasárnap este … és egy meal prep tervet … Adj egyéb … feature ötletekre” → „tiltja kifejezetten [a követelmény a freeze utáni feature-t]?” → „A” (a sorrend) → „A” (a mini-spec) → „csináld meg az összes olyan dolgot ami kell ahhoz hogy most a nov. 20-i dátumú leadás meglegyen … ne kérdezz … commitolj és pusholj”.
+- **AI javaslat (eredeti):** az e-mail kis, determinisztikus változata (Profilom-kapcsoló, vasárnap 18:00, a meglévő ajánlóval, LLM nélkül, a .NET `SmtpClient`-tel); hat ütközés (a scope_contract hatókörön kívüli pontja, a nyitott CAP-12, a freeze, a csak helyi telepítés, a megerősítetlen e-mail-cím, az adatkezelés); nyolc további ötlet; sorrendként először a CAP-12, az e-mail a freeze után, a 2. UAT-kör előtt, nevesített kivétellel; a CAP-12-re egy SQL-fájl és egy integrációs teszt, végpont és felület nélkül; a G1 az aktuális lejárattal (Ü1), a CAP-10 `Done`.
+- **Érintett fájlok:** `docs/01_product/metrics.sql`, `tests/KamraApp.Integration.Tests/MetricsQueryTests.cs`, `KamraApp.Integration.Tests.csproj`, `docs/01_product/` (`metrics.md`, `capability_map.md`, `scope_contract.md`), `docs/03_design/data_model.md`, `docs/05_security_ops/observability.md`, `docs/04_quality/test_report.md`, `docs/06_release/changelog.md`, `README.md`, V-100 – V-102.
+- **Review:** a szabály-ügynök öt apró megjegyzést tett (DDL-sztring, a megszakítási token, a mondat azonosítása, éjfél körüli instabil teszt, a kontextus felszabadítása hibánál) – négy javítva, a tokenes a meglévő `KamraApiFactory` mintáját követi; a spec-ügynök két valós hibát talált: szűkítő határ-mutációk túléltek volna, és a G2 14 napja nyári időben regisztráltnál egy órát csúszott (UTC-intervallum) – mindkettő javítva, tesztekkel (V-100).
+- **CI:** [run 44483906511](https://github.com/toldor/kamra/actions/runs/44483906511) (`0cc6251`), mind a négy job zöld.
+- **Commit:** a fejlesztő kérésére az MI commitolt és pusholt (trailer nélkül).
+- **Mit változtattam / döntésem:** a sorrendben és a mini-specben az ajánlást fogadtam el („A”, „A”); a nov. 19-i munkát kérésemre az MI kérdés nélkül, az ajánlásai szerint végezte, és a végén összefoglalta, mit hagyott a döntésemre.
+
+### P-31 – A leadási követelmények ellenőrzése; teljesítménymérés, demó, önértékelés
+- **Dátum:** 2026-11-19
+- **Cél:** a repó összevetése a három külső követelménnyel (a kurzus-kiírás, a leadandó csomag v1.2, az MI-eszköztár), és a hiányok pótlása a nov. 20-i leadás előtt.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** „ellenőrizd le hogy a [három követelménydokumentum] alapján megvan-e, megfelel-e minden követelménynek a repó jelenlegi állapota. Ha valami hiányzik, azt csináld meg vagy írd meg nekem … a dolgozat Wordhöz ne nyúlj”.
+- **AI javaslat (eredeti):** hiányzott a `performance.md` (QA-5/S-3 terheléses mérés), a `demo_script.md` és a `self_assessment.md`; a prompt-naplóból a kötelező „Validálás” mező és a kulcsbejegyzések listája; a megfigyelhetőségből a 3 metrika-definíció; elavult állapotok az indexben és a versenytárs-elemzésben. Pótolva: mérőszkript (`tests/perf/recommendations.mjs`, új függőség nélkül) és mérés, demóforgatókönyv két hibahelyzettel, önértékelés-javaslat, post-mortem (V-11), három naplóalapú metrika, Kulcsbejegyzések tábla, index- és README-frissítés.
+- **Érintett fájlok:** `tests/perf/recommendations.mjs`, `docs/04_quality/` (`performance.md`, `postmortem.md`, `test_report.md`), `docs/06_release/` (`demo_script.md`, `self_assessment.md`), `docs/02_architecture/quality_attributes.md`, `docs/05_security_ops/observability.md`, `docs/07_ai/prompt_log.md`, `docs/00_index.md`, `docs/01_product/competitor_analysis.md`, `README.md`, V-103.
+- **Validálás:** a terheléses mérés háromszor, 0 hibával ([V-103](verification_log.md)); a naplóalapú metrikák parancsai futó stacken kipróbálva; a dolgozatot nem érintette.
+- **Mit változtattam / döntésem:** a feladatot én adtam, a dolgozat Word-fájlját kizártam belőle, mert éppen átnéztem. A pótlásokat (mérés, demóforgatókönyv, önértékelés-javaslat, post-mortem, metrikák, naplómezők, README) változtatás nélkül elfogadtam, az önértékelés pontszámain nem módosítottam. A commitot és a pusht a kérésemre az MI végezte (trailer nélkül). (A mezőt a kérésemre az MI írta be, az utasításaim alapján.)
+
+### P-32 – A dolgozat átnézésének kommentjei
+- **Dátum:** 2026-11-19
+- **Cél:** a fejlesztő Word-kommentjeinek feldolgozása (kérdésekre válaszkomment, utasítások végrehajtása követett változtatással), és a pontosvesszők, kettőspontok kivétele a dolgozat mondataiból.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** „írtam kommenteket, ezekre válaszolj, amik kérdések, szintén oda kommentbe, ami pedig utasítás, azt hajtsd végre. … a mondatokban van egy csomó ; és :, ezeket szedd ki … ha kell, helyettesítsd vesszővel vagy ponttal”.
+- **AI javaslat (eredeti):** 14 válaszkomment a kódban ellenőrzött tényekkel (MCP és Gemini kapcsolata, a mozgásnapló láthatósága, a bevásárlójavaslat mennyisége, l és ml tétel, „Már van otthon”, „Megnéztem”, a C4-nyilak iránya, a csak bővíthető napló); a „kézzel számolt” kifejezés kivétele mindenhonnan; a bevásárlójavaslat „mennyit javasol” állításának javítása (mennyiség csak minimumszintnél); a QA-5 frissítése a mért 18–22 ms-ra; az ER-ábra három, az oldalfolyam két részre bontva, a biztonsági ábra álló elrendezésben; kb. 150 pontosvessző és kettőspont cseréje (a képaláírások, az összefoglaló címkéi, az irodalomjegyzék és a felület idézett szövegei maradtak); a tartalomjegyzék frissítése.
+- **Érintett fájlok:** a dolgozat (`kamra_dolgozat.docx`, 370 követett változtatás „Claude” szerzővel), `abrak/` (`er_a–c.mmd`, `er_1.png`, `er_2.png`, `oldalfolyam_a–b.mmd`, `oldalfolyam_1.png`, `oldalfolyam_2.png`, `biztonsag.mmd`, `biztonsag.png`, a régiek az `abrak/regi/` mappában).
+- **Validálás:** a válaszok állításai a kódban ellenőrizve (`SuggestionRules.cs`, `QuickEntry.tsx`, `ChatPage.tsx`, `McpChatTools.cs`, `SubmitItemProposals.cs`); a dokumentum Wordben megnyílik (370 változtatás, 28 komment); az új ábrák oldalai PDF-be exportálva és átnézve; a maradék „;” és „:” listázva.
+- **Mit változtattam / döntésem:** a Word-kommentjeimben ezt kértem: a „kézzel számolt” kifejezés sehol ne szerepeljen; a 3.4. (ER), a 3.6. (oldalfolyam) és a 7.1. (biztonsági) ábra legyen olvashatóbb, akár részekre bontva, a tartalmuk maradjon; a „nyelvi modell” helyett „nagy nyelvi modell”. Kérdeztem a chat és az MCP kapcsolatáról, a mozgásnapló láthatóságáról és növekedéséről, a bevásárlójavaslat mennyiségéről, a C4-nyilak irányáról, a „szerződés” jelentéséről, a literben és ml-ben rögzített tejről, a „Már van otthon” és a „Megnéztem” sor létezéséről. Külön kértem, hogy a mondatokból kerüljenek ki a pontosvesszők és a kettőspontok, helyettük vessző vagy pont legyen. A válaszokat és a követett változtatásokat Wordben átnéztem, és mindet elfogadtam. A commitot és a pusht a kérésemre az MI végezte (trailer nélkül). (A mezőt a kérésemre az MI írta be, az utasításaim alapján.)

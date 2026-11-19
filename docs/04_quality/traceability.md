@@ -79,13 +79,22 @@ Rövidítések a tesztoszlopban – Unit: `tests/KamraApp.Unit.Tests`, Int.: `te
 | US-6/3 | Csak a saját háztartás adata | 5. | `POST /chat` | – | Int.: ChatApiTests, AdversarialChatApiTests | Megvalósítva |
 | US-6/4 | LLM-kiesésnél magyar hiba, a felület többi része működik | 5. | `POST /chat` | Kérdezz | Unit: [GeminiChatModelTests.cs](../../tests/KamraApp.Unit.Tests/GeminiChatModelTests.cs); Vitest: [ChatPage.test.tsx](../../src/frontend/src/ChatPage.test.tsx); E2E: chat.spec.ts | Megvalósítva |
 
+## Stretch és mérés
+
+| # | Követelmény | Flow | Végpont | Képernyő | Teszt | Állapot |
+|---|---|---|---|---|---|---|
+| ST-1 | AI-receptötlet szerkeszthető űrlapon, mentés után „AI-javasolt” jelöléssel (Stretch 1) | 5. | `POST /chat` (`recipe`), `POST /recipes` (`aiSuggested`) | Kérdezz, „Új recept”, Receptek | Unit: [AskChatTests.cs](../../tests/KamraApp.Unit.Tests/AskChatTests.cs); Int.: [ChatApiTests.cs](../../tests/KamraApp.Integration.Tests/ChatApiTests.cs); Vitest: [ChatPage.test.tsx](../../src/frontend/src/ChatPage.test.tsx), [RecipesPage.test.tsx](../../src/frontend/src/RecipesPage.test.tsx); E2E: [chat.spec.ts](../../tests/e2e/chat.spec.ts) | Megvalósítva (`v0.7.0`) |
+| ST-3 | Kinézet és kezelhetőség: Profilom, sötét téma, menüsávok, asztali elrendezés (Stretch 3) | Keret és navigáció | – | minden oldal | Vitest: [Layout.test.tsx](../../src/frontend/src/Layout.test.tsx), [Theme.test.tsx](../../src/frontend/src/Theme.test.tsx), [tokens.test.ts](../../src/frontend/src/tokens.test.ts); E2E: [frame.spec.ts](../../tests/e2e/frame.spec.ts), [theme.spec.ts](../../tests/e2e/theme.spec.ts), [desktop.spec.ts](../../tests/e2e/desktop.spec.ts) | Megvalósítva (`v0.8.0`) |
+| M-1 | A metrika-lekérdezések a szintetikus adaton tesztekkel ellenőrzöttek (DoD) | – | – (operátori SQL: [metrics.sql](../01_product/metrics.sql)) | – | Int.: [MetricsQueryTests.cs](../../tests/KamraApp.Integration.Tests/MetricsQueryTests.cs) | Megvalósítva |
+
 ## Nem funkcionális követelmények (a scope_contract 3–4. fejezetéből)
 
 | # | Követelmény | Bizonyíték | Állapot |
 |---|---|---|---|
-| NF-1 | 360 px-es szélesség vízszintes görgetés nélkül; az e2e asztali Chrome-on és 360 px-en fut | Mind a 15 e2e teszt mindkét nézetben, a görgetés-ellenőrzéssel; képernyőképek: `docs/assets/*-360.png` | Megvalósítva |
+| NF-1 | 360 px-es szélesség vízszintes görgetés nélkül; az e2e asztali Chrome-on és 360 px-en fut | Mind a 41 e2e teszt mindkét nézetben, a görgetés-ellenőrzéssel; képernyőképek: `docs/assets/*-360.png`, `docs/assets/v080-*.png` | Megvalósítva |
 | NF-2 | A felület nyelve magyar | Vitest-tesztek a pontos szövegekre; ux_flows | Megvalósítva |
 | NF-3 | Indítás `docker compose up`-pal 15 percen belül tiszta gépen | [manual_tests.md](manual_tests.md) MT-02: 1 p 26 mp; [deploy_runbook.md](../05_security_ops/deploy_runbook.md) | Megvalósítva |
 | NF-4 | Domain + Application sorlefedettség ≥ 80%, CI-ban mérve | CI `backend` job, a lefedettségi kapu | Megvalósítva |
 | NF-5 | Nincs secret a repóban; függőség-sérülékenységi vizsgálat a CI-ban | CI `secrets` (gitleaks), NuGet- és npm-audit ([V-51](../07_ai/verification_log.md)) | Megvalósítva |
-| NF-6 | Felhasználói kipróbálás a célcsoporttal | [uat.md](uat.md) | Részben – az 1. kör kész ([uat.md](uat.md), „Eredmények – 1. kör”); a 2. kör nov. 21–27. |
+| NF-7 | Az ajánlás p95 ≤ 300 ms 10 párhuzamos felhasználónál (QA-5, S-3) | [performance.md](performance.md): p95 18–22 ms, 0 hiba; [V-103](../07_ai/verification_log.md) | Megvalósítva (mérve, nem CI-teszt) |
+| NF-6 | Felhasználói kipróbálás a célcsoporttal | [uat.md](uat.md) | Részben – az 1. kör kész ([uat.md](uat.md), „Eredmények – 1. kör”); a 2. kör a feature freeze után |
