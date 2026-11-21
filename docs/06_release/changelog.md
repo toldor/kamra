@@ -2,6 +2,11 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
+## [Unreleased]
+
+### Módosítva
+- A feature freeze alól a heti e-mailre (Stretch 4) tervezett kivétel visszavonva; a funkció a továbbfejlesztési lehetőségek közé került.
+
 ## [0.8.0] – 2026-11-19 – Kinézet, kezelhetőség és a siker mérése
 
 A fejlesztő kérésére (Stretch 3.), a siker mérőszámainak lekérdezése (CAP-12) és a leadási dokumentáció. Részletek: [ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [ux_flows.md](../01_product/ux_flows.md) „Keret és navigáció”, [metrics.md](../01_product/metrics.md), [P-29 – P-32](../07_ai/prompt_log.md), [V-90 – V-103](../07_ai/verification_log.md).
