@@ -25,22 +25,28 @@ public class ForwardedHeadersTests(KamraApiFactory factory)
         (await LoginAsync(client, Proxy, "203.0.113.2")).Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    [Fact]
-    public async Task Without_a_configured_proxy_network_the_forwarded_header_is_ignored()
+    // " , ": with both trust lists empty the framework would trust every proxy (V-105), so no network = off.
+    [Theory]
+    [InlineData(null)]
+    [InlineData(" , ")]
+    public async Task Without_a_configured_proxy_network_the_forwarded_header_is_ignored(string? knownNetworks)
     {
-        var client = await ClientAsync(knownNetworks: null);
+        var client = await ClientAsync(knownNetworks);
         await UseUpTheLimitAsync(client, Proxy, "203.0.113.1");
 
         (await LoginAsync(client, Proxy, "203.0.113.2")).Should().Be(HttpStatusCode.TooManyRequests);
     }
 
-    [Fact]
-    public async Task A_forwarded_header_from_outside_the_proxy_network_is_ignored()
+    // 127.0.0.1: the framework trusts loopback by default (F2); only the configured network may count.
+    [Theory]
+    [InlineData("198.51.100.7")]
+    [InlineData("127.0.0.1")]
+    public async Task A_forwarded_header_from_outside_the_proxy_network_is_ignored(string remote)
     {
         var client = await ClientAsync(ProxyNetwork);
-        await UseUpTheLimitAsync(client, "198.51.100.7", "203.0.113.1");
+        await UseUpTheLimitAsync(client, remote, "203.0.113.1");
 
-        (await LoginAsync(client, "198.51.100.7", "203.0.113.2")).Should().Be(HttpStatusCode.TooManyRequests);
+        (await LoginAsync(client, remote, "203.0.113.2")).Should().Be(HttpStatusCode.TooManyRequests);
     }
 
     [Fact]
