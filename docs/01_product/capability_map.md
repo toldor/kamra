@@ -56,7 +56,7 @@ Céldátumok a [scope_contract.md](scope_contract.md) ütemezése szerint; ha az
   - *AI-receptötlet mentése jóváhagyással:* **megvalósítva** (`v0.7.0`, nov. 16.) – a Kérdezz oldalról az „Új recept” űrlapra, „AI-javasolt” címkével.
   - *Kipipált bevásárlólista-tételből készletbevitel:* a készletbevitel e nélkül is működik; ez a kör zárását kényelmesíti.
   - *Kinézet és kezelhetőség:* **megvalósítva** (`v0.8.0`).
-  - *Heti e-mail:* a freeze alóli kivétel a [scope_contract.md](scope_contract.md) szerint; csak ha a felhasználói kipróbálás 2. köréig elkészül.
+  - *Heti e-mail:* nem készül el (a fejlesztő döntése, 2026-11-21), továbbfejlesztési lehetőség ([scope_contract.md](scope_contract.md)).
 - Az AI-os helyettesítés és adagjavaslat a témavezetővel egyeztetett szűkítés szerint továbbfejlesztési lehetőség ([scope_contract.md](scope_contract.md)).
 
 ## Ismert hiányosságok

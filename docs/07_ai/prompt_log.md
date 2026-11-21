@@ -600,3 +600,23 @@ A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-
 - **Érintett fájlok:** `docs/06_release/changelog.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/07_ai/prompt_log.md`.
 - **Validálás:** a release ág CI-futása; a tag a `main` merge-commitjára mutat.
 - **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-34 – A heti e-mail visszavonása
+- **Dátum:** 2026-11-21
+- **Cél:** a heti e-mail (Stretch 4) freeze-kivételének kivezetése a dokumentációból, mert a fejlesztő döntése szerint nem készül el.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** az `ALLAPOT.md` „Következő lépés” 1. pontja: a heti e-mail visszavonása a scope_contractból, új changelog-bejegyzés.
+- **AI javaslat (eredeti):** a négy előfordulás felülvizsgálata (scope_contract Stretch 4 és freeze, capability_map, changelog `[0.8.0]`); a Stretch 4 pont „visszavonva” jelöléssel marad (A) vagy törlődik (B), ajánlás: A, mert a P-30 és a `[0.8.0]` hivatkozik rá; új pont a „Későbbi továbbfejlesztési lehetőségek” alatt; `[Unreleased]` changelog-szakasz, mert a `[0.8.0]` már kiadott. Az ütközésvizsgálat szerint a visszavonás a „Hatókörön kívül” lista „E-mail / push értesítések” pontjával való ellentmondást is megszünteti.
+- **Érintett fájlok:** `docs/01_product/scope_contract.md`, `docs/01_product/capability_map.md`, `docs/06_release/changelog.md`, `docs/07_ai/prompt_log.md`.
+- **Validálás:** a repóban a „heti e-mail” minden előfordulásának átnézése (`grep`); a P-30 történeti bejegyzés változatlan.
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-35 – A leadási követelmények újbóli összevetése; az UAT 2. kör terve
+- **Dátum:** 2026-11-21
+- **Cél:** a P-31 óta történtek összevetése a három külső követelménnyel, és az UAT 2. kör tervének frissítése.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** az `ALLAPOT.md` „Következő lépés” 2–3. pontja.
+- **AI javaslat (eredeti):** hiánylista három csoportban. A) Elavult dokumentáció: az `uat.md` 2. köre (verzió, US-2- és receptötlet-forgatókönyv, Gemini-adatkezelés), az önértékelés állapota és CI-linkje, a README állapota, a tesztszámok. B) A fejlesztő feladatai: UAT 2. kör, időmért demó, telepítés másik gépen, konzulensi jóváhagyás. C) A végleges leadáshoz: végleges verziótag, képernyőképek a végleges verzióról. Az UAT 2. kör tartalmára három változat; ajánlás: A (S1–S5 változatlanul, S6, új S7 mondatos bevitel, új S8 receptötlet, kb. 50 perc).
+- **Érintett fájlok:** `docs/04_quality/uat.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/07_ai/prompt_log.md`, `docs/07_ai/verification_log.md`.
+- **Validálás:** a forgatókönyvek tételnevei az `ingredients.json`-ban; a tesztszámok teljes futással ([V-104](verification_log.md)).
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
