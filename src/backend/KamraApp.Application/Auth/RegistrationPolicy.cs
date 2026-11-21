@@ -11,8 +11,9 @@ public sealed record RegistrationPolicy(string? InviteCode)
 
     public bool InviteCodeRequired => !string.IsNullOrEmpty(InviteCode);
 
-    // Constant time for equal lengths, so a wrong guess does not reveal how much of it was right.
+    // Constant time over equal-length hashes, so a wrong guess reveals neither how much of it was right nor the
+    // configured code's length (Antigravity review #3).
     public bool Accepts(string? inviteCode) =>
         !InviteCodeRequired || CryptographicOperations.FixedTimeEquals(
-            Encoding.UTF8.GetBytes(inviteCode ?? ""), Encoding.UTF8.GetBytes(InviteCode!));
+            SHA256.HashData(Encoding.UTF8.GetBytes(inviteCode ?? "")), SHA256.HashData(Encoding.UTF8.GetBytes(InviteCode!)));
 }
