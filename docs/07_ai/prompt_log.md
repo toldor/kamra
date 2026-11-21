@@ -620,3 +620,25 @@ A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-
 - **Érintett fájlok:** `docs/04_quality/uat.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/07_ai/prompt_log.md`, `docs/07_ai/verification_log.md`.
 - **Validálás:** a forgatókönyvek tételnevei az `ingredients.json`-ban; a tesztszámok teljes futással ([V-104](verification_log.md)).
 - **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-36 – Az élő kitelepítés terve és a T1 (továbbított fejlécek, meghívókód, prod Compose, betöltő szkript)
+- **Dátum:** 2026-11-21 – 22.
+- **Cél:** a témavezető 07-es levele szerinti nyilvános, HTTPS-es kitelepítés terve, és a kódoldali feltételek (T1).
+- **Eszköz:** Claude Code (claude-opus-5-5); review: Antigravity (Claude Sonnet 4.6).
+- **Prompt összefoglaló:** „az [email] szerint kell haladnunk … ami az alkalmazással kapcsolatos kiegészíteni valók azokat csináljuk most pl. kitelepítés”; a fejlesztő javaslata: „statikus meghívókód regisztráláskor”.
+- **AI javaslat (eredeti):** 10 döntés, egyenként, ajánlással:
+  - Azure for Students VM, ugyanaz a Compose;
+  - az Azure DNS-neve és Caddy;
+  - LLM bekapcsolva, külön kulccsal;
+  - **nyitott regisztráció**;
+  - `ForwardedHeaders` csak a proxy hálózatáról;
+  - betöltő szkript;
+  - kézi telepítés tag alapján;
+  - napi mentés;
+  - T1–T3, `v0.9.0`;
+  - UAT élőben, ha nov. 25-ig kész.
+
+  T1 mini-spec (K1–K4, 7 ellenőrzött tény forrással), spec-first commitok, mutáció, három review.
+- **Érintett fájlok:** `src/backend/KamraApp.Api/Auth/` (`TrustedProxySetup.cs`, `AuthenticationSetup.cs`, `AuthController.cs`), `Program.cs`, `openapi.json`, `src/backend/KamraApp.Application/Auth/` (`RegistrationPolicy.cs`, `RegisterUser.cs`, `AuthRequests.cs`), `src/frontend/src/` (`AuthForm.tsx`, `api/client.ts`, `api/schema.d.ts`, `App.test.tsx`), `docker-compose.prod.yml`, `Caddyfile`, `.env.example`, `tests/perf/` (`client.mjs`, `demo-seed.mjs`, `recommendations.mjs`), a tesztek (`ForwardedHeadersTests`, `InviteCodeTests`, `AdversarialProxyAndInviteTests`, `StartupTests`, `AuthUseCaseTests`, `TestRemoteAddress`), `docs/07_ai/` (`prompt_log.md`, `verification_log.md`).
+- **Validálás:** minden CI-kapu helyben és a CI-ban (az utolsó zöld: run 44960375835); az e2e az izolált stacken (73 + 9); mutáció (K1 7/7, K2 7/7, unit 4/4, keményítés 3/3, ellenséges 3/3); [V-105](verification_log.md), [V-106](verification_log.md), [V-107](verification_log.md).
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
