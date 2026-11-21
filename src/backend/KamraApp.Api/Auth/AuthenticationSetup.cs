@@ -28,8 +28,7 @@ public static class AuthenticationSetup
             .Validate(options => string.IsNullOrEmpty(options.InviteCode) || options.InviteCode.Length >= InviteCodeOptions.MinimumLength,
                 $"Auth:InviteCode must be empty or at least {InviteCodeOptions.MinimumLength} characters long.")
             .ValidateOnStart();
-        services.AddSingleton(provider => new RegistrationPolicy(
-            provider.GetRequiredService<IOptions<InviteCodeOptions>>().Value.InviteCode is { Length: > 0 } code ? code : null));
+        services.AddSingleton(provider => new RegistrationPolicy(provider.GetRequiredService<IOptions<InviteCodeOptions>>().Value.InviteCode));
         services.AddSingleton(TimeProvider.System);
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentHousehold, HttpCurrentHousehold>();

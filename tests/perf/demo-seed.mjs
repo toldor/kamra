@@ -40,7 +40,8 @@ const pantry = [
   ['tej', 1, 'l', day(2)],
 ]
 
-async function expectOk(response, what) {
+// The step, the endpoint and the error code (t1_minispec K4); the request body (with the password) is never printed.
+async function expectOk(response, what, endpoint) {
   if (response.ok) return response
   const body = await response.text()
   let code = ''
@@ -49,7 +50,7 @@ async function expectOk(response, what) {
   } catch {
     // not a ProblemDetails body
   }
-  fail(`${what}: HTTP ${response.status} ${code}`.trim())
+  fail(`${what} (${endpoint}): HTTP ${response.status} ${code}`.trim())
 }
 
 async function main() {
@@ -61,20 +62,20 @@ async function main() {
 
   const registered = await browser.call('POST', '/api/v1/auth/register', { email, password, ...(inviteCode ? { inviteCode } : {}) })
   if (registered.status === 409) fail(`A fiók már létezik (${email}); a betöltéshez előbb állítsd vissza az adatbázist (deploy_runbook.md).`, 2)
-  await expectOk(registered, 'Regisztráció')
+  await expectOk(registered, 'Regisztráció', 'POST /api/v1/auth/register')
   await browser.refreshToken()
 
-  const ingredients = await (await expectOk(await browser.call('GET', '/api/v1/ingredients'), 'Hozzávalók')).json()
+  const ingredients = await (await expectOk(await browser.call('GET', '/api/v1/ingredients'), 'Hozzávalók', 'GET /api/v1/ingredients')).json()
   const byName = (name) => ingredients.find((ingredient) => ingredient.name === name) ?? fail(`Nincs ilyen hozzávaló: ${name}`)
 
   for (const [name, amount, unit, expiryDate] of pantry) {
-    await expectOk(await browser.call('POST', '/api/v1/pantry-items', { ingredientId: byName(name).id, amount, unit, expiryDate }), `Készlet: ${name}`)
+    await expectOk(await browser.call('POST', '/api/v1/pantry-items', { ingredientId: byName(name).id, amount, unit, expiryDate }), `Készlet: ${name}`, 'POST /api/v1/pantry-items')
   }
-  await expectOk(await browser.call('PUT', `/api/v1/ingredients/${byName('tej').id}/minimum`, { amount: 1, unit: 'l' }), 'Minimumszint: tej')
-  await expectOk(await browser.call('POST', '/api/v1/shopping-list/items', { ingredientId: byName('kenyér').id, amount: 1, unit: 'db' }), 'Bevásárlólista: kenyér')
+  await expectOk(await browser.call('PUT', `/api/v1/ingredients/${byName('tej').id}/minimum`, { amount: 1, unit: 'l' }), 'Minimumszint: tej', 'PUT /api/v1/ingredients/{id}/minimum')
+  await expectOk(await browser.call('POST', '/api/v1/shopping-list/items', { ingredientId: byName('kenyér').id, amount: 1, unit: 'db' }), 'Bevásárlólista: kenyér', 'POST /api/v1/shopping-list/items')
 
   // The demo needs these two on "Mit főzzek?" (demo_script.md 4th step).
-  const recommendations = await (await expectOk(await browser.call('GET', '/api/v1/recommendations'), 'Ajánlás')).json()
+  const recommendations = await (await expectOk(await browser.call('GET', '/api/v1/recommendations'), 'Ajánlás', 'GET /api/v1/recommendations')).json()
   const names = (list) => list.map((recommendation) => recommendation.name)
   if (!names(recommendations.makeable).includes('Rántotta')) fail('A Rántotta nem elkészíthető a betöltés után.')
   if (!names(recommendations.almostMakeable).includes('Lecsó')) fail('A Lecsó nem majdnem elkészíthető a betöltés után.')
