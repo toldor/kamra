@@ -14,7 +14,7 @@ public class AuthUseCaseTests
     [Fact]
     public async Task Register_rejects_an_invalid_email_with_a_field_error()
     {
-        var act = () => new RegisterUser(_identity, new FixedTime(Now))
+        var act = () => new RegisterUser(_identity, new FixedTime(Now), RegistrationPolicy.Open)
             .ExecuteAsync(new RegisterRequest { Email = "not-an-email", Password = ValidPassword }, CancellationToken.None);
 
         var error = (await act.Should().ThrowAsync<ValidationException>()).Which;
@@ -26,7 +26,7 @@ public class AuthUseCaseTests
     [Fact]
     public async Task Register_rejects_a_password_longer_than_128_characters()
     {
-        var act = () => new RegisterUser(_identity, new FixedTime(Now))
+        var act = () => new RegisterUser(_identity, new FixedTime(Now), RegistrationPolicy.Open)
             .ExecuteAsync(new RegisterRequest { Email = "tomi@example.com", Password = new string('a', 129) }, CancellationToken.None);
 
         (await act.Should().ThrowAsync<ValidationException>()).Which.Errors.Should().ContainKey("password");
@@ -35,7 +35,7 @@ public class AuthUseCaseTests
     [Fact]
     public async Task Register_rejects_a_missing_body()
     {
-        var act = () => new RegisterUser(_identity, new FixedTime(Now)).ExecuteAsync(null, CancellationToken.None);
+        var act = () => new RegisterUser(_identity, new FixedTime(Now), RegistrationPolicy.Open).ExecuteAsync(null, CancellationToken.None);
 
         await act.Should().ThrowAsync<ValidationException>();
     }
@@ -43,7 +43,7 @@ public class AuthUseCaseTests
     [Fact]
     public async Task Register_creates_a_household_owned_by_the_new_user()
     {
-        await new RegisterUser(_identity, new FixedTime(Now))
+        await new RegisterUser(_identity, new FixedTime(Now), RegistrationPolicy.Open)
             .ExecuteAsync(new RegisterRequest { Email = " tomi@example.com ", Password = ValidPassword }, CancellationToken.None);
 
         var (email, household) = _identity.Registered!.Value;

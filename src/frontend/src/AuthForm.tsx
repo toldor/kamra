@@ -21,13 +21,29 @@ export function AuthForm({ mode, notice, onSignedIn, onSwitchMode }: {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const [inviteCode, setInviteCode] = useState('')
+  const [inviteCodeRequired, setInviteCodeRequired] = useState(false)
   const emailInput = useRef<HTMLInputElement>(null)
   const passwordInput = useRef<HTMLInputElement>(null)
+  const inviteCodeInput = useRef<HTMLInputElement>(null)
+
+  // t1_minispec K2: only the registration asks; if the question fails, the server's field error still shows the field.
+  useEffect(() => {
+    if (mode !== 'register') return
+    let active = true
+    api.registrationOptions()
+      .then((options) => active && setInviteCodeRequired(options.inviteCodeRequired))
+      .catch(() => active && setInviteCodeRequired(false))
+    return () => {
+      active = false
+    }
+  }, [mode])
 
   // ux_flows a11y: move focus to the first invalid field, so a screen reader reads its label and error.
   useEffect(() => {
     if (fieldErrors.email) emailInput.current?.focus()
     else if (fieldErrors.password) passwordInput.current?.focus()
+    else if (fieldErrors.inviteCode) inviteCodeInput.current?.focus()
   }, [fieldErrors])
 
   async function submit(event: FormEvent) {
@@ -36,7 +52,8 @@ export function AuthForm({ mode, notice, onSignedIn, onSwitchMode }: {
     setError(null)
     setFieldErrors({})
     try {
-      await (mode === 'login' ? api.login : api.register)({ email, password })
+      if (mode === 'login') await api.login({ email, password })
+      else await api.register({ email, password, ...(inviteCode ? { inviteCode } : {}) })
       const me = await api.me()
       if (me) onSignedIn(me)
       else setError(FALLBACK_MESSAGE)
@@ -51,6 +68,7 @@ export function AuthForm({ mode, notice, onSignedIn, onSwitchMode }: {
 
   const fieldError = (field: string) => fieldErrors[field]?.join(' ')
   const showHint = mode === 'register' && !fieldError('password')
+  const showInviteCode = mode === 'register' && (inviteCodeRequired || !!fieldError('inviteCode'))
 
   return (
     <main className="narrow">
@@ -84,6 +102,25 @@ export function AuthForm({ mode, notice, onSignedIn, onSwitchMode }: {
         {fieldError('password') && <p id="password-error" className="field-error">{fieldError('password')}</p>}
         {showHint && (
           <p id="password-hint" className="hint">Legalább 15 karakter. Egy hosszabb, könnyen megjegyezhető mondat is jó.</p>
+        )}
+
+        {showInviteCode && (
+          <>
+            <label htmlFor="invite-code">Meghívókód</label>
+            <input
+              ref={inviteCodeInput}
+              id="invite-code"
+              type="text"
+              autoComplete="off"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              aria-invalid={fieldError('inviteCode') ? true : undefined}
+              aria-describedby={fieldError('inviteCode') ? 'invite-code-error' : 'invite-code-hint'}
+            />
+            {fieldError('inviteCode')
+              ? <p id="invite-code-error" className="field-error">{fieldError('inviteCode')}</p>
+              : <p id="invite-code-hint" className="hint">Az élő bemutató példányon a regisztrációhoz meghívókód kell.</p>}
+          </>
         )}
 
         <div role="alert" className="form-error">{error}</div>

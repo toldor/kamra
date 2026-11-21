@@ -1332,6 +1332,25 @@
         }
       }
     },
+    "/api/v1/auth/registration": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationOptionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/antiforgery": {
       "get": {
         "tags": [
@@ -2360,6 +2379,25 @@
               "null",
               "string"
             ]
+          },
+          "inviteCode": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RegistrationOptionsResponse": {
+        "required": [
+          "inviteCodeRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "inviteCodeRequired": {
+            "type": "boolean"
           }
         }
       },

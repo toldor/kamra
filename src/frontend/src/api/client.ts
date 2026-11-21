@@ -8,6 +8,7 @@ const BASE_URL = '/api/v1'
 export type Me = components['schemas']['MeResponse']
 export type LoginRequest = components['schemas']['LoginRequest']
 export type RegisterRequest = components['schemas']['RegisterRequest']
+export type RegistrationOptions = components['schemas']['RegistrationOptionsResponse']
 export type Category = components['schemas']['Category']
 export type CategoryInfo = components['schemas']['CategoryResponse']
 export type Dimension = components['schemas']['Dimension']
@@ -157,6 +158,9 @@ export const api = {
     await post('/auth/register', request)
     antiforgeryToken = null
   },
+
+  // t1_minispec K2: whether this instance asks for an invite code at registration.
+  registrationOptions: () => json<RegistrationOptions>(send('GET', '/auth/registration')),
 
   async logout(): Promise<void> {
     await post('/auth/logout')
