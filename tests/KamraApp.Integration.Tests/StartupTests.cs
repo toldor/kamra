@@ -38,6 +38,40 @@ public class StartupTests
             .Which.Message.Should().Contain("Llm:ApiKey");
     }
 
+    // t1_minispec K1: a mistyped proxy network must not silently fall back to "trust nobody" or "trust everybody".
+    [Fact]
+    public void App_does_not_start_with_an_invalid_proxy_network()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseSetting("ConnectionStrings:Default", "Host=127.0.0.1;Port=1;Database=none;Username=none");
+                builder.UseSetting("ForwardedHeaders:KnownNetworks", "172.30.0.0/24,not-a-network");
+            });
+
+        var start = () => factory.CreateClient();
+
+        start.Should().Throw<OptionsValidationException>()
+            .Which.Message.Should().Contain("ForwardedHeaders:KnownNetworks");
+    }
+
+    // t1_minispec K2: a short invite code would be guessable within the auth rate limit.
+    [Fact]
+    public void App_does_not_start_with_a_too_short_invite_code()
+    {
+        using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseSetting("ConnectionStrings:Default", "Host=127.0.0.1;Port=1;Database=none;Username=none");
+                builder.UseSetting("Auth:InviteCode", "too-short");
+            });
+
+        var start = () => factory.CreateClient();
+
+        start.Should().Throw<OptionsValidationException>()
+            .Which.Message.Should().Contain("Auth:InviteCode");
+    }
+
     // The local Docker Compose deployment is plain HTTP; the antiforgery token must still be issued (V-12).
     [Fact]
     public async Task Antiforgery_token_is_issued_over_plain_http()

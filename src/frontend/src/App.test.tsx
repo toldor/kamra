@@ -145,4 +145,75 @@ describe('sign-in screens', () => {
 
     await waitFor(() => expect(screen.getByText('Még üres a kamrád.')).toBeTruthy())
   })
+
+  // t1_minispec K2: the invite code field appears only where the server asks for it.
+  it('does not show the invite code field when the server does not require one', async () => {
+    const calls = fakeBackend({
+      'GET /api/v1/auth/me': [notSignedIn],
+      'GET /api/v1/auth/antiforgery': [token],
+      'GET /api/v1/auth/registration': [{ status: 200, body: { inviteCodeRequired: false } }],
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /Regisztrálj/ }))
+
+    await waitFor(() => expect(calls.some((call) => call.url === '/api/v1/auth/registration')).toBe(true))
+    expect(screen.queryByLabelText('Meghívókód')).toBeNull()
+  })
+
+  it('shows the invite code field when required and sends the code with the registration', async () => {
+    const calls = fakeBackend({
+      'GET /api/v1/auth/me': [notSignedIn, { status: 200, body: { email: 'tomi@example.com', householdId: 'h-1' } }],
+      'GET /api/v1/auth/antiforgery': [token],
+      'GET /api/v1/auth/registration': [{ status: 200, body: { inviteCodeRequired: true } }],
+      'POST /api/v1/auth/register': [{ status: 204 }],
+      ...emptyPantry,
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /Regisztrálj/ }))
+    const codeInput = await screen.findByLabelText('Meghívókód')
+    expect(screen.getByText('Az élő bemutató példányon a regisztrációhoz meghívókód kell.').id).toBe(codeInput.getAttribute('aria-describedby'))
+    fireEvent.change(screen.getByLabelText('E-mail-cím'), { target: { value: 'tomi@example.com' } })
+    fireEvent.change(screen.getByLabelText('Jelszó'), { target: { value: 'correct horse battery staple' } })
+    fireEvent.change(codeInput, { target: { value: 'demo-invite-code-1234' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Fiók létrehozása' }))
+
+    await waitFor(() => expect(screen.getByText('Még üres a kamrád.')).toBeTruthy())
+    const register = calls.find((call) => call.url === '/api/v1/auth/register')!
+    expect(JSON.parse(register.init.body as string)).toMatchObject({ inviteCode: 'demo-invite-code-1234' })
+  })
+
+  it('shows the invite code field with the server error even when the requirement could not be loaded', async () => {
+    fakeBackend({
+      'GET /api/v1/auth/me': [notSignedIn],
+      'GET /api/v1/auth/antiforgery': [token],
+      'GET /api/v1/auth/registration': [{ status: 500, body: { code: 'INTERNAL_ERROR', title: 'Váratlan hiba történt.' } }],
+      'POST /api/v1/auth/register': [{
+        status: 400,
+        body: { code: 'VALIDATION_FAILED', title: 'Néhány mező hibás.', errors: { inviteCode: ['Hibás vagy hiányzó meghívókód. Kérd el attól, aki a címet adta.'] } },
+      }],
+    })
+    render(<App />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /Regisztrálj/ }))
+    fireEvent.change(screen.getByLabelText('E-mail-cím'), { target: { value: 'tomi@example.com' } })
+    fireEvent.change(screen.getByLabelText('Jelszó'), { target: { value: 'correct horse battery staple' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Fiók létrehozása' }))
+
+    const fieldError = await screen.findByText('Hibás vagy hiányzó meghívókód. Kérd el attól, aki a címet adta.')
+    expect(screen.getByLabelText('Meghívókód').getAttribute('aria-describedby')).toBe(fieldError.id)
+  })
+
+  it('never shows the invite code field on the login screen', async () => {
+    fakeBackend({
+      'GET /api/v1/auth/me': [notSignedIn],
+      'GET /api/v1/auth/antiforgery': [token],
+      'GET /api/v1/auth/registration': [{ status: 200, body: { inviteCodeRequired: true } }],
+    })
+    render(<App />)
+
+    await screen.findByRole('heading', { name: 'Bejelentkezés' })
+    expect(screen.queryByLabelText('Meghívókód')).toBeNull()
+  })
 })
