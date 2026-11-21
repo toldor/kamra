@@ -117,25 +117,4 @@ public class ForwardedHeadersTests(KamraApiFactory factory)
         using var response = await client.LoginAsync(ApiClient.NewEmail(), WrongPassword);
         return response.StatusCode;
     }
-
-    // The TestServer has no real connection; this sets the connection address before the app's own pipeline,
-    // so the test decides it, not a TestServer default (Antigravity review A-01).
-    private sealed class TestRemoteAddress : IStartupFilter
-    {
-        public const string Header = "X-Test-Remote-Ip";
-
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
-        {
-            app.Use((context, nextMiddleware) =>
-            {
-                if (context.Request.Headers.TryGetValue(Header, out var address))
-                {
-                    context.Connection.RemoteIpAddress = IPAddress.Parse(address.ToString());
-                }
-
-                return nextMiddleware(context);
-            });
-            next(app);
-        };
-    }
 }
