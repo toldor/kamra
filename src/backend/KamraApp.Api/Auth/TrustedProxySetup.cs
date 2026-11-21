@@ -4,7 +4,7 @@ using IPNetwork = System.Net.IPNetwork;
 namespace KamraApp.Api.Auth;
 
 // t1_minispec K1: behind the Caddy proxy every connection comes from the proxy, so the per-IP auth limit would be
-// shared by all clients. X-Forwarded-For is accepted only from the configured proxy network, one hop deep; without
+// shared by all clients. X-Forwarded-For and -Proto are accepted only from the configured proxy network, one hop deep; without
 // the setting (local, CI, e2e) nothing is trusted and nothing changes (api.md: a client could forge the header).
 public static class TrustedProxySetup
 {
@@ -16,7 +16,9 @@ public static class TrustedProxySetup
         services.AddOptions<ForwardedHeadersOptions>()
             .Configure(options =>
             {
-                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor;
+                // Proto: Caddy talks plain HTTP to the API, so the antiforgery cookie (SameAsRequest, V-12) gets the
+                // Secure flag only when the request counts as https (security review hardening).
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
                 options.ForwardLimit = 1;
                 // The defaults trust loopback (F2); only the configured networks count.
                 options.KnownProxies.Clear();

@@ -53,9 +53,14 @@ public static class AuthenticationSetup
         // [AllowAnonymous]. A global filter (not a fallback policy) keeps unknown routes at 404.
         // ADR-0006 / ADR-0007: one global antiforgery filter; the SPA sends the token in a header.
         services.AddAuthorization();
-        // The antiforgery cookie keeps the default SecurePolicy (SameAsRequest): with Always, ASP.NET
-        // refuses to issue tokens on plain HTTP, which breaks the HTTP-only local deployment (V-12).
-        services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
+        // SameAsRequest: with Always, ASP.NET refuses to issue tokens on plain HTTP, which breaks the HTTP-only local
+        // deployment (V-12). The default is None (no Secure flag even over https, V-106), so it is set explicitly;
+        // behind Caddy the forwarded https (TrustedProxySetup) makes the request count as https.
+        services.AddAntiforgery(options =>
+        {
+            options.HeaderName = "X-XSRF-TOKEN";
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        });
         services.Configure<MvcOptions>(options =>
         {
             options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
