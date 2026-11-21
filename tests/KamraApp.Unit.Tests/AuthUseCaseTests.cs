@@ -52,6 +52,50 @@ public class AuthUseCaseTests
         email.Should().Be("tomi@example.com");
     }
 
+    // t1_minispec K2: the invite code (code review Std 2).
+    [Fact]
+    public async Task Register_without_the_required_invite_code_is_rejected_before_any_account_exists()
+    {
+        var act = () => new RegisterUser(_identity, new FixedTime(Now), new RegistrationPolicy("demo-invite-code-1234"))
+            .ExecuteAsync(new RegisterRequest { Email = "tomi@example.com", Password = ValidPassword }, CancellationToken.None);
+
+        var error = (await act.Should().ThrowAsync<ValidationException>()).Which;
+        error.Errors["inviteCode"].Should().Equal(RegisterUser.InviteCodeMessage);
+        _identity.Registered.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Register_with_the_required_invite_code_creates_the_account()
+    {
+        await new RegisterUser(_identity, new FixedTime(Now), new RegistrationPolicy("demo-invite-code-1234"))
+            .ExecuteAsync(new RegisterRequest { Email = "tomi@example.com", Password = ValidPassword, InviteCode = "demo-invite-code-1234" }, CancellationToken.None);
+
+        _identity.Registered.Should().NotBeNull();
+    }
+
+    [Theory]
+    [InlineData("demo-invite-code-1235")]
+    [InlineData("demo-invite-code-123")]
+    [InlineData("demo-invite-code-12345")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void A_required_invite_code_accepts_only_the_exact_code(string? sent)
+    {
+        new RegistrationPolicy("demo-invite-code-1234").Accepts(sent).Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void Without_a_configured_code_any_invite_code_is_accepted(string? configured)
+    {
+        var policy = new RegistrationPolicy(configured);
+
+        policy.InviteCodeRequired.Should().BeFalse();
+        policy.Accepts(null).Should().BeTrue();
+        policy.Accepts("anything").Should().BeTrue();
+    }
+
     [Fact]
     public async Task Login_maps_invalid_credentials_to_the_uniform_401_code()
     {
