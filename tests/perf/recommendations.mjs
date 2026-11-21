@@ -5,6 +5,8 @@
 //   node tests/perf/recommendations.mjs http://localhost:8091
 // Each virtual user registers a fresh household and gets ITEMS pantry items; then the users ask for recommendations
 // in parallel, WARMUP requests first, then REQUESTS measured ones. Prints the latency percentiles as JSON.
+import { Browser } from './client.mjs'
+
 const base = process.argv[2] ?? 'http://localhost:8080'
 const USERS = Number(process.env.USERS ?? 10)
 const ITEMS = Number(process.env.ITEMS ?? 50)
@@ -16,29 +18,8 @@ const unitOf = { mass: 'g', volume: 'ml', count: 'db' }
 let seed = 42
 const random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
 
-class Browser {
-  cookies = new Map()
-  token = ''
-
-  async call(method, path, body) {
-    const headers = { 'Content-Type': 'application/json', Cookie: [...this.cookies].map(([k, v]) => `${k}=${v}`).join('; ') }
-    if (this.token) headers['X-XSRF-TOKEN'] = this.token
-    const response = await fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined })
-    for (const cookie of response.headers.getSetCookie()) {
-      const [pair] = cookie.split(';')
-      const at = pair.indexOf('=')
-      this.cookies.set(pair.slice(0, at), pair.slice(at + 1))
-    }
-    return response
-  }
-
-  async refreshToken() {
-    this.token = (await (await this.call('GET', '/api/v1/auth/antiforgery')).json()).requestToken
-  }
-}
-
 async function household(ingredients) {
-  const browser = new Browser()
+  const browser = new Browser(base)
   await browser.refreshToken()
   const email = `perf-${crypto.randomUUID()}@example.com`
   const registered = await browser.call('POST', '/api/v1/auth/register', { email, password: 'correct horse battery staple' })
@@ -57,7 +38,7 @@ async function household(ingredients) {
 
 const percentile = (sorted, p) => sorted[Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1)]
 
-const first = new Browser()
+const first = new Browser(base)
 await first.refreshToken()
 await first.call('POST', '/api/v1/auth/register', { email: `perf-${crypto.randomUUID()}@example.com`, password: 'correct horse battery staple' })
 const ingredients = (await (await first.call('GET', '/api/v1/ingredients')).json())
