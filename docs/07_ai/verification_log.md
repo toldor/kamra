@@ -858,3 +858,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** terheléses mérés a [recommendations.mjs](../../tests/perf/recommendations.mjs) szkripttel a Docker Compose stack ellen (külön projekt, 8091-es port): 50 bemelegítő és 500 mért kérés, háromszor; változatok: 300 tétel/háztartás, illetve 50 felhasználó 1000 kéréssel ([performance.md](../04_quality/performance.md)).
 - **Eredmény:** PASS – p95 22,2, 21,1 és 18,0 ms, 0 hiba; 300 tételnél p95 24,7 ms; 50 felhasználónál p95 109,8 ms (a cél ekkor is teljesül). A válaszidő a párhuzamossággal nő, a készlet méretével alig, miközben a konténerek CPU-terhelése alacsony maradt.
 - **Következtetés:** a cél bőven teljesül, javítás nem kell; a valószínű korlát a kérésenkénti adatbázis-körök száma (a biztonsági bélyeg ellenőrzése is), ezt egy későbbi mérés bonthatja tovább.
+
+### V-104 – A tesztjelentés darabszámai a `v0.8.0` után
+- **Dátum:** 2026-11-21
+- **Állítás:** unit 616, integrációs 295 (+2 `LiveAI`) ([test_report.md](../04_quality/test_report.md)); az MI állapotfájlja (a repón kívül) 289 integrációs tesztet írt.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** teljes `dotnet test` a `docs/submission-prep` ágon.
+- **Eredmény:** PASS a tesztjelentésre – 913 teszt, 911 sikeres, 2 kihagyott (`LiveAI`, kulcs nélkül). Az állapotfájl elavult volt: a 289 a CAP-12 előtti szám, a különbség a 6 metrika-teszt.
+- **Következtetés:** a darabszámot a tesztjelentésből vagy egy futásból kell venni, nem az MI munkajegyzetéből.

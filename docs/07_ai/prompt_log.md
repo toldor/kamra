@@ -610,3 +610,13 @@ A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-
 - **Érintett fájlok:** `docs/01_product/scope_contract.md`, `docs/01_product/capability_map.md`, `docs/06_release/changelog.md`, `docs/07_ai/prompt_log.md`.
 - **Validálás:** a repóban a „heti e-mail” minden előfordulásának átnézése (`grep`); a P-30 történeti bejegyzés változatlan.
 - **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-35 – A leadási követelmények újbóli összevetése; az UAT 2. kör terve
+- **Dátum:** 2026-11-21
+- **Cél:** a P-31 óta történtek összevetése a három külső követelménnyel, és az UAT 2. kör tervének frissítése.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** az `ALLAPOT.md` „Következő lépés” 2–3. pontja.
+- **AI javaslat (eredeti):** hiánylista három csoportban. A) Elavult dokumentáció: az `uat.md` 2. köre (verzió, US-2- és receptötlet-forgatókönyv, Gemini-adatkezelés), az önértékelés állapota és CI-linkje, a README állapota, a tesztszámok. B) A fejlesztő feladatai: UAT 2. kör, időmért demó, telepítés másik gépen, konzulensi jóváhagyás. C) A végleges leadáshoz: végleges verziótag, képernyőképek a végleges verzióról. Az UAT 2. kör tartalmára három változat; ajánlás: A (S1–S5 változatlanul, S6, új S7 mondatos bevitel, új S8 receptötlet, kb. 50 perc).
+- **Érintett fájlok:** `docs/04_quality/uat.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/07_ai/prompt_log.md`, `docs/07_ai/verification_log.md`.
+- **Validálás:** a forgatókönyvek tételnevei az `ingredients.json`-ban; a tesztszámok teljes futással ([V-104](verification_log.md)).
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
