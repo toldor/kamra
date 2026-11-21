@@ -58,9 +58,38 @@ public class ForwardedHeadersTests(KamraApiFactory factory)
         (await LoginAsync(client, "::ffff:10.0.0.5", "203.0.113.2")).Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    private async Task<ApiClient> ClientAsync(string? knownNetworks)
+    // Security review hardening: behind Caddy the API sees plain HTTP, so without the forwarded scheme the antiforgery
+    // cookie (SecurePolicy.SameAsRequest, V-12) would go out without the Secure flag on the public instance.
+    [Fact]
+    public async Task The_antiforgery_cookie_is_secure_when_the_trusted_proxy_forwards_https()
     {
-        var app = factory.WithWebHostBuilder(builder =>
+        (await AntiforgeryCookieAsync(ProxyNetwork, Proxy)).Should().Contain("secure");
+    }
+
+    [Theory]
+    [InlineData(null, Proxy)]
+    [InlineData(ProxyNetwork, "198.51.100.7")]
+    public async Task A_forwarded_https_is_ignored_without_the_trusted_proxy(string? knownNetworks, string remote)
+    {
+        (await AntiforgeryCookieAsync(knownNetworks, remote)).Should().NotContain("secure");
+    }
+
+    // Plain http, as Caddy talks to the API; the cookie header in lower case.
+    private async Task<string> AntiforgeryCookieAsync(string? knownNetworks, string remote)
+    {
+        var http = App(knownNetworks).CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("http://localhost") });
+        http.DefaultRequestHeaders.Add(TestRemoteAddress.Header, remote);
+        http.DefaultRequestHeaders.Add("X-Forwarded-Proto", "https");
+        using var response = await http.GetAsync("/api/v1/auth/antiforgery", TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+        return response.Headers.GetValues("Set-Cookie").Single(cookie => cookie.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal))
+            .ToLowerInvariant();
+    }
+
+    private Task<ApiClient> ClientAsync(string? knownNetworks) => ApiClient.CreateAsync(App(knownNetworks));
+
+    private WebApplicationFactory<Program> App(string? knownNetworks) =>
+        factory.WithWebHostBuilder(builder =>
         {
             builder.UseSetting("RateLimiting:Auth:PermitLimit", "3");
             if (knownNetworks is not null)
@@ -70,8 +99,6 @@ public class ForwardedHeadersTests(KamraApiFactory factory)
 
             builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, TestRemoteAddress>());
         });
-        return await ApiClient.CreateAsync(app);
-    }
 
     private static async Task UseUpTheLimitAsync(ApiClient client, string remote, string forwardedFor)
     {
