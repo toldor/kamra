@@ -8,6 +8,8 @@ A kurzus-kiírás 5. pontja szerinti kézi tesztek: ki, mikor, melyik verzión, 
 | MT-02 | Telepítés tiszta környezetben a runbook szerint, mért idővel | 2026-10-23 | `develop @ 7b6a484` | a fejlesztő | PASS, 2 runbook-eltéréssel (javítva) |
 | MT-03 | Az UAT-forgatókönyvek fejlesztői végigpróbálása | 2026-10-25 | `v0.3.0` (`main @ ad2d93a`) | a fejlesztő; az S2–S5 akadálymentességi pontjait a Claude Code automatikusan ellenőrizte | PASS, 2 akadálymentességi lelettel (L1, L2) |
 | MT-04 | Visszaállás az előző kiadásra (rollback) a runbook szerint | 2026-10-25 | `v0.3.0` → `v0.2.0` → `v0.3.0` | a fejlesztő | PASS |
+| MT-05 | Az élő példány telepítése egy Azure VM-re a runbook szerint, mért idővel és memóriával; ellenőrzés kívülről | 2026-11-22 | `feature/live-deploy @ 434cb4d` | a fejlesztő, az MI lépésenkénti vezetésével | PASS |
+| MT-06 | Mentés, az adatbázis törlése és visszaállítása az élő példányon | 2026-11-22 | `feature/live-deploy @ 434cb4d` | a fejlesztő | PASS |
 
 ## MT-01 – A fő folyamat a fejlesztő gépén
 
@@ -98,3 +100,43 @@ A kurzus-kiírás 5. pontja szerinti kézi tesztek: ki, mikor, melyik verzión, 
 
 - **Eredmény:** **PASS.** A `v0.2.0` elindult a `v0.3.0` sémáján, adat nem veszett el, és a visszatérés után a `v0.3.0` ugyanazokkal az adatokkal működik. A runbook állítása, hogy a régi kód az új sémán is fut, igazolódott ([V-57](../07_ai/verification_log.md)). A mentés visszatöltését (`pg_restore`) nem próbáltuk, mert adat nem sérült.
 - **E3 – megfigyelés:** a `v0.2.0` alatt az adatbázis portja minden hálózati címen nyitva volt (`0.0.0.0:5432`), mert a `127.0.0.1`-es kötés csak a `v0.3.0`-ban került a compose-fájlba (`fdca415`, threat_model T-5). A `.env.example` jelszava nyilvános, ezért a `v0.2.0`-ra való visszaállás idejére a helyi hálózatról az adatbázis elérhető, ha a Windows tűzfala átengedi. A runbook visszaállási része erre figyelmeztet.
+
+
+## MT-05 – Az élő példány telepítése (Azure VM)
+
+- **Cél:** a [deploy_runbook.md](../05_security_ops/deploy_runbook.md) „Élő példány (Azure)” része egy új, üres gépen ([ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)); egyben a scope_contract „ellenőrzött telepítés másik gépen” pontja.
+- **Verzió:** `feature/live-deploy @ 434cb4d` (a T1 kódja: továbbított fejlécek, meghívókód, `docker-compose.prod.yml`, `Caddyfile`, `demo-seed.mjs`).
+- **Környezet:** Azure for Students, Austria East, zóna nélkül, Standard_B2ats_v2 (2 vCPU, 836 MiB használható RAM), Ubuntu 24.04.5 LTS, 29 GB szabad lemez; 4 GB swap; Docker 29.10.0, Docker Compose v5.8.0; Caddy 2.11.9.
+
+| # | Lépés | Elvárt | Tényleges | Idő (UTC) |
+|---|---|---|---|---|
+| 1 | VM létrehozása a Portalon, SSH-kulcs (ed25519), DNS-név `kamra-demo`, az SSH-szabály a saját IP-re szűkítve | a VM fut; NSG: 22 (saját IP), 80, 443 | `kamra-vm-nsg` a hálózati adapteren, a három szabály és a „DenyAllInBound” | – |
+| 2 | `apt-get upgrade`, 4 GB swap, Docker Engine, `sudo reboot` | újraindítás után a swap és a Docker él | `Swap: 4.0Gi`, `systemctl is-enabled docker` → `enabled` | – |
+| 3 | `git clone --branch feature/live-deploy` | `434cb4d` | `434cb4d docs: log the live deployment plan…` | 15:55:59 (a mérés kezdete) |
+| 4 | `.env` a runbook szerint (generált jelszó és meghívókód, új Gemini-kulcs, `COMPOSE_FILE`) | a titkok kitöltve, `-rw-------` | a hosszak rendben (a jelszó 48, a kód 20 karakter), `-rw-------` | – |
+| 5 | `docker compose up -d --build` | a négy konténer elindul | 3 p 12 mp (a két image buildje kb. 169 mp); `db` Healthy, `migrator` Exited, `api` és `caddy` Started | – |
+| 6 | `curl https://…/health` a VM-en | `Healthy` | `Healthy`; a Caddy naplója: „certificate obtained successfully” (Let's Encrypt, 5 mp; a ZeroSSL-tartalék nem kellett) | 16:17:41 (**21 p 42 mp a klóntól**) |
+| 7 | Memória futás közben (`free -h`) | elfér | kb. 370–385 MiB RAM foglalt, 136–154 MiB swap | – |
+| 8 | Kívülről (PowerShell): `curl.exe` az antiforgery-végpontra, sima HTTP, `Test-NetConnection` a 8080-as és az 5432-es portra | `200`, HSTS, `secure` süti; `308`; mindkét port zárt | `200 OK`, `Strict-Transport-Security: max-age=31536000`, a süti `secure; samesite=strict; httponly` ([V-106](../07_ai/verification_log.md)); `308 Permanent Redirect` → https; `False`, `False` | – |
+| 9 | `demo-seed.mjs` a saját gépről, a meghívókóddal | 0-s kilépés, a várt ajánlás | „Kész: tomi@pelda.hu – 9 készlettétel …; elkészíthető: Rántotta; majdnem: Lecsó, Palacsinta, Rizibizi.” | – |
+| 10 | Böngésző laptopon és telefonon (mobilnet): belépés, Készlet, Mit főzzek?, Kérdezz, mondatos bevitel (a javaslat kihagyva); privát ablakban a regisztráció | minden működik; a regisztrációnál a „Meghívókód” mező | a fejlesztő szerint minden a várt módon; a telefonos belépés is sikerült (az 1. UAT-kör korlátja megszűnt) | – |
+| 11 | Rate limit a proxy mögött: a laptopról 11 hibás belépés egy kitalált címmel, ugyanabban a percben belépés a telefonról (mobilnet) | a laptop „Túl sok kérés”, a telefon belép | a várt eredmény ([V-108](../07_ai/verification_log.md)) | – |
+
+- **Mért idő:** a klóntól az első sikeres `/health`-ig **21 perc 42 másodperc**; ebben benne van a `.env` kézi kitöltése és az élő Gemini-kulcs létrehozása az AI Studióban. A gépi rész (build és indítás) 3 perc 12 másodperc.
+- **Eltérés a tervtől:** a 836 MiB-os gépen a build swappal lefutott, a tervben tartalékként szereplő nagyobb VM nem kellett.
+- **Eredmény:** **PASS.**
+
+## MT-06 – Mentés és visszaállítás az élő példányon
+
+- **Cél:** a runbook „Mentés és visszaállítás” és „Napi mentés” része a célkörnyezetben (az MT-04 a visszatöltést nem próbálta).
+- **Környezet és adatok:** az MT-05 példánya, a `tomi@pelda.hu` bemutató adataival.
+
+| # | Lépés | Elvárt | Tényleges | Idő (UTC) |
+|---|---|---|---|---|
+| 1 | `~/backup.sh` (a cron-szkript kézzel), `crontab` beállítása | nem üres mentés; a cron-sor megvan | `kamra-2026-11-22.dump`, 58 KB; `30 3 * * * $HOME/backup.sh …` | 16:59 |
+| 2 | `docker compose down`, `docker volume rm kamra_pgdata`, `docker compose up -d` | üres adatbázis a migrációkkal | a migrátor `Exited`, a stack 6,5 mp alatt fut | 17:00:35 |
+| 3 | Belépés `tomi@pelda.hu`-ként | elbukik | „Hibás e-mail-cím vagy jelszó.” | – |
+| 4 | `pg_restore --clean --if-exists` a mentésből | 0-s kilépés | `restore exit: 0` | 17:01:12 → 17:01:13 |
+| 5 | Belépés `tomi@pelda.hu`-ként | sikerül, az adatok megvannak | a fejlesztő szerint a várt eredmény | – |
+
+- **Eredmény:** **PASS.** A mentésből egy másodperc alatt visszaállt a törölt adatbázis, adatvesztés nélkül. A tanúsítvány-volume (`caddy_data`) a lépések alatt megmaradt.

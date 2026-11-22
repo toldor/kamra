@@ -1,0 +1,43 @@
+# Kamra - the public instance (ADR-0014, t1_minispec K3), on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Caddy terminates TLS (automatic Let's Encrypt, ZeroSSL as fallback) and is the only service reachable from
+# outside; the Api trusts X-Forwarded-For only from this compose network. Values come from the VM's .env.
+services:
+  caddy:
+    image: caddy:2.11.9-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      KAMRA_DOMAIN: ${KAMRA_DOMAIN:?Set KAMRA_DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # The certificates; do not delete it (Let's Encrypt issues at most 5 identical certificates a week).
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    networks: [kamra-network]
+
+  api:
+    # Only through Caddy: no port on the host.
+    ports: !reset []
+    restart: unless-stopped
+    environment:
+      ForwardedHeaders__KnownNetworks: 172.30.0.0/24
+      Auth__InviteCode: ${Auth__InviteCode:?Set Auth__InviteCode in .env}
+
+  db:
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  kamra-network:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

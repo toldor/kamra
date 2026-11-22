@@ -15,18 +15,19 @@ A tesztekben és a dokumentációban csak kitalált adat szerepel (`@example.com
 
 ## Adatáramlás
 
-Böngésző → API (`/api/v1`, session-cookie) → PostgreSQL ugyanazon a gépen. A mondatos bevitel (US-2, csak bekapcsolt `Llm:Enabled` mellett) a beírt mondatot és a háztartás által látható hozzávalók nevét elküldi a Google Gemini API-nak ([ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)); készlet- és fiókadatot nem. A chat (US-6, ugyanazzal a kapcsolóval) a kérdést, a legfeljebb 10 korábbi üzenetet és az MCP-eszközök eredményét küldi: a saját háztartás készletét, ajánlását és bevásárlólistáját (nevek, mennyiségek, lejáratok), azonosító és fiókadat nélkül ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)); a beszélgetést a szerver nem tárolja. Más harmadik félhez semmi nem megy. A felület sem tölt be külső erőforrást: a betűk is az alkalmazás saját címéről jönnek ([ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md)).
+Böngésző → API (`/api/v1`, session-cookie) → PostgreSQL ugyanazon a gépen. Az élő példányon a böngésző és az API között a Caddy végzi a TLS-t ugyanazon a VM-en (Azure, Austria East, [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)); a tanúsítványkiadó (Let's Encrypt, tartalékként ZeroSSL) csak a domainnevet és az üzemeltető értesítési címét kapja, felhasználói adatot nem. A mondatos bevitel (US-2, csak bekapcsolt `Llm:Enabled` mellett) a beírt mondatot és a háztartás által látható hozzávalók nevét elküldi a Google Gemini API-nak ([ADR-0009](../02_architecture/adr/0009-llm-szolgaltato.md)); készlet- és fiókadatot nem. A chat (US-6, ugyanazzal a kapcsolóval) a kérdést, a legfeljebb 10 korábbi üzenetet és az MCP-eszközök eredményét küldi: a saját háztartás készletét, ajánlását és bevásárlólistáját (nevek, mennyiségek, lejáratok), azonosító és fiókadat nélkül ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md)); a beszélgetést a szerver nem tárolja. Más harmadik félhez semmi nem megy. A felület sem tölt be külső erőforrást: a betűk is az alkalmazás saját címéről jönnek ([ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md)).
 
 ## Megőrzés és törlés
 
 - Az adat a fiók törléséig megmarad. A felületen fióktörlés nincs (Ismert korlátok); kérésre az üzemeltető törli a felhasználót; ez láncban törli a háztartását és annak minden adatát (a háztartás a felhasználóra, a háztartáshoz kötött táblák a háztartásra hivatkoznak `ON DELETE CASCADE`-del, [data_model.md](../03_design/data_model.md)).
 - A napló a konténer kimenete: a konténer újralétrehozásával törlődik.
-- Az UAT után a próba-adatbázist a fejlesztő törli ([uat.md](../04_quality/uat.md)).
+- Az UAT után a próba-adatbázist a fejlesztő törli ([uat.md](../04_quality/uat.md)); az élő példányon a résztvevők fiókjait egyenként (a fenti láncolt törléssel), mert ott a bemutató adat megmarad.
+- **Az élő példány** bemutatási célú: a regisztrációhoz meghívókód kell, és kitalált adatot vár. Az adatbázist a napi mentés (7 napos megőrzés, ugyanazon a VM-en, csak az üzemeltető fér hozzá) őrzi; a példány a mentésekkel együtt 2027. jan. 22. után törlődik ([deploy_runbook.md](deploy_runbook.md), „Élő példány (Azure)”).
 
 ## Hozzáférés
 
 - Egy felhasználó csak a saját háztartása adatát látja (QA-1, [threat_model.md](threat_model.md) T-4). Szerepkörök és admin felület nincsenek.
-- Az üzemeltető (a telepítést futtató személy) az adatbázishoz a gépen fér hozzá.
+- Az üzemeltető (a telepítést futtató személy) az adatbázishoz a gépen fér hozzá; az élő példányon SSH-kulccsal, csak a saját IP-címéről (NSG), az adatbázis kívülről nem érhető el.
 
 ## MI és adatok
 
@@ -65,6 +66,6 @@ A projekt licence: MIT ([LICENSE](../../LICENSE)) (D2).
 | @playwright/test | 1.63.0 | Apache-2.0 | e2e |
 | Zilla Slab 700, IBM Plex Sans (betűtípus, woff2, latin + latin-ext) | Google Fonts, 2026-10-31 (Zilla Slab v12, IBM Plex Sans v23) | SIL OFL 1.1 (`src/frontend/public/fonts/OFL-*.txt`) | frontend, saját tárhelyről |
 
-Mind megengedő licenc, egymással és az MIT-tel kompatibilis. A US-2 nem hozott új függőséget: a Gemini-hívás `HttpClient`-tel megy, az e2e LLM-csonkja csak beépített Node-modulokat használ; a US-6 egyet: a hivatalos MCP C# SDK-t (Apache-2.0), a két MIT-licences átmeneti függőségével. A Docker-alapképek: `postgres:18` (PostgreSQL License), `mcr.microsoft.com/dotnet/*` (MIT), `node:24-alpine` (MIT).
+Mind megengedő licenc, egymással és az MIT-tel kompatibilis. A US-2 nem hozott új függőséget: a Gemini-hívás `HttpClient`-tel megy, az e2e LLM-csonkja csak beépített Node-modulokat használ; a US-6 egyet: a hivatalos MCP C# SDK-t (Apache-2.0), a két MIT-licences átmeneti függőségével. A Docker-alapképek: `postgres:18` (PostgreSQL License), `mcr.microsoft.com/dotnet/*` (MIT), `node:24-alpine` (MIT); az élő példányon a `caddy:2.11.9-alpine` (Apache-2.0, a TLS-proxy, [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)). A T1 (élő kitelepítés) NuGet- és npm-függőséget nem hozott.
 
 **Adat és tartalom:** az induló receptek saját szövegűek ([V-43](../07_ai/verification_log.md)); a kategóriák eltarthatósági értékei a USDA FoodKeeper adatain alapulnak (CC0, [data_model.md](../03_design/data_model.md)).

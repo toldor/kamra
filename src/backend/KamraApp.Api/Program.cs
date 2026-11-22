@@ -52,6 +52,7 @@ if (Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider")
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddKamraAuthentication(builder.Configuration);
+builder.Services.AddTrustedProxy(builder.Configuration);
 // US-1 use cases (ADR-0004: one class per use case, no mediator).
 builder.Services.AddScoped<ListIngredients>();
 builder.Services.AddScoped<CreateIngredient>();
@@ -84,6 +85,8 @@ builder.Services.AddExceptionHandler<AppExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = AppExceptionHandler.Customize);
 
 var app = builder.Build();
+
+app.UseTrustedProxy();
 
 // The correlation id is always server-generated; a client-supplied value would allow log injection.
 // Headers are set on OnStarting because the exception handler clears the response before writing the error.

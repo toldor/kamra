@@ -43,6 +43,7 @@ A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-
 | [P-29](#p-29--kinézet-és-kezelhetőség-v080) | Kinézet és kezelhetőség | `v0.8.0` | [V-90 – V-99](verification_log.md) |
 | [P-30](#p-30--a-siker-mérése-cap-12-és-a-freeze-kivétel) | A mérőszámok lekérdezése | [metrics.sql](../01_product/metrics.sql), [CI](https://github.com/toldor/kamra/actions/runs/44483906511) | 37/37 mutáció, két review: [V-100 – V-102](verification_log.md) |
 | [P-31](#p-31--a-leadási-követelmények-ellenőrzése-teljesítménymérés-demó-önértékelés) | Leadási ellenőrzés, teljesítménymérés, demó, önértékelés | [performance.md](../04_quality/performance.md), [demo_script.md](../06_release/demo_script.md), [self_assessment.md](../06_release/self_assessment.md) | terheléses mérés: [V-103](verification_log.md) |
+| [P-36](#p-36--az-élő-kitelepítés-terve-és-a-t1-továbbított-fejlécek-meghívókód-prod-compose-betöltő-szkript) | Az élő kitelepítés terve és kódja (továbbított fejlécek, meghívókód) | [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md), [CI](https://github.com/toldor/kamra/actions/runs/44963175210), MT-05, MT-06 | [V-105 – V-108](verification_log.md) |
 
 ---
 
@@ -599,4 +600,66 @@ A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-
 - **AI javaslat (eredeti):** a `v0.7.0` mintája szerint egy dokumentációs commit (a changelog `[Unreleased]` része a `[0.8.0]` alá, a dátum nov. 19., a README állapota, az önértékelés CI-kapuja), PR a `develop`-ba, majd „Release v0.8.0” PR a `main`-be, a tag a `main` merge-commitjára.
 - **Érintett fájlok:** `docs/06_release/changelog.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/07_ai/prompt_log.md`.
 - **Validálás:** a release ág CI-futása; a tag a `main` merge-commitjára mutat.
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-34 – A heti e-mail visszavonása
+- **Dátum:** 2026-11-21
+- **Cél:** a heti e-mail (Stretch 4) freeze-kivételének kivezetése a dokumentációból, mert a fejlesztő döntése szerint nem készül el.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** az `ALLAPOT.md` „Következő lépés” 1. pontja: a heti e-mail visszavonása a scope_contractból, új changelog-bejegyzés.
+- **AI javaslat (eredeti):** a négy előfordulás felülvizsgálata (scope_contract Stretch 4 és freeze, capability_map, changelog `[0.8.0]`); a Stretch 4 pont „visszavonva” jelöléssel marad (A) vagy törlődik (B), ajánlás: A, mert a P-30 és a `[0.8.0]` hivatkozik rá; új pont a „Későbbi továbbfejlesztési lehetőségek” alatt; `[Unreleased]` changelog-szakasz, mert a `[0.8.0]` már kiadott. Az ütközésvizsgálat szerint a visszavonás a „Hatókörön kívül” lista „E-mail / push értesítések” pontjával való ellentmondást is megszünteti.
+- **Érintett fájlok:** `docs/01_product/scope_contract.md`, `docs/01_product/capability_map.md`, `docs/06_release/changelog.md`, `docs/07_ai/prompt_log.md`.
+- **Validálás:** a repóban a „heti e-mail” minden előfordulásának átnézése (`grep`); a P-30 történeti bejegyzés változatlan.
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-35 – A leadási követelmények újbóli összevetése; az UAT 2. kör terve
+- **Dátum:** 2026-11-21
+- **Cél:** a P-31 óta történtek összevetése a három külső követelménnyel, és az UAT 2. kör tervének frissítése.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** az `ALLAPOT.md` „Következő lépés” 2–3. pontja.
+- **AI javaslat (eredeti):** hiánylista három csoportban. A) Elavult dokumentáció: az `uat.md` 2. köre (verzió, US-2- és receptötlet-forgatókönyv, Gemini-adatkezelés), az önértékelés állapota és CI-linkje, a README állapota, a tesztszámok. B) A fejlesztő feladatai: UAT 2. kör, időmért demó, telepítés másik gépen, konzulensi jóváhagyás. C) A végleges leadáshoz: végleges verziótag, képernyőképek a végleges verzióról. Az UAT 2. kör tartalmára három változat; ajánlás: A (S1–S5 változatlanul, S6, új S7 mondatos bevitel, új S8 receptötlet, kb. 50 perc).
+- **Érintett fájlok:** `docs/04_quality/uat.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/07_ai/prompt_log.md`, `docs/07_ai/verification_log.md`.
+- **Validálás:** a forgatókönyvek tételnevei az `ingredients.json`-ban; a tesztszámok teljes futással ([V-104](verification_log.md)).
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-36 – Az élő kitelepítés terve és a T1 (továbbított fejlécek, meghívókód, prod Compose, betöltő szkript)
+- **Dátum:** 2026-11-21 – 22.
+- **Cél:** a témavezető 07-es levele szerinti nyilvános, HTTPS-es kitelepítés terve, és a kódoldali feltételek (T1).
+- **Eszköz:** Claude Code (claude-opus-5-5); review: Antigravity (Claude Sonnet 4.6).
+- **Prompt összefoglaló:** „az [email] szerint kell haladnunk … ami az alkalmazással kapcsolatos kiegészíteni valók azokat csináljuk most pl. kitelepítés”; a fejlesztő javaslata: „statikus meghívókód regisztráláskor”.
+- **AI javaslat (eredeti):** 10 döntés, egyenként, ajánlással:
+  - Azure for Students VM, ugyanaz a Compose;
+  - az Azure DNS-neve és Caddy;
+  - LLM bekapcsolva, külön kulccsal;
+  - **nyitott regisztráció**;
+  - `ForwardedHeaders` csak a proxy hálózatáról;
+  - betöltő szkript;
+  - kézi telepítés tag alapján;
+  - napi mentés;
+  - T1–T3, `v0.9.0`;
+  - UAT élőben, ha nov. 25-ig kész.
+
+  T1 mini-spec (K1–K4, 7 ellenőrzött tény forrással), spec-first commitok, mutáció, három review.
+- **Érintett fájlok:** `src/backend/KamraApp.Api/Auth/` (`TrustedProxySetup.cs`, `AuthenticationSetup.cs`, `AuthController.cs`), `Program.cs`, `openapi.json`, `src/backend/KamraApp.Application/Auth/` (`RegistrationPolicy.cs`, `RegisterUser.cs`, `AuthRequests.cs`), `src/frontend/src/` (`AuthForm.tsx`, `api/client.ts`, `api/schema.d.ts`, `App.test.tsx`), `docker-compose.prod.yml`, `Caddyfile`, `.env.example`, `tests/perf/` (`client.mjs`, `demo-seed.mjs`, `recommendations.mjs`), a tesztek (`ForwardedHeadersTests`, `InviteCodeTests`, `AdversarialProxyAndInviteTests`, `StartupTests`, `AuthUseCaseTests`, `TestRemoteAddress`), `docs/07_ai/` (`prompt_log.md`, `verification_log.md`).
+- **Validálás:** minden CI-kapu helyben és a CI-ban (az utolsó zöld: run 44960375835); az e2e az izolált stacken (73 + 9); mutáció (K1 7/7, K2 7/7, unit 4/4, keményítés 3/3, ellenséges 3/3); [V-105](verification_log.md), [V-106](verification_log.md), [V-107](verification_log.md).
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-37 – Az élő példány kitelepítése (T2) és dokumentálása (T3)
+- **Dátum:** 2026-11-22
+- **Cél:** a jóváhagyott terv T2 (Azure VM, a runbook szerinti telepítés, tesztfiók, mentés, MT-05, MT-06) és T3 (dokumentáció) szakasza.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** a T2-ben lépésenként: „írd le részletesen mit csináljak”, „magyar az azure felülete úgyhogy úgy írd ki hogy mire nyomjak rá”; a T3-ra: „most elfogadom amiket írni fogsz nem kell egyesével megmutatni, a sorrend jó, haladj végig a terved szerint az összesen”.
+- **AI javaslat (eredeti):** a régió és a méret a Portal adatai szerint (Austria East, mert a Sweden Centralra a Let's Encrypt-korlát vonatkozhat, és a France Centralban a méretek nem elérhetők; zóna nélkül; B2ats_v2 4 GB swappal, tartalékként ideiglenesen B2als_v2); SSH-kulcs jelmondattal; a titkok a VM-en generálva, a chat kihagyásával; `COMPOSE_FILE` a `.env`-ben; mérés és ellenőrzés kívülről; a rate limit élő próbája két hálózatról; napi mentés szkripttel (a crontab `%`-a miatt); MT-06 a volume név szerinti törlésével (soha `-v`). T3: ADR-0014, runbook-szakasz, MT-05/MT-06, threat model (T-15 – T-17), privacy, api, ux_flows (H6), error_handling, C4, scope_contract, uat, observability, README, self_assessment, test_report, capability_map, changelog, index, V-108.
+- **Érintett fájlok:** `docs/02_architecture/adr/0014-elo-kitelepites-azure-caddy.md`, `docs/05_security_ops/` (`deploy_runbook.md`, `threat_model.md`, `privacy_licensing.md`, `observability.md`), `docs/04_quality/` (`manual_tests.md`, `test_report.md`, `uat.md`), `docs/03_design/` (`api.md`, `error_handling.md`), `docs/02_architecture/c4_context_container.md`, `docs/01_product/` (`scope_contract.md`, `ux_flows.md`, `capability_map.md`), `docs/06_release/` (`self_assessment.md`, `changelog.md`), `docs/00_index.md`, `README.md`, `docs/07_ai/` (`prompt_log.md`, `verification_log.md`).
+- **Validálás:** a telepítés és a visszaállítás a VM-en (MT-05, MT-06); kívülről `curl.exe` és `Test-NetConnection`; böngésző laptopon és telefonon; [V-108](verification_log.md). Az MI tévedései a T2 alatt: a PowerShell-parancsokat nem jelölte elég egyértelműen a saját gépre (a fejlesztő a VM-en futtatta, kár nélkül); a `curl -I` `HEAD` kérést küldött a csak `GET`-et fogadó végpontra (405), javítva; a 10. lépés d) pontja (a meghívókód kiolvasása) kimaradt, utólag pótolva.
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-38 – A `v0.9.0` kiadás és az élő példány frissítése
+- **Dátum:** 2026-11-22
+- **Cél:** a `v0.9.0` kiadása a `main` ágra (az élő kitelepítés kódja és dokumentációja), és az élő VM átállítása a kiadott tagra.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** „mergeltem developra”.
+- **AI javaslat (eredeti):** a `v0.8.0` mintája szerint egy dokumentációs commit (a changelog `[Unreleased]` része `[0.9.0]` alá, a README állapota, az index és az önértékelés állapotsora), PR a `develop`-ba, majd „Release v0.9.0” PR a `main`-be, a tag a `main` merge-commitjára; utána az élő VM frissítése a runbook „Frissítés és visszaállás” szerint (mentés, `git checkout v0.9.0`, `docker compose up -d --build`), ami egyben a frissítés élő próbája; végül az önértékelés CI-kapuja a `main` új futására.
+- **Érintett fájlok:** `docs/06_release/changelog.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/00_index.md`, `docs/07_ai/prompt_log.md`.
+- **Validálás:** a release ág és a `main` CI-futása; a tag a `main` merge-commitjára mutat; a VM a frissítés után `Healthy`, a `git describe --tags` a VM-en `v0.9.0`.
 - **Mit változtattam / döntésem:** [fejlesztő tölti ki]

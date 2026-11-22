@@ -13,7 +13,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 | 2. AI-bevitel | US-2 |
 | 3. Chat | US-6 |
 
-**Keresztmetszeti követelmény – fiók és adatelkülönítés:** e-mail + jelszó alapú regisztráció és bejelentkezés; egy fiók = egy háztartás. Minden story feltételezi a bejelentkezett felhasználót.
+**Keresztmetszeti követelmény – fiók és adatelkülönítés:** e-mail + jelszó alapú regisztráció és bejelentkezés; egy fiók = egy háztartás. Minden story feltételezi a bejelentkezett felhasználót. Az élő, nyilvános példányon a regisztrációhoz statikus meghívókód is kell (`Auth:InviteCode`; helyben és a tesztekben nincs kód; a fejlesztő javaslata, 2026-11-21, [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)).
 
 - Bejelentkezés nélkül egyetlen adatvégpont sem érhető el (401).
 - Egy felhasználó más háztartás adatait nem látja és nem módosíthatja, akkor sem, ha az azonosítót ismeri (404). Integrációs teszt ellenőrzi.
@@ -92,7 +92,7 @@ Sorrendben, az MVP Definition of Done teljesülése után:
 1. **AI-receptötlet mentése:** az AI által generált recept szerkeszthető űrlapon jelenik meg, és jóváhagyás után „AI-javasolt” forrásjelöléssel a receptek közé menthető. Mentés után az ajánlásban ugyanúgy szerepel, mint bármely más recept. **Megvalósítva (`v0.7.0`, 2026-11-16):** a receptötletet a Kérdezz oldalon lehet kérni; a modell a `propose_recipe` függvénnyel adja (nem MCP-eszköz, nem olvas, nem ír), a „Szerkesztés és mentés” gomb az „Új recept” űrlapra viszi, a mentett recept „AI-javasolt” címkét kap ([ADR-0010](../02_architecture/adr/0010-mcp-integracio.md) 9., [P-28](../07_ai/prompt_log.md)).
 2. **Kipipált tételből készletbevitel:** a bevásárlólistán kipipált tétel előre kitöltött készletbeviteli formot nyit (hozzávaló, mennyiség, egység), amit a felhasználó lejárattal kiegészítve ment.
 3. **Kinézet és kezelhetőség** (a fejlesztő kérésére, 2026-11-17; **megvalósítva, `v0.8.0`**): Profilom panel és oldal, sötét téma, ragadós fejléc és 1024 px alatt alsó menüsáv, ikonok és saját lapikon, oldalcímek, „Nincs ilyen oldal”, lejárati csík, helykitöltő sorok, üres állapot ikonok, nyomtatható bevásárlólista, kategóriánkénti rendezés, asztalon összegző sáv, összecsukható beviteli kártyák, receptrács és kétoszlopos bevásárlólista, valamint egy élénkebb Kérdezz oldal ([ADR-0013](../02_architecture/adr/0013-vizualis-rendszer.md) módosítás, [P-29](../07_ai/prompt_log.md)).
-4. **Heti e-mail** (a fejlesztő kérésére, 2026-11-18; nem vállalt): opcionális vasárnap esti levél a jövő héten lejáró tételekről, receptötletekkel a lejáró készletből. A freeze alóli kivétel feltételei a 3. szakaszban.
+4. **Heti e-mail** (a fejlesztő kérésére, 2026-11-18; **2026-11-21-én visszavonva, nem készül el**): opcionális vasárnap esti levél a jövő héten lejáró tételekről, receptötletekkel. A továbbfejlesztési lehetőségek közé került (lásd lent).
 
 ## 3. Korlátok
 
@@ -107,10 +107,10 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 | okt. 17 – okt. 22. | US-5; US-3 és US-4 hibás esetei; saját recept és hozzávaló; az induló lista bővítése; az első dokumentált telepítés; a dolgozat 1–4. fejezete és az 5. fejezet első része | okt. 22. (témavezetői: okt. 23.): a készlet–recept–főzés–bevásárlás teljes útja (1. lépcső kész) |
 | okt. 23 – nov. 13. | 2. lépcső: felhasználói kipróbálás 1. köre (okt. 26. – nov. 1., 4 fő) és javítások; LLM-mérés (PoC, nov. 2–7.); US-2 | nov. 13.: kipróbálható MI-bevitel (`v0.5.0`); az eredeti nov. 3-i céldátum csúszott (2026-11-07-i átütemezés) |
 | nov. 14 – nov. 20. | 3. lépcső: US-6 (`v0.6.0`, nov. 12. – a 2026-11-09-i gyorsítás szerint); mérések; a dolgozat teljes első változata | nov. 20. (témavezetői határidő): a vállalt funkciók lezárása, a teljes dolgozat és projektcsomag |
-| nov. 21 – dec. 4. | Hibajavítás; felhasználói kipróbálás 2. köre (nov. 21–27., 3–4 fő); javítás utáni újratesztelés; ellenőrzött telepítés másik gépen; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás |
-| dec. 5 – dec. 11. | Végső ellenőrzés | dec. 11.: végső belső ellenőrzési csomag |
+| nov. 21 – dec. 4. | Hibajavítás; élő, publikus HTTPS-kitelepítés (a témavezető 2026-11-21-i kérése; **kész nov. 22.**: Azure VM, Caddy, [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md), MT-05, MT-06 – ez az „ellenőrzött telepítés másik gépen” is); felhasználói kipróbálás 2. köre az élő példányon (nov. 25–27., 3–4 fő); javítás utáni újratesztelés; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás, élő példány |
+| dec. 5 – dec. 11. | Végső ellenőrzés; végleges verzió (`v1.0.0`) az élő példányon | dec. 11.: végső belső ellenőrzési csomag (a témavezetőnek dec. 12-ig: élő URL és tesztfiók, végleges PDF, CooSpace-melléklet); az élő példány 2027. jan. 22-ig fut |
 
-- **Feature freeze: nov. 20.** (2026-11-17-én nov. 18-ról áthelyezve a kinézet bővítése miatt, a fejlesztő döntése; a témavezetői határidő nov. 20.). Utána csak javítás és dokumentáció kerül be, egy kivétellel: az opcionális heti e-mail (Stretch 4), ha a felhasználói kipróbálás 2. körének kezdetéig elkészül és minden kapun átmegy. Ha nem, kimarad, és a továbbfejlesztési lehetőségek közé kerül (a fejlesztő döntése, 2026-11-18).
+- **Feature freeze: nov. 20.** (2026-11-17-én nov. 18-ról áthelyezve a kinézet bővítése miatt, a fejlesztő döntése; a témavezetői határidő nov. 20.). Utána csak javítás és dokumentáció kerül be. A heti e-mailre (Stretch 4) tervezett kivételt a fejlesztő 2026-11-21-én visszavonta.
 - **Hivatalos határidők** (a témavezető tájékoztatása szerint a TTIK kari naptára alapján, egyedileg ellenőrizendő): jelentkezés a januári záróvizsgára okt. 31., dolgozatbeadás dec. 19.
 - **Döntési pont – okt. 22–23.:** az 1. lépcső eredménye alapján a témavezetővel döntünk a januári záróvizsga tarthatóságáról; csúszás esetén későbbi záróvizsga.
 - A dolgozat a fejlesztéssel párhuzamosan készül: minden lépcső végén a hozzá tartozó fejezet.
@@ -175,7 +175,7 @@ A projekt akkor leadható, ha az alábbiak **mind** teljesülnek:
 ## Technikai hatókör
 
 - REST API (ASP.NET Core) + React frontend
-- Docker Compose-alapú fejlesztői és éles környezet
+- Docker Compose-alapú fejlesztői és éles környezet; az élő példány egy Azure VM-en, Caddy TLS-proxyval ([ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md))
 - Metrika-lekérdezések a [metrics.md](metrics.md) szerint (North Star + 3 guardrail), szintetikus seed-adaton tesztekkel ellenőrizve
 
 ## Hatókörön kívül
@@ -198,6 +198,7 @@ A projekt akkor leadható, ha az alábbiak **mind** teljesülnek:
 Tudatosan kihagyott, de a jelenlegi tervezéssel összeegyeztethető bővítések (nem stretch, ebben a scope-ban nem készülnek el):
 
 - **AI-os helyettesítés és adagjavaslat:** egy receptnél az AI magyarázattal javasolna helyettesítő hozzávalót („nincs tejföl → görög joghurt”) és adagarányt. A témavezetővel egyeztetett szűkítés (2026. okt.) szerint továbbfejlesztési lehetőség; a szabályalapú adagszámítás (US-4), a jóváhagyott mondatos bevitel (US-2) és a csak olvasó chat (US-6) a vállalás része.
+- **Heti e-mail:** opcionális vasárnap esti levél a jövő héten lejáró tételekről, receptötletekkel a lejáró készletből. A fejlesztő kérésére Stretch 4-ként merült fel (2026-11-18), a freeze előtt nem készült el (2026-11-21). Ehhez e-mail-küldés kellene, ami most hatókörön kívül van (lásd fent).
 - **Saját „mindig otthon van” lista:** az alaphozzávalók (víz, só, bors) felhasználói bővítése.
 - **Kategóriafüggő „hamarosan lejáró” küszöb:** a fix 2 nap helyett kategóriánként eltérő küszöb.
 - **A kategória-eltarthatóság felhasználói felülírása** a háztartás saját szokásaihoz.

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.Options;
 
 namespace KamraApp.Api.Auth;
 
@@ -21,6 +22,13 @@ public static class AuthenticationSetup
     {
         services.AddScoped<RegisterUser>();
         services.AddScoped<LoginUser>();
+        // t1_minispec K2: a short invite code could be guessed within the auth rate limit, so it stops the startup.
+        services.AddOptions<InviteCodeOptions>()
+            .Bind(configuration.GetSection("Auth"))
+            .Validate(options => string.IsNullOrEmpty(options.InviteCode) || options.InviteCode.Length >= InviteCodeOptions.MinimumLength,
+                $"Auth:InviteCode must be empty or at least {InviteCodeOptions.MinimumLength} characters long.")
+            .ValidateOnStart();
+        services.AddSingleton(provider => new RegistrationPolicy(provider.GetRequiredService<IOptions<InviteCodeOptions>>().Value.InviteCode));
         services.AddSingleton(TimeProvider.System);
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentHousehold, HttpCurrentHousehold>();
@@ -45,9 +53,14 @@ public static class AuthenticationSetup
         // [AllowAnonymous]. A global filter (not a fallback policy) keeps unknown routes at 404.
         // ADR-0006 / ADR-0007: one global antiforgery filter; the SPA sends the token in a header.
         services.AddAuthorization();
-        // The antiforgery cookie keeps the default SecurePolicy (SameAsRequest): with Always, ASP.NET
-        // refuses to issue tokens on plain HTTP, which breaks the HTTP-only local deployment (V-12).
-        services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
+        // SameAsRequest: with Always, ASP.NET refuses to issue tokens on plain HTTP, which breaks the HTTP-only local
+        // deployment (V-12). The default is None (no Secure flag even over https, V-106), so it is set explicitly;
+        // behind Caddy the forwarded https (TrustedProxySetup) makes the request count as https.
+        services.AddAntiforgery(options =>
+        {
+            options.HeaderName = "X-XSRF-TOKEN";
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        });
         services.Configure<MvcOptions>(options =>
         {
             options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
@@ -85,4 +98,12 @@ public static class AuthenticationSetup
             ? RateLimitPartition.GetFixedWindowLimiter(householdId,
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = window })
             : RateLimitPartition.GetNoLimiter("anonymous");
+}
+
+// The "Auth" configuration section; only the invite code lives here (t1_minispec K2).
+public sealed class InviteCodeOptions
+{
+    public const int MinimumLength = 16;
+
+    public string? InviteCode { get; set; }
 }

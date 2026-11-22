@@ -45,6 +45,13 @@ public sealed class AuthController : ControllerBase
     public MeResponse Me([FromServices] ICurrentHousehold household) =>
         new(User.FindFirstValue(ClaimTypes.Email) ?? "", household.HouseholdId);
 
+    // t1_minispec K2: the registration form shows the invite code field only when the instance asks for one.
+    [AllowAnonymous]
+    [HttpGet("registration")]
+    [Produces("application/json")]
+    public RegistrationOptionsResponse Registration([FromServices] RegistrationPolicy policy) =>
+        new(policy.InviteCodeRequired);
+
     // The token is bound to the current user: the SPA fetches a new one after login, registration and logout.
     [AllowAnonymous]
     [HttpGet("antiforgery")]
@@ -56,3 +63,5 @@ public sealed class AuthController : ControllerBase
 public sealed record MeResponse(string Email, Guid HouseholdId);
 
 public sealed record AntiforgeryTokenResponse(string RequestToken);
+
+public sealed record RegistrationOptionsResponse(bool InviteCodeRequired);

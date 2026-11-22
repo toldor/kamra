@@ -15,6 +15,10 @@ public sealed class RegisterRequest
     [Required(ErrorMessage = "Add meg a jelszavad.")]
     [StringLength(128, MinimumLength = 15, ErrorMessage = "A jelszó legalább 15 és legfeljebb 128 karakter legyen. Egy hosszabb, könnyen megjegyezhető mondat is jó.")]
     public string? Password { get; init; }
+
+    // t1_minispec K2: only checked when the instance requires one (RegistrationPolicy).
+    [StringLength(64, ErrorMessage = "A meghívókód legfeljebb 64 karakter lehet.")]
+    public string? InviteCode { get; init; }
 }
 
 // Login does not reveal the password policy; wrong values get the uniform INVALID_CREDENTIALS answer.

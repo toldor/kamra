@@ -42,6 +42,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | [adr/0011-serilog-strukturalt-naplozas.md](02_architecture/adr/0011-serilog-strukturalt-naplozas.md) | Serilog JSON-napló, szerver által generált correlationId | Accepted |
 | [adr/0012-bongeszos-kereses.md](02_architecture/adr/0012-bongeszos-kereses.md) | Böngészőben szűrő kereső a Receptek és a Bevásárlólista oldalon | Accepted |
 | [adr/0013-vizualis-rendszer.md](02_architecture/adr/0013-vizualis-rendszer.md) | Saját vizuális rendszer: tokenek CSS-változókban, saját tárhelyű betűk | Accepted |
+| [adr/0014-elo-kitelepites-azure-caddy.md](02_architecture/adr/0014-elo-kitelepites-azure-caddy.md) | Élő kitelepítés: Azure VM, ugyanaz a Docker Compose, Caddy TLS-proxy, meghívókódos regisztráció | Accepted |
 
 ---
 
@@ -61,10 +62,10 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | [test_strategy.md](04_quality/test_strategy.md) | Teszt piramis, mock stratégia, CI quality gate-ek | Kész |
-| [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Kész (1220 teszt, P1–P20, LLM- és chat-mérés, zöld CI) |
-| [manual_tests.md](04_quality/manual_tests.md) | Kézi tesztjegyzőkönyv (kiírás 5. pont) | Kész (MT-01–MT-04) |
+| [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Kész (1261 teszt, P1–P20, LLM- és chat-mérés, zöld CI) |
+| [manual_tests.md](04_quality/manual_tests.md) | Kézi tesztjegyzőkönyv (kiírás 5. pont) | Kész (MT-01–MT-06; az élő példány telepítése és visszaállítása: MT-05, MT-06) |
 | [traceability.md](04_quality/traceability.md) | Megfeleltetés: követelmény → flow → végpont és képernyő → teszt | Kész |
-| [uat.md](04_quality/uat.md) | Felhasználói kipróbálás terve, két kör | Kész az 1. körre (nov. 1., 4 résztvevő); a 2. kör a freeze után |
+| [uat.md](04_quality/uat.md) | Felhasználói kipróbálás terve, két kör | Kész az 1. körre (nov. 1., 4 résztvevő); a 2. kör az élő példányon (nov. 25–27.) |
 | [performance.md](04_quality/performance.md) | Teljesítmény-alapmérés, a mért szűk keresztmetszet | Kész (az ajánlás p95 18–22 ms) |
 | [postmortem.md](04_quality/postmortem.md) | Post-mortem egy valós hibáról (bónusz) | Kész |
 
@@ -74,9 +75,9 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 | Fájl | Tartalom | Állapot |
 |---|---|---|
-| [threat_model.md](05_security_ops/threat_model.md) | STRIDE fenyegetések (≥6), mitigáció, residual risk | Kész (14 fenyegetés, az MI-funkcióké is) |
+| [threat_model.md](05_security_ops/threat_model.md) | STRIDE fenyegetések (≥6), mitigáció, residual risk | Kész (17 fenyegetés, az MI-funkcióké és az élő példányé is) |
 | [privacy_licensing.md](05_security_ops/privacy_licensing.md) | Adatkategóriák, adatáramlás, AI adatküldési szabály, licencek | Kész |
-| [deploy_runbook.md](05_security_ops/deploy_runbook.md) | Deploy lépések, rollback, ≥2 incident forgatókönyv | Kész (3 incidens; tiszta környezetben kipróbálva, MT-02) |
+| [deploy_runbook.md](05_security_ops/deploy_runbook.md) | Deploy lépések, rollback, ≥2 incident forgatókönyv | Kész (3 incidens; tiszta környezetben kipróbálva, MT-02; élő példány az Azure-ban, MT-05, MT-06) |
 | [observability.md](05_security_ops/observability.md) | Naplózás, health check, metrikák, debugging guide | Kész (3 naplóalapú metrika; külön metrikagyűjtő szándékosan nincs) |
 
 ---
@@ -87,7 +88,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 |---|---|---|
 | [demo_script.md](06_release/demo_script.md) | 5-7 perces stabil demo forgatókönyv | Kész |
 | [self_assessment.md](06_release/self_assessment.md) | Kötelező önértékelés kategóriánként (4.5 pont a PDF-ben) | Kész |
-| [changelog.md](06_release/changelog.md) | Release notes, scope változások | Kész (0.1.0 – 0.8.0) |
+| [changelog.md](06_release/changelog.md) | Release notes, scope változások | Kész (0.1.0 – 0.9.0) |
 
 ---
 
@@ -96,8 +97,8 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 | Fájl | Tartalom | Állapot |
 |---|---|---|
 | [ai_manifest.md](07_ai/ai_manifest.md) | Használt eszközök, tiltások, kritikus döntések, kockázatok | Kész (D-1–D-3, tanulságok) |
-| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-31; Kulcsbejegyzések tábla validálással) |
-| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Kész (V-01–V-103) |
+| [prompt_log.md](07_ai/prompt_log.md) | 10-20 kulcsprompt kontextussal és kimenet linkkel | Kész (P-01–P-37; Kulcsbejegyzések tábla validálással) |
+| [verification_log.md](07_ai/verification_log.md) | AI állítások ellenőrzési naplója (min. 10 bejegyzés kell) | Kész (V-01–V-108) |
 | [review_prompts.md](07_ai/review_prompts.md) | Verziózott review-, ellenséges teszt- és megértés-ellenőrző promptsablonok | Kész |
 
 ---
@@ -113,4 +114,4 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 
 ## Hiányzó fájlok
 
-Nincs: a v1.2 minden kötelező dokumentuma megvan (2026-11-19). Az ADR-ek: 0002–0013 (12 döntés) és a sablon.
+Nincs: a v1.2 minden kötelező dokumentuma megvan (2026-11-19). Az ADR-ek: 0002–0014 (13 döntés) és a sablon.

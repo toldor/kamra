@@ -17,7 +17,8 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 | Metódus | Útvonal | Hozzáférés | Kérés | Válasz | Hibakódok |
 |---|---|---|---|---|---|
 | GET | `/auth/antiforgery` | nyilvános | – | 200 `{ "requestToken": "..." }` | – |
-| POST | `/auth/register` | nyilvános, rate limit | `{ "email", "password" }` (e-mail ≤ 256, jelszó 15–128 karakter) | 204, a felhasználó bejelentkezett | `VALIDATION_FAILED`, `EMAIL_ALREADY_REGISTERED`, `ANTIFORGERY_TOKEN_INVALID`, `RATE_LIMITED` |
+| POST | `/auth/register` | nyilvános, rate limit | `{ "email", "password", "inviteCode"? }` (e-mail ≤ 256, jelszó 15–128 karakter, meghívókód ≤ 64; a kód csak akkor kell, ha a példány `Auth:InviteCode`-ot állít be) | 204, a felhasználó bejelentkezett | `VALIDATION_FAILED` (hiányzó vagy hibás kódnál `errors.inviteCode`, egységes üzenettel, fiók nem jön létre), `EMAIL_ALREADY_REGISTERED`, `ANTIFORGERY_TOKEN_INVALID`, `RATE_LIMITED` |
+| GET | `/auth/registration` | nyilvános | – | 200 `{ "inviteCodeRequired": true\|false }` – a felület ebből tudja, mutassa-e a „Meghívókód” mezőt | – |
 | POST | `/auth/login` | nyilvános, rate limit | `{ "email", "password" }` | 204, a felhasználó bejelentkezett | `VALIDATION_FAILED`, `INVALID_CREDENTIALS`, `LOGIN_LOCKED_OUT`, `ANTIFORGERY_TOKEN_INVALID`, `RATE_LIMITED` |
 | POST | `/auth/logout` | bejelentkezett | – | 204; a cookie törölve, és a felhasználó minden korábbi sessionje érvénytelen (új security stamp) | `UNAUTHENTICATED`, `ANTIFORGERY_TOKEN_INVALID` |
 | GET | `/auth/me` | bejelentkezett | – | 200 `{ "email", "householdId" }` | `UNAUTHENTICATED` |
@@ -124,6 +125,6 @@ Cookie-alapú session ASP.NET Core Identity-vel ([ADR-0006](../02_architecture/a
 - Az ajánlás az összes illeszkedő receptet visszaadja, lapozás nélkül; háztartási méretnél (20–40 recept) erre nincs szükség.
 - Egy készlettétel friss adatát (például verzióütközés után) a felület a teljes készletlistából veszi; tételenkénti `GET /pantry-items/{id}` végpont nincs, háztartási méretnél erre nincs szükség.
 
-- A rate limit a kapcsolat IP-címét használja. Proxy vagy Docker Desktop porttovábbítás mögött minden kérés ugyanarról a (gateway-) címről érkezhet, ilyenkor a limit közös az összes kliensre. Megbízható reverse proxy jelenleg nincs, ezért a továbbított IP-fejléceket (`X-Forwarded-For`) szándékosan nem fogadjuk el, mert azt a kliens hamisíthatná.
+- A rate limit a kapcsolat IP-címét használja. Helyben, Docker Desktop porttovábbítás mögött minden kérés ugyanarról a (gateway-) címről érkezhet, ilyenkor a limit közös az összes kliensre. Az élő példányon a Caddy mögött az API a `ForwardedHeaders:KnownNetworks`-ben megadott hálózatról (a Compose rögzített alhálózata) elfogadja az `X-Forwarded-For` és az `X-Forwarded-Proto` fejlécet, egy ugrással; más forrásból, illetve a beállítás nélkül a fejlécet figyelmen kívül hagyja, mert azt a kliens hamisíthatná ([ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md), [V-105](../07_ai/verification_log.md)).
 - Az `openapi.json` a sikeres válaszokat és a kérés-sémákat írja le; a ProblemDetails-hibaválaszok még nincsenek benne végpontonként, azok listája ebben a dokumentumban és az [error_handling.md](error_handling.md)-ben van.
 - A CI elbukik, ha a generált `openapi.json` vagy a belőle generált frontend-típusok eltérnek a commitolttól ([ci.yml](../../.github/workflows/ci.yml)).

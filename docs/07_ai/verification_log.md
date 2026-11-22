@@ -858,3 +858,47 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
 - **Ellenőrzési módszer:** terheléses mérés a [recommendations.mjs](../../tests/perf/recommendations.mjs) szkripttel a Docker Compose stack ellen (külön projekt, 8091-es port): 50 bemelegítő és 500 mért kérés, háromszor; változatok: 300 tétel/háztartás, illetve 50 felhasználó 1000 kéréssel ([performance.md](../04_quality/performance.md)).
 - **Eredmény:** PASS – p95 22,2, 21,1 és 18,0 ms, 0 hiba; 300 tételnél p95 24,7 ms; 50 felhasználónál p95 109,8 ms (a cél ekkor is teljesül). A válaszidő a párhuzamossággal nő, a készlet méretével alig, miközben a konténerek CPU-terhelése alacsony maradt.
 - **Következtetés:** a cél bőven teljesül, javítás nem kell; a valószínű korlát a kérésenkénti adatbázis-körök száma (a biztonsági bélyeg ellenőrzése is), ezt egy későbbi mérés bonthatja tovább.
+
+### V-104 – A tesztjelentés darabszámai a `v0.8.0` után
+- **Dátum:** 2026-11-21
+- **Állítás:** unit 616, integrációs 295 (+2 `LiveAI`) ([test_report.md](../04_quality/test_report.md)); az MI állapotfájlja (a repón kívül) 289 integrációs tesztet írt.
+- **Kockázat:** Alacsony.
+- **Ellenőrzési módszer:** teljes `dotnet test` a `docs/submission-prep` ágon.
+- **Eredmény:** PASS a tesztjelentésre – 913 teszt, 911 sikeres, 2 kihagyott (`LiveAI`, kulcs nélkül). Az állapotfájl elavult volt: a 289 a CAP-12 előtti szám, a különbség a 6 metrika-teszt.
+- **Következtetés:** a darabszámot a tesztjelentésből vagy egy futásból kell venni, nem az MI munkajegyzetéből.
+
+### V-105 – „A konfigurált hálózat nélkül a továbbított fejlécet senki nem hamisíthatja” (T1, K1)
+- **Dátum:** 2026-11-21
+- **Állítás:** az MI első változata a `ForwardedHeaders` middleware-t bármilyen nem üres beállításnál bekapcsolta. Abból indult ki, hogy üres megbízható-lista esetén senkit nem bíz meg.
+- **Kockázat:** Magas (az auth rate limit megkerülhető lett volna).
+- **Ellenőrzési módszer:** mutációs ellenőrzés a `ForwardedHeadersTests`-en, 7 mutációval.
+- **Eredmény:** **FAIL** az eredeti feltevésre: ha a `KnownProxies` és a `KnownIPNetworks` is üres, az ASP.NET Core **minden** proxyt megbíz. Egy `" , "` beállítás tehát bárkinek megengedte volna a cím hamisítását. Javítás: csak legalább egy érvényes hálózattal kapcsol be. Új teszteset (`null` és `" , "`), a hibát visszaállító mutáció (M3b) elbukik. Mellékeredmény, PASS: az IPv4-be ágyazott IPv6-címet a keretrendszer magától illeszti (F3).
+- **Következtetés:** a „feltétel nélkül bekapcsolva is ártalmatlan” mutációt nem szabad egyenértékűnek tekinteni, amíg egy teszt nem bizonyítja.
+
+### V-106 – „Az antiforgery-süti alapból a kérés sémáját követi (`SameAsRequest`)” (V-12, `AuthenticationSetup.cs`)
+- **Dátum:** 2026-11-22
+- **Állítás:** a kód megjegyzése (V-12 óta) és erre építve a T1 biztonsági reviewja szerint az antiforgery-süti alapértelmezett `SecurePolicy`-je `SameAsRequest`. Ezért a proxy mögött elég lenne az `X-Forwarded-Proto` átvétele.
+- **Kockázat:** Közepes (az élő példányon `Secure` nélküli süti).
+- **Ellenőrzési módszer:** integrációs teszt a sütifejlécre, a proxy mögött és közvetlen https-en.
+- **Eredmény:** **FAIL:** az alapérték `None`, a süti közvetlen https-en sem kap `Secure` jelzést. Javítás: `SameAsRequest` kifejezetten, és a megbízható proxytól az `X-Forwarded-Proto` is átjön. 3 teszt, mutáció 3/3. A V-12 (sima HTTP-n is kiadott token) változatlan.
+- **Következtetés:** a keretrendszer alapértékére vonatkozó megjegyzést teszttel kell igazolni. A review is a megjegyzésre épített, nem a viselkedésre.
+
+### V-107 – A T1 reviewjai (Claude Code `/code-review`, `/security-review`; Antigravity, Claude Sonnet 4.6: szakasz-review és ellenséges teszt)
+- **Dátum:** 2026-11-22
+- **Állítás:** a reviewk megállapításai a T1 kódjára (`9331e39..HEAD`).
+- **Kockázat:** Közepes.
+- **Ellenőrzési módszer:** minden állítás a kóddal, teszttel vagy forrással összevetve; az ellenséges tesztek beillesztve és lefuttatva.
+- **Eredmény:** **Részben PASS.**
+  - `/code-review`: 2 valós (unit tesztek, végpont a szkript hibájában), 2 a T3-ba (ADR, README), 6 elvetve indokkal.
+  - `/security-review`: magas vagy közepes sebezhetőséget nem talált. Egy keményítési javaslata a V-106-hoz vezetett.
+  - Antigravity szakasz-review: 22 pontból 1 kódváltozás (SHA-256-os összehasonlítás), 3 a T3-ba, 2 téves (#1 rétegsértés, #11 `operationId`), a többi már benne volt vagy elvetve.
+  - Antigravity ellenséges teszt: 14 eset, mind zöld, hibát nem talált; 2 gyenge teszt megerősítve, 2 duplikáció kihagyva.
+- **Következtetés:** az azonos modellcsaládú reviewer (V-38) új hibát nem talált. A valódi hibákat (V-105, V-106) a mutáció és a teszt fogta meg.
+
+### V-108 – „A Caddy mögött a bejelentkezés rate limitje kliensenként számol” (élő példány, T1 K1)
+- **Dátum:** 2026-11-22
+- **Állítás:** az élő példányon a továbbított `X-Forwarded-For` (a Caddy írja, az API a Compose-hálózatról fogadja el) külön rate-limit keretet ad minden kliensnek; enélkül a világ összes látogatója egy közös, percenként 10 kéréses kereten osztozna.
+- **Kockázat:** Közepes (a témavezető kizárható lenne a belépésből).
+- **Ellenőrzési módszer:** élő próba: a laptopról (otthoni wifi) 11 hibás belépés egy kitalált címmel egy percen belül, ugyanabban a percben belépés a `tomi@pelda.hu` fiókkal egy telefonról, mobilnetről ([manual_tests.md](../04_quality/manual_tests.md) MT-05, 11. lépés).
+- **Eredmény:** **PASS** – a laptop a „Túl sok kérés érkezett” üzenetet kapta, a telefon közben be tudott lépni.
+- **Következtetés:** a tesztekben (`ForwardedHeadersTests`) a kapcsolat címét egy tesztszűrő állítja be; az élő próba igazolja, hogy a valódi Caddy–API láncban is a kliens címe a kulcs.

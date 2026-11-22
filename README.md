@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/toldor/kamra/actions/workflows/ci.yml/badge.svg)](https://github.com/toldor/kamra/actions/workflows/ci.yml)
 
+**Élő példány:** https://kamra-demo.austriaeast.cloudapp.azure.com (bemutatási célú, 2027. jan. 22-ig; a regisztrációhoz meghívókód kell, a tesztfiók adatait a témavezető külön kapja; [ADR-0014](docs/02_architecture/adr/0014-elo-kitelepites-azure-caddy.md))
+
 ## A projektről
 
 A **Kamra** egy webalapú háztartási készlet- és receptkezelő rendszer, amelynek egyik célja az otthoni élelmiszer-pazarlás csökkentése.
@@ -37,9 +39,9 @@ A projekt célja egy olyan mérnökileg ellenőrizhető rendszer megtervezése �
 4. főzés után következetesen frissíti a készletet;
 5. az AI-t csak ellenőrzött, validált és felhasználói jóváhagyással működő folyamatokban használja.
 
-## Jelenlegi állapot – 2026. november 19.
+## Jelenlegi állapot – 2026. november 22.
 
-Elkészült mindhárom lépcső: a determinisztikus mag, az egy mondatos bevitel és a csak olvasó chat, a receptötlet (Stretch 1) és a kinézet bővítése (Stretch 3).
+Elkészült mindhárom lépcső: a determinisztikus mag, az egy mondatos bevitel és a csak olvasó chat, a receptötlet (Stretch 1) és a kinézet bővítése (Stretch 3). Az alkalmazás nyilvános, HTTPS-es élő példányon is fut (Azure VM, Caddy TLS-proxy, meghívókódos regisztráció; telepítés és visszaállítás kipróbálva: [kézi tesztek](docs/04_quality/manual_tests.md) MT-05, MT-06).
 
 - chat (US-6): kérdés a készletről, a lejáró tételekről, az ajánlásról és a bevásárlólistáról, négy csak olvasó MCP-eszközzel; receptötlet kérésre, amely az „Új recept” űrlapon átnézhető és menthető ([ADR-0010](docs/02_architecture/adr/0010-mcp-integracio.md));
 - a siker mérése: a North Star és a három guardrail lekérdezése, szintetikus adaton, kézzel számolt értékekkel ellenőrizve ([metrics.md](docs/01_product/metrics.md));
@@ -54,7 +56,7 @@ Elkészült mindhárom lépcső: a determinisztikus mag, az egy mondatos bevitel
 
 Az aktuális képességállapot: [capability map](docs/01_product/capability_map.md).
 
-A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án, a `v0.8.0` (kinézet és kezelhetőség, a mérőszámok lekérdezése, CAP-12) nov. 19-én elkészült. Következő mérföldkő: **nov. 20.** – a feature freeze, a dolgozat és a projektcsomag; utána az UAT 2. köre. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
+A `v0.6.0` (chat, az UAT 1. kör javításai) nov. 12-én, a `v0.7.0` (receptötlet a chatből, Stretch 1) nov. 16-án, a `v0.8.0` (kinézet és kezelhetőség, a mérőszámok lekérdezése, CAP-12) nov. 19-én, a `v0.9.0` (élő, nyilvános HTTPS-kitelepítés, meghívókódos regisztráció) nov. 22-én elkészült. A feature freeze nov. 20. óta érvényes: csak javítás és dokumentáció kerül be. Következő mérföldkő: **dec. 4.** – a felhasználói kipróbálás 2. köre az élő példányon (nov. 25–27.), a javítások és az újratesztelés; utána **dec. 11.** – a végleges változat. Az első felhasználói kipróbálás nov. 1-jén lezajlott ([UAT](docs/04_quality/uat.md)). A teljes ütemezés: [scope_contract.md](docs/01_product/scope_contract.md) (3. Korlátok / Idő).
 
 ## Használat röviden
 
@@ -209,6 +211,10 @@ Ezután nyisd meg: **http://localhost:8080** → *Regisztrálj* → e-mail-cím 
 | `RateLimiting__ItemProposals__PermitLimit`, `RateLimiting__ItemProposals__WindowSeconds` | Mondatos bevitel: kérések száma háztartásonként egy időablakban | `20`, `600` |
 | `Llm__ChatModel` | A chat modellje; üresen a `Llm__Model` értéke | üres |
 | `RateLimiting__Chat__PermitLimit`, `RateLimiting__Chat__WindowSeconds` | Chat: kérdések száma háztartásonként egy időablakban | `30`, `600` |
+| `Auth__InviteCode` | Statikus meghívókód a regisztrációhoz; üresen nincs kód, beállítva legalább 16 karakter (az élő példányon kötelező) | üres |
+| `ForwardedHeaders__KnownNetworks` | Vesszővel elválasztott CIDR-hálózatok, ahonnan az API elfogadja az `X-Forwarded-For` és az `X-Forwarded-Proto` fejlécet (a TLS-proxy hálózata); üresen ki van kapcsolva. Az élő példányon a `docker-compose.prod.yml` állítja be | üres |
+| `KAMRA_DOMAIN`, `ACME_EMAIL` | Csak az élő példányhoz (`docker-compose.prod.yml`): a nyilvános név, amelyre a Caddy tanúsítványt kér, és a tanúsítványkiadók értesítési címe | üres |
+| `COMPOSE_FILE` | Csak az élő példány `.env`-jében: `docker-compose.yml:docker-compose.prod.yml`, így minden `docker compose` parancs a prod felülíró fájllal fut | – |
 
 Hiányzó kötelező beállítással az alkalmazás induláskor hibával leáll (fail-fast).
 
@@ -250,7 +256,7 @@ Az e2e tesztekhez a tesztelt Api-t emelt bejelentkezési limittel érdemes indí
 | 2. lépcső | AI-alapú egy mondatos készletbevitel | Kész (`v0.5.0`, nov. 8.; eredeti cél: nov. 3.) |
 | 3. lépcső | Olvasási célú chat és mérési funkciók | Kész (`v0.6.0`, nov. 12.) |
 | Bővítések | Receptötlet a chatből (Stretch 1), kinézet és kezelhetőség (Stretch 3), a mérőszámok lekérdezése | Kész (`v0.7.0`, nov. 16.; `v0.8.0`, nov. 17–19.) |
-| Lezárás | Teljesítménymérés, demóforgatókönyv, önértékelés; a felhasználói kipróbálás 2. köre; javított dolgozat és alkalmazás | Folyamatban (nov. 20.: az első teljes dolgozat; dec. 4.: a javított változat) |
+| Lezárás | Teljesítménymérés, demóforgatókönyv, önértékelés; élő, publikus HTTPS-kitelepítés; a felhasználói kipróbálás 2. köre; javított dolgozat és alkalmazás | Folyamatban (nov. 20.: az első teljes dolgozat, kész; nov. 22.: az élő példány, kész, `v0.9.0`; dec. 4.: a javított változat; dec. 11.: a végleges változat) |
 
 ## Biztonsági és minőségi alapelvek
 

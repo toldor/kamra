@@ -103,6 +103,7 @@ A hibaüzenetek magyarok, nem tartalmaznak technikai kifejezést vagy HTTP-kódo
 | H3 | Hálózati hiba mentéskor | *„Nem sikerült menteni, mert megszakadt a kapcsolat. Semmi nem veszett el – próbáld újra.”* | A kitöltött adatok megmaradnak; „Újra” gomb |
 | H4 | Hibás bejelentkezési adatok | *„Hibás e-mail-cím vagy jelszó.”* (nem árulja el, melyik volt rossz) | Az e-mail mező kitöltve marad |
 | H5 | Zárolt fiók (5 sikertelen bejelentkezés után) | *„Túl sok sikertelen próbálkozás. Várj 5 percet, és próbáld újra.”* | Az e-mail mező kitöltve marad; 5 perc múlva újra próbálható |
+| H6 | Hiányzó vagy hibás meghívókód a regisztrációnál (csak az élő példányon, ahol kód kell) | A „Meghívókód” mező alatt: *„Hibás vagy hiányzó meghívókód. Kérd el attól, aki a címet adta.”* | A kitöltött mezők megmaradnak, a fókusz a kódmezőre ugrik. A mező akkor látszik, ha a példány kódot kér (alatta: *„Az élő bemutató példányon a regisztrációhoz meghívókód kell.”*), vagy ha a szerver erre a mezőre adott hibát ([App.test.tsx](../../src/frontend/src/App.test.tsx), [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)) |
 
 **További edge case-ek:**
 
