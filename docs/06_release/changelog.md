@@ -2,7 +2,7 @@
 
 A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; a `1.0.0` előtti változatok fejlesztési mérföldkövek. Minden kiadás git taggel jelölt.
 
-## [Unreleased]
+## [0.9.0] – 2026-11-22 – Élő, nyilvános kitelepítés
 
 Élő, nyilvános HTTPS-kitelepítés (a témavezető 2026-11-21-i kérése) és a hozzá kellő kódoldali feltételek. Részletek: [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md), [deploy_runbook.md](../05_security_ops/deploy_runbook.md) „Élő példány (Azure)”, [manual_tests.md](../04_quality/manual_tests.md) MT-05, MT-06, [P-36 – P-37](../07_ai/prompt_log.md), [V-105 – V-108](../07_ai/verification_log.md).
 

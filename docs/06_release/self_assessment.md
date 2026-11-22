@@ -1,6 +1,6 @@
 # Önértékelés
 
-A leadandó csomag v1.2 4.5. pontja szerinti kötelező önértékelés, a 6.3. pont 100 pontos scorecardja alapján. Állapot: 2026-11-22, a `feature/live-deploy` ágon (a `v0.9.0` előtt; a `main` a `v0.8.0`). Az első változatot az MI javasolta ([P-31](../07_ai/prompt_log.md)); a pontszámok a fejlesztő értékelését tükrözik, a leadás előtt felülvizsgálva.
+A leadandó csomag v1.2 4.5. pontja szerinti kötelező önértékelés, a 6.3. pont 100 pontos scorecardja alapján. Állapot: 2026-11-22, a `v0.9.0` kiadás előtt (a `main` CI-kapuja a kiadás után frissül). Az első változatot az MI javasolta ([P-31](../07_ai/prompt_log.md)); a pontszámok a fejlesztő értékelését tükrözik, a leadás előtt felülvizsgálva.
 
 ## Kapu feltételek
 
