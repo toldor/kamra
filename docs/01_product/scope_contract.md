@@ -13,7 +13,7 @@ A story-k prioritási sorrendben, három lépcsőben készülnek. Minden lépcs�
 | 2. AI-bevitel | US-2 |
 | 3. Chat | US-6 |
 
-**Keresztmetszeti követelmény – fiók és adatelkülönítés:** e-mail + jelszó alapú regisztráció és bejelentkezés; egy fiók = egy háztartás. Minden story feltételezi a bejelentkezett felhasználót.
+**Keresztmetszeti követelmény – fiók és adatelkülönítés:** e-mail + jelszó alapú regisztráció és bejelentkezés; egy fiók = egy háztartás. Minden story feltételezi a bejelentkezett felhasználót. Az élő, nyilvános példányon a regisztrációhoz statikus meghívókód is kell (`Auth:InviteCode`; helyben és a tesztekben nincs kód; a fejlesztő javaslata, 2026-11-21, [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)).
 
 - Bejelentkezés nélkül egyetlen adatvégpont sem érhető el (401).
 - Egy felhasználó más háztartás adatait nem látja és nem módosíthatja, akkor sem, ha az azonosítót ismeri (404). Integrációs teszt ellenőrzi.
@@ -107,8 +107,8 @@ Kapacitás: kb. 20 óra/hét, okt. 17. és nov. 13. között kb. 25 óra/hét; �
 | okt. 17 – okt. 22. | US-5; US-3 és US-4 hibás esetei; saját recept és hozzávaló; az induló lista bővítése; az első dokumentált telepítés; a dolgozat 1–4. fejezete és az 5. fejezet első része | okt. 22. (témavezetői: okt. 23.): a készlet–recept–főzés–bevásárlás teljes útja (1. lépcső kész) |
 | okt. 23 – nov. 13. | 2. lépcső: felhasználói kipróbálás 1. köre (okt. 26. – nov. 1., 4 fő) és javítások; LLM-mérés (PoC, nov. 2–7.); US-2 | nov. 13.: kipróbálható MI-bevitel (`v0.5.0`); az eredeti nov. 3-i céldátum csúszott (2026-11-07-i átütemezés) |
 | nov. 14 – nov. 20. | 3. lépcső: US-6 (`v0.6.0`, nov. 12. – a 2026-11-09-i gyorsítás szerint); mérések; a dolgozat teljes első változata | nov. 20. (témavezetői határidő): a vállalt funkciók lezárása, a teljes dolgozat és projektcsomag |
-| nov. 21 – dec. 4. | Hibajavítás; felhasználói kipróbálás 2. köre (nov. 21–27., 3–4 fő); javítás utáni újratesztelés; ellenőrzött telepítés másik gépen; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás |
-| dec. 5 – dec. 11. | Végső ellenőrzés | dec. 11.: végső belső ellenőrzési csomag |
+| nov. 21 – dec. 4. | Hibajavítás; élő, publikus HTTPS-kitelepítés (a témavezető 2026-11-21-i kérése; **kész nov. 22.**: Azure VM, Caddy, [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md), MT-05, MT-06 – ez az „ellenőrzött telepítés másik gépen” is); felhasználói kipróbálás 2. köre az élő példányon (nov. 25–27., 3–4 fő); javítás utáni újratesztelés; a dolgozat javítása | dec. 4.: javított dolgozat és alkalmazás, élő példány |
+| dec. 5 – dec. 11. | Végső ellenőrzés; végleges verzió (`v1.0.0`) az élő példányon | dec. 11.: végső belső ellenőrzési csomag (a témavezetőnek dec. 12-ig: élő URL és tesztfiók, végleges PDF, CooSpace-melléklet); az élő példány 2027. jan. 22-ig fut |
 
 - **Feature freeze: nov. 20.** (2026-11-17-én nov. 18-ról áthelyezve a kinézet bővítése miatt, a fejlesztő döntése; a témavezetői határidő nov. 20.). Utána csak javítás és dokumentáció kerül be. A heti e-mailre (Stretch 4) tervezett kivételt a fejlesztő 2026-11-21-én visszavonta.
 - **Hivatalos határidők** (a témavezető tájékoztatása szerint a TTIK kari naptára alapján, egyedileg ellenőrizendő): jelentkezés a januári záróvizsgára okt. 31., dolgozatbeadás dec. 19.
@@ -175,7 +175,7 @@ A projekt akkor leadható, ha az alábbiak **mind** teljesülnek:
 ## Technikai hatókör
 
 - REST API (ASP.NET Core) + React frontend
-- Docker Compose-alapú fejlesztői és éles környezet
+- Docker Compose-alapú fejlesztői és éles környezet; az élő példány egy Azure VM-en, Caddy TLS-proxyval ([ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md))
 - Metrika-lekérdezések a [metrics.md](metrics.md) szerint (North Star + 3 guardrail), szintetikus seed-adaton tesztekkel ellenőrizve
 
 ## Hatókörön kívül

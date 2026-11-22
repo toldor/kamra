@@ -894,3 +894,11 @@ Ha az AI biztonsági, teljesítménybeli, helyességi vagy licencelési állít�
   - Antigravity szakasz-review: 22 pontból 1 kódváltozás (SHA-256-os összehasonlítás), 3 a T3-ba, 2 téves (#1 rétegsértés, #11 `operationId`), a többi már benne volt vagy elvetve.
   - Antigravity ellenséges teszt: 14 eset, mind zöld, hibát nem talált; 2 gyenge teszt megerősítve, 2 duplikáció kihagyva.
 - **Következtetés:** az azonos modellcsaládú reviewer (V-38) új hibát nem talált. A valódi hibákat (V-105, V-106) a mutáció és a teszt fogta meg.
+
+### V-108 – „A Caddy mögött a bejelentkezés rate limitje kliensenként számol” (élő példány, T1 K1)
+- **Dátum:** 2026-11-22
+- **Állítás:** az élő példányon a továbbított `X-Forwarded-For` (a Caddy írja, az API a Compose-hálózatról fogadja el) külön rate-limit keretet ad minden kliensnek; enélkül a világ összes látogatója egy közös, percenként 10 kéréses kereten osztozna.
+- **Kockázat:** Közepes (a témavezető kizárható lenne a belépésből).
+- **Ellenőrzési módszer:** élő próba: a laptopról (otthoni wifi) 11 hibás belépés egy kitalált címmel egy percen belül, ugyanabban a percben belépés a `tomi@pelda.hu` fiókkal egy telefonról, mobilnetről ([manual_tests.md](../04_quality/manual_tests.md) MT-05, 11. lépés).
+- **Eredmény:** **PASS** – a laptop a „Túl sok kérés érkezett” üzenetet kapta, a telefon közben be tudott lépni.
+- **Következtetés:** a tesztekben (`ForwardedHeadersTests`) a kapcsolat címét egy tesztszűrő állítja be; az élő próba igazolja, hogy a valódi Caddy–API láncban is a kliens címe a kulcs.

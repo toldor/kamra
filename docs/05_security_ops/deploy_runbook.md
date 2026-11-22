@@ -1,10 +1,10 @@
 # Telepítési útmutató (deploy runbook)
 
-A Kamra egy gépen fut Docker Compose-zal: PostgreSQL 18, egy egyszer lefutó migrátor, és az API, amely a React-felületet is kiszolgálja ugyanarról a címről. Ez az útmutató a telepítést, az ellenőrzést, a mentést, a frissítést és a leállítást írja le. Az első, tiszta környezetű telepítés jegyzőkönyve: [manual_tests.md](../04_quality/manual_tests.md) (MT-02).
+A Kamra egy gépen fut Docker Compose-zal: PostgreSQL 18, egy egyszer lefutó migrátor, és az API, amely a React-felületet is kiszolgálja ugyanarról a címről. Ez az útmutató a telepítést, az ellenőrzést, a mentést, a frissítést és a leállítást írja le. Az első, tiszta környezetű telepítés jegyzőkönyve: [manual_tests.md](../04_quality/manual_tests.md) (MT-02). A nyilvános, HTTPS-es élő példány (Azure VM, Caddy) telepítése lent, az „Élő példány (Azure)” szakaszban ([ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md), MT-05, MT-06).
 
 ## Környezetek és verziók
 
-- **Környezet:** egy van, a helyi gép (fejlesztés, bemutató, UAT); staging és éles környezet nincs. A CI minden pushnál a Compose-stacket is elindítja, és ez ellen futnak az e2e tesztek.
+- **Környezetek:** (1) a helyi gép (fejlesztés, helyi bemutató); (2) az **élő példány**: https://kamra-demo.austriaeast.cloudapp.azure.com – Azure VM, ugyanaz a Compose a `docker-compose.prod.yml` felülíró fájllal, Caddy TLS-proxyval, 2027. jan. 22-ig (bemutató, UAT 2. kör, témavezetői kipróbálás). Staging nincs. A CI minden pushnál a Compose-stacket is elindítja, és ez ellen futnak az e2e tesztek.
 - **Verziózás:** kiadás = annotált git tag a `main` ágon (`v0.1.0`, `v0.2.0`, `v0.3.0`), a változások a [changelog.md](../06_release/changelog.md)-ben. A futó verzió: `git describe --tags` a telepítés mappájában.
 
 ## Előfeltételek
@@ -98,7 +98,77 @@ Kipróbálva 2026-10-25-én: `v0.3.0` → `v0.2.0` → `v0.3.0`, adatvesztés n�
 ## Leállítás és törlés
 
 - Leállítás, az adatok megmaradnak: `docker compose down`
-- Minden adat törlése (adatbázis és cookie-kulcsok): `docker compose down -v`
+- Minden adat törlése (adatbázis és cookie-kulcsok): `docker compose down -v` – **az élő példányon soha** (a `-v` a tanúsítványokat is törölné, lásd lent).
+
+## Élő példány (Azure)
+
+A döntés és az alternatívák: [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md). Kipróbálva 2026-11-22-én ([manual_tests.md](../04_quality/manual_tests.md) MT-05, MT-06).
+
+**Felépítés:** Azure for Students, erőforráscsoport `kamra-rg`, VM `kamra-vm` (Austria East, zóna nélkül, Standard_B2ats_v2: 2 vCPU, 836 MiB használható RAM; Ubuntu Server 24.04 LTS, 30 GB lemez), DNS-név `kamra-demo.austriaeast.cloudapp.azure.com`. A stack: `db`, `migrator`, `api` (kívülről nem érhető el) és `caddy` (80, 443; Let's Encrypt, tartalék a ZeroSSL).
+
+### Első telepítés
+
+1. **VM az Azure Portalon:** Virtuális gépek → Létrehozás → a fenti régió és méret, „Nincs szükség infrastruktúra-redundanciára”, SSH nyilvános kulcs (a saját gépen: `ssh-keygen -t ed25519 -f ~/.ssh/kamra_azure`, jelmondattal), nyilvános bejövő portok: 22, 80, 443; az automatikus leállítás **ki** (különben esténként leáll). A VM áttekintésében: DNS-név → `kamra-demo`.
+2. **SSH szűkítése:** Hálózatkezelés → Hálózati beállítások → az SSH-szabály → Forrás: **Saját IP-cím** (My IP address). Ha az otthoni IP-cím változik, ugyanígy frissíteni kell, különben az SSH nem enged be.
+3. **Belépés:** `ssh -i ~/.ssh/kamra_azure kamra@kamra-demo.austriaeast.cloudapp.azure.com`
+4. **Frissítés, swap, Docker** (a VM-en): `sudo apt-get update && sudo apt-get -y upgrade`; 4 GB swap (a build 1 GB alatti memóriával csak így fut le):
+   `sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab`;
+   Docker a lenti „Linux: Docker Engine telepítése” szerint, utána `sudo reboot` (így a swap és a Docker újraindítás utáni indulása is ellenőrizve). Kipróbálva: Docker 29.10.0, Compose v5.8.0 (a `!reset` a v2.24-nél újabb Compose-t kér).
+5. **Klón:** `git clone --branch <kiadás vagy ág> https://github.com/toldor/kamra.git && cd kamra`
+6. **`.env`** (a titkok a VM-en keletkeznek, a chatbe, a repóba és a dolgozatba nem kerülnek):
+   ```bash
+   cp .env.example .env && chmod 600 .env
+   sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 24)|" .env
+   sed -i '/^ConnectionStrings__Default=/d' .env
+   sed -i "s|^Auth__InviteCode=.*|Auth__InviteCode=$(openssl rand -hex 10)|" .env
+   sed -i "s|^KAMRA_DOMAIN=.*|KAMRA_DOMAIN=kamra-demo.austriaeast.cloudapp.azure.com|" .env
+   sed -i "s|^Llm__Enabled=.*|Llm__Enabled=true|" .env
+   read -r -p 'ACME e-mail-cím: ' ACME && sed -i "s|^ACME_EMAIL=.*|ACME_EMAIL=$ACME|" .env && unset ACME
+   read -r -s -p 'Gemini-kulcs (élő): ' KEY && echo && sed -i "s|^Llm__ApiKey=.*|Llm__ApiKey=$KEY|" .env && unset KEY
+   echo 'COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml' >> .env
+   ```
+   Az élő példány külön Gemini-kulcsot kap (ugyanazon az előre fizetett kereten), hogy a helyitől függetlenül visszavonható legyen. A meghívókódot (`grep '^Auth__InviteCode=' .env`) a jelszókezelőbe kell menteni. A `COMPOSE_FILE` miatt minden további `docker compose` parancs a prod felülíró fájllal együtt fut.
+7. **Indítás:** `docker compose up -d --build` (MT-05: 3 p 12 mp, ebből a két image buildje kb. 169 mp; futás közben kb. 380 MiB RAM és 150 MiB swap).
+8. **Ellenőrzés:** a VM-en `curl -sS https://kamra-demo.austriaeast.cloudapp.azure.com/health` → `Healthy`; a tanúsítvány: `docker compose logs caddy | grep -iE "certificate obtained|error"`. Kívülről (PowerShell): `curl.exe -s -D - -o NUL https://kamra-demo.austriaeast.cloudapp.azure.com/api/v1/auth/antiforgery` → `200`, `Strict-Transport-Security`, a süti `secure`; `curl.exe -sI http://kamra-demo.austriaeast.cloudapp.azure.com` → `308`; a 8080-as és az 5432-es port zárt (`Test-NetConnection … -Port 8080`).
+9. **Tesztfiók** (a saját gépről, a repó gyökerében, Node 24):
+   ```powershell
+   $env:BASE_URL = "https://kamra-demo.austriaeast.cloudapp.azure.com"
+   $env:DEMO_PASSWORD = Read-Host "tomi@pelda.hu jelszava" -MaskInput
+   $env:INVITE_CODE = Read-Host "Meghívókód" -MaskInput
+   node tests/perf/demo-seed.mjs
+   Remove-Item Env:DEMO_PASSWORD, Env:INVITE_CODE, Env:BASE_URL
+   ```
+   Kilépési kód: 0 betöltve, 2 a fiók már létezik (előbb az adatbázis visszaállítása kell), 1 minden más hiba.
+
+### Napi mentés
+
+A `~/backup.sh` a konténer saját környezeti változóival ment (a jelszó nem kerül a crontabba), és 7 napig őrzi a mentéseket; a `~/backups` mappa `chmod 700` (a mentésben e-mail-címek és jelszó-hashek vannak):
+
+```bash
+#!/bin/sh
+set -e
+cd "$HOME/kamra"
+docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "$HOME/backups/kamra-$(date +%F).dump"
+find "$HOME/backups" -name 'kamra-*.dump' -mtime +7 -delete
+```
+
+Ütemezés (`crontab -e`, 03:30 UTC): `30 3 * * * $HOME/backup.sh >> $HOME/backups/backup.log 2>&1`. A visszaállítás a fenti „Mentés és visszaállítás” szerint, a fájl: `~/backups/kamra-<dátum>.dump`. Kipróbálva: MT-06 (az adatbázis-volume törlése után 1 mp alatt, adatvesztés nélkül).
+
+### Frissítés és visszaállás
+
+Mentés (`~/backup.sh`), `git fetch --tags && git checkout <új kiadás>`, `docker compose up -d --build`, ellenőrzés (8. lépés). Visszaállás: `git checkout <előző kiadás>` és `docker compose up -d --build`, a fenti „Visszaállás az előző verzióra” szerint. Az adatbázis-volume-ot csak név szerint szabad törölni (`docker volume rm kamra_pgdata`), a **`caddy_data`-t soha**: abban vannak a tanúsítványok, és a Let's Encrypt hetente legfeljebb 5 azonos tanúsítványt ad ki.
+
+### Hibakeresés
+
+- A tanúsítvány nem jön meg: `docker compose logs caddy`; a 80-as portnak kívülről elérhetőnek kell lennie (NSG). Ha a Let's Encrypt korlátba fut, a Caddy az `ACME_EMAIL` miatt a ZeroSSL-lel próbálkozik.
+- Az SSH nem enged be: a 22-es NSG-szabály forrása a régi IP-cím (2. lépés).
+- A meghívókód cseréje: új érték a `.env`-ben (`Auth__InviteCode`, legalább 16 karakter), utána `docker compose up -d` (az API újraindul, a meglévő fiókok megmaradnak).
+- A regisztráció „Túl sok kérés” üzenetet ad: IP-címenként 10 kérés/perc; a proxy mögött az `X-Forwarded-For` alapján kliensenként számol (V-108).
+
+### Leállítás (2027. jan. 22. után)
+
+Az Azure Portalon az erőforráscsoport (`kamra-rg`) törlése: a VM, a lemez, a nyilvános IP, az NSG és a mentések együtt törlődnek. Az élő Gemini-kulcsot az AI Studióban vissza kell vonni.
+
 
 ## Linux: Docker Engine telepítése (Ubuntu 24.04)
 

@@ -4,8 +4,17 @@ A kiadások a [Semantic Versioning](https://semver.org/) szerint számozódnak; 
 
 ## [Unreleased]
 
+Élő, nyilvános HTTPS-kitelepítés (a témavezető 2026-11-21-i kérése) és a hozzá kellő kódoldali feltételek. Részletek: [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md), [deploy_runbook.md](../05_security_ops/deploy_runbook.md) „Élő példány (Azure)”, [manual_tests.md](../04_quality/manual_tests.md) MT-05, MT-06, [P-36 – P-37](../07_ai/prompt_log.md), [V-105 – V-108](../07_ai/verification_log.md).
+
+### Hozzáadva
+- Élő példány: https://kamra-demo.austriaeast.cloudapp.azure.com – Azure VM, ugyanaz a Docker Compose a `docker-compose.prod.yml` felülíró fájllal, Caddy TLS-proxy (Let's Encrypt, HSTS), napi mentés.
+- Statikus meghívókód a regisztrációhoz (`Auth:InviteCode`; üresen kikapcsolva); `GET /api/v1/auth/registration`; „Meghívókód” mező a regisztrációs űrlapon.
+- Továbbított fejlécek a megbízható proxytól (`ForwardedHeaders:KnownNetworks`): a bejelentkezés és a regisztráció rate limitje a proxy mögött is kliensenként számol.
+- A tesztfiók betöltő szkriptje (`tests/perf/demo-seed.mjs`), a mérőszkripttel közös API-klienssel (`tests/perf/client.mjs`).
+
 ### Módosítva
 - A feature freeze alól a heti e-mailre (Stretch 4) tervezett kivétel visszavonva; a funkció a továbbfejlesztési lehetőségek közé került.
+- Az antiforgery-süti `SecurePolicy`-je kifejezetten `SameAsRequest`: https-en (és a proxy mögött) `Secure`, a helyi, sima HTTP-s telepítésen változatlan (V-106).
 
 ## [0.8.0] – 2026-11-19 – Kinézet, kezelhetőség és a siker mérése
 
