@@ -7,7 +7,7 @@
 - **Mezők minden bejegyzésnél:**
   - `correlationId` – a szerver által generált kérésazonosító (`TraceIdentifier`); ugyanez jön az `X-Correlation-Id` válaszfejlécben és a hibaválasz `correlationId` mezőjében
   - `@t` (időbélyeg), `@l` (szint, `Information`-nél hiányzik), `@m` (üzenet), `SourceContext`
-- **Hol olvasható:** a konténer stdoutján, Docker Compose-ban `docker compose logs api` (a migrátoré: `docker compose logs migrator`); egy hibához tartozó sorok: `docker compose logs api | grep <correlationId>`
+- **Hol olvasható:** a konténer stdoutján, Docker Compose-ban `docker compose logs api` (a migrátoré: `docker compose logs migrator`); egy hibához tartozó sorok: `docker compose logs api | grep <correlationId>`. Az élő példányon ugyanígy, SSH-n a VM-en a `~/kamra` mappában (a `COMPOSE_FILE` miatt a prod felülíró fájllal együtt); a TLS-proxy naplója: `docker compose logs caddy` (tanúsítványkérés és -megújítás, [deploy_runbook.md](deploy_runbook.md) „Élő példány (Azure)”). A kliens IP-címe nem kerül a naplóba.
 - **Kérésenként egy összefoglaló sor** (`UseSerilogRequestLogging`): metódus, útvonal, státusz, időtartam
 
 ### Naplóminta
@@ -32,7 +32,7 @@ Egy kezelt üzleti hiba (409) és a kérés összefoglaló sora, ugyanazzal a `c
 
 ## Health Check
 
-- **Végpont:** `GET /health` (nyilvános) – válasz: `200 Healthy` (szöveg), ha a folyamat fut és az adatbázis elérhető ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs) `Health_returns_200`)
+- **Végpont:** `GET /health` (nyilvános) – válasz: `200 Healthy` (szöveg), ha a folyamat fut és az adatbázis elérhető ([ErrorHandlingTests.cs](../../tests/KamraApp.Integration.Tests/ErrorHandlingTests.cs) `Health_returns_200`); az élő példányon: https://kamra-demo.austriaeast.cloudapp.azure.com/health (MT-05)
 - **Ellenőrzések:**
   - PostgreSQL kapcsolat (`DatabaseHealthCheck`, `CanConnectAsync`): elérhetetlen adatbázisnál a válasz **503 `Unhealthy`** ([StartupTests.cs](../../tests/KamraApp.Integration.Tests/StartupTests.cs) `Health_returns_503_when_the_database_is_unreachable`)
   - Az LLM nem része a health checknek: a kiesése nem teszi `Unhealthy`-vé az alkalmazást (degradált üzem, S-1); a kiesés a naplóban látszik (`timeout`, `unavailable`).

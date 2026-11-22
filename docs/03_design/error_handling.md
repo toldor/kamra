@@ -41,7 +41,7 @@ A döntések indoklása: [ADR-0007](../02_architecture/adr/0007-rest-api-hibamod
 |---|---|---|---|
 | `INTERNAL_ERROR` | 500 | Váratlan hiba; a válasz nem tartalmaz belső részletet, a részletek a naplóba kerülnek; a chatben az MCP-eszköz belső hibája is (nem a modell hibája) | Megvalósítva |
 | `NOT_FOUND` | 404 | Ismeretlen útvonal (keretrendszer által generált 404) | Megvalósítva |
-| `VALIDATION_FAILED` | 400 | Mezőnkénti validációs hiba; az `errors` mező magyar üzeneteket tartalmaz (kulcs: a JSON-mező neve) | Megvalósítva |
+| `VALIDATION_FAILED` | 400 | Mezőnkénti validációs hiba; az `errors` mező magyar üzeneteket tartalmaz (kulcs: a JSON-mező neve). A regisztrációnál a hiányzó és a hibás meghívókód ugyanazt az üzenetet kapja (`errors.inviteCode`), így a válasz nem árulja el, melyik volt ([ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)) | Megvalósítva |
 | `ANTIFORGERY_TOKEN_INVALID` | 400 | Hiányzó vagy érvénytelen antiforgery token módosító kérésnél | Megvalósítva |
 | `UNAUTHENTICATED` | 401 | Bejelentkezés nélküli, lejárt vagy hamisított cookie-val érkező kérés | Megvalósítva |
 | `INVALID_CREDENTIALS` | 401 | Hibás e-mail-cím vagy jelszó (a kettő megkülönböztethetetlen, ux_flows H4) | Megvalósítva |

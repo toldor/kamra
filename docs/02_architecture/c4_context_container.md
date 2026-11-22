@@ -115,8 +115,9 @@ flowchart TB
         end
     end
 
-    subgraph target["Tervezett célkörnyezet – döntés a deploy runbookban"]
-        vm["Linux VM: ugyanaz a Compose<br/>+ TLS-proxy konténer"]
+    subgraph target["Élő példány – Azure VM (ADR-0014)"]
+        caddy["caddy konténer<br/>TLS (Let's Encrypt), 80/443"]
+        vm["ugyanaz a Compose<br/>+ docker-compose.prod.yml"]
     end
 
     browser -- "HTTP localhost / HTTPS" --> apic
@@ -127,10 +128,9 @@ flowchart TB
     dbc --- pg
     apic --- dp
     apic -- "HTTPS" --> llm
-    compose -.-> target
-
-    classDef planned stroke-dasharray: 5 5
-    class target,vm planned
+    compose -. "ugyanaz a stack" .-> target
+    browser -- "HTTPS" --> caddy
+    caddy -- "HTTP, belső hálózat" --> vm
 ```
 
 | Környezet | Mi fut | Hogyan indul | Konfiguráció |
@@ -138,11 +138,11 @@ flowchart TB
 | Fejlesztői | Az API `dotnet run`-nal, a SPA a Vite dev serverrel (az `/api` kéréseket az API-ra proxyzza), az adatbázis Compose-ban | `docker compose up -d db`, `dotnet ef database update`, `dotnet run`, `npm run dev` | `appsettings.Development.json` + környezeti változók |
 | Docker Compose (localhost) | api (SPA-val), migrator, db; volume-ok: `pgdata`, `dpkeys`; kívülről csak az api portja érhető el | `docker compose up --build`; a migrator a sikeres lefutás után engedi indulni az api-t | `.env` (nincs a repóban) a [.env.example](../../.env.example) alapján; induláskor validálva (QA-7) |
 | CI (GitHub Actions) | Build, formázás, lint, tesztek (Testcontainers, `postgres:18`), OpenAPI-diff | Push és pull request | CI secretek, valódi LLM-hívás nélkül |
-| Tervezett célkörnyezet | Ugyanaz a Compose egy Linux VM-en, TLS-proxy konténerrel | A deploy runbook szerint | A deploy runbook szerint |
+| Élő példány (Azure, [ADR-0014](adr/0014-elo-kitelepites-azure-caddy.md)) | Ugyanaz a Compose egy Linux VM-en (Austria East, Standard_B2ats_v2, 4 GB swap) + `caddy` (TLS, HSTS); az api portja kívülről nem érhető el, a db csak `127.0.0.1`-en; https://kamra-demo.austriaeast.cloudapp.azure.com | `docker compose up -d --build` a `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml` beállítással, a [deploy_runbook.md](../05_security_ops/deploy_runbook.md) „Élő példány (Azure)” szerint (MT-05) | A VM `.env`-je (`chmod 600`): erős DB-jelszó, `KAMRA_DOMAIN`, `ACME_EMAIL`, `Auth__InviteCode`, élő Gemini-kulcs; a `ForwardedHeaders__KnownNetworks` a `docker-compose.prod.yml`-ben |
 
 ## Ismert korlátok
 
 - **MCP-útvonal (eldöntve, [ADR-0010](adr/0010-mcp-integracio.md)):** az MCP-szerver az API folyamatában fut, kérésenként, memóriabeli streamen; a háztartás a kérés hatóköréből jön. Külön konténerbe a szállítás cseréjével vihető.
-- **Nincs felhőkörnyezet:** a rendszer Docker Compose-zal, localhoston fut; a célkörnyezet a deploy runbookban dől el.
-- **HTTPS:** a session-cookie `Secure`, ezért nem localhost telepítéshez TLS-végződtetés kell (TLS-proxy vagy a platform szolgáltatása).
+- **Egy felhőpéldány, egy gép:** az élő példány egyetlen Azure VM-en fut, zóna és redundancia nélkül, bemutatási céllal 2027. jan. 22-ig ([ADR-0014](adr/0014-elo-kitelepites-azure-caddy.md)).
+- **HTTPS:** a session-cookie `Secure`, ezért nem localhost telepítéshez TLS-végződtetés kell; az élő példányon ezt a Caddy végzi, a továbbított klienscímet és sémát az API csak a megbízható hálózatról fogadja el.
 - **LLM-szolgáltató:** a konkrét szolgáltató és modell külön ADR-ben dől el; a diagram általános külső rendszerként mutatja.

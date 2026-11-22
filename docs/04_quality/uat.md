@@ -7,7 +7,7 @@ Azt vizsgálja, hogy a célcsoportba tartozó felhasználó a valós feladatát 
 | Kör | Időszak | Verzió | Tartalom | Résztvevők |
 |---|---|---|---|---|
 | 1. | 2026. okt. 26. – nov. 1. | `v0.4.0` | A determinisztikus út: készlet, „Mit főzzek?”, főzés, bevásárlólista, saját recept (US-1, US-3, US-4, US-5) | 4 fő (U1–U4) |
-| 2. | 2026. nov. 21–27. | `v0.8.0` | Az 1. kör forgatókönyvei (S1–S5) az 1. kör javításainak és az új felületnek az ellenőrzésére, és a beépített MI-funkciók: chat (S6), mondatos bevitel (S7), receptötlet (S8) (US-2, US-6, Stretch 1) | 3–4 fő ugyanezek közül |
+| 2. | 2026. nov. 25–27. | a `v0.8.0` funkciói az élő példányon (`feature/live-deploy`, a `v0.9.0` jelöltje) | Az 1. kör forgatókönyvei (S1–S5) az 1. kör javításainak és az új felületnek az ellenőrzésére, és a beépített MI-funkciók: chat (S6), mondatos bevitel (S7), receptötlet (S8) (US-2, US-6, Stretch 1) | 3–4 fő ugyanezek közül |
 | Újratesztelés | dec. 4. előtt | a javított változat | Az 1–2. körben talált elakadások javítása után ugyanazok a forgatókönyvek | aki vállalja |
 
 ## Résztvevők
@@ -23,13 +23,13 @@ A résztvevők nevét, elérhetőségét és a hozzájárulást a fejlesztő a r
 
 ## Lebonyolítás
 
-- **Hol:** személyesen a fejlesztő laptopján, vagy képernyőmegosztással, ahol a résztvevő vezérel (távoli vezérlés). Az alkalmazás nem kerül ki az internetre: a laptopon fut, Docker Compose-zal, az 1. körben a `v0.4.0`-n, a 2. körben a `v0.8.0`-n bekapcsolt MI-funkciókkal (`Llm__Enabled=true`, a kulcs csak a fejlesztő shelljében: [README](../../README.md) „Konfiguráció”) ([deploy_runbook.md](../05_security_ops/deploy_runbook.md)).
-- **Mobil:** az S5 a Chrome telefonnézetében (360 × 740 px) fut. A bejelentkezési süti `Secure`, ezért valódi telefonról a laptop helyi címén, `http`-n nem lehet bejelentkezni; ez az 1. kör korlátja.
-- **Tesztfiók:** minden résztvevő maga regisztrál egy előre kiadott, kitalált címmel (`u1@example.com` …), nem a saját e-mail-címével.
+- **Hol:** az 1. körben személyesen a fejlesztő laptopján (Docker Compose, `v0.4.0`), vagy képernyőmegosztással, ahol a résztvevő vezérel. A 2. kör az **élő példányon** fut (https://kamra-demo.austriaeast.cloudapp.azure.com, [ADR-0014](../02_architecture/adr/0014-elo-kitelepites-azure-caddy.md)), bekapcsolt MI-funkciókkal: a résztvevő a saját eszközén nyitja meg, a moderátor mellette ül vagy hívásban van. A tervben szereplő tartalék (laptop, ha az élő példány nov. 25-ig nem kész) nem kellett ([manual_tests.md](manual_tests.md) MT-05).
+- **Mobil:** az 1. körben az S5 a Chrome telefonnézetében (360 × 740 px) futott, mert a `Secure` süti miatt valódi telefonról a laptop helyi címén, `http`-n nem lehetett bejelentkezni. A 2. körben az S5 a résztvevő **saját telefonján** fut, HTTPS-en (az MT-05-ben kipróbálva).
+- **Tesztfiók:** minden résztvevő maga regisztrál egy előre kiadott, kitalált címmel (`u1@example.com` …), nem a saját e-mail-címével. A 2. körben a regisztrációhoz a meghívókód is kell: a moderátor kártyán adja oda.
 - **Időtartam:** kb. 40 perc: 5 perc bevezetés és hozzájárulás, 5 × 5–7 perc feladat, 5 perc kérdések. A 2. körben a három új forgatókönyvvel kb. 50 perc.
 - **Hangos gondolkodás:** a résztvevőt arra kérjük, hogy mondja ki, mit keres és mit gondol.
 - **A moderátor (a fejlesztő) szabályai:** a feladatot felolvassa és kártyán is odaadja, a képernyőt nem mutatja meg előre, és nem magyaráz. Ha a résztvevő 2 percig nem halad, egy rövid segítséget ad, és ezt feljegyzi. Kérdésre ezt válaszolja: „Mit gondolsz, hol lehet?”
-- **Előtte:** a fejlesztő friss adatbázissal indítja a stacket (`docker compose down -v`, `docker compose up -d`), és ellenőrzi, hogy a `/health` válaszol.
+- **Előtte:** az 1. körben a fejlesztő friss adatbázissal indította a stacket (`docker compose down -v`, `docker compose up -d`). A 2. körben az élő példány fut (a `/health` ellenőrzése a kör előtt); a résztvevő új fiókja üres háztartással indul, a `tomi@pelda.hu` bemutató adatai nem keverednek vele.
 
 ## Forgatókönyvek
 
@@ -59,7 +59,7 @@ A feladatok célt adnak, nem lépéseket. Mindegyik a résztvevő saját fiókj�
 ## Adatkezelés
 
 - **Hozzájárulás:** szóban vagy üzenetben, a kipróbálás előtt. A résztvevő tudja, hogy szakdolgozathoz készül, a jegyzetek névtelenek, és bármikor abbahagyhatja.
-- **Adatok:** csak kitalált tesztadat és tesztfiók. A kipróbálás után a fejlesztő törli az adatbázist (`docker compose down -v`). Képernyőfelvétel nem készül; a jegyzetekben nincs név és elérhetőség.
+- **Adatok:** csak kitalált tesztadat és tesztfiók. Az 1. kör után a fejlesztő törölte az adatbázist (`docker compose down -v`); a 2. kör után az élő példányról a résztvevők fiókjait egyenként törli (a háztartás minden adatával, [privacy_licensing.md](../05_security_ops/privacy_licensing.md)). Képernyőfelvétel nem készül; a jegyzetekben nincs név és elérhetőség.
 - **MI-funkciók (2. kör):** a mondatos bevitelbe beírt mondat, a chat kérdései és a saját, kitalált készletadat a Google Gemini API fizetős szolgáltatásához kerül ([privacy_licensing.md](../05_security_ops/privacy_licensing.md)). A résztvevő ezt a hozzájáruláskor megtudja, és azt kérjük tőle, hogy ne írjon be személyes adatot.
 
 ## Eredmények, javítás és újratesztelés

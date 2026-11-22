@@ -1,0 +1,12 @@
+# The public instance's TLS proxy (ADR-0014, t1_minispec K3); started by docker-compose.prod.yml.
+# No trusted_proxies: Caddy then rewrites X-Forwarded-For from the connection, so a client cannot forge it.
+{
+	# With an e-mail address Caddy falls back to ZeroSSL when Let's Encrypt refuses (t1_minispec F6, F7).
+	email {$ACME_EMAIL}
+}
+
+{$KAMRA_DOMAIN} {
+	reverse_proxy api:8080
+	# One year, without includeSubDomains and preload: the parent domain is not ours.
+	header Strict-Transport-Security "max-age=31536000"
+}
