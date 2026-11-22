@@ -653,3 +653,13 @@ A leadandó csomag (3.J, H) 10–20 kulcspromptot kér kontextussal és kimenet-
 - **Érintett fájlok:** `docs/02_architecture/adr/0014-elo-kitelepites-azure-caddy.md`, `docs/05_security_ops/` (`deploy_runbook.md`, `threat_model.md`, `privacy_licensing.md`, `observability.md`), `docs/04_quality/` (`manual_tests.md`, `test_report.md`, `uat.md`), `docs/03_design/` (`api.md`, `error_handling.md`), `docs/02_architecture/c4_context_container.md`, `docs/01_product/` (`scope_contract.md`, `ux_flows.md`, `capability_map.md`), `docs/06_release/` (`self_assessment.md`, `changelog.md`), `docs/00_index.md`, `README.md`, `docs/07_ai/` (`prompt_log.md`, `verification_log.md`).
 - **Validálás:** a telepítés és a visszaállítás a VM-en (MT-05, MT-06); kívülről `curl.exe` és `Test-NetConnection`; böngésző laptopon és telefonon; [V-108](verification_log.md). Az MI tévedései a T2 alatt: a PowerShell-parancsokat nem jelölte elég egyértelműen a saját gépre (a fejlesztő a VM-en futtatta, kár nélkül); a `curl -I` `HEAD` kérést küldött a csak `GET`-et fogadó végpontra (405), javítva; a 10. lépés d) pontja (a meghívókód kiolvasása) kimaradt, utólag pótolva.
 - **Mit változtattam / döntésem:** [fejlesztő tölti ki]
+
+### P-38 – A `v0.9.0` kiadás és az élő példány frissítése
+- **Dátum:** 2026-11-22
+- **Cél:** a `v0.9.0` kiadása a `main` ágra (az élő kitelepítés kódja és dokumentációja), és az élő VM átállítása a kiadott tagra.
+- **Eszköz:** Claude Code (claude-opus-5-5).
+- **Prompt összefoglaló:** „mergeltem developra”.
+- **AI javaslat (eredeti):** a `v0.8.0` mintája szerint egy dokumentációs commit (a changelog `[Unreleased]` része `[0.9.0]` alá, a README állapota, az index és az önértékelés állapotsora), PR a `develop`-ba, majd „Release v0.9.0” PR a `main`-be, a tag a `main` merge-commitjára; utána az élő VM frissítése a runbook „Frissítés és visszaállás” szerint (mentés, `git checkout v0.9.0`, `docker compose up -d --build`), ami egyben a frissítés élő próbája; végül az önértékelés CI-kapuja a `main` új futására.
+- **Érintett fájlok:** `docs/06_release/changelog.md`, `docs/06_release/self_assessment.md`, `README.md`, `docs/00_index.md`, `docs/07_ai/prompt_log.md`.
+- **Validálás:** a release ág és a `main` CI-futása; a tag a `main` merge-commitjára mutat; a VM a frissítés után `Healthy`, a `git describe --tags` a VM-en `v0.9.0`.
+- **Mit változtattam / döntésem:** [fejlesztő tölti ki]

@@ -88,7 +88,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 |---|---|---|
 | [demo_script.md](06_release/demo_script.md) | 5-7 perces stabil demo forgatókönyv | Kész |
 | [self_assessment.md](06_release/self_assessment.md) | Kötelező önértékelés kategóriánként (4.5 pont a PDF-ben) | Kész |
-| [changelog.md](06_release/changelog.md) | Release notes, scope változások | Kész (0.1.0 – 0.8.0) |
+| [changelog.md](06_release/changelog.md) | Release notes, scope változások | Kész (0.1.0 – 0.9.0) |
 
 ---
 
