@@ -1,13 +1,13 @@
 # Önértékelés
 
-A leadandó csomag v1.2 4.5. pontja szerinti kötelező önértékelés, a 6.3. pont 100 pontos scorecardja alapján. Állapot: 2026-11-22, a `v0.9.0` kiadás előtt (a `main` CI-kapuja a kiadás után frissül). Az első változatot az MI javasolta ([P-31](../07_ai/prompt_log.md)); a pontszámok a fejlesztő értékelését tükrözik, a leadás előtt felülvizsgálva.
+A leadandó csomag v1.2 4.5. pontja szerinti kötelező önértékelés, a 6.3. pont 100 pontos scorecardja alapján. Állapot: 2026-11-24, a `v0.9.0` kiadás után (`main` @ `875149f`, az élő példány is ezen fut). Az első változatot az MI javasolta ([P-31](../07_ai/prompt_log.md)); a pontszámok a fejlesztő értékelését tükrözik, a leadás előtt felülvizsgálva.
 
 ## Kapu feltételek
 
 | Kapu | Teljesül? | Evidence |
 |---|---|---|
 | Futtathatóság: a Quickstart alapján indul | Igen | [README.md](../../README.md) „Gyors indítás”; tiszta környezetben 1 p 26 mp ([manual_tests.md](../04_quality/manual_tests.md) MT-02) |
-| CI zöld a `main` ágon | Igen | a `v0.8.0` kiadás `main`-je (`1efc36a`): [run 44632445957](https://github.com/toldor/kamra/actions/runs/44632445957) |
+| CI zöld a `main` ágon | Igen | a `v0.9.0` kiadás `main`-je (`875149f`): [run 45054111523](https://github.com/toldor/kamra/actions/runs/45054111523) |
 | Nincs titok a repóban | Igen | gitleaks a teljes historyra minden CI-futásban ([ci.yml](../../.github/workflows/ci.yml)); [.env.example](../../.env.example) érték nélkül |
 | Legalább 30 automatizált teszt | Igen | 1261 teszt ([test_report.md](../04_quality/test_report.md)) |
 | AI-átláthatóság | Igen | [ai_manifest.md](../07_ai/ai_manifest.md), [prompt_log.md](../07_ai/prompt_log.md), [verification_log.md](../07_ai/verification_log.md) |
