@@ -10,6 +10,7 @@ A kurzus-kiírás 5. pontja szerinti kézi tesztek: ki, mikor, melyik verzión, 
 | MT-04 | Visszaállás az előző kiadásra (rollback) a runbook szerint | 2026-10-25 | `v0.3.0` → `v0.2.0` → `v0.3.0` | a fejlesztő | PASS |
 | MT-05 | Az élő példány telepítése egy Azure VM-re a runbook szerint, mért idővel és memóriával; ellenőrzés kívülről | 2026-11-22 | `feature/live-deploy @ 434cb4d` | a fejlesztő, az MI lépésenkénti vezetésével | PASS |
 | MT-06 | Mentés, az adatbázis törlése és visszaállítása az élő példányon | 2026-11-22 | `feature/live-deploy @ 434cb4d` | a fejlesztő | PASS |
+| MT-07 | Az élő példány frissítése a `v0.9.0` kiadásra a runbook szerint | 2026-11-24 | `434cb4d` → `v0.9.0` (`875149f`) | a fejlesztő | PASS, 1 megfigyeléssel (E4) |
 
 ## MT-01 – A fő folyamat a fejlesztő gépén
 
@@ -140,3 +141,20 @@ A kurzus-kiírás 5. pontja szerinti kézi tesztek: ki, mikor, melyik verzión, 
 | 5 | Belépés `tomi@pelda.hu`-ként | sikerül, az adatok megvannak | a fejlesztő szerint a várt eredmény | – |
 
 - **Eredmény:** **PASS.** A mentésből egy másodperc alatt visszaállt a törölt adatbázis, adatvesztés nélkül. A tanúsítvány-volume (`caddy_data`) a lépések alatt megmaradt.
+
+## MT-07 – Az élő példány frissítése a `v0.9.0`-ra
+
+- **Cél:** a [deploy_runbook.md](../05_security_ops/deploy_runbook.md) „Élő példány (Azure)” / „Frissítés és visszaállás” része a célkörnyezetben.
+- **Környezet és adatok:** az MT-05 példánya, a `tomi@pelda.hu` bemutató adataival.
+
+| # | Lépés | Elvárt | Tényleges |
+|---|---|---|---|
+| 1 | Belépés SSH-val | bejut | **először időtúllépés** (`Connection timed out`), lásd E4; az NSG-szabály javítása után bejut |
+| 2 | `~/backup.sh` | friss mentés | lefutott |
+| 3 | `git fetch --tags`, `git checkout v0.9.0`, `git describe --tags` | `v0.9.0` | `v0.9.0` |
+| 4 | `time docker compose up -d --build` | az api újraépül és újraindul, a db és a caddy fut tovább | 3 p 26 mp (a build kb. 198 mp: a dokumentáció is a build-kontextus része, ezért nem a cache-ből jött); a `db` és a `caddy` 32 órája futott tovább |
+| 5 | `curl …/health` | `Healthy` | az indulás pillanatában üres válasz (az API még nem állt fel), egy perccel később `Healthy` |
+| 6 | Böngészőben belépés `tomi@pelda.hu`-ként | az adatok megvannak | a fejlesztő szerint rendben |
+
+- **E4 – megfigyelés:** két nappal a telepítés után az SSH időtúllépéssel elakadt, mert a fejlesztő otthoni IP-címe megváltozott, és az NSG a 22-es portot csak a régi címről engedte (review A-04). Javítás a Portalon: az SSH-szabály forrása a jelenlegi saját IP-cím; a runbook „Hibakeresés” része ezt már leírta. A weboldal közben végig elérhető volt.
+- **Eredmény:** **PASS.** A frissítés a runbook szerint, adatvesztés nélkül sikerült; a leállás az API újraindulásának néhány másodperce volt.

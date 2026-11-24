@@ -63,7 +63,7 @@ Minden fájl a kóddal együtt frissül (lásd `AGENTS.md` 9. pont).
 |---|---|---|
 | [test_strategy.md](04_quality/test_strategy.md) | Teszt piramis, mock stratégia, CI quality gate-ek | Kész |
 | [test_report.md](04_quality/test_report.md) | Utolsó futás eredménye, lefedettség, ismert hiányok | Kész (1261 teszt, P1–P20, LLM- és chat-mérés, zöld CI) |
-| [manual_tests.md](04_quality/manual_tests.md) | Kézi tesztjegyzőkönyv (kiírás 5. pont) | Kész (MT-01–MT-06; az élő példány telepítése és visszaállítása: MT-05, MT-06) |
+| [manual_tests.md](04_quality/manual_tests.md) | Kézi tesztjegyzőkönyv (kiírás 5. pont) | Kész (MT-01–MT-07; az élő példány telepítése, visszaállítása és frissítése: MT-05 – MT-07) |
 | [traceability.md](04_quality/traceability.md) | Megfeleltetés: követelmény → flow → végpont és képernyő → teszt | Kész |
 | [uat.md](04_quality/uat.md) | Felhasználói kipróbálás terve, két kör | Kész az 1. körre (nov. 1., 4 résztvevő); a 2. kör az élő példányon (nov. 25–27.) |
 | [performance.md](04_quality/performance.md) | Teljesítmény-alapmérés, a mért szűk keresztmetszet | Kész (az ajánlás p95 18–22 ms) |
